@@ -1,89 +1,63 @@
 import '../domain/models.dart';
+import 'field_reader.dart';
 import 'profile_dto.dart';
 
-String _requiredString(Map<String, dynamic> json, String key) {
-  final value = json[key];
-  if (value is! String || value.isEmpty) throw ParseFailure(key);
-  return value;
-}
-
-String _optionalString(Object? value, String field) {
-  if (value == null) return '';
-  if (value is! String) throw ParseFailure(field);
-  return value;
-}
-
-int _optionalInt(Object? value, String field) {
-  if (value == null) return 0;
-  if (value is! int) throw ParseFailure(field);
-  return value;
-}
-
 final class FeedPostDto {
-  const FeedPostDto({
-    required this.id,
-    required this.username,
-    required this.displayName,
-    required this.excerpt,
-    required this.voteScore,
-    required this.commentCount,
-  });
+  FeedPostDto._(this._json);
   factory FeedPostDto.fromJson(Map<String, dynamic> json) {
-    final rawAuthor = json['author'];
-    if (rawAuthor != null && rawAuthor is! Map<String, dynamic>) {
-      throw const ParseFailure('author');
-    }
+    final dto = FeedPostDto._(objectValue(json, 'post')!);
+    dto.toDomain();
+    return dto;
+  }
+  final Map<String, dynamic> _json;
+  FeedPost toDomain() {
+    final id = stringValue(_json['id'], 'id');
+    if (id.isEmpty) throw const ParseFailure('id');
     final author =
-        rawAuthor as Map<String, dynamic>? ?? const <String, dynamic>{};
-    final profile = ProfileDto.fromJson(author);
-    return FeedPostDto(
-      id: _requiredString(json, 'id'),
-      username: profile.username,
-      displayName: profile.displayName,
-      excerpt: _optionalString(json['excerpt'], 'excerpt'),
-      voteScore: _optionalInt(json['voteScore'], 'voteScore'),
-      commentCount: _optionalInt(json['commentCount'], 'commentCount'),
+        objectValue(_json['author'], 'author') ?? const <String, dynamic>{};
+    return FeedPost(
+      id: id,
+      author: ProfileDto.fromJson(author).toDomain(),
+      excerpt: stringValue(_json['excerpt'], 'excerpt'),
+      title: nullableString(_json['title'], 'title'),
+      slug: stringValue(_json['slug'], 'slug'),
+      contentText: stringValue(_json['contentText'], 'contentText'),
+      contentHtml: stringValue(_json['contentHtml'], 'contentHtml'),
+      contentJson: objectValue(_json['contentJson'], 'contentJson'),
+      coverUrl: nullableString(_json['coverUrl'], 'coverUrl'),
+      coverAlt: stringValue(_json['coverAlt'], 'coverAlt'),
+      format: stringValue(_json['format'], 'format'),
+      status: stringValue(_json['status'], 'status'),
+      version: intValue(_json['version'], 'version'),
+      likeCount: intValue(_json['likeCount'], 'likeCount'),
+      commentCount: intValue(_json['commentCount'], 'commentCount'),
+      bookmarkCount: intValue(_json['bookmarkCount'], 'bookmarkCount'),
+      viewCount: nullableInt(_json['viewCount'], 'viewCount'),
+      voteScore: intValue(_json['voteScore'], 'voteScore'),
+      viewerVote: intValue(_json['viewerVote'], 'viewerVote'),
+      viewerLiked: boolValue(_json['viewerLiked'], 'viewerLiked'),
+      viewerBookmarked: boolValue(
+        _json['viewerBookmarked'],
+        'viewerBookmarked',
+      ),
+      canEdit: boolValue(_json['canEdit'], 'canEdit'),
+      tagSlugs: stringList(_json['tagSlugs'], 'tagSlugs'),
+      tags: stringList(_json['tags'], 'tags'),
+      publishedAt: dateValue(_json['publishedAt'], 'publishedAt'),
+      updatedAt: dateValue(_json['updatedAt'], 'updatedAt'),
     );
   }
-  final String id;
-  final String username;
-  final String displayName;
-  final String excerpt;
-  final int voteScore;
-  final int commentCount;
-  FeedPost toDomain() => FeedPost(
-    id: id,
-    author: Author(username: username, displayName: displayName),
-    excerpt: excerpt,
-    voteScore: voteScore,
-    commentCount: commentCount,
-  );
 }
 
 final class FeedPageDto {
   FeedPageDto.fromJson(Map<String, dynamic> json)
-    : items = _parseItems(json['items']),
-      nextCursor = _parseCursor(json['nextCursor']);
+    : items = objectList(
+        json['items'],
+        'items',
+      ).map(FeedPostDto.fromJson).toList(growable: false),
+      nextCursor = nullableString(json['nextCursor'], 'nextCursor');
   final List<FeedPostDto> items;
   final String? nextCursor;
-  static List<FeedPostDto> _parseItems(Object? value) {
-    if (value == null) return const [];
-    if (value is! List) throw const ParseFailure('items');
-    return value
-        .map((item) {
-          if (item is! Map<String, dynamic>) throw const ParseFailure('items');
-          return FeedPostDto.fromJson(item);
-        })
-        .toList(growable: false);
-  }
-
-  static String? _parseCursor(Object? value) {
-    if (value != null && value is! String) {
-      throw const ParseFailure('nextCursor');
-    }
-    return value as String?;
-  }
-
   FeedPage toDomain() => FeedPage(
     items: items.map((item) => item.toDomain()).toList(),
     nextCursor: nextCursor,

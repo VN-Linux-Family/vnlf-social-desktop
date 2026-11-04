@@ -32,10 +32,36 @@ final class Session {
   final String displayName;
 }
 
+final class AuthorStyle {
+  const AuthorStyle({
+    this.frame,
+    this.icon,
+    this.distroBadge,
+    this.nameplate,
+    this.status,
+  });
+  final Map<String, dynamic>? frame;
+  final Map<String, dynamic>? icon;
+  final String? distroBadge;
+  final Map<String, dynamic>? nameplate;
+  final Map<String, dynamic>? status;
+}
+
 final class Author {
-  const Author({required this.username, required this.displayName});
+  const Author({
+    required this.username,
+    required this.displayName,
+    this.id = '',
+    this.avatarUrl = '',
+    this.role = '',
+    this.style,
+  });
+  final String id;
   final String username;
   final String displayName;
+  final String avatarUrl;
+  final String role;
+  final AuthorStyle? style;
 }
 
 final class FeedPost {
@@ -45,12 +71,134 @@ final class FeedPost {
     required this.excerpt,
     required this.voteScore,
     required this.commentCount,
+    this.title,
+    this.slug = '',
+    this.contentText = '',
+    this.contentHtml = '',
+    this.contentJson,
+    this.coverUrl,
+    this.coverAlt = '',
+    this.format = '',
+    this.status = '',
+    this.version = 0,
+    this.likeCount = 0,
+    this.bookmarkCount = 0,
+    this.viewCount,
+    this.viewerVote = 0,
+    this.viewerLiked = false,
+    this.viewerBookmarked = false,
+    this.canEdit = false,
+    this.tagSlugs = const [],
+    this.tags = const [],
+    this.publishedAt,
+    this.updatedAt,
   });
   final String id;
   final Author author;
   final String excerpt;
-  final int voteScore;
+  final String? title;
+  final String slug;
+  final String contentText;
+  final String contentHtml;
+  final Map<String, dynamic>? contentJson;
+  final String? coverUrl;
+  final String coverAlt;
+  final String format;
+  final String status;
+  final int version;
+  final int likeCount;
   final int commentCount;
+  final int bookmarkCount;
+  final int? viewCount;
+  final int voteScore;
+  final int viewerVote;
+  final bool viewerLiked;
+  final bool viewerBookmarked;
+  final bool canEdit;
+  final List<String> tagSlugs;
+  final List<String> tags;
+  final DateTime? publishedAt;
+  final DateTime? updatedAt;
+}
+
+final class LeaderboardItem {
+  const LeaderboardItem({
+    required this.userId,
+    required this.username,
+    required this.displayName,
+    required this.avatarUrl,
+    required this.earnedPoints,
+    required this.rank,
+    this.style,
+  });
+  final String userId;
+  final String username;
+  final String displayName;
+  final String avatarUrl;
+  final int earnedPoints;
+  final int rank;
+  final AuthorStyle? style;
+}
+
+final class LeaderboardPage {
+  LeaderboardPage({
+    required this.period,
+    this.periodStart,
+    this.periodEnd,
+    this.computedAt,
+    required List<LeaderboardItem> items,
+  }) : items = List.unmodifiable(items);
+  final String period;
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
+  final DateTime? computedAt;
+  final List<LeaderboardItem> items;
+}
+
+final class ProjectItem {
+  const ProjectItem({
+    required this.id,
+    required this.name,
+    this.slug = '',
+    this.tagline = '',
+    this.type = '',
+    this.tier = '',
+    this.relation = '',
+    this.seeking = false,
+    this.featured = false,
+    this.status = '',
+    this.logoUrl,
+    this.accentColor,
+    this.owner,
+    this.repo,
+    this.rating,
+    this.commentCount = 0,
+    this.approvedAt,
+  });
+  final String id;
+  final String name;
+  final String slug;
+  final String tagline;
+  final String type;
+  final String tier;
+  final String relation;
+  final bool seeking;
+  final bool featured;
+  final String status;
+  final String? logoUrl;
+  final String? accentColor;
+  final Author? owner;
+  final Map<String, dynamic>? repo;
+  final Map<String, dynamic>? rating;
+  final int commentCount;
+  final DateTime? approvedAt;
+}
+
+final class ProjectsPage {
+  ProjectsPage({required List<ProjectItem> items, this.nextCursor})
+    : items = List.unmodifiable(items);
+  final List<ProjectItem> items;
+  final String? nextCursor;
 }
 
 final class FeedPage {

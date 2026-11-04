@@ -4,6 +4,8 @@ import '../core/api_client.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
 import 'feed_dto.dart';
+import 'leaderboard_dto.dart';
+import 'projects_dto.dart';
 
 /// Synthetic content using the confirmed public feed response shape.
 Future<ApiResponse> fixtureTransport(ApiRequest request) async {
@@ -45,10 +47,8 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
               'slug': 'chao-mung-cong-dong-linux-viet-nam',
               'title': 'Chào mừng đến với Vietnam Linux Family!',
               'excerpt': 'Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ',
-              'contentText':
-                  'Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.',
-              'contentHtml':
-                  '<p>Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.</p>',
+              'contentText': 'Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.',
+              'contentHtml': '<p>Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.</p>',
               'contentJson': {
                 'type': 'doc',
                 'content': [
@@ -57,8 +57,7 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
                     'content': [
                       {
                         'type': 'text',
-                        'text':
-                            'Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ.',
+                        'text': 'Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ.',
                       },
                     ],
                   },
@@ -171,14 +170,13 @@ final class FixtureDiscoverRepository implements DiscoverRepository {
   Future<DiscoverPage> getProjects() => _client.get(
     '/api/v1/projects',
     decode: (json) {
-      if (json['items'] is! List || (json['items'] as List).isNotEmpty) {
-        throw const ParseFailure('items');
-      }
-      final cursor = json['nextCursor'];
-      if (cursor != null && cursor is! String) {
-        throw const ParseFailure('nextCursor');
-      }
-      return DiscoverPage(items: const [], nextCursor: cursor as String?);
+      final page = ProjectsPageDto.fromJson(json).toDomain();
+      return DiscoverPage(
+        items: page.items
+            .map((item) => ProjectSummary(id: item.id, name: item.name))
+            .toList(),
+        nextCursor: page.nextCursor,
+      );
     },
   );
 }
@@ -190,11 +188,38 @@ final class FixtureLeaderboardsRepository implements LeaderboardsRepository {
   Future<Leaderboard> getLeaderboard() => _client.get(
     '/api/v1/leaderboards',
     decode: (json) {
-      if (json['items'] is! List || (json['items'] as List).isNotEmpty) {
-        throw const ParseFailure('items');
-      }
-      if (json['period'] is! String) throw const ParseFailure('period');
-      return Leaderboard(period: json['period'] as String, items: const []);
+      final page = LeaderboardPageDto.fromJson(json).toDomain();
+      return Leaderboard(
+        period: page.period,
+        items: page.items
+            .map(
+              (item) => LeaderboardEntry(
+                username: item.username,
+                points: item.earnedPoints,
+              ),
+            )
+            .toList(),
+      );
     },
+  );
+}
+
+final class FixtureLeaderboardRepository implements LeaderboardRepository {
+  const FixtureLeaderboardRepository(this._client);
+  final ApiClient _client;
+  @override
+  Future<LeaderboardPage> getLeaderboard() => _client.get(
+    '/api/v1/leaderboards',
+    decode: (json) => LeaderboardPageDto.fromJson(json).toDomain(),
+  );
+}
+
+final class FixtureProjectsRepository implements ProjectsRepository {
+  const FixtureProjectsRepository(this._client);
+  final ApiClient _client;
+  @override
+  Future<ProjectsPage> getProjects() => _client.get(
+    '/api/v1/projects',
+    decode: (json) => ProjectsPageDto.fromJson(json).toDomain(),
   );
 }

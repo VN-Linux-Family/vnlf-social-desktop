@@ -48,6 +48,13 @@ final leaderboardsRepositoryProvider = Provider<LeaderboardsRepository>(
   (ref) => FixtureLeaderboardsRepository(ref.watch(apiClientProvider)),
 );
 
+final leaderboardRepositoryProvider = Provider<LeaderboardRepository>(
+  (ref) => FixtureLeaderboardRepository(ref.watch(apiClientProvider)),
+);
+final projectsRepositoryProvider = Provider<ProjectsRepository>(
+  (ref) => FixtureProjectsRepository(ref.watch(apiClientProvider)),
+);
+
 final sessionProvider = FutureProvider<Session?>(
   (ref) => ref.watch(authRepositoryProvider).currentSession(),
 );

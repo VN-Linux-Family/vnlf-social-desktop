@@ -25,3 +25,11 @@ abstract interface class DiscoverRepository {
 abstract interface class LeaderboardsRepository {
   Future<Leaderboard> getLeaderboard();
 }
+
+abstract interface class LeaderboardRepository {
+  Future<LeaderboardPage> getLeaderboard();
+}
+
+abstract interface class ProjectsRepository {
+  Future<ProjectsPage> getProjects();
+}
