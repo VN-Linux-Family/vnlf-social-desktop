@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'src/design_system/design_system.dart';
+import 'src/gallery/gallery_page.dart';
+
 void main() {
   runApp(const ProviderScope(child: MainApp()));
 }
@@ -9,11 +12,7 @@ void main() {
 final _router = GoRouter(
   routes: [
     GoRoute(path: '/', redirect: (context, state) => '/gallery'),
-    GoRoute(
-      path: '/gallery',
-      builder: (context, state) =>
-          const Scaffold(body: Center(child: Text('Thư viện giao diện'))),
-    ),
+    GoRoute(path: '/gallery', builder: (context, state) => const GalleryPage()),
   ],
 );
 
@@ -24,7 +23,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'VNLF Social',
-      theme: ThemeData(fontFamily: 'BeVietnamPro'),
+      theme: VnlfTheme.light(),
+      darkTheme: VnlfTheme.dark(),
       routerConfig: _router,
     );
   }
