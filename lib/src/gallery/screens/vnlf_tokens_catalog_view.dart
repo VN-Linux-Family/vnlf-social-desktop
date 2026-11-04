@@ -32,7 +32,7 @@ class VnlfTokensCatalogView extends StatelessWidget {
                 _CatalogSectionCard(
                   title: '1. Typography (Be Vietnam Pro)',
                   subtitle:
-                      'Kiểm tra hiển thị dấu thanh: ${VnlfTypography.diacriticSample}',
+                      'Kiểm tra hiển thị dấu thanh: ${VnlfGalleryFixtures.diacriticSample}',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -40,25 +40,25 @@ class VnlfTokensCatalogView extends StatelessWidget {
                         token: 'text-h1 (18/24 Bold)',
                         style: VnlfTypography.h1(colors.ink),
                         sample:
-                            'Bảng tin cộng đồng — ${VnlfTypography.diacriticSample}',
+                            'Bảng tin cộng đồng — ${VnlfGalleryFixtures.diacriticSample}',
                       ),
                       _TypeRow(
                         token: 'text-h2 (16/22 Bold)',
                         style: VnlfTypography.h2(colors.ink),
                         sample:
-                            'Xếp hạng tuần & Dự án — ${VnlfTypography.diacriticSample}',
+                            'Xếp hạng tuần & Dự án — ${VnlfGalleryFixtures.diacriticSample}',
                       ),
                       _TypeRow(
                         token: 'text-h3 (14/20 SemiBold)',
                         style: VnlfTypography.h3(colors.ink),
                         sample:
-                            'Cấu hình nhân Linux 6.12 — ${VnlfTypography.diacriticSample}',
+                            'Cấu hình nhân Linux 6.12 — ${VnlfGalleryFixtures.diacriticSample}',
                       ),
                       _TypeRow(
                         token: 'text-body (13/20.8 Regular)',
                         style: VnlfTypography.body(colors.ink),
                         sample:
-                            'Trải nghiệm cài đặt Debian 13 + XFCE mượt mà, hỗ trợ đầy đủ ${VnlfTypography.diacriticSample}.',
+                            'Trải nghiệm cài đặt Debian 13 + XFCE mượt mà, hỗ trợ đầy đủ ${VnlfGalleryFixtures.diacriticSample}.',
                       ),
                       _TypeRow(
                         token: 'text-control (13/18 Medium)',
@@ -141,12 +141,36 @@ class VnlfTokensCatalogView extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: const [
-                          VnlfDistroBadgePill(badge: DistroBadgeType.caramos),
-                          VnlfDistroBadgePill(badge: DistroBadgeType.cachyos),
-                          VnlfDistroBadgePill(badge: DistroBadgeType.arch),
-                          VnlfDistroBadgePill(badge: DistroBadgeType.debian),
-                          VnlfDistroBadgePill(badge: DistroBadgeType.nixos),
-                          VnlfDistroBadgePill(badge: DistroBadgeType.fedora),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.caramos,
+                            label: 'caramos',
+                            iconTooltip: 'caramos',
+                          ),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.cachyos,
+                            label: 'cachyos',
+                            iconTooltip: 'cachyos',
+                          ),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.arch,
+                            label: 'arch',
+                            iconTooltip: 'arch',
+                          ),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.debian,
+                            label: 'debian',
+                            iconTooltip: 'debian',
+                          ),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.nixos,
+                            label: 'nixos',
+                            iconTooltip: 'nixos',
+                          ),
+                          VnlfDistroBadgePill(
+                            badge: DistroBadgeType.fedora,
+                            label: 'fedora',
+                            iconTooltip: 'fedora',
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -154,18 +178,40 @@ class VnlfTokensCatalogView extends StatelessWidget {
                         spacing: 14,
                         runSpacing: 10,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        children: const [
+                        children: [
                           VnlfVoteCapsule(
                             score: 4,
                             voteState: VoteState.neutral,
+                            semanticLabel:
+                                VnlfGalleryFixtures.voteCapsuleSemanticLabel(4),
+                            upvoteSemanticLabel:
+                                VnlfGalleryFixtures.upvoteSemanticLabel,
+                            downvoteSemanticLabel:
+                                VnlfGalleryFixtures.downvoteSemanticLabel,
                           ),
                           VnlfVoteCapsule(
                             score: 42,
                             voteState: VoteState.upvoted,
+                            semanticLabel:
+                                VnlfGalleryFixtures.voteCapsuleSemanticLabel(
+                                  42,
+                                ),
+                            upvoteSemanticLabel:
+                                VnlfGalleryFixtures.upvoteSemanticLabel,
+                            downvoteSemanticLabel:
+                                VnlfGalleryFixtures.downvoteSemanticLabel,
                           ),
                           VnlfVoteCapsule(
                             score: -2,
                             voteState: VoteState.downvoted,
+                            semanticLabel:
+                                VnlfGalleryFixtures.voteCapsuleSemanticLabel(
+                                  -2,
+                                ),
+                            upvoteSemanticLabel:
+                                VnlfGalleryFixtures.upvoteSemanticLabel,
+                            downvoteSemanticLabel:
+                                VnlfGalleryFixtures.downvoteSemanticLabel,
                           ),
                         ],
                       ),

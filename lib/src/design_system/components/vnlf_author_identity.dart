@@ -15,12 +15,24 @@ class VnlfAuthorNameRow extends StatelessWidget {
     this.showHandleInline = true,
     this.fontSize = 13.5,
     this.allowWrap = true,
+    this.semanticLabel,
+    this.distroBadgeTooltip,
+    this.distroBadgeSemanticLabel,
+    this.terminalBadgeSemanticLabel,
+    this.pixelBadgeSemanticLabel,
+    this.partnerStarSemanticLabel,
   });
 
   final AuthorData author;
   final bool showHandleInline;
   final double fontSize;
   final bool allowWrap;
+  final String? semanticLabel;
+  final String? distroBadgeTooltip;
+  final String? distroBadgeSemanticLabel;
+  final String? terminalBadgeSemanticLabel;
+  final String? pixelBadgeSemanticLabel;
+  final String? partnerStarSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +83,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
       );
     }
 
-    return Wrap(
+    final row = Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 4,
       runSpacing: 2,
@@ -94,10 +106,17 @@ class VnlfAuthorNameRow extends StatelessWidget {
           ],
         ),
         if (style.distroBadge != DistroBadgeType.none)
-          VnlfInlineDistroIcon(badge: style.distroBadge),
-        if (style.hasTerminalBadge) const _TerminalMiniBadge(),
-        if (style.hasPixelBadge) const _PixelHelmBadge(),
-        if (style.hasPartnerStar) const _GoldStarMiniBadge(),
+          VnlfInlineDistroIcon(
+            badge: style.distroBadge,
+            tooltip: distroBadgeTooltip ?? style.distroBadgeLabel,
+            semanticLabel: distroBadgeSemanticLabel ?? style.distroBadgeLabel,
+          ),
+        if (style.hasTerminalBadge)
+          _TerminalMiniBadge(semanticLabel: terminalBadgeSemanticLabel),
+        if (style.hasPixelBadge)
+          _PixelHelmBadge(semanticLabel: pixelBadgeSemanticLabel),
+        if (style.hasPartnerStar)
+          _GoldStarMiniBadge(semanticLabel: partnerStarSemanticLabel),
         if (showHandleInline)
           Padding(
             padding: const EdgeInsets.only(left: 2),
@@ -109,6 +128,11 @@ class VnlfAuthorNameRow extends StatelessWidget {
           ),
       ],
     );
+
+    if (semanticLabel == null) {
+      return row;
+    }
+    return Semantics(label: semanticLabel, container: true, child: row);
   }
 }
 
@@ -119,10 +143,14 @@ class VnlfInlineDistroIcon extends StatelessWidget {
     super.key,
     required this.badge,
     this.size = 15.0,
+    this.tooltip,
+    this.semanticLabel,
   });
 
   final DistroBadgeType badge;
   final double size;
+  final String? tooltip;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -139,41 +167,55 @@ class VnlfInlineDistroIcon extends StatelessWidget {
 
     if (badge == DistroBadgeType.none) return const SizedBox.shrink();
 
-    return Tooltip(
-      message: badge.label,
-      child: Container(
-        width: size,
-        height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-        child: Text(
-          glyph,
-          style: TextStyle(
-            fontFamily: VnlfTypography.fontFamily,
-            fontSize: size * 0.62,
-            height: 1.0,
-            fontWeight: FontWeight.w800,
-            color: fg,
-          ),
+    Widget badgeWidget = Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+      child: Text(
+        glyph,
+        style: TextStyle(
+          fontFamily: VnlfTypography.fontFamily,
+          fontSize: size * 0.62,
+          height: 1.0,
+          fontWeight: FontWeight.w800,
+          color: fg,
         ),
       ),
     );
+
+    if (tooltip != null && tooltip!.isNotEmpty) {
+      badgeWidget = Tooltip(message: tooltip!, child: badgeWidget);
+    }
+    if (semanticLabel != null) {
+      badgeWidget = Semantics(label: semanticLabel, child: badgeWidget);
+    }
+    return badgeWidget;
   }
 }
 
 /// Full labeled distro badge pill (`caramos`, `cachyos`, `arch`, `debian`, `nixos`)
 /// for profile headers, thread details, and the component gallery.
 class VnlfDistroBadgePill extends StatelessWidget {
-  const VnlfDistroBadgePill({super.key, required this.badge});
+  const VnlfDistroBadgePill({
+    super.key,
+    required this.badge,
+    this.label = '',
+    this.iconTooltip,
+    this.semanticLabel,
+  });
 
   final DistroBadgeType badge;
+  final String label;
+  final String? iconTooltip;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     if (badge == DistroBadgeType.none) return const SizedBox.shrink();
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final pill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: colors.surfaceSoft,
@@ -183,28 +225,37 @@ class VnlfDistroBadgePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          VnlfInlineDistroIcon(badge: badge, size: 13),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              badge.label,
-              style: VnlfTypography.caption(colors.ink),
-              overflow: TextOverflow.ellipsis,
+          VnlfInlineDistroIcon(badge: badge, size: 13, tooltip: iconTooltip),
+          if (label.isNotEmpty) ...[
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: VnlfTypography.caption(colors.ink),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return pill;
+    }
+    return Semantics(label: semanticLabel, container: true, child: pill);
   }
 }
 
 class _TerminalMiniBadge extends StatelessWidget {
-  const _TerminalMiniBadge();
+  const _TerminalMiniBadge({this.semanticLabel});
+
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    return Container(
+    final badge = Container(
       width: 15,
       height: 15,
       alignment: Alignment.center,
@@ -223,16 +274,20 @@ class _TerminalMiniBadge extends StatelessWidget {
         ),
       ),
     );
+    if (semanticLabel == null) return badge;
+    return Semantics(label: semanticLabel, child: badge);
   }
 }
 
 class _PixelHelmBadge extends StatelessWidget {
-  const _PixelHelmBadge();
+  const _PixelHelmBadge({this.semanticLabel});
+
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    return Container(
+    final badge = Container(
       width: 15,
       height: 15,
       alignment: Alignment.center,
@@ -243,21 +298,27 @@ class _PixelHelmBadge extends StatelessWidget {
       ),
       child: Icon(Icons.terminal_rounded, size: 10, color: colors.ink),
     );
+    if (semanticLabel == null) return badge;
+    return Semantics(label: semanticLabel, child: badge);
   }
 }
 
 class _GoldStarMiniBadge extends StatelessWidget {
-  const _GoldStarMiniBadge();
+  const _GoldStarMiniBadge({this.semanticLabel});
+
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    return Container(
+    final badge = Container(
       width: 15,
       height: 15,
       alignment: Alignment.center,
       decoration: BoxDecoration(color: colors.amber, shape: BoxShape.circle),
       child: Icon(Icons.star_rounded, size: 10.5, color: colors.surface),
     );
+    if (semanticLabel == null) return badge;
+    return Semantics(label: semanticLabel, child: badge);
   }
 }

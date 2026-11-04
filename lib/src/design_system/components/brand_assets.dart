@@ -12,12 +12,15 @@ abstract final class BrandAssets {
   /// Set to false to replace with a neutral community badge across the entire app.
   static bool useLocalDevEmblem = true;
 
-  /// Returns the brand logo widget with the specified [size].
-  static Widget logo({double size = 30.0}) {
-    if (useLocalDevEmblem) {
-      return _VnlfDevLogoEmblem(size: size);
+  /// Returns the brand logo widget with the specified [size] and optional [semanticLabel].
+  static Widget logo({double size = 30.0, String? semanticLabel}) {
+    final Widget badge = useLocalDevEmblem
+        ? _VnlfDevLogoEmblem(size: size)
+        : _NeutralLogoPlaceholder(size: size);
+    if (semanticLabel == null) {
+      return badge;
     }
-    return _NeutralLogoPlaceholder(size: size);
+    return Semantics(label: semanticLabel, image: true, child: badge);
   }
 }
 

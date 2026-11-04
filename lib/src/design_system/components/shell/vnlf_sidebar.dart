@@ -22,6 +22,35 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.onProfileTap,
     this.isDrawer = false,
     this.width = VnlfDimensions.leftSidebarWidth,
+    this.destinationLabels = const {},
+    this.destinationSemanticLabels = const {},
+    this.brandTitlePrefix = '',
+    this.brandTitleAccent = '',
+    this.brandLogoSemanticLabel,
+    this.loginLabel = '',
+    this.loginSubtitleLabel = '',
+    this.supportLabel = '',
+    this.supportBadgeText = '',
+    this.supportSemanticLabel,
+    this.feedbackLabel = '',
+    this.feedbackSemanticLabel,
+    this.socialSectionLabel = '',
+    this.facebookBadgeLabel = '',
+    this.facebookSemanticLabel,
+    this.telegramSemanticLabel,
+    this.discordSemanticLabel,
+    this.settingsLabel = '',
+    this.settingsSemanticLabel,
+    this.helpLabel = '',
+    this.helpSemanticLabel,
+    this.loginUtilitySemanticLabel,
+    this.lightThemeTooltip = '',
+    this.darkThemeTooltip = '',
+    this.systemThemeTooltip = '',
+    this.themePickerSemanticLabel,
+    this.profileSemanticLabel,
+    this.collapseSidebarSemanticLabel,
+    this.semanticLabel,
   });
 
   /// Right complementary column width (`304px`) from `DESIGN_REFERENCE.md`.
@@ -34,12 +63,41 @@ class VnlfDesktopSidebar extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final bool isDrawer;
   final double width;
+  final Map<VnlfNavDestination, String> destinationLabels;
+  final Map<VnlfNavDestination, String> destinationSemanticLabels;
+  final String brandTitlePrefix;
+  final String brandTitleAccent;
+  final String? brandLogoSemanticLabel;
+  final String loginLabel;
+  final String loginSubtitleLabel;
+  final String supportLabel;
+  final String supportBadgeText;
+  final String? supportSemanticLabel;
+  final String feedbackLabel;
+  final String? feedbackSemanticLabel;
+  final String socialSectionLabel;
+  final String facebookBadgeLabel;
+  final String? facebookSemanticLabel;
+  final String? telegramSemanticLabel;
+  final String? discordSemanticLabel;
+  final String settingsLabel;
+  final String? settingsSemanticLabel;
+  final String helpLabel;
+  final String? helpSemanticLabel;
+  final String? loginUtilitySemanticLabel;
+  final String lightThemeTooltip;
+  final String darkThemeTooltip;
+  final String systemThemeTooltip;
+  final String? themePickerSemanticLabel;
+  final String? profileSemanticLabel;
+  final String? collapseSidebarSemanticLabel;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return ConstrainedBox(
+    final sidebar = ConstrainedBox(
       constraints: isDrawer
           ? const BoxConstraints(minWidth: 0, maxWidth: double.infinity)
           : BoxConstraints.tightFor(width: width),
@@ -66,7 +124,10 @@ class VnlfDesktopSidebar extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      BrandAssets.logo(size: 30),
+                      BrandAssets.logo(
+                        size: 30,
+                        semanticLabel: brandLogoSemanticLabel,
+                      ),
                       const SizedBox(width: 9),
                       RichText(
                         text: TextSpan(
@@ -74,9 +135,9 @@ class VnlfDesktopSidebar extends StatelessWidget {
                             colors.ink,
                           ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
                           children: [
-                            const TextSpan(text: 'VNLF '),
+                            TextSpan(text: brandTitlePrefix),
                             TextSpan(
-                              text: 'Social',
+                              text: brandTitleAccent,
                               style: TextStyle(
                                 color: colors.brand,
                                 fontWeight: FontWeight.w600,
@@ -91,44 +152,57 @@ class VnlfDesktopSidebar extends StatelessWidget {
                 const SizedBox(height: 18),
 
                 // Login / Profile Prompt Pill
-                InkWell(
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                  onTap: onProfileTap,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 6,
+                Semantics(
+                  button: true,
+                  label:
+                      profileSemanticLabel ??
+                      (loginLabel.isNotEmpty ? loginLabel : null),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(
+                      VnlfDimensions.radiusMd,
                     ),
-                    child: Row(
-                      children: [
-                        const VnlfGuestAvatarBox(size: 34),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Đăng nhập',
-                                style: VnlfTypography.control(
-                                  colors.ink,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                'Để dùng đầy đủ tí...',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: VnlfTypography.meta(colors.muted),
-                              ),
-                            ],
+                    onTap: onProfileTap,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          VnlfGuestAvatarBox(
+                            size: 34,
+                            semanticLabel: profileSemanticLabel,
                           ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 16,
-                          color: colors.muted,
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (loginLabel.isNotEmpty)
+                                  Text(
+                                    loginLabel,
+                                    style: VnlfTypography.control(
+                                      colors.ink,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                if (loginSubtitleLabel.isNotEmpty)
+                                  Text(
+                                    loginSubtitleLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: VnlfTypography.meta(colors.muted),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 16,
+                            color: colors.muted,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -138,7 +212,10 @@ class VnlfDesktopSidebar extends StatelessWidget {
                 for (final dest in VnlfNavDestination.values) ...[
                   SidebarNavTile(
                     icon: dest.icon,
-                    label: dest.label,
+                    label: destinationLabels[dest] ?? '',
+                    semanticLabel:
+                        destinationSemanticLabels[dest] ??
+                        destinationLabels[dest],
                     selected: dest == activeDestination,
                     onTap: () => onDestinationSelected?.call(dest),
                   ),
@@ -146,42 +223,55 @@ class VnlfDesktopSidebar extends StatelessWidget {
                 ],
 
                 // Special support tile
-                SidebarSupportTile(onTap: () {}),
-                const SizedBox(height: 8),
+                if (supportLabel.isNotEmpty || supportBadgeText.isNotEmpty) ...[
+                  SidebarSupportTile(
+                    label: supportLabel,
+                    badgeText: supportBadgeText,
+                    semanticLabel: supportSemanticLabel,
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 8),
+                ],
 
-                // Soft brand pill: "Góp ý & báo lỗi"
-                Container(
-                  decoration: BoxDecoration(
-                    color: colors.brandSoft,
-                    borderRadius: BorderRadius.circular(
-                      VnlfDimensions.radiusMd,
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.rate_review_outlined,
-                        size: 17,
-                        color: colors.brand,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Góp ý & báo lỗi',
-                          style: VnlfTypography.control(
-                            colors.brand,
-                            fontWeight: FontWeight.w700,
-                          ),
+                // Soft brand pill: feedback & bug report
+                if (feedbackLabel.isNotEmpty) ...[
+                  Semantics(
+                    button: true,
+                    label: feedbackSemanticLabel ?? feedbackLabel,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colors.brandSoft,
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusMd,
                         ),
                       ),
-                    ],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.rate_review_outlined,
+                            size: 17,
+                            color: colors.brand,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              feedbackLabel,
+                              style: VnlfTypography.control(
+                                colors.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                ],
                 Divider(color: colors.line, height: 1),
                 const SizedBox(height: 12),
 
@@ -191,18 +281,34 @@ class VnlfDesktopSidebar extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'VNLF trên các mạng xã hội khác',
-                        style: VnlfTypography.meta(colors.muted),
-                      ),
-                      const SizedBox(height: 10),
+                      if (socialSectionLabel.isNotEmpty) ...[
+                        Text(
+                          socialSectionLabel,
+                          style: VnlfTypography.meta(colors.muted),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                       Row(
-                        children: const [
-                          SocialCircleBadge(label: 'f'),
-                          SizedBox(width: 8),
-                          SocialCircleBadge(icon: Icons.send_rounded),
-                          SizedBox(width: 8),
-                          SocialCircleBadge(icon: Icons.sports_esports_rounded),
+                        children: [
+                          SocialCircleBadge(
+                            label: facebookBadgeLabel.isNotEmpty
+                                ? facebookBadgeLabel
+                                : null,
+                            icon: facebookBadgeLabel.isEmpty
+                                ? Icons.public_rounded
+                                : null,
+                            semanticLabel: facebookSemanticLabel,
+                          ),
+                          const SizedBox(width: 8),
+                          SocialCircleBadge(
+                            icon: Icons.send_rounded,
+                            semanticLabel: telegramSemanticLabel,
+                          ),
+                          const SizedBox(width: 8),
+                          SocialCircleBadge(
+                            icon: Icons.sports_esports_rounded,
+                            semanticLabel: discordSemanticLabel,
+                          ),
                         ],
                       ),
                     ],
@@ -212,25 +318,35 @@ class VnlfDesktopSidebar extends StatelessWidget {
                 const Spacer(),
 
                 // Utility Bottom Links
-                const SidebarUtilityTile(
-                  icon: Icons.settings_outlined,
-                  label: 'Cài đặt',
-                ),
-                const SidebarUtilityTile(
-                  icon: Icons.help_outline_rounded,
-                  label: 'Trợ giúp',
-                ),
-                SidebarUtilityTile(
-                  icon: Icons.login_rounded,
-                  label: 'Đăng nhập',
-                  onTap: onProfileTap,
-                ),
+                if (settingsLabel.isNotEmpty)
+                  SidebarUtilityTile(
+                    icon: Icons.settings_outlined,
+                    label: settingsLabel,
+                    semanticLabel: settingsSemanticLabel,
+                  ),
+                if (helpLabel.isNotEmpty)
+                  SidebarUtilityTile(
+                    icon: Icons.help_outline_rounded,
+                    label: helpLabel,
+                    semanticLabel: helpSemanticLabel,
+                  ),
+                if (loginLabel.isNotEmpty)
+                  SidebarUtilityTile(
+                    icon: Icons.login_rounded,
+                    label: loginLabel,
+                    semanticLabel: loginUtilitySemanticLabel,
+                    onTap: onProfileTap,
+                  ),
                 const SizedBox(height: 8),
 
                 // 3-State Theme Picker Segment Control
                 VnlfThemeSegmentPicker(
                   themeMode: themeMode,
                   onThemeModeChanged: onThemeModeChanged,
+                  lightTooltip: lightThemeTooltip,
+                  darkTooltip: darkThemeTooltip,
+                  systemTooltip: systemThemeTooltip,
+                  semanticLabel: themePickerSemanticLabel,
                 ),
               ],
             ),
@@ -239,25 +355,36 @@ class VnlfDesktopSidebar extends StatelessWidget {
             Positioned(
               top: 26,
               right: -11,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.line),
-                  boxShadow: VnlfDimensions.subtleShadow(isDark: colors.isDark),
-                ),
-                child: Icon(
-                  Icons.chevron_left_rounded,
-                  size: 14,
-                  color: colors.muted,
+              child: Semantics(
+                button: true,
+                label: collapseSidebarSemanticLabel,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.line),
+                    boxShadow: VnlfDimensions.subtleShadow(
+                      isDark: colors.isDark,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.chevron_left_rounded,
+                    size: 14,
+                    color: colors.muted,
+                  ),
                 ),
               ),
             ),
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return sidebar;
+    }
+    return Semantics(label: semanticLabel, container: true, child: sidebar);
   }
 }
 
@@ -268,16 +395,23 @@ class VnlfDesktopRightSidebar extends StatelessWidget {
     super.key,
     required this.child,
     this.width = VnlfDimensions.rightSidebarWidth,
+    this.semanticLabel,
   });
 
   final Widget child;
   final double width;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
+    final column = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: width),
       child: SizedBox(width: width, child: child),
     );
+
+    if (semanticLabel == null) {
+      return column;
+    }
+    return Semantics(label: semanticLabel, container: true, child: column);
   }
 }

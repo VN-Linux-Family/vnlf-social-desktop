@@ -20,6 +20,7 @@ class VnlfStateCard extends StatelessWidget {
     this.compact = false,
     this.embedded = false,
     this.semanticLabel,
+    this.actionSemanticLabel,
   });
 
   final IconData icon;
@@ -31,6 +32,7 @@ class VnlfStateCard extends StatelessWidget {
   final bool compact;
   final bool embedded;
   final String? semanticLabel;
+  final String? actionSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -57,57 +59,69 @@ class VnlfStateCard extends StatelessWidget {
           alignment: Alignment.center,
           child: Icon(icon, size: compact ? 18 : 22, color: accentColor),
         ),
-        SizedBox(height: compact ? 10 : 12),
-        Text(
-          title,
-          softWrap: true,
-          textAlign: compact ? TextAlign.start : TextAlign.center,
-          style: compact
-              ? VnlfTypography.h3(colors.ink)
-              : VnlfTypography.h2(colors.ink),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          message,
-          softWrap: true,
-          textAlign: compact ? TextAlign.start : TextAlign.center,
-          style: VnlfTypography.body(colors.muted),
-        ),
+        if (title.isNotEmpty) ...[
+          SizedBox(height: compact ? 10 : 12),
+          Text(
+            title,
+            softWrap: true,
+            textAlign: compact ? TextAlign.start : TextAlign.center,
+            style: compact
+                ? VnlfTypography.h3(colors.ink)
+                : VnlfTypography.h2(colors.ink),
+          ),
+        ],
+        if (message.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            message,
+            softWrap: true,
+            textAlign: compact ? TextAlign.start : TextAlign.center,
+            style: VnlfTypography.body(colors.muted),
+          ),
+        ],
         if (onAction != null &&
             actionLabel != null &&
             actionLabel!.isNotEmpty) ...[
           SizedBox(height: compact ? 12 : 16),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-              onTap: onAction,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: compact ? 12 : 16,
-                  vertical: compact ? 7 : 9,
-                ),
-                decoration: BoxDecoration(
-                  color: isError ? colors.surfaceSoft : colors.brandSoft,
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.refresh_rounded, size: 16, color: accentColor),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        actionLabel!,
-                        softWrap: true,
-                        style: VnlfTypography.control(
-                          accentColor,
-                          fontWeight: FontWeight.w700,
+          Semantics(
+            button: true,
+            label: actionSemanticLabel ?? actionLabel,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+                onTap: onAction,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 12 : 16,
+                    vertical: compact ? 7 : 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isError ? colors.surfaceSoft : colors.brandSoft,
+                    borderRadius: BorderRadius.circular(
+                      VnlfDimensions.radiusMd,
+                    ),
+                    border: Border.all(
+                      color: accentColor.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.refresh_rounded, size: 16, color: accentColor),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          actionLabel!,
+                          softWrap: true,
+                          style: VnlfTypography.control(
+                            accentColor,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -132,28 +146,35 @@ class VnlfStateCard extends StatelessWidget {
             child: content,
           );
 
-    return Semantics(
-      label: semanticLabel ?? '$title. $message',
-      container: true,
-      child: body,
-    );
+    final combinedLabel = [
+      if (title.isNotEmpty) title,
+      if (message.isNotEmpty) message,
+    ].join('. ');
+    final effectiveSemantics =
+        semanticLabel ?? (combinedLabel.isNotEmpty ? combinedLabel : null);
+
+    return Semantics(label: effectiveSemantics, container: true, child: body);
   }
 }
 
-/// Empty state component for the community feed (`Bảng tin`).
+/// Empty state component for the community feed.
 class VnlfFeedEmptyState extends StatelessWidget {
   const VnlfFeedEmptyState({
     super.key,
-    this.title = 'Chưa có bài viết nào',
-    this.message = 'Bảng tin hiện chưa có bài viết trong mục này. Hãy thử chuyển sang mục khác hoặc làm mới.',
-    this.actionLabel = 'Làm mới',
+    this.title = '',
+    this.message = '',
+    this.actionLabel,
     this.onRetry,
+    this.semanticLabel,
+    this.actionSemanticLabel,
   });
 
   final String title;
   final String message;
   final String? actionLabel;
   final VoidCallback? onRetry;
+  final String? semanticLabel;
+  final String? actionSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -164,25 +185,30 @@ class VnlfFeedEmptyState extends StatelessWidget {
       actionLabel: actionLabel,
       onAction: onRetry,
       isError: false,
-      semanticLabel: 'Bảng tin trống: $title',
+      semanticLabel: semanticLabel,
+      actionSemanticLabel: actionSemanticLabel,
     );
   }
 }
 
-/// Error state component for the community feed (`Bảng tin`).
+/// Error state component for the community feed.
 class VnlfFeedErrorState extends StatelessWidget {
   const VnlfFeedErrorState({
     super.key,
-    this.title = 'Không thể tải bảng tin',
-    this.message = 'Đã xảy ra sự cố khi tải danh sách bài viết. Vui lòng kiểm tra kết nối và thử lại.',
-    this.retryLabel = 'Thử lại',
+    this.title = '',
+    this.message = '',
+    this.retryLabel = '',
     this.onRetry,
+    this.semanticLabel,
+    this.actionSemanticLabel,
   });
 
   final String title;
   final String message;
   final String retryLabel;
   final VoidCallback? onRetry;
+  final String? semanticLabel;
+  final String? actionSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -193,30 +219,36 @@ class VnlfFeedErrorState extends StatelessWidget {
       actionLabel: retryLabel,
       onAction: onRetry,
       isError: true,
-      semanticLabel: 'Lỗi bảng tin: $title',
+      semanticLabel: semanticLabel,
+      actionSemanticLabel: actionSemanticLabel,
     );
   }
 }
 
-/// Empty state component for the `304px` right-sidebar weekly leaderboard
-/// (`Xếp hạng tuần`).
+/// Empty state component for the `304px` right-sidebar weekly leaderboard.
 class VnlfLeaderboardEmptyState extends StatelessWidget {
   const VnlfLeaderboardEmptyState({
     super.key,
-    this.title = 'Chưa có dữ liệu xếp hạng',
-    this.message = 'Bảng xếp hạng tuần này đang được cập nhật.',
-    this.actionLabel = 'Làm mới',
+    this.headerTitle = '',
+    this.title = '',
+    this.message = '',
+    this.actionLabel,
     this.onRetry,
     this.width = VnlfDimensions.rightSidebarWidth,
     this.embedded = false,
+    this.semanticLabel,
+    this.actionSemanticLabel,
   });
 
+  final String headerTitle;
   final String title;
   final String message;
   final String? actionLabel;
   final VoidCallback? onRetry;
   final double width;
   final bool embedded;
+  final String? semanticLabel;
+  final String? actionSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -229,36 +261,46 @@ class VnlfLeaderboardEmptyState extends StatelessWidget {
       isError: false,
       compact: true,
       embedded: true,
-      semanticLabel: 'Bảng xếp hạng tuần trống: $title',
+      semanticLabel: semanticLabel,
+      actionSemanticLabel: actionSemanticLabel,
     );
 
     if (embedded) {
       return inner;
     }
 
-    return _LeaderboardStateShell(width: width, child: inner);
+    return _LeaderboardStateShell(
+      width: width,
+      headerTitle: headerTitle,
+      child: inner,
+    );
   }
 }
 
-/// Error state component for the `304px` right-sidebar weekly leaderboard
-/// (`Xếp hạng tuần`).
+/// Error state component for the `304px` right-sidebar weekly leaderboard.
 class VnlfLeaderboardErrorState extends StatelessWidget {
   const VnlfLeaderboardErrorState({
     super.key,
-    this.title = 'Không thể tải bảng xếp hạng',
-    this.message = 'Đã xảy ra sự cố khi tải dữ liệu xếp hạng tuần.',
-    this.retryLabel = 'Thử lại',
+    this.headerTitle = '',
+    this.title = '',
+    this.message = '',
+    this.retryLabel = '',
     this.onRetry,
     this.width = VnlfDimensions.rightSidebarWidth,
     this.embedded = false,
+    this.semanticLabel,
+    this.actionSemanticLabel,
   });
 
+  final String headerTitle;
   final String title;
   final String message;
   final String retryLabel;
   final VoidCallback? onRetry;
   final double width;
   final bool embedded;
+  final String? semanticLabel;
+  final String? actionSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -271,21 +313,31 @@ class VnlfLeaderboardErrorState extends StatelessWidget {
       isError: true,
       compact: true,
       embedded: true,
-      semanticLabel: 'Lỗi bảng xếp hạng tuần: $title',
+      semanticLabel: semanticLabel,
+      actionSemanticLabel: actionSemanticLabel,
     );
 
     if (embedded) {
       return inner;
     }
 
-    return _LeaderboardStateShell(width: width, child: inner);
+    return _LeaderboardStateShell(
+      width: width,
+      headerTitle: headerTitle,
+      child: inner,
+    );
   }
 }
 
 class _LeaderboardStateShell extends StatelessWidget {
-  const _LeaderboardStateShell({required this.width, required this.child});
+  const _LeaderboardStateShell({
+    required this.width,
+    required this.headerTitle,
+    required this.child,
+  });
 
   final double width;
+  final String headerTitle;
   final Widget child;
 
   @override
@@ -306,29 +358,31 @@ class _LeaderboardStateShell extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 1.5),
-                    child: Icon(
-                      Icons.emoji_events_outlined,
-                      size: 17,
-                      color: colors.ink,
+              if (headerTitle.isNotEmpty) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1.5),
+                      child: Icon(
+                        Icons.emoji_events_outlined,
+                        size: 17,
+                        color: colors.ink,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      'Xếp hạng tuần',
-                      softWrap: true,
-                      style: VnlfTypography.h3(colors.ink)
-                          .copyWith(fontWeight: FontWeight.w700),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        headerTitle,
+                        softWrap: true,
+                        style: VnlfTypography.h3(colors.ink)
+                            .copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
               child,
             ],
           ),

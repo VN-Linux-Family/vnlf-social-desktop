@@ -6,16 +6,26 @@ import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 
 /// Dark forest-green terminal code block matching Post 2 in `reference_feed_desktop.png`,
-/// featuring a floating top-right "Sao chép" pill and bottom scrollbar track.
+/// featuring a floating top-right copy pill and bottom scrollbar track.
 class VnlfCodeBlock extends StatefulWidget {
   const VnlfCodeBlock({
     super.key,
     required this.code,
     this.showHorizontalScrollbar = true,
+    this.copyLabel = '',
+    this.copiedLabel = '',
+    this.semanticLabel,
+    this.copyButtonSemanticLabel,
+    this.copiedButtonSemanticLabel,
   });
 
   final String code;
   final bool showHorizontalScrollbar;
+  final String copyLabel;
+  final String copiedLabel;
+  final String? semanticLabel;
+  final String? copyButtonSemanticLabel;
+  final String? copiedButtonSemanticLabel;
 
   @override
   State<VnlfCodeBlock> createState() => _VnlfCodeBlockState();
@@ -36,8 +46,12 @@ class _VnlfCodeBlockState extends State<VnlfCodeBlock> {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final activeCopyText = _copied ? widget.copiedLabel : widget.copyLabel;
+    final activeCopySemantics = _copied
+        ? (widget.copiedButtonSemanticLabel ?? widget.copiedLabel)
+        : (widget.copyButtonSemanticLabel ?? widget.copyLabel);
 
-    return Container(
+    final block = Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: colors.codeBlockBg,
@@ -96,41 +110,59 @@ class _VnlfCodeBlockState extends State<VnlfCodeBlock> {
                 ),
             ],
           ),
-          Positioned(
-            top: 8,
-            right: 10,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-                onTap: _handleCopy,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.codeBlockPillBg.withValues(alpha: 0.92),
+          if (activeCopyText.isNotEmpty)
+            Positioned(
+              top: 8,
+              right: 10,
+              child: Semantics(
+                button: true,
+                label: activeCopySemantics.isNotEmpty
+                    ? activeCopySemantics
+                    : null,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(
                       VnlfDimensions.radiusSm,
                     ),
-                    border: Border.all(
-                      color: colors.codeBlockText.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  child: Text(
-                    _copied ? 'Đã chép' : 'Sao chép',
-                    style: VnlfTypography.caption(
-                      colors.codeBlockText,
-                      fontWeight: FontWeight.w500,
+                    onTap: _handleCopy,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.codeBlockPillBg.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusSm,
+                        ),
+                        border: Border.all(
+                          color: colors.codeBlockText.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Text(
+                        activeCopyText,
+                        style: VnlfTypography.caption(
+                          colors.codeBlockText,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
+    );
+
+    if (widget.semanticLabel == null) {
+      return block;
+    }
+    return Semantics(
+      label: widget.semanticLabel,
+      container: true,
+      child: block,
     );
   }
 }

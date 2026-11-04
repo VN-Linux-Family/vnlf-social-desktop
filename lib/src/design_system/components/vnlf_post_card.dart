@@ -18,45 +18,69 @@ export 'vnlf_skeleton.dart'
         VnlfPostCardSkeleton;
 export 'vnlf_state_cards.dart' show VnlfFeedEmptyState, VnlfFeedErrorState;
 
-/// Composer prompt card ("Hôm nay bạn muốn chia sẻ điều gì?") at the top of the feed.
+/// Composer prompt card at the top of the feed.
 class VnlfComposerPromptCard extends StatelessWidget {
-  const VnlfComposerPromptCard({super.key, this.onTap});
+  const VnlfComposerPromptCard({
+    super.key,
+    this.promptText = '',
+    this.onTap,
+    this.semanticLabel,
+    this.avatarSemanticLabel,
+    this.addMediaSemanticLabel,
+  });
 
+  final String promptText;
   final VoidCallback? onTap;
+  final String? semanticLabel;
+  final String? avatarSemanticLabel;
+  final String? addMediaSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final effectiveSemantics =
+        semanticLabel ?? (promptText.isNotEmpty ? promptText : null);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-        border: Border.all(color: colors.line),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+    return Semantics(
+      button: true,
+      label: effectiveSemantics,
+      child: Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            child: Row(
-              children: [
-                const VnlfGuestAvatarBox(size: 32, isCircle: true),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Hôm nay bạn muốn chia sẻ điều gì?',
-                    style: VnlfTypography.body(colors.muted),
+          border: Border.all(color: colors.line),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              child: Row(
+                children: [
+                  VnlfGuestAvatarBox(
+                    size: 32,
+                    isCircle: true,
+                    semanticLabel: avatarSemanticLabel,
                   ),
-                ),
-                Icon(
-                  Icons.add_photo_alternate_outlined,
-                  size: 20,
-                  color: colors.brand,
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      promptText,
+                      style: VnlfTypography.body(colors.muted),
+                    ),
+                  ),
+                  Semantics(
+                    label: addMediaSemanticLabel,
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 20,
+                      color: colors.brand,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -78,6 +102,18 @@ class VnlfPostCard extends StatelessWidget {
     this.onBookmarkToggle,
     this.onAuthorTap,
     this.showBottomActions = true,
+    this.semanticLabel,
+    this.authorAvatarSemanticLabel,
+    this.moreOptionsSemanticLabel,
+    this.codeCopyLabel = '',
+    this.codeCopiedLabel = '',
+    this.codeBlockSemanticLabel,
+    this.voteSemanticLabel,
+    this.upvoteSemanticLabel,
+    this.downvoteSemanticLabel,
+    this.commentSemanticLabel,
+    this.shareSemanticLabel,
+    this.bookmarkSemanticLabel,
   });
 
   final PostData post;
@@ -86,12 +122,24 @@ class VnlfPostCard extends StatelessWidget {
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
   final bool showBottomActions;
+  final String? semanticLabel;
+  final String? authorAvatarSemanticLabel;
+  final String? moreOptionsSemanticLabel;
+  final String codeCopyLabel;
+  final String codeCopiedLabel;
+  final String? codeBlockSemanticLabel;
+  final String? voteSemanticLabel;
+  final String? upvoteSemanticLabel;
+  final String? downvoteSemanticLabel;
+  final String? commentSemanticLabel;
+  final String? shareSemanticLabel;
+  final String? bookmarkSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final card = Container(
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
@@ -103,7 +151,11 @@ class VnlfPostCard extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: onAuthorTap,
-            child: VnlfAvatar(author: post.author, size: 40),
+            child: VnlfAvatar(
+              author: post.author,
+              size: 40,
+              semanticLabel: authorAvatarSemanticLabel,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -126,10 +178,13 @@ class VnlfPostCard extends StatelessWidget {
                       style: VnlfTypography.meta(colors.textSubtle),
                     ),
                     const SizedBox(width: 6),
-                    Icon(
-                      Icons.more_horiz_rounded,
-                      size: 16,
-                      color: colors.muted,
+                    Semantics(
+                      label: moreOptionsSemanticLabel,
+                      child: Icon(
+                        Icons.more_horiz_rounded,
+                        size: 16,
+                        color: colors.muted,
+                      ),
                     ),
                   ],
                 ),
@@ -154,11 +209,22 @@ class VnlfPostCard extends StatelessWidget {
                       VnlfImagePlaceholder(
                         aspectRatio: imagePlaceholder.aspectRatio,
                         label: imagePlaceholder.label,
+                        semanticLabel: imagePlaceholder.semanticLabel,
                       ),
                     final CodeBlockAttachment codeBlock => VnlfCodeBlock(
                       code: codeBlock.code,
                       showHorizontalScrollbar:
                           codeBlock.showHorizontalScrollbar,
+                      copyLabel: codeBlock.copyLabel.isNotEmpty
+                          ? codeBlock.copyLabel
+                          : codeCopyLabel,
+                      copiedLabel: codeBlock.copiedLabel.isNotEmpty
+                          ? codeBlock.copiedLabel
+                          : codeCopiedLabel,
+                      semanticLabel:
+                          codeBlock.semanticLabel ?? codeBlockSemanticLabel,
+                      copyButtonSemanticLabel:
+                          codeBlock.copyButtonSemanticLabel,
                     ),
                     final ProjectPreviewAttachment projectPreview =>
                       VnlfProjectPreviewCard(project: projectPreview.project),
@@ -202,6 +268,12 @@ class VnlfPostCard extends StatelessWidget {
                     onVoteChanged: onVoteChanged,
                     onCommentTap: onCommentTap,
                     onBookmarkToggle: onBookmarkToggle,
+                    voteSemanticLabel: voteSemanticLabel,
+                    upvoteSemanticLabel: upvoteSemanticLabel,
+                    downvoteSemanticLabel: downvoteSemanticLabel,
+                    commentSemanticLabel: commentSemanticLabel,
+                    shareSemanticLabel: shareSemanticLabel,
+                    bookmarkSemanticLabel: bookmarkSemanticLabel,
                   ),
                 ],
               ],
@@ -210,5 +282,10 @@ class VnlfPostCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return card;
+    }
+    return Semantics(label: semanticLabel, container: true, child: card);
   }
 }

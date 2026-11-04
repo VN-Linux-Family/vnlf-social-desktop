@@ -16,14 +16,13 @@ export 'shell/vnlf_sidebar.dart';
 
 /// Primary navigation destinations in the VNLF app shell.
 enum VnlfNavDestination {
-  feed('Bảng tin', Icons.grid_view_rounded),
-  explore('Khám phá', Icons.explore_outlined),
-  messages('Tin nhắn', Icons.chat_bubble_outline_rounded),
-  voice('Voice', Icons.mic_none_rounded),
-  projects('Dự án', Icons.workspaces_outline);
+  feed(Icons.grid_view_rounded),
+  explore(Icons.explore_outlined),
+  messages(Icons.chat_bubble_outline_rounded),
+  voice(Icons.mic_none_rounded),
+  projects(Icons.workspaces_outline);
 
-  const VnlfNavDestination(this.label, this.icon);
-  final String label;
+  const VnlfNavDestination(this.icon);
   final IconData icon;
 }
 
@@ -42,6 +41,46 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.themeMode = ThemeMode.light,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.destinationLabels = const {},
+    this.destinationSemanticLabels = const {},
+    this.brandTitlePrefix = '',
+    this.brandTitleAccent = '',
+    this.brandLogoSemanticLabel,
+    this.loginLabel = '',
+    this.loginSubtitleLabel = '',
+    this.supportLabel = '',
+    this.supportBadgeText = '',
+    this.supportSemanticLabel,
+    this.feedbackLabel = '',
+    this.feedbackSemanticLabel,
+    this.socialSectionLabel = '',
+    this.facebookBadgeLabel = '',
+    this.facebookSemanticLabel,
+    this.telegramSemanticLabel,
+    this.discordSemanticLabel,
+    this.settingsLabel = '',
+    this.settingsSemanticLabel,
+    this.helpLabel = '',
+    this.helpSemanticLabel,
+    this.loginUtilitySemanticLabel,
+    this.lightThemeTooltip = '',
+    this.darkThemeTooltip = '',
+    this.systemThemeTooltip = '',
+    this.themePickerSemanticLabel,
+    this.railThemeToggleTooltip = '',
+    this.railThemeToggleSemanticLabel,
+    this.openDrawerTooltip = '',
+    this.openDrawerSemanticLabel,
+    this.searchSemanticLabel = '',
+    this.notificationsSemanticLabel = '',
+    this.profileSemanticLabel,
+    this.collapseSidebarSemanticLabel,
+    this.leftSidebarSemanticLabel,
+    this.rightSidebarSemanticLabel,
+    this.tabletRailSemanticLabel,
+    this.mobileHeaderSemanticLabel,
+    this.mobileBottomNavSemanticLabel,
+    this.semanticLabel,
   });
 
   final Widget centerChild;
@@ -51,12 +90,52 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+  final Map<VnlfNavDestination, String> destinationLabels;
+  final Map<VnlfNavDestination, String> destinationSemanticLabels;
+  final String brandTitlePrefix;
+  final String brandTitleAccent;
+  final String? brandLogoSemanticLabel;
+  final String loginLabel;
+  final String loginSubtitleLabel;
+  final String supportLabel;
+  final String supportBadgeText;
+  final String? supportSemanticLabel;
+  final String feedbackLabel;
+  final String? feedbackSemanticLabel;
+  final String socialSectionLabel;
+  final String facebookBadgeLabel;
+  final String? facebookSemanticLabel;
+  final String? telegramSemanticLabel;
+  final String? discordSemanticLabel;
+  final String settingsLabel;
+  final String? settingsSemanticLabel;
+  final String helpLabel;
+  final String? helpSemanticLabel;
+  final String? loginUtilitySemanticLabel;
+  final String lightThemeTooltip;
+  final String darkThemeTooltip;
+  final String systemThemeTooltip;
+  final String? themePickerSemanticLabel;
+  final String railThemeToggleTooltip;
+  final String? railThemeToggleSemanticLabel;
+  final String openDrawerTooltip;
+  final String? openDrawerSemanticLabel;
+  final String searchSemanticLabel;
+  final String notificationsSemanticLabel;
+  final String? profileSemanticLabel;
+  final String? collapseSidebarSemanticLabel;
+  final String? leftSidebarSemanticLabel;
+  final String? rightSidebarSemanticLabel;
+  final String? tabletRailSemanticLabel;
+  final String? mobileHeaderSemanticLabel;
+  final String? mobileBottomNavSemanticLabel;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return LayoutBuilder(
+    final shell = LayoutBuilder(
       builder: (context, constraints) {
         final viewport = VnlfViewportSize.fromWidth(constraints.maxWidth);
 
@@ -72,6 +151,35 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   themeMode: themeMode,
                   onThemeModeChanged: onThemeModeChanged,
                   onProfileTap: onProfileTap,
+                  destinationLabels: destinationLabels,
+                  destinationSemanticLabels: destinationSemanticLabels,
+                  brandTitlePrefix: brandTitlePrefix,
+                  brandTitleAccent: brandTitleAccent,
+                  brandLogoSemanticLabel: brandLogoSemanticLabel,
+                  loginLabel: loginLabel,
+                  loginSubtitleLabel: loginSubtitleLabel,
+                  supportLabel: supportLabel,
+                  supportBadgeText: supportBadgeText,
+                  supportSemanticLabel: supportSemanticLabel,
+                  feedbackLabel: feedbackLabel,
+                  feedbackSemanticLabel: feedbackSemanticLabel,
+                  socialSectionLabel: socialSectionLabel,
+                  facebookBadgeLabel: facebookBadgeLabel,
+                  facebookSemanticLabel: facebookSemanticLabel,
+                  telegramSemanticLabel: telegramSemanticLabel,
+                  discordSemanticLabel: discordSemanticLabel,
+                  settingsLabel: settingsLabel,
+                  settingsSemanticLabel: settingsSemanticLabel,
+                  helpLabel: helpLabel,
+                  helpSemanticLabel: helpSemanticLabel,
+                  loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+                  lightThemeTooltip: lightThemeTooltip,
+                  darkThemeTooltip: darkThemeTooltip,
+                  systemThemeTooltip: systemThemeTooltip,
+                  themePickerSemanticLabel: themePickerSemanticLabel,
+                  profileSemanticLabel: profileSemanticLabel,
+                  collapseSidebarSemanticLabel: collapseSidebarSemanticLabel,
+                  semanticLabel: leftSidebarSemanticLabel,
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -97,6 +205,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                               const SizedBox(width: 28),
                               VnlfDesktopRightSidebar(
                                 width: VnlfDimensions.rightSidebarWidth,
+                                semanticLabel: rightSidebarSemanticLabel,
                                 child: rightSidebarChild!,
                               ),
                             ],
@@ -120,6 +229,13 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   themeMode: themeMode,
                   onThemeModeChanged: onThemeModeChanged,
                   onProfileTap: onProfileTap,
+                  destinationLabels: destinationLabels,
+                  destinationSemanticLabels: destinationSemanticLabels,
+                  brandLogoSemanticLabel: brandLogoSemanticLabel,
+                  themeToggleTooltip: railThemeToggleTooltip,
+                  themeToggleSemanticLabel: railThemeToggleSemanticLabel,
+                  profileSemanticLabel: profileSemanticLabel,
+                  semanticLabel: tabletRailSemanticLabel,
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -161,13 +277,52 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
                     isDrawer: true,
+                    destinationLabels: destinationLabels,
+                    destinationSemanticLabels: destinationSemanticLabels,
+                    brandTitlePrefix: brandTitlePrefix,
+                    brandTitleAccent: brandTitleAccent,
+                    brandLogoSemanticLabel: brandLogoSemanticLabel,
+                    loginLabel: loginLabel,
+                    loginSubtitleLabel: loginSubtitleLabel,
+                    supportLabel: supportLabel,
+                    supportBadgeText: supportBadgeText,
+                    supportSemanticLabel: supportSemanticLabel,
+                    feedbackLabel: feedbackLabel,
+                    feedbackSemanticLabel: feedbackSemanticLabel,
+                    socialSectionLabel: socialSectionLabel,
+                    facebookBadgeLabel: facebookBadgeLabel,
+                    facebookSemanticLabel: facebookSemanticLabel,
+                    telegramSemanticLabel: telegramSemanticLabel,
+                    discordSemanticLabel: discordSemanticLabel,
+                    settingsLabel: settingsLabel,
+                    settingsSemanticLabel: settingsSemanticLabel,
+                    helpLabel: helpLabel,
+                    helpSemanticLabel: helpSemanticLabel,
+                    loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+                    lightThemeTooltip: lightThemeTooltip,
+                    darkThemeTooltip: darkThemeTooltip,
+                    systemThemeTooltip: systemThemeTooltip,
+                    themePickerSemanticLabel: themePickerSemanticLabel,
+                    profileSemanticLabel: profileSemanticLabel,
+                    semanticLabel: leftSidebarSemanticLabel,
                   ),
                 ),
               ),
             ),
             body: Column(
               children: [
-                VnlfMobileStickyHeader(onProfileTap: onProfileTap),
+                VnlfMobileStickyHeader(
+                  onProfileTap: onProfileTap,
+                  openDrawerTooltip: openDrawerTooltip,
+                  openDrawerSemanticLabel: openDrawerSemanticLabel,
+                  brandTitlePrefix: brandTitlePrefix,
+                  brandTitleAccent: brandTitleAccent,
+                  brandLogoSemanticLabel: brandLogoSemanticLabel,
+                  searchSemanticLabel: searchSemanticLabel,
+                  notificationsSemanticLabel: notificationsSemanticLabel,
+                  profileSemanticLabel: profileSemanticLabel,
+                  semanticLabel: mobileHeaderSemanticLabel,
+                ),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
@@ -179,32 +334,44 @@ class VnlfAdaptiveShell extends StatelessWidget {
             bottomNavigationBar: VnlfMobileBottomNav(
               activeDestination: activeDestination,
               onDestinationSelected: onDestinationSelected,
+              destinationLabels: destinationLabels,
+              destinationSemanticLabels: destinationSemanticLabels,
+              semanticLabel: mobileBottomNavSemanticLabel,
             ),
           ),
         };
       },
     );
+
+    if (semanticLabel == null) {
+      return shell;
+    }
+    return Semantics(label: semanticLabel, container: true, child: shell);
   }
 }
 
-/// Feed Tab Bar (`Mới nhất`, `Được chú ý`, `Article`, `Đang theo dõi`) matching `reference_feed_desktop.png`.
+/// Feed Tab Bar matching `reference_feed_desktop.png`.
 class VnlfFeedTabBar extends StatelessWidget {
   const VnlfFeedTabBar({
     super.key,
     required this.tabs,
     required this.selectedIndex,
     this.onTabSelected,
+    this.semanticLabel,
+    this.tabSemanticLabels,
   });
 
   final List<String> tabs;
   final int selectedIndex;
   final ValueChanged<int>? onTabSelected;
+  final String? semanticLabel;
+  final List<String>? tabSemanticLabels;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final bar = Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.line)),
       ),
@@ -215,27 +382,38 @@ class VnlfFeedTabBar extends StatelessWidget {
             for (var i = 0; i < tabs.length; i++)
               Padding(
                 padding: const EdgeInsets.only(right: 22),
-                child: InkWell(
-                  onTap: onTabSelected == null ? null : () => onTabSelected!(i),
-                  child: Container(
-                    padding: const EdgeInsets.only(top: 12, bottom: 10),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: i == selectedIndex
-                              ? colors.ink
-                              : Colors.transparent,
-                          width: 2,
+                child: Semantics(
+                  button: true,
+                  selected: i == selectedIndex,
+                  label:
+                      (tabSemanticLabels != null &&
+                          i < tabSemanticLabels!.length)
+                      ? tabSemanticLabels![i]
+                      : tabs[i],
+                  child: InkWell(
+                    onTap: onTabSelected == null
+                        ? null
+                        : () => onTabSelected!(i),
+                    child: Container(
+                      padding: const EdgeInsets.only(top: 12, bottom: 10),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: i == selectedIndex
+                                ? colors.ink
+                                : Colors.transparent,
+                            width: 2,
+                          ),
                         ),
                       ),
-                    ),
-                    child: Text(
-                      tabs[i],
-                      style: VnlfTypography.control(
-                        i == selectedIndex ? colors.ink : colors.muted,
-                        fontWeight: i == selectedIndex
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                      child: Text(
+                        tabs[i],
+                        style: VnlfTypography.control(
+                          i == selectedIndex ? colors.ink : colors.muted,
+                          fontWeight: i == selectedIndex
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -245,5 +423,10 @@ class VnlfFeedTabBar extends StatelessWidget {
         ),
       ),
     );
+
+    if (semanticLabel == null) {
+      return bar;
+    }
+    return Semantics(label: semanticLabel, container: true, child: bar);
   }
 }

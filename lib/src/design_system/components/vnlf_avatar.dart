@@ -8,10 +8,18 @@ import '../tokens/vnlf_typography.dart';
 /// Renders a user avatar with optional neutral generic ring frame
 /// and fallback initials / icon. Zero network calls or bundled third-party photos.
 class VnlfAvatar extends StatelessWidget {
-  const VnlfAvatar({super.key, required this.author, this.size = 40.0});
+  const VnlfAvatar({
+    super.key,
+    required this.author,
+    this.size = 40.0,
+    this.fallbackInitial = '',
+    this.semanticLabel,
+  });
 
   final AuthorData author;
   final double size;
+  final String fallbackInitial;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +28,7 @@ class VnlfAvatar extends StatelessWidget {
 
     final initial = author.displayName.isNotEmpty
         ? author.displayName.characters.first.toUpperCase()
-        : 'U';
+        : fallbackInitial;
 
     final coreAvatar = Container(
       width: size,
@@ -40,20 +48,23 @@ class VnlfAvatar extends StatelessWidget {
       ),
     );
 
-    if (frame == AvatarFrameType.ring) {
-      return Container(
-        width: size + 6,
-        height: size + 6,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: colors.brand, width: 1.5),
-        ),
-        child: coreAvatar,
-      );
-    }
+    final Widget avatarWidget = frame == AvatarFrameType.ring
+        ? Container(
+            width: size + 6,
+            height: size + 6,
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.brand, width: 1.5),
+            ),
+            child: coreAvatar,
+          )
+        : SizedBox(width: size, height: size, child: coreAvatar);
 
-    return SizedBox(width: size, height: size, child: coreAvatar);
+    if (semanticLabel == null) {
+      return avatarWidget;
+    }
+    return Semantics(label: semanticLabel, image: true, child: avatarWidget);
   }
 }
 
@@ -63,16 +74,18 @@ class VnlfGuestAvatarBox extends StatelessWidget {
     super.key,
     this.size = 36.0,
     this.isCircle = false,
+    this.semanticLabel,
   });
 
   final double size;
   final bool isCircle;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final box = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
@@ -90,5 +103,10 @@ class VnlfGuestAvatarBox extends StatelessWidget {
         color: colors.muted,
       ),
     );
+
+    if (semanticLabel == null) {
+      return box;
+    }
+    return Semantics(label: semanticLabel, image: true, child: box);
   }
 }

@@ -10,16 +10,32 @@ import 'vnlf_vote_capsule.dart';
 
 /// Hierarchical comment node with nested replies and vertical thread guide lines.
 class VnlfCommentTree extends StatelessWidget {
-  const VnlfCommentTree({super.key, required this.comment, this.depth = 0});
+  const VnlfCommentTree({
+    super.key,
+    required this.comment,
+    this.depth = 0,
+    this.replyLabel = '',
+    this.semanticLabel,
+    this.replySemanticLabel,
+    this.voteSemanticLabel,
+    this.upvoteSemanticLabel,
+    this.downvoteSemanticLabel,
+  });
 
   final CommentNodeData comment;
   final int depth;
+  final String replyLabel;
+  final String? semanticLabel;
+  final String? replySemanticLabel;
+  final String? voteSemanticLabel;
+  final String? upvoteSemanticLabel;
+  final String? downvoteSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Column(
+    final tree = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -75,17 +91,35 @@ class VnlfCommentTree extends StatelessWidget {
                         score: comment.voteScore,
                         voteState: comment.viewerVote,
                         compact: true,
+                        semanticLabel: voteSemanticLabel,
+                        upvoteSemanticLabel: upvoteSemanticLabel,
+                        downvoteSemanticLabel: downvoteSemanticLabel,
                       ),
-                      const SizedBox(width: 12),
-                      Icon(Icons.reply_rounded, size: 14, color: colors.muted),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Trả lời',
-                        style: VnlfTypography.meta(
-                          colors.muted,
-                          fontWeight: FontWeight.w500,
+                      if (replyLabel.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        Semantics(
+                          button: true,
+                          label: replySemanticLabel ?? replyLabel,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.reply_rounded,
+                                size: 14,
+                                color: colors.muted,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                replyLabel,
+                                style: VnlfTypography.meta(
+                                  colors.muted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ],
@@ -110,6 +144,11 @@ class VnlfCommentTree extends StatelessWidget {
                     VnlfCommentTree(
                       comment: comment.replies[i],
                       depth: depth + 1,
+                      replyLabel: replyLabel,
+                      replySemanticLabel: replySemanticLabel,
+                      voteSemanticLabel: voteSemanticLabel,
+                      upvoteSemanticLabel: upvoteSemanticLabel,
+                      downvoteSemanticLabel: downvoteSemanticLabel,
                     ),
                   ],
                 ],
@@ -118,21 +157,35 @@ class VnlfCommentTree extends StatelessWidget {
           ),
       ],
     );
+
+    if (semanticLabel == null) {
+      return tree;
+    }
+    return Semantics(label: semanticLabel, container: true, child: tree);
   }
 }
 
 /// Direct Message & Channel Chat bubble with author identity, timestamp,
 /// reaction pills, and optional sticker (`DESIGN_REFERENCE.md` Section 6.4).
 class VnlfChatBubble extends StatelessWidget {
-  const VnlfChatBubble({super.key, required this.message});
+  const VnlfChatBubble({
+    super.key,
+    required this.message,
+    this.semanticLabel,
+    this.avatarSemanticLabel,
+    this.stickerSemanticLabel,
+  });
 
   final ChatMessageData message;
+  final String? semanticLabel;
+  final String? avatarSemanticLabel;
+  final String? stickerSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final bubble = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -142,7 +195,11 @@ class VnlfChatBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          VnlfAvatar(author: message.author, size: 36),
+          VnlfAvatar(
+            author: message.author,
+            size: 36,
+            semanticLabel: avatarSemanticLabel,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -166,37 +223,40 @@ class VnlfChatBubble extends StatelessWidget {
                 Text(message.text, style: VnlfTypography.body(colors.ink)),
                 if (message.stickerLabel != null) ...[
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.brandSoft,
-                      borderRadius: BorderRadius.circular(
-                        VnlfDimensions.radiusMd,
+                  Semantics(
+                    label: stickerSemanticLabel ?? message.stickerLabel,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      border: Border.all(
-                        color: colors.brand.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.terminal_rounded,
-                          size: 18,
-                          color: colors.brand,
+                      decoration: BoxDecoration(
+                        color: colors.brandSoft,
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusMd,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          message.stickerLabel!,
-                          style: VnlfTypography.meta(
-                            colors.brand,
-                            fontWeight: FontWeight.w600,
+                        border: Border.all(
+                          color: colors.brand.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.terminal_rounded,
+                            size: 18,
+                            color: colors.brand,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            message.stickerLabel!,
+                            style: VnlfTypography.meta(
+                              colors.brand,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -233,5 +293,10 @@ class VnlfChatBubble extends StatelessWidget {
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return bubble;
+    }
+    return Semantics(label: semanticLabel, container: true, child: bubble);
   }
 }

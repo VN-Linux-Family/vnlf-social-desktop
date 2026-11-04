@@ -15,6 +15,13 @@ class VnlfTabletRail extends StatelessWidget {
     required this.themeMode,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.destinationLabels = const {},
+    this.destinationSemanticLabels = const {},
+    this.brandLogoSemanticLabel,
+    this.themeToggleTooltip = '',
+    this.themeToggleSemanticLabel,
+    this.profileSemanticLabel,
+    this.semanticLabel,
   });
 
   final VnlfNavDestination activeDestination;
@@ -22,12 +29,19 @@ class VnlfTabletRail extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+  final Map<VnlfNavDestination, String> destinationLabels;
+  final Map<VnlfNavDestination, String> destinationSemanticLabels;
+  final String? brandLogoSemanticLabel;
+  final String themeToggleTooltip;
+  final String? themeToggleSemanticLabel;
+  final String? profileSemanticLabel;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final rail = Container(
       width: VnlfDimensions.tabletRailWidth,
       decoration: BoxDecoration(
         color: colors.bg,
@@ -36,64 +50,116 @@ class VnlfTabletRail extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         children: [
-          BrandAssets.logo(size: 32),
+          BrandAssets.logo(size: 32, semanticLabel: brandLogoSemanticLabel),
           const SizedBox(height: 20),
           for (final dest in VnlfNavDestination.values) ...[
-            Tooltip(
-              message: dest.label,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                onTap: () => onDestinationSelected?.call(dest),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: dest == activeDestination
-                        ? colors.surface
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(
-                      VnlfDimensions.radiusMd,
-                    ),
-                    border: dest == activeDestination
-                        ? Border.all(color: colors.line)
-                        : null,
-                  ),
-                  child: Icon(
-                    dest.icon,
-                    size: 20,
-                    color: dest == activeDestination
-                        ? colors.brand
-                        : colors.muted,
-                  ),
-                ),
-              ),
+            _RailNavButton(
+              destination: dest,
+              selected: dest == activeDestination,
+              tooltip: destinationLabels[dest] ?? '',
+              semanticLabel:
+                  destinationSemanticLabels[dest] ?? destinationLabels[dest],
+              onTap: () => onDestinationSelected?.call(dest),
             ),
             const SizedBox(height: 8),
           ],
           const Spacer(),
-          IconButton(
-            tooltip: 'Chế độ giao diện',
-            onPressed: () {
-              final next = themeMode == ThemeMode.dark
-                  ? ThemeMode.light
-                  : ThemeMode.dark;
-              onThemeModeChanged?.call(next);
-            },
-            icon: Icon(
-              themeMode == ThemeMode.dark
-                  ? Icons.dark_mode_outlined
-                  : Icons.wb_sunny_outlined,
-              size: 19,
-              color: colors.muted,
+          Semantics(
+            button: true,
+            label:
+                themeToggleSemanticLabel ??
+                (themeToggleTooltip.isNotEmpty ? themeToggleTooltip : null),
+            child: IconButton(
+              tooltip: themeToggleTooltip.isNotEmpty
+                  ? themeToggleTooltip
+                  : null,
+              onPressed: () {
+                final next = themeMode == ThemeMode.dark
+                    ? ThemeMode.light
+                    : ThemeMode.dark;
+                onThemeModeChanged?.call(next);
+              },
+              icon: Icon(
+                themeMode == ThemeMode.dark
+                    ? Icons.dark_mode_outlined
+                    : Icons.wb_sunny_outlined,
+                size: 19,
+                color: colors.muted,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: onProfileTap,
-            child: const VnlfGuestAvatarBox(size: 36),
+          Semantics(
+            button: true,
+            label: profileSemanticLabel,
+            child: GestureDetector(
+              onTap: onProfileTap,
+              child: VnlfGuestAvatarBox(
+                size: 36,
+                semanticLabel: profileSemanticLabel,
+              ),
+            ),
           ),
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return rail;
+    }
+    return Semantics(label: semanticLabel, container: true, child: rail);
+  }
+}
+
+class _RailNavButton extends StatelessWidget {
+  const _RailNavButton({
+    required this.destination,
+    required this.selected,
+    required this.tooltip,
+    required this.onTap,
+    this.semanticLabel,
+  });
+
+  final VnlfNavDestination destination;
+  final bool selected;
+  final String tooltip;
+  final VoidCallback onTap;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final effectiveSemantics =
+        semanticLabel ?? (tooltip.isNotEmpty ? tooltip : null);
+
+    Widget button = Semantics(
+      button: true,
+      selected: selected,
+      label: effectiveSemantics,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: selected ? colors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+            border: selected ? Border.all(color: colors.line) : null,
+          ),
+          child: Icon(
+            destination.icon,
+            size: 20,
+            color: selected ? colors.brand : colors.muted,
+          ),
+        ),
+      ),
+    );
+
+    if (tooltip.isNotEmpty) {
+      button = Tooltip(message: tooltip, child: button);
+    }
+
+    return button;
   }
 }
