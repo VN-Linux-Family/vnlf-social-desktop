@@ -12,6 +12,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   const VnlfMobileStickyHeader({
     super.key,
     this.onProfileTap,
+    this.onSearchTap,
     this.openDrawerTooltip = '',
     this.openDrawerSemanticLabel,
     this.brandTitlePrefix = '',
@@ -24,6 +25,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   });
 
   final VoidCallback? onProfileTap;
+  final VoidCallback? onSearchTap;
   final String openDrawerTooltip;
   final String? openDrawerSemanticLabel;
   final String brandTitlePrefix;
@@ -88,7 +90,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
           _HeaderSquareIconButton(
             icon: Icons.search_rounded,
             semanticLabel: searchSemanticLabel,
-            onTap: () {},
+            onTap: onSearchTap,
           ),
           const SizedBox(width: 8),
           _HeaderSquareIconButton(
@@ -128,7 +130,7 @@ class _HeaderSquareIconButton extends StatelessWidget {
 
   final IconData icon;
   final String semanticLabel;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

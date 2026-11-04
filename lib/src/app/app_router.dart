@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../design_system/design_system.dart';
+import '../features/channels/presentation/channels_screen.dart';
+import '../features/channels/presentation/channel_directory.dart';
 import '../features/discover/presentation/discover_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
 import '../features/projects/presentation/projects_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/search/presentation/search_screen.dart';
+import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
 import '../features/thread/presentation/thread_sidebar.dart';
 import '../gallery/gallery_page.dart';
@@ -116,6 +120,7 @@ GoRouter createMainRouter() {
               activeDestination: active,
               onDestinationSelected: (destination) =>
                   context.go(destinations[destination]!),
+              onSearchTap: () => context.push('/search'),
               centerChildHandlesScroll:
                   const [
                     '/',
@@ -123,6 +128,9 @@ GoRouter createMainRouter() {
                     '/projects',
                     '/settings',
                     '/discover',
+                    '/channels',
+                    '/voice',
+                    '/search',
                   ].contains(state.uri.path) ||
                   state.uri.path.startsWith('/thread/') ||
                   state.uri.path.startsWith('/profile/'),
@@ -130,6 +138,8 @@ GoRouter createMainRouter() {
                   ? ThreadSidebar(postId: state.pathParameters['id']!)
                   : state.uri.path == '/'
                   ? const LeaderboardPanel(sidebar: true)
+                  : state.uri.path == '/channels'
+                  ? const ActiveCommunityMembers()
                   : null,
               destinationLabels: labels,
               brandTitlePrefix: 'VNLF ',
@@ -193,25 +203,18 @@ GoRouter createMainRouter() {
             path: '/discover',
             builder: (context, state) => const DiscoverScreen(),
           ),
-          for (final entry in <String, (String, String, IconData)>{
-            '/search': ('Tìm kiếm', 'Search', Icons.search),
-            '/channels': ('Kênh', 'Channels', Icons.chat_bubble_outline),
-            '/voice': ('Voice', 'Voice', Icons.mic_none),
-          }.entries)
-            GoRoute(
-              path: entry.key,
-              builder: (context, state) {
-                final english =
-                    Localizations.localeOf(context).languageCode == 'en';
-                return VnlfStateCard(
-                  icon: entry.value.$3,
-                  title: english ? entry.value.$2 : entry.value.$1,
-                  message: english
-                      ? 'This screen is not available yet.'
-                      : 'Màn hình này chưa có nội dung.',
-                );
-              },
-            ),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) => const SearchScreen(),
+          ),
+          GoRoute(
+            path: '/channels',
+            builder: (context, state) => const ChannelsScreen(),
+          ),
+          GoRoute(
+            path: '/voice',
+            builder: (context, state) => const VoiceScreen(),
+          ),
         ],
       ),
     ],

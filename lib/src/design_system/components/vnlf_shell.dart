@@ -42,6 +42,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.themeMode = ThemeMode.light,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.onSearchTap,
     this.destinationLabels = const {},
     this.destinationSemanticLabels = const {},
     this.brandTitlePrefix = '',
@@ -92,6 +93,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onSearchTap;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;
   final String brandTitlePrefix;
@@ -332,6 +334,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   brandTitleAccent: brandTitleAccent,
                   brandLogoSemanticLabel: brandLogoSemanticLabel,
                   searchSemanticLabel: searchSemanticLabel,
+                  onSearchTap: onSearchTap,
                   notificationsSemanticLabel: notificationsSemanticLabel,
                   profileSemanticLabel: profileSemanticLabel,
                   semanticLabel: mobileHeaderSemanticLabel,

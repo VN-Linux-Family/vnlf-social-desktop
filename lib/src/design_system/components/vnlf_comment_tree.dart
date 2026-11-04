@@ -279,9 +279,29 @@ class VnlfChatBubble extends StatelessWidget {
                             ),
                             border: Border.all(color: colors.line),
                           ),
-                          child: Text(
-                            '${entry.key} ${entry.value}',
-                            style: VnlfTypography.caption(colors.ink),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (entry.key == '👍' || entry.key == '❤️')
+                                Icon(
+                                  entry.key == '👍'
+                                      ? Icons.thumb_up_alt_outlined
+                                      : Icons.favorite_outline,
+                                  size: 13,
+                                  color: colors.muted,
+                                  semanticLabel: entry.key,
+                                )
+                              else
+                                Text(
+                                  entry.key,
+                                  style: VnlfTypography.caption(colors.ink),
+                                ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${entry.value}',
+                                style: VnlfTypography.caption(colors.ink),
+                              ),
+                            ],
                           ),
                         ),
                     ],

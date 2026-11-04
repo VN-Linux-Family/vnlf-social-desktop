@@ -7,6 +7,9 @@ import 'package:vnlfsocialapp/main.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
+import 'package:vnlfsocialapp/src/features/channels/presentation/channels_screen.dart';
+import 'package:vnlfsocialapp/src/features/search/presentation/search_screen.dart';
+import 'package:vnlfsocialapp/src/features/voice/presentation/voice_screen.dart';
 import 'package:vnlfsocialapp/src/features/discover/presentation/discover_screen.dart';
 import 'package:vnlfsocialapp/src/features/profile/presentation/profile_screen.dart';
 import 'package:vnlfsocialapp/src/features/settings/presentation/settings_screen.dart';
@@ -44,8 +47,9 @@ void main() {
     for (final entry in <String, Type>{
       '/thread/1': ThreadScreen,
       '/profile/1': ProfileScreen,
-      '/search': VnlfStateCard,
-      '/channels': VnlfStateCard,
+      '/search': SearchScreen,
+      '/channels': ChannelsScreen,
+      '/voice': VoiceScreen,
       '/discover': DiscoverScreen,
       '/settings': SettingsScreen,
     }.entries) {

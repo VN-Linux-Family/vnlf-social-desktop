@@ -7,13 +7,16 @@ import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
+import 'package:vnlfsocialapp/src/features/channels/presentation/channels_screen.dart';
+import 'package:vnlfsocialapp/src/features/search/presentation/search_screen.dart';
+import 'package:vnlfsocialapp/src/features/voice/presentation/voice_screen.dart';
 
 void main() {
-  testWidgets('router navigates to every placeholder route', (tester) async {
+  testWidgets('router navigates to every community route', (tester) async {
     final app = await _pumpApp(tester, const Size(360, 900));
     addTearDown(app.dispose);
 
-    for (final route in _placeholderRoutes) {
+    for (final route in _communityRoutes) {
       app.router.go(route.path);
       await tester.pumpAndSettle();
 
@@ -22,14 +25,14 @@ void main() {
         route.path,
         reason: 'router should navigate to ${route.path}',
       );
-      expect(find.byType(VnlfStateCard), findsOneWidget, reason: route.path);
+      expect(find.byType(route.screen), findsOneWidget, reason: route.path);
       expect(
         find.descendant(
-          of: find.byType(VnlfStateCard),
+          of: find.byType(VnlfCenterPageHeader),
           matching: find.text(route.vietnamese),
         ),
         findsOneWidget,
-        reason: 'Vietnamese placeholder title for ${route.path}',
+        reason: 'Vietnamese screen title for ${route.path}',
       );
     }
   });
@@ -62,20 +65,16 @@ void main() {
     });
   }
 
-  testWidgets('locale override rebuilds every placeholder and nav label', (
+  testWidgets('locale override rebuilds every community screen and nav label', (
     tester,
   ) async {
     final app = await _pumpApp(tester, const Size(360, 900));
     addTearDown(app.dispose);
 
-    for (final route in _placeholderRoutes) {
+    for (final route in _communityRoutes) {
       app.router.go(route.path);
       await tester.pumpAndSettle();
-      _expectPlaceholder(
-        tester,
-        route.vietnamese,
-        'Màn hình này chưa có nội dung.',
-      );
+      _expectScreenTitle(route.screen, route.vietnamese);
       _expectMobileNavigation(tester, const [
         'Bảng tin',
         'Khám phá',
@@ -88,14 +87,10 @@ void main() {
     app.container.read(localeProvider.notifier).state = const Locale('en');
     await tester.pumpAndSettle();
 
-    for (final route in _placeholderRoutes) {
+    for (final route in _communityRoutes) {
       app.router.go(route.path);
       await tester.pumpAndSettle();
-      _expectPlaceholder(
-        tester,
-        route.english,
-        'This screen is not available yet.',
-      );
+      _expectScreenTitle(route.screen, route.english);
       _expectMobileNavigation(tester, const [
         'Feed',
         'Discover',
@@ -107,11 +102,27 @@ void main() {
   });
 }
 
-const _placeholderRoutes = <({String path, String vietnamese, String english})>[
-  (path: '/search', vietnamese: 'Tìm kiếm', english: 'Search'),
-  (path: '/channels', vietnamese: 'Kênh', english: 'Channels'),
-  (path: '/voice', vietnamese: 'Voice', english: 'Voice'),
-];
+const _communityRoutes =
+    <({String path, String vietnamese, String english, Type screen})>[
+      (
+        path: '/search',
+        vietnamese: 'Tìm kiếm',
+        english: 'Search',
+        screen: SearchScreen,
+      ),
+      (
+        path: '/channels',
+        vietnamese: 'Kênh & trò chuyện',
+        english: 'Channels & chat',
+        screen: ChannelsScreen,
+      ),
+      (
+        path: '/voice',
+        vietnamese: 'Phòng Voice',
+        english: 'Voice rooms',
+        screen: VoiceScreen,
+      ),
+    ];
 
 Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -138,16 +149,12 @@ Finder _permanentDesktopSidebar() => find.byWidgetPredicate(
   description: 'permanent desktop sidebar',
 );
 
-void _expectPlaceholder(WidgetTester tester, String title, String message) {
-  expect(find.byType(VnlfStateCard), findsOneWidget);
-  expect(
-    find.descendant(of: find.byType(VnlfStateCard), matching: find.text(title)),
-    findsOneWidget,
-  );
+void _expectScreenTitle(Type screen, String title) {
+  expect(find.byType(screen), findsOneWidget);
   expect(
     find.descendant(
-      of: find.byType(VnlfStateCard),
-      matching: find.text(message),
+      of: find.byType(VnlfCenterPageHeader),
+      matching: find.text(title),
     ),
     findsOneWidget,
   );
