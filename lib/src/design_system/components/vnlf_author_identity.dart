@@ -185,7 +185,13 @@ class VnlfDistroBadgePill extends StatelessWidget {
         children: [
           VnlfInlineDistroIcon(badge: badge, size: 13),
           const SizedBox(width: 4),
-          Text(badge.label, style: VnlfTypography.caption(colors.ink)),
+          Flexible(
+            child: Text(
+              badge.label,
+              style: VnlfTypography.caption(colors.ink),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

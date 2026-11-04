@@ -155,14 +155,16 @@ class VnlfPostInteractionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Row(
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 4,
       children: [
         VnlfVoteCapsule(
           score: voteScore,
           voteState: voteState,
           onVoteChanged: onVoteChanged,
         ),
-        const SizedBox(width: 14),
         InkWell(
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
           onTap: onCommentTap,
@@ -182,7 +184,6 @@ class VnlfPostInteractionBar extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
         InkWell(
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
           onTap: onShareTap,
@@ -191,7 +192,6 @@ class VnlfPostInteractionBar extends StatelessWidget {
             child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
           ),
         ),
-        const SizedBox(width: 12),
         InkWell(
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
           onTap: onBookmarkToggle,

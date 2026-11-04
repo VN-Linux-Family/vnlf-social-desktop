@@ -118,9 +118,11 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                   children: [
                     Icon(Icons.code_rounded, size: 16, color: colors.brand),
                     const SizedBox(width: 6),
-                    Text(
-                      'Cấu hình Fcitx5 & tự động dọn gói apt (/etc/environment)',
-                      style: VnlfTypography.h3(colors.ink),
+                    Expanded(
+                      child: Text(
+                        'Cấu hình Fcitx5 & tự động dọn gói apt (/etc/environment)',
+                        style: VnlfTypography.h3(colors.ink),
+                      ),
                     ),
                   ],
                 ),

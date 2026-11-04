@@ -228,8 +228,10 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
                       const SizedBox(height: 12),
 
                       // Stats Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      Wrap(
+                        alignment: WrapAlignment.spaceAround,
+                        spacing: 12,
+                        runSpacing: 10,
                         children: const [
                           _ProfileStatCell(value: '1,450', label: 'Điểm Karma'),
                           _ProfileStatCell(value: '28', label: 'Bài viết'),
@@ -300,7 +302,7 @@ class _ProfileMetaItem extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: VnlfTypography.meta(color)),
+        Flexible(child: Text(label, style: VnlfTypography.meta(color))),
       ],
     );
   }
