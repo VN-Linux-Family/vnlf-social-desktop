@@ -13,6 +13,8 @@ dependencies:
   flutter_riverpod: ^2.6.1
   # Declarative navigation and deep links.
   go_router: ^14.8.1
+  # Platform-backed storage for session data.
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:
