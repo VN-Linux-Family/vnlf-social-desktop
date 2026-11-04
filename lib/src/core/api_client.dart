@@ -1,89 +1,102 @@
-// ignore_for_file: prefer_initializing_formals
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
 import '../domain/models.dart';
 export '../domain/models.dart'
-    show AppFailure, HttpFailure, ParseFailure, TransportFailure;
+    show AppFailure, HttpFailure, ParseFailure, TransportFailure, RateLimited;
 
-/// A request addressed to a fixture transport; no network transport is supplied.
 final class ApiRequest {
   ApiRequest(
     this.path, {
+    this.method = 'GET',
+    this.body,
     Map<String, String> headers = const {},
     Map<String, String> query = const {},
   }) : headers = Map.unmodifiable(headers),
        query = Map.unmodifiable(query);
   final String path;
+  final String method;
+  final String? body;
   final Map<String, String> headers;
   final Map<String, String> query;
 
-  ApiRequest withHeaders(Map<String, String> values) =>
-      ApiRequest(path, headers: {...headers, ...values}, query: query);
+  ApiRequest withHeaders(Map<String, String> values) => ApiRequest(
+    path,
+    method: method,
+    body: body,
+    headers: {...headers, ...values},
+    query: query,
+  );
 }
 
-typedef ApiTransport = Future<Map<String, dynamic>> Function(
-  ApiRequest request,
-);
+final class ApiResponse {
+  ApiResponse({
+    required this.statusCode,
+    required this.body,
+    Map<String, String> headers = const {},
+  }) : headers = Map.unmodifiable(
+         headers.map((key, value) => MapEntry(key.toLowerCase(), value)),
+       );
+  final int statusCode;
+  final Map<String, String> headers;
+  final String body;
+}
+
+typedef ApiTransport = Future<ApiResponse> Function(ApiRequest request);
 typedef ApiInterceptor = Future<ApiRequest> Function(ApiRequest request);
 typedef RetryDelay = Future<void> Function(Duration delay);
 
-/// The transport must be supplied explicitly; the application uses local fixtures.
 final class ApiClient {
   ApiClient({
     required ApiTransport transport,
     List<ApiInterceptor> interceptors = const [],
     RetryDelay? retryDelay,
     Random? random,
-    this.throttleInterval = const Duration(milliseconds: 200),
+    this.throttleInterval = const Duration(milliseconds: 500),
     this.cacheDuration = const Duration(minutes: 1),
+    Object? hostKey,
+    // The public parameter name is intentionally different from the field.
+    // ignore: prefer_initializing_formals
   }) : _transport = transport,
        _interceptors = List.unmodifiable(interceptors),
        _retryDelay = retryDelay ?? Future<void>.delayed,
-       _random = random ?? Random();
+       _random = random ?? Random(),
+       _host = _hosts.putIfAbsent(hostKey ?? _defaultHostKey, _HostPolicy.new);
+  static final _defaultHostKey = Object();
+  static final _hosts = <Object, _HostPolicy>{};
   final ApiTransport _transport;
   final List<ApiInterceptor> _interceptors;
   final RetryDelay _retryDelay;
   final Random _random;
+  final _HostPolicy _host;
   final Duration throttleInterval;
   final Duration cacheDuration;
   final _cache = <String, (DateTime, String)>{};
-  Future<void> _throttleQueue = Future.value();
-  DateTime? _lastRequest;
 
   void clearCache() => _cache.clear();
-
-  Future<void> _throttle() {
-    final previous = _throttleQueue;
-    final done = Completer<void>();
-    _throttleQueue = done.future;
-    return () async {
-      try {
-        await previous;
-        final last = _lastRequest;
-        if (last != null) {
-          final wait = throttleInterval - DateTime.now().difference(last);
-          if (wait > Duration.zero) await Future<void>.delayed(wait);
-        }
-        _lastRequest = DateTime.now();
-      } finally {
-        done.complete();
-      }
-    }();
-  }
 
   Future<T> get<T>(
     String path, {
     Map<String, String> query = const {},
     T Function(Map<String, dynamic>)? decode,
+  }) => request<T>('GET', path, query: query, decode: decode);
+
+  Future<T> request<T>(
+    String method,
+    String path, {
+    Map<String, String> query = const {},
+    String? body,
+    T Function(Map<String, dynamic>)? decode,
   }) async {
+    final normalizedMethod = method.toUpperCase();
     var request = ApiRequest(
       path,
+      method: normalizedMethod,
+      body: body,
       query: query,
       headers: const {
-        'User-Agent': 'VNLF-Mobile/0.1.0 (native client)',
+        'User-Agent': 'vlf-flutter-dev/0.1 (unofficial community client)',
         'Accept': 'application/json',
       },
     );
@@ -91,6 +104,7 @@ final class ApiClient {
       for (final interceptor in _interceptors) {
         request = await interceptor(request);
       }
+      final isGet = request.method == 'GET';
       final key = jsonEncode([
         request.path,
         Map.fromEntries(
@@ -102,47 +116,171 @@ final class ApiClient {
             ..sort((a, b) => a.key.compareTo(b.key)),
         ),
       ]);
-      final cached = _cache[key];
+      final cached = isGet ? _cache[key] : null;
       if (cached != null &&
           DateTime.now().difference(cached.$1) < cacheDuration) {
-        final response = jsonDecode(cached.$2) as Map<String, dynamic>;
-        return decode != null ? decode(response) : response as T;
+        final value = _decode(cached.$2);
+        return decode != null ? decode(value) : value as T;
       }
-      _cache.remove(key);
+      if (isGet) _cache.remove(key);
+      final canRetry =
+          request.method == 'GET' ||
+          request.method == 'HEAD' ||
+          request.method == 'OPTIONS';
       for (var attempt = 0; ; attempt++) {
+        ApiResponse response;
         try {
-          await _throttle();
-          final response = await _transport(request);
-          final result = decode != null ? decode(response) : response as T;
-          if (cacheDuration > Duration.zero) {
-            if (_cache.length >= 100) _cache.remove(_cache.keys.first);
-            _cache[key] = (DateTime.now(), jsonEncode(response));
+          await _host.acquire(throttleInterval);
+          try {
+            response = await _transport(request);
+            _host.record(response.statusCode);
+          } finally {
+            _host.release();
           }
-          return result;
-        } on HttpFailure catch (error) {
-          if (attempt >= 2 ||
-              (error.statusCode != 429 &&
-                  (error.statusCode < 500 || error.statusCode > 599))) {
-            rethrow;
-          }
-          await _retryDelay(
-            Duration(
-              milliseconds: (200 * (1 << attempt)) + _random.nextInt(101),
-            ),
-          );
         } on TimeoutException {
-          if (attempt >= 2) throw const TransportFailure();
-          await _retryDelay(
-            Duration(
-              milliseconds: (200 * (1 << attempt)) + _random.nextInt(101),
-            ),
-          );
+          if (!canRetry || attempt >= 2) throw const TransportFailure();
+          await _retryDelay(_backoff(attempt));
+          continue;
         }
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          final transient =
+              response.statusCode == 429 ||
+              (response.statusCode >= 500 && response.statusCode <= 599);
+          if (!canRetry || !transient || attempt >= 2) {
+            throw HttpFailure(response.statusCode);
+          }
+          await _retryDelay(
+            _retryAfter(response.headers['retry-after']) ?? _backoff(attempt),
+          );
+          continue;
+        }
+        final value = _decode(response.body);
+        final result = decode != null ? decode(value) : value as T;
+        if (isGet && cacheDuration > Duration.zero) {
+          if (_cache.length >= 100) _cache.remove(_cache.keys.first);
+          _cache[key] = (DateTime.now(), response.body);
+        }
+        return result;
       }
     } on AppFailure {
       rethrow;
     } catch (_) {
       throw const TransportFailure();
     }
+  }
+
+  Map<String, dynamic> _decode(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is! Map<String, dynamic>) throw const FormatException();
+      return decoded;
+    } on FormatException {
+      throw const ParseFailure('response');
+    }
+  }
+
+  Duration _backoff(int attempt) =>
+      Duration(milliseconds: 200 * (1 << attempt) + _random.nextInt(101));
+
+  Duration? _retryAfter(String? value) {
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    if (seconds != null) return Duration(seconds: seconds.clamp(0, 60));
+    final match = RegExp(
+      r'^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), (\d{2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4}) (\d{2}):(\d{2}):(\d{2}) GMT$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
+    if (match == null) return null;
+    const months = [
+      'jan',
+      'feb',
+      'mar',
+      'apr',
+      'may',
+      'jun',
+      'jul',
+      'aug',
+      'sep',
+      'oct',
+      'nov',
+      'dec',
+    ];
+    final date = DateTime.utc(
+      int.parse(match[3]!),
+      months.indexOf(match[2]!.toLowerCase()) + 1,
+      int.parse(match[1]!),
+      int.parse(match[4]!),
+      int.parse(match[5]!),
+      int.parse(match[6]!),
+    );
+    final delay = date.difference(DateTime.now().toUtc());
+    if (delay < Duration.zero) return Duration.zero;
+    return delay > const Duration(seconds: 60)
+        ? const Duration(seconds: 60)
+        : delay;
+  }
+}
+
+final class _HostPolicy {
+  Future<void> _queue = Future.value();
+  final _waiting = <Completer<void>>[];
+  int _active = 0;
+  int _consecutive429 = 0;
+  DateTime? _lastRequest;
+  DateTime? _pausedUntil;
+
+  Future<void> acquire(Duration interval) async {
+    final previous = _queue;
+    final done = Completer<void>();
+    _queue = done.future;
+    try {
+      await previous;
+      _checkPause();
+      while (_active >= 2) {
+        final available = Completer<void>();
+        _waiting.add(available);
+        await available.future;
+        _checkPause();
+      }
+      final last = _lastRequest;
+      if (last != null) {
+        final delay = interval - DateTime.now().difference(last);
+        if (delay > Duration.zero) await Future<void>.delayed(delay);
+      }
+      _checkPause();
+      _lastRequest = DateTime.now();
+      _active++;
+    } finally {
+      done.complete();
+    }
+  }
+
+  void _checkPause() {
+    final until = _pausedUntil;
+    if (until != null && DateTime.now().isBefore(until)) {
+      throw RateLimited(until);
+    }
+    if (until != null) {
+      _pausedUntil = null;
+      _consecutive429 = 0;
+    }
+  }
+
+  void record(int status) {
+    if (status == 429) {
+      _consecutive429++;
+      if (_consecutive429 >= 2) {
+        final until = DateTime.now().add(const Duration(minutes: 5));
+        _pausedUntil = until;
+        throw RateLimited(until);
+      }
+    } else {
+      _consecutive429 = 0;
+    }
+  }
+
+  void release() {
+    _active--;
+    if (_waiting.isNotEmpty) _waiting.removeAt(0).complete();
   }
 }

@@ -1,10 +1,23 @@
+import 'dart:convert';
+
 import '../core/api_client.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
 import 'feed_dto.dart';
 
 /// Synthetic content using the confirmed public feed response shape.
-Future<Map<String, dynamic>> fixtureTransport(ApiRequest request) async {
+Future<ApiResponse> fixtureTransport(ApiRequest request) async {
+  if (request.method != 'GET') {
+    return ApiResponse(statusCode: 405, body: '{"error":"method_not_allowed"}');
+  }
+  final fixture = _fixture(request);
+  return ApiResponse(
+    statusCode: fixture == null ? 404 : 200,
+    body: jsonEncode(fixture ?? {'error': 'fixture_not_found'}),
+  );
+}
+
+Map<String, dynamic>? _fixture(ApiRequest request) {
   if (request.path == '/api/v1/projects') {
     return {
       'items': <Object>[],
@@ -21,7 +34,7 @@ Future<Map<String, dynamic>> fixtureTransport(ApiRequest request) async {
       'items': <Object>[],
     };
   }
-  if (request.path != '/api/v1/feed') throw const HttpFailure(404);
+  if (request.path != '/api/v1/feed') return null;
   return {
     'items': request.query.containsKey('cursor')
         ? <Object>[]

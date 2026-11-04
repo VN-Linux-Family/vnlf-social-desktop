@@ -26,7 +26,10 @@ void main() {
       final delays = <Duration>[];
       server.listen((request) async {
         requests++;
-        expect(request.headers.value('user-agent'), contains('VNLF'));
+        expect(
+          request.headers.value('user-agent'),
+          'vlf-flutter-dev/0.1 (unofficial community client)',
+        );
         request.response.statusCode = requests == 1
             ? 500
             : requests == 2
@@ -36,6 +39,7 @@ void main() {
         await request.response.close();
       });
       final client = ApiClient(
+        hostKey: Object(),
         transport: transport.call,
         random: Random(1),
         retryDelay: (delay) async => delays.add(delay),
@@ -62,6 +66,7 @@ void main() {
         await request.response.close();
       });
       final client = ApiClient(
+        hostKey: Object(),
         transport: transport.call,
         throttleInterval: Duration.zero,
       );
@@ -89,6 +94,7 @@ void main() {
       await request.response.close();
     });
     final client = ApiClient(
+      hostKey: Object(),
       transport: transport.call,
       throttleInterval: Duration.zero,
     );
@@ -106,6 +112,7 @@ void main() {
   test('retries timeouts and returns typed failure after exhaustion', () async {
     var attempts = 0;
     final client = ApiClient(
+      hostKey: Object(),
       transport: (_) async {
         attempts++;
         throw TimeoutException('timeout');
@@ -128,6 +135,7 @@ void main() {
       await request.response.close();
     });
     final client = ApiClient(
+      hostKey: Object(),
       transport: transport.call,
       throttleInterval: const Duration(milliseconds: 80),
     );

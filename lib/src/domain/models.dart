@@ -8,6 +8,11 @@ final class HttpFailure extends AppFailure {
   final int statusCode;
 }
 
+final class RateLimited extends AppFailure {
+  const RateLimited(this.retryAt);
+  final DateTime retryAt;
+}
+
 final class ParseFailure extends AppFailure {
   const ParseFailure(this.field);
   final String field;

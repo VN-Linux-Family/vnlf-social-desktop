@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
@@ -31,15 +33,19 @@ void main() {
   test('fixture client retries transient failures and maps the feed', () async {
     var attempts = 0;
     final client = ApiClient(
+      hostKey: Object(),
       transport: (request) async {
         attempts++;
-        if (attempts == 1) throw const HttpFailure(503);
-        return {
-          'items': [
-            {'id': 'post-1'},
-          ],
-          'nextCursor': null,
-        };
+        if (attempts == 1) return ApiResponse(statusCode: 503, body: '');
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode({
+            'items': [
+              {'id': 'post-1'},
+            ],
+            'nextCursor': null,
+          }),
+        );
       },
       retryDelay: (_) async {},
     );
@@ -49,7 +55,7 @@ void main() {
   });
 
   test('unknown fixture path fails explicitly', () async {
-    final client = ApiClient(transport: fixtureTransport);
+    final client = ApiClient(hostKey: Object(), transport: fixtureTransport);
     await expectLater(
       client.get<Map<String, dynamic>>('/unknown'),
       throwsA(isA<HttpFailure>()),
@@ -61,7 +67,7 @@ void main() {
     expect(await FixtureCommunityRepository().getChannels(), isEmpty);
     expect(
       (await FixtureFeedRepository(
-        ApiClient(transport: fixtureTransport),
+        ApiClient(hostKey: Object(), transport: fixtureTransport),
       ).getFeed()).items,
       isNotEmpty,
     );
@@ -70,12 +76,14 @@ void main() {
   test('session interceptor reads explicitly configured headers', () async {
     final storage = _MemoryStorage({'csrf': 'fixture-value'});
     final client = ApiClient(
+      hostKey: Object(),
       interceptors: [
         sessionHeadersInterceptor(storage, {'x-example-csrf': 'csrf'}),
       ],
-      transport: (request) async => {
-        'header': request.headers['x-example-csrf'],
-      },
+      transport: (request) async => ApiResponse(
+        statusCode: 200,
+        body: jsonEncode({'header': request.headers['x-example-csrf']}),
+      ),
     );
     final response = await client.get<Map<String, dynamic>>('/fixture');
     expect(response['header'], 'fixture-value');
@@ -84,10 +92,11 @@ void main() {
   test('transient errors stop after three attempts', () async {
     var attempts = 0;
     final client = ApiClient(
+      hostKey: Object(),
       retryDelay: (_) async {},
       transport: (_) async {
         attempts++;
-        throw const HttpFailure(429);
+        return ApiResponse(statusCode: 503, body: '');
       },
     );
     await expectLater(

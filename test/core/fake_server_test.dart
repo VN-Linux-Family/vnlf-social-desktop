@@ -54,12 +54,16 @@ void main() {
       final json = jsonDecode(
         await utf8.decoder.bind(response).join(),
       ) as Map<String, dynamic>;
-      expect(json, await fixtureTransport(ApiRequest('/api/v1/feed')));
+      expect(
+        json,
+        jsonDecode((await fixtureTransport(ApiRequest('/api/v1/feed'))).body),
+      );
       expect(json['items'], isA<List<dynamic>>());
       expect(json['nextCursor'], isNull);
       final transport = IoApiTransport(Uri.parse('http://127.0.0.1:$port'));
       addTearDown(transport.close);
       final api = ApiClient(
+        hostKey: Object(),
         transport: transport.call,
         throttleInterval: Duration.zero,
       );

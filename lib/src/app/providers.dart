@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
+import '../core/io_api_transport.dart';
 import '../core/session_storage.dart';
 import '../data/fixture_repositories.dart';
 import '../domain/models.dart';
@@ -10,10 +11,16 @@ final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),
 );
 
-/// No network transport is installed by default.
-final apiClientProvider = Provider<ApiClient>(
-  (ref) => ApiClient(transport: fixtureTransport),
-);
+/// Live requests are enabled only by an explicit build-time opt-in.
+final apiClientProvider = Provider<ApiClient>((ref) {
+  if (!const bool.fromEnvironment('VNLF_LIVE')) {
+    return ApiClient(transport: fixtureTransport);
+  }
+  final uri = Uri.parse('https://vietnamlinuxfamily.net');
+  final transport = IoApiTransport(uri);
+  ref.onDispose(transport.close);
+  return ApiClient(transport: transport.call);
+});
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => const FixtureAuthRepository(),
 );
