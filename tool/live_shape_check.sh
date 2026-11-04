@@ -34,10 +34,15 @@ for item in "${ENDPOINTS[@]}"; do
     sleep 2
   fi
 
-  curl -sSL --fail --max-time 20 \
+  http_code=$(curl -sSL -w "%{http_code}" -o "${out_file}" --max-time 20 \
     -H "User-Agent: ${USER_AGENT}" \
     -H "Accept: application/json" \
-    "${url}" -o "${out_file}"
+    "${url}") || true
+
+  if [ "${http_code}" != "200" ]; then
+    echo "Note: ${name} (${url}) returned HTTP ${http_code}" >&2
+    rm -f "${out_file}"
+  fi
 done
 
 for item in "${ENDPOINTS[@]}"; do

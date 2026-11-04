@@ -18,17 +18,18 @@ fixture demonstrates a live value or authenticated behavior.
   - `items[].author.username`: [CONFIRMED] read from real unauthenticated response.
   - `items[].author.displayName`: [CONFIRMED] read from real unauthenticated response.
   (All 9 field names in `feed.json` were read from real unauthenticated response; 0 are inferred. All values are synthetic).
-- The inline empty projects fixture models `GET /api/v1/projects`:
-  `items`, `nextCursor`, and `facets` are [CONFIRMED] field names. The empty
-  collection, null cursor, and empty facets object are [INFERRED] examples;
-  project item fields and their types remain [UNKNOWN].
-- The inline empty leaderboard fixture models `GET /api/v1/leaderboards`:
-  `period`, `periodStart`, `periodEnd`, `computedAt`, and `items` are
-  [CONFIRMED] field names. Their example values and nullability are [INFERRED];
-  leaderboard item fields and types remain [UNKNOWN].
-- The post repository searches the synthetic feed fixture; it does not model a
-  post-detail response. Channels currently return an empty local list without
-  modeling `/api/v1/channels`, whose response fields remain [UNKNOWN].
+- The projects fixture models `GET /api/v1/projects`:
+  `items`, `nextCursor`, and `facets` (`languages`, `types`) are [CONFIRMED] field names.
+  Project item fields are [CONFIRMED]: `id`, `name`, `slug`, `tagline`, `type`, `tier`, `relation`,
+  `seeking`, `featured`, `status`, `logoUrl`, `accentColor`, `owner`, `repo` (`provider`, `owner`, `name`,
+  `url`, `stars`, `forks`, `language`, `languageColor`, `archived`, `fork`, `pushedAt`, `unavailable`),
+  `rating` (`average`, `count`), `commentCount`, `approvedAt`.
+- The leaderboard fixture models `GET /api/v1/leaderboards`:
+  `period`, `periodStart`, `periodEnd`, `computedAt`, and `items` are [CONFIRMED] field names.
+  Leaderboard item fields are [CONFIRMED]: `userId`, `username`, `displayName`, `avatarUrl`,
+  `earnedPoints`, `rank`, `style` (frame, distroBadge, icon, nameplate, status).
+- Channels: `GET /api/v1/channels` returns `HTTP 401 Unauthorized` when unauthenticated.
+  Channel listing requires authentication; response fields remain [UNKNOWN] until authenticated HAR capture.
 
 ---
 
@@ -182,7 +183,7 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/channels` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response with public channel list. |
+| `GET` | `/api/v1/channels` | [CONFIRMED - requires auth (HTTP 401 unauthenticated)] | Yes | Public unauthenticated request returns 401 Unauthorized. |
 | `GET` | `/api/v1/channels/{id}/messages` | [INFERRED] | Optional | Channel message history. |
 | `POST` | `/api/v1/channels/{id}/messages` | [INFERRED] | Yes | Write endpoint: send chat message. |
 | `GET` | `/api/v1/channels/{id}/mention-candidates` | [INFERRED] | Yes | Mention autocompletion. |
