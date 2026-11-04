@@ -21,18 +21,18 @@ Accept: application/json
 User-Agent: VNLF-Mobile/<version> (Linux; Android)
 ```
 - `x-vnlf-client`: Persistent UUID generated once on installation and stored securely in local device storage.
-- Session Management: Cookie-based session (`credentials: "include"`). The server sets session cookies upon login/register. The native `ApiClient` must use a persistent cookie jar (`CookieJar` / `flutter_secure_storage`).
+- Session Management: Cookie-based session (`credentials: "include"`). Exact CSRF, cookie names, and set-cookie headers under authenticated states are **[UNKNOWN / INFERRED]** pending the coordinator receiving the user's Phase 3 HAR/cURL export.
 
-### Standard Error Response Shape [CONFIRMED]
+### Standard Error Response Shape [CONFIRMED - observed unauthenticated (public)]
 Observed live response from unauthenticated endpoints:
 - Top-level field names: `code`, `message`, `requestId`.
 All errors must be mapped into a typed Dart sealed class `ApiFailure` with status code, typed error code, localized message, and trace `requestId`.
 
-### CORS & Web Platform Restriction [CONFIRMED]
+### CORS & Web Platform Restriction [CONFIRMED - observed unauthenticated (public)]
 - The production server returns `HTTP 500` on `OPTIONS` preflight requests and does NOT emit `Access-Control-Allow-Origin` headers.
 - **Impact**: Flutter Web running in a browser from `localhost` or a separate domain will be blocked by browser CORS policy.
 - **Native Targets**: Linux, Android, iOS, Windows, macOS do not enforce browser CORS and communicate directly without issue.
-- **Web Workaround**: For Flutter Web builds, requests must be routed through a reverse proxy (e.g. Caddy/Nginx) or served from the same domain.
+- **Web Workaround**: Flutter Web is dev-only through a local proxy and is not shipped.
 
 ---
 
@@ -40,14 +40,14 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/auth/session` | [CONFIRMED] | No | Current session status. Unauthenticated response returned only field names: `code`, `message`, `requestId`. Contained NO email, NO user ID, NO token. |
-| `POST` | `/api/v1/auth/login` | [INFERRED] | No | Inferred from bundle: `{"login": "<email|username>", "password": "<pwd>"}` |
-| `POST` | `/api/v1/auth/register` | [INFERRED] | No | Inferred from bundle: `{"email": "<email>", "username": "<user>", "password": "<pwd>"}` |
-| `POST` | `/api/v1/auth/refresh` | [INFERRED] | Cookie | Rotates session cookies. |
-| `POST` | `/api/v1/auth/logout` | [INFERRED] | Cookie | Invalidates current server session and clears cookies. |
+| `GET` | `/api/v1/auth/session` | [CONFIRMED - observed unauthenticated (public)] | No | Current session status. Unauthenticated response returned only field names: `code`, `message`, `requestId`. Contained NO email, NO user ID, NO token. Authenticated session shape after login is **[UNKNOWN]**. |
+| `POST` | `/api/v1/auth/login` | [INFERRED] | No | Inferred from bundle: `{"login": "<email|username>", "password": "<pwd>"}`. Real auth flow contract **[UNKNOWN]** until user's Phase 3 export. |
+| `POST` | `/api/v1/auth/register` | [INFERRED] | No | Inferred from bundle: `{"email": "<email>", "username": "<user>", "password": "<pwd>"}`. Real response contract **[UNKNOWN]**. |
+| `POST` | `/api/v1/auth/refresh` | [INFERRED] | Cookie | Inferred from bundle. Cookie/token rotation behavior **[UNKNOWN]**. |
+| `POST` | `/api/v1/auth/logout` | [INFERRED] | Cookie | Inferred from bundle. Invalidation mechanics **[UNKNOWN]**. |
 
 > [!NOTE]
-> `/api/v1/auth/session` field audit: The unauthenticated response observed contained solely the keys `code`, `message`, and `requestId`. It contained NO email, NO user id, and NO token. Zero real credentials or user session tokens were received, printed to terminal, written to file, or recorded in logs.
+> `/api/v1/auth/session` field audit: The unauthenticated response observed contained solely the keys `code`, `message`, and `requestId`. It contained NO email, NO user id, and NO token. Zero real credentials or user session tokens were received, printed to terminal, written to file, or recorded in logs. Everything regarding the authenticated session state is treated as **[UNKNOWN]** for Phases 1 and 2.
 
 ---
 
@@ -55,18 +55,18 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/feed` | [CONFIRMED] | Optional | Live response observed: `items`, `nextCursor`. Query: `type=latest\|trending\|article\|following`, `limit=20`. |
+| `GET` | `/api/v1/feed` | [CONFIRMED - observed unauthenticated (public)] | Optional | Live response observed unauthenticated: `items`, `nextCursor`. Query: `type=latest\|trending\|article\|following`, `limit=20`. |
 | `GET` | `/api/v1/articles/{id}` | [INFERRED] | Optional | Fetch full post detail with body, poll, and asset attachments. |
-| `POST` | `/api/v1/articles` | [INFERRED] | Yes | Create post/article: `{"title": "...", "contentJson": {...}, "contentText": "..."}` |
-| `POST` | `/api/v1/articles/{id}/publish` | [INFERRED] | Yes | Publish a drafted post. |
-| `PUT` | `/api/v1/articles/{id}/vote` | [INFERRED] | Yes | Body: `{"value": 1 \| 0 \| -1}`. Returns `{"viewerVote": int, "voteScore": int, "viewerLiked": bool}` |
-| `POST` | `/api/v1/articles/{id}/like` | [INFERRED] | Yes | Toggle like on post. |
-| `POST` | `/api/v1/articles/{id}/bookmark` | [INFERRED] | Yes | Toggle bookmark on post. |
-| `DELETE`| `/api/v1/articles/{id}` | [INFERRED] | Yes | Delete authored post. |
+| `POST` | `/api/v1/articles` | [INFERRED] | Yes | Write endpoint: `{"title": "...", "contentJson": {...}, "contentText": "..."}` |
+| `POST` | `/api/v1/articles/{id}/publish` | [INFERRED] | Yes | Write endpoint: publish drafted post. |
+| `PUT` | `/api/v1/articles/{id}/vote` | [INFERRED] | Yes | Write endpoint: `{"value": 1 \| 0 \| -1}`. |
+| `POST` | `/api/v1/articles/{id}/like` | [INFERRED] | Yes | Write endpoint: toggle like. |
+| `POST` | `/api/v1/articles/{id}/bookmark` | [INFERRED] | Yes | Write endpoint: toggle bookmark. |
+| `DELETE`| `/api/v1/articles/{id}` | [INFERRED] | Yes | Write endpoint: delete authored post. |
 | `GET` | `/api/v1/articles/{id}/comments`| [INFERRED] | Optional | Fetch comment hierarchy for article. |
-| `POST` | `/api/v1/articles/{id}/comments`| [INFERRED] | Yes | Create comment: `{"content": "...", "parentId": "<optional-comment-id>"}` |
+| `POST` | `/api/v1/articles/{id}/comments`| [INFERRED] | Yes | Write endpoint: create comment. |
 
-### Post Entity Schema [CONFIRMED shape, INVENTED Vietnamese sample]
+### Post Entity Schema [CONFIRMED shape from unauthenticated feed, INVENTED Vietnamese sample]
 ```json
 {
   "id": "00000000-0000-7000-8000-000000000001",
@@ -131,10 +131,10 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `PUT` | `/api/v1/comments/{id}/vote` | [INFERRED] | Yes | Body: `{"value": 1 \| 0 \| -1}` |
-| `POST` | `/api/v1/comments/{id}/like` | [INFERRED] | Yes | Toggle comment like. |
-| `PATCH`| `/api/v1/comments/{id}` | [INFERRED] | Yes | Edit comment body: `{"content": "..."}` |
-| `DELETE`| `/api/v1/comments/{id}` | [INFERRED] | Yes | Remove comment. |
+| `PUT` | `/api/v1/comments/{id}/vote` | [INFERRED] | Yes | Write endpoint: `{"value": 1 \| 0 \| -1}` |
+| `POST` | `/api/v1/comments/{id}/like` | [INFERRED] | Yes | Write endpoint: toggle comment like. |
+| `PATCH`| `/api/v1/comments/{id}` | [INFERRED] | Yes | Write endpoint: edit comment content. |
+| `DELETE`| `/api/v1/comments/{id}` | [INFERRED] | Yes | Write endpoint: remove comment. |
 
 ---
 
@@ -142,11 +142,11 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/leaderboards` | [CONFIRMED] | Optional | Observed live response: `period`, `periodStart`, `periodEnd`, `computedAt`, `items`. |
-| `GET` | `/api/v1/point-rules` | [CONFIRMED] | Optional | Observed live response: `items` array with karma activity rules. |
-| `GET` | `/api/v1/me/points` | [INFERRED] | Yes | Current user point balance and activity breakdown. |
-| `GET` | `/api/v1/me/point-stats`| [INFERRED] | Yes | Query: `period=week`. Historical points earned. |
-| `POST` | `/api/v1/me/check-in` | [INFERRED] | Yes | Daily check-in reward claim. |
+| `GET` | `/api/v1/leaderboards` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response: `period`, `periodStart`, `periodEnd`, `computedAt`, `items`. |
+| `GET` | `/api/v1/point-rules` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response: `items` array with karma activity rules. |
+| `GET` | `/api/v1/me/points` | [INFERRED] | Yes | Current user point balance. Authenticated state **[UNKNOWN]**. |
+| `GET` | `/api/v1/me/point-stats`| [INFERRED] | Yes | Authenticated points history **[UNKNOWN]**. |
+| `POST` | `/api/v1/me/check-in` | [INFERRED] | Yes | Write endpoint: daily check-in claim. |
 
 ---
 
@@ -154,15 +154,15 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/channels` | [CONFIRMED] | Optional | Observed live response with public channel list. |
-| `GET` | `/api/v1/channels/{id}/messages` | [INFERRED] | Optional | Fetch channel message history. |
-| `POST` | `/api/v1/channels/{id}/messages` | [INFERRED] | Yes | Send chat message: `{"content": "...", "replyToId": "..."}` |
-| `GET` | `/api/v1/channels/{id}/mention-candidates` | [INFERRED] | Yes | Query: `q=<prefix>`. Mention autocompletion. |
-| `POST` | `/api/v1/messages/{id}/reactions` | [INFERRED] | Yes | Add emoji reaction. |
-| `GET` | `/api/v1/dm/conversations` | [INFERRED] | Yes | List user direct message conversations. |
-| `GET` | `/api/v1/dm/conversations/{id}/messages` | [INFERRED] | Yes | List messages in DM thread. |
-| `POST` | `/api/v1/dm/conversations/{id}/messages` | [INFERRED] | Yes | Send DM message. |
-| `POST` | `/api/v1/dm/conversations/{id}/read` | [INFERRED] | Yes | Mark DM conversation as read. |
+| `GET` | `/api/v1/channels` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response with public channel list. |
+| `GET` | `/api/v1/channels/{id}/messages` | [INFERRED] | Optional | Channel message history. |
+| `POST` | `/api/v1/channels/{id}/messages` | [INFERRED] | Yes | Write endpoint: send chat message. |
+| `GET` | `/api/v1/channels/{id}/mention-candidates` | [INFERRED] | Yes | Mention autocompletion. |
+| `POST` | `/api/v1/messages/{id}/reactions` | [INFERRED] | Yes | Write endpoint: add emoji reaction. |
+| `GET` | `/api/v1/dm/conversations` | [INFERRED] | Yes | Authenticated DM list **[UNKNOWN]**. |
+| `GET` | `/api/v1/dm/conversations/{id}/messages` | [INFERRED] | Yes | Authenticated DM messages **[UNKNOWN]**. |
+| `POST` | `/api/v1/dm/conversations/{id}/messages` | [INFERRED] | Yes | Write endpoint: send DM. |
+| `POST` | `/api/v1/dm/conversations/{id}/read` | [INFERRED] | Yes | Write endpoint: mark DM read. |
 
 ---
 
@@ -170,14 +170,26 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/projects` | [CONFIRMED] | Optional | Observed live response: `items`, `nextCursor`, `facets`. |
-| `POST` | `/api/v1/project-images/presign` | [INFERRED] | Yes | Presign upload URL for project screenshots. |
-| `POST` | `/api/v1/project-images/{assetId}/complete` | [INFERRED] | Yes | Confirm upload completion. |
+| `GET` | `/api/v1/projects` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response: `items`, `nextCursor`, `facets`. |
+| `POST` | `/api/v1/project-images/presign` | [INFERRED] | Yes | Write endpoint: presign upload URL. |
+| `POST` | `/api/v1/project-images/{assetId}/complete` | [INFERRED] | Yes | Write endpoint: confirm upload. |
 | `GET` | `/api/v1/users/{username}/projects` | [INFERRED] | Optional | Projects authored by user. |
 
 ---
 
-## 8. Realtime WebSocket Architecture
+## 8. Notifications & User Profile
+
+| Method | Path | Status | Auth Required | Description / Payload |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/notifications` | [INFERRED] | Yes | Authenticated notifications list **[UNKNOWN]**. |
+| `POST` | `/api/v1/notifications/read` | [INFERRED] | Yes | Write endpoint: mark notification read. |
+| `POST` | `/api/v1/notifications/seen` | [INFERRED] | Yes | Write endpoint: mark notification seen. |
+| `GET` | `/api/v1/me/profile` | [INFERRED] | Yes | Authenticated current user profile **[UNKNOWN]**. |
+| `PATCH`| `/api/v1/me/profile` | [INFERRED] | Yes | Write endpoint: update profile **[UNKNOWN]**. |
+
+---
+
+## 9. Realtime WebSocket Architecture
 
 ### Connection Endpoint [INFERRED]
 ```
@@ -209,7 +221,7 @@ Connection uses HTTP upgrade with existing session cookies.
 
 ---
 
-## 9. Voice Infrastructure [INFERRED]
+## 10. Voice Infrastructure [INFERRED]
 - Control API: `GET /api/v1/voice/rooms`, `POST /api/v1/voice/rooms/{id}/join-token`.
 - RTC Engine: LiveKit SFU running at `wss://voice.vietnamlinuxfamily.net`.
 - Dart integration: `livekit_client` official Flutter SDK for room connection and microphone streams.
