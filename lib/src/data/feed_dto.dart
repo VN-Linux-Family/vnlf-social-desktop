@@ -1,4 +1,5 @@
 import '../domain/models.dart';
+import 'profile_dto.dart';
 
 String _requiredString(Map<String, dynamic> json, String key) {
   final value = json[key];
@@ -34,12 +35,11 @@ final class FeedPostDto {
     }
     final author =
         rawAuthor as Map<String, dynamic>? ?? const <String, dynamic>{};
-    final username = _optionalString(author['username'], 'author.username');
-    final name = _optionalString(author['displayName'], 'author.displayName');
+    final profile = ProfileDto.fromJson(author);
     return FeedPostDto(
       id: _requiredString(json, 'id'),
-      username: username,
-      displayName: name.isEmpty ? username : name,
+      username: profile.username,
+      displayName: profile.displayName,
       excerpt: _optionalString(json['excerpt'], 'excerpt'),
       voteScore: _optionalInt(json['voteScore'], 'voteScore'),
       commentCount: _optionalInt(json['commentCount'], 'commentCount'),
@@ -67,6 +67,7 @@ final class FeedPageDto {
   final List<FeedPostDto> items;
   final String? nextCursor;
   static List<FeedPostDto> _parseItems(Object? value) {
+    if (value == null) return const [];
     if (value is! List) throw const ParseFailure('items');
     return value
         .map((item) {

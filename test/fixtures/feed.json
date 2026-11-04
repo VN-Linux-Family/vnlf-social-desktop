@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "id": "fixture-post-1",
+      "excerpt": "Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ",
+      "voteScore": 3,
+      "commentCount": 0,
+      "author": {
+        "username": "thanhvien",
+        "displayName": "Thành viên"
+      }
+    }
+  ],
+  "nextCursor": null
+}
