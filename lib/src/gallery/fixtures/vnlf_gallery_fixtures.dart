@@ -1,210 +1,166 @@
-import 'package:flutter/material.dart';
-
 import '../../design_system/design_system.dart';
 
 /// Synthetic Vietnamese fixtures for the Gallery and 3 key screens (`feed`, `thread`, `profile`).
 ///
-/// Strictly follows `PLAN.md` Gate 0 rules: preserves exact production schemas and
-/// visual density while using only invented Vietnamese content and synthetic names.
+/// Strictly compliant with zero-reference-content rules: 100% synthetic discussions,
+/// invented identities, and neutral placeholders. Zero production names or screenshot text.
 abstract final class VnlfGalleryFixtures {
-  static const AuthorData authorAn = AuthorData(
-    id: '00000000-0000-7000-8000-000000000002',
-    username: 'nguyenvanan',
-    displayName: 'Nguyễn Văn An',
+  static const AuthorData authorNam = AuthorData(
+    id: '00000000-0000-7000-8000-000000000011',
+    username: 'tranvannam',
+    displayName: 'Trần Văn Nam',
     role: 'MEMBER',
-    avatarPreset: AvatarVisualPreset.workspaceCoder,
     style: AuthorStyleData(
-      nameGradientLight: [Color(0xFF0F766E), Color(0xFF0369A1)],
-      nameGradientDark: [Color(0xFF5EEAD4), Color(0xFF7DD3FC)],
-      frame: AvatarFrameType.neon,
-      distroBadge: DistroBadgeType.cachyos,
+      frame: AvatarFrameType.ring,
+      distroBadge: DistroBadgeType.fedora,
       hasTerminalBadge: true,
     ),
   );
 
-  static const AuthorData authorMinhQuan = AuthorData(
-    id: '00000000-0000-7000-8000-000000000003',
-    username: 'minhquan_py',
-    displayName: ':)',
-    role: 'MEMBER',
-    avatarPreset: AvatarVisualPreset.retroChef,
-    style: AuthorStyleData(frame: AvatarFrameType.stars),
-  );
-
-  static const AuthorData authorHoangDung = AuthorData(
-    id: '00000000-0000-7000-8000-000000000004',
-    username: 'hoangdung_vn',
-    displayName: 'Lê Hoàng Dũng',
+  static const AuthorData authorMai = AuthorData(
+    id: '00000000-0000-7000-8000-000000000012',
+    username: 'lethimai',
+    displayName: 'Lê Thị Mai',
     role: 'CONTRIBUTOR',
-    avatarPreset: AvatarVisualPreset.matrixHacker,
     style: AuthorStyleData(
-      nameGradientLight: [Color(0xFF0F5338), Color(0xFF14532D)],
-      nameGradientDark: [Color(0xFF6EE7B7), Color(0xFF34D399)],
-      frame: AvatarFrameType.matrix,
-      nameEffect: NameEffectType.cursor,
-      hasPixelBadge: true,
+      frame: AvatarFrameType.none,
+      distroBadge: DistroBadgeType.nixos,
       hasPartnerStar: true,
-      distroBadge: DistroBadgeType.arch,
     ),
   );
 
-  static const AuthorData authorLinhChi = AuthorData(
-    id: '00000000-0000-7000-8000-000000000005',
-    username: 'linhchi_linux',
-    displayName: 'linhchi_linux',
+  static const AuthorData authorBao = AuthorData(
+    id: '00000000-0000-7000-8000-000000000013',
+    username: 'phamlqbao',
+    displayName: 'Phạm Quốc Bảo',
     role: 'MEMBER',
-    avatarPreset: AvatarVisualPreset.pastelSakura,
     style: AuthorStyleData(
-      nameGradientLight: [Color(0xFFC026D3), Color(0xFFE11D48)],
-      nameGradientDark: [Color(0xFFF0ABFC), Color(0xFFFDA4AF)],
-      frame: AvatarFrameType.stars,
-      distroBadge: DistroBadgeType.cachyos,
+      frame: AvatarFrameType.none,
+      distroBadge: DistroBadgeType.arch,
+      hasPixelBadge: true,
     ),
   );
 
-  static const AuthorData authorTuxArch = AuthorData(
-    id: '00000000-0000-7000-8000-000000000006',
-    username: 'TuxArchVN',
-    displayName: 'TuxArchVN',
+  static const AuthorData authorHa = AuthorData(
+    id: '00000000-0000-7000-8000-000000000014',
+    username: 'hoangthibaoha',
+    displayName: 'Hoàng Bảo Hà',
     role: 'MODERATOR',
-    avatarPreset: AvatarVisualPreset.tuxMascot,
     style: AuthorStyleData(
-      nameGradientLight: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
-      nameGradientDark: [Color(0xFF60A5FA), Color(0xFF93C5FD)],
-      distroBadge: DistroBadgeType.caramos,
+      frame: AvatarFrameType.ring,
+      distroBadge: DistroBadgeType.debian,
       hasTerminalBadge: true,
     ),
   );
 
   static const List<LeaderboardEntryData> weeklyLeaderboard = [
-    LeaderboardEntryData(rank: 1, author: authorHoangDung, points: 75),
-    LeaderboardEntryData(rank: 2, author: authorLinhChi, points: 70),
-    LeaderboardEntryData(rank: 3, author: authorTuxArch, points: 62),
+    LeaderboardEntryData(rank: 1, author: authorMai, points: 88),
+    LeaderboardEntryData(rank: 2, author: authorNam, points: 74),
+    LeaderboardEntryData(rank: 3, author: authorBao, points: 65),
   ];
 
   static const List<PostData> feedPosts = [
     PostData(
-      id: 'post-debian-xfce-01',
-      author: authorAn,
-      relativeTime: '1 giờ',
+      id: 'post-pipewire-audio-01',
+      author: authorNam,
+      relativeTime: '2 giờ',
       paragraphs: [
-        'Lúc mới biết Linux chưa có nhiều kinh nghiệm, mình cài thử bản rolling release cho máy trạm ở cửa hàng nhỏ (máy ít khi được mở mà gói cập nhật lại liên tục, đôi lúc ngại xung đột cấu hình).',
-        'Giờ có nhiều kinh nghiệm hơn chút, cài lại Debian 13 + XFCE ổn định mượt mà cho máy trạm :))...',
+        'Chia sẻ kinh nghiệm tinh chỉnh bộ đệm âm thanh PipeWire và WirePlumber để đạt độ trễ siêu thấp khi làm việc với các phần mềm xử lý âm thanh số trên Linux.',
+        'Sau khi cấu hình quantum 64/48000 trong pipewire.conf, hệ thống xử lý hoàn toàn trơn tru mà không gặp hiện tượng xé tiếng (xruns).',
       ],
-      attachment: LinuxDesktopAttachment(
-        distroHeader: 'debian 13',
-        terminalTitle: 'terminal - annguyen@debian: ~',
-        userHost: 'annguyen@debian',
-        osLine: 'Debian GNU/Linux 13 (trixie) x86_64',
-        kernelLine: 'Linux 6.12.10+deb13-amd64',
-        uptimeLine: '35 mins',
-        packagesLine: '1813 (dpkg), 6 (flatpak)',
-        shellLine: 'bash 5.2.37',
-        deLine: 'Xfce 4.20',
-        wmLine: 'Xfwm4 (X11) / Default',
-        cpuLine: 'Intel(R) Core(TM) i5-8250U (8) @ 3.40 GHz',
-        memoryLine: '1.73 GiB / 7.76 GiB (22%) - btrfs',
+      attachment: ImagePlaceholderAttachment(
+        aspectRatio: 16 / 9,
+        label: 'Sơ đồ định tuyến luồng âm thanh PipeWire & JACK',
       ),
-      voteScore: 4,
+      voteScore: 12,
       viewerVote: VoteState.neutral,
-      commentCount: 0,
+      commentCount: 4,
     ),
     PostData(
-      id: 'post-python-prompt-02',
-      author: authorMinhQuan,
-      relativeTime: '3 giờ',
+      id: 'post-shell-script-02',
+      author: authorMai,
+      relativeTime: '4 giờ',
       paragraphs: [
-        'Fact của ngày: Bạn có thể chỉnh prompt của Python',
-        'Và prompt ở đây là (xét ví dụ):',
+        'Mẹo dòng lệnh: Sử dụng GNU Parallel kết hợp ffmpeg để trích xuất âm thanh FLAC đa luồng nhanh gấp 4 lần so với vòng lặp tuần tự.',
+        'Đoạn script ngắn gọn sử dụng cú pháp chuẩn POSIX và hỗ trợ thư mục Tiếng Việt: ặ ữ ờ ẫ ệ:',
       ],
       attachment: CodeBlockAttachment(
         code:
-            'Python 3.14.3 (tags/v3.14.3:323c59a, Feb  3 2026, 16:04:56) [GCC 14.2.0] on linux\n'
-            'Type "help", "copyright", "credits" or "license" for more information.\n'
-            '>>>\n'
-            '^^^ đây là prompt (PS1)\n'
-            '>>> for i in range(10):\n'
-            '...     print(i)\n'
-            '^^^ đây cũng là prompt (PS2)',
+            '#!/usr/bin/env bash\n'
+            '# Chuyển đổi video đa luồng với GNU Parallel\n'
+            'find ./video -type f -name "*.mkv" | \\\n'
+            '  parallel -j 4 ffmpeg -i {} -vn -c:a flac {.}.flac\n'
+            '\n'
+            'echo "Hoàn thành xử lý đa luồng!"',
       ),
-      voteScore: 18,
+      voteScore: 24,
       viewerVote: VoteState.upvoted,
-      commentCount: 5,
+      commentCount: 7,
     ),
     PostData(
-      id: 'post-caramos-wayland-03',
-      author: authorHoangDung,
-      relativeTime: '6 giờ',
+      id: 'post-flutter-wayland-03',
+      author: authorBao,
+      relativeTime: '7 giờ',
       isArticle: true,
-      title: 'Cấu hình hiển thị Tiếng Việt: ặ ữ ờ ẫ ệ trên Wayland & CaramOS',
+      title: 'Xây dựng ứng dụng Flutter native mượt mà trên môi trường Wayland',
       paragraphs: [
-        'Khi sử dụng bộ gõ Fcitx5 kết hợp phông chữ Be Vietnam Pro trên môi trường Wayland, việc bật subpixel hinting và thiết lập fontconfig chuẩn giúp dấu thanh Tiếng Việt: ặ ữ ờ ẫ ệ hiển thị sắc nét không bị cắt dấu.',
+        'Kiến trúc render Impeller trên Linux desktop hiện đã hỗ trợ tốt tính năng tăng tốc phần cứng qua EGL. Nhờ phông chữ Be Vietnam Pro và cấu hình fontconfig hợp lý, các ký tự Tiếng Việt: ặ ữ ờ ẫ ệ hiển thị sắc nét ở mọi độ phân giải.',
       ],
-      tags: ['caramos', 'wayland', 'fcitx5', 'tiengviet'],
-      attachment: ProjectPreviewAttachment(project: projectCaramControl),
-      voteScore: 42,
+      tags: ['flutter', 'linux', 'wayland', 'tiengviet'],
+      attachment: ProjectPreviewAttachment(project: projectFlutterWayland),
+      voteScore: 56,
       viewerVote: VoteState.upvoted,
-      commentCount: 12,
+      commentCount: 15,
       isBookmarked: true,
     ),
   ];
 
   static const PostData threadDetailPost = PostData(
-    id: 'thread-detail-01',
-    author: authorAn,
-    relativeTime: '1 giờ trước',
+    id: 'thread-detail-pipewire-01',
+    author: authorNam,
+    relativeTime: '2 giờ trước',
     isArticle: true,
-    title: 'Kinh nghiệm chuyển từ Rolling Release sang Debian 13 + XFCE cho máy trạm sản xuất (Tiếng Việt: ặ ữ ờ ẫ ệ)',
+    title: 'Tối ưu hóa âm thanh độ trễ thấp với PipeWire và WirePlumber trên máy trạm Linux (Tiếng Việt: ặ ữ ờ ẫ ệ)',
     paragraphs: [
-      'Lúc mới biết Linux chưa có nhiều kinh nghiệm, mình cài thử bản rolling release cho máy trạm ở cửa hàng nhỏ (máy ít khi được mở mà gói cập nhật lại liên tục, đôi lúc ngại xung đột cấu hình).',
-      'Giờ có nhiều kinh nghiệm hơn chút, cài lại Debian 13 (Trixie) + XFCE 4.20 kèm bộ gõ Fcitx5 hiển thị đầy đủ Tiếng Việt: ặ ữ ờ ẫ ệ. Hệ thống chỉ tiêu thụ khoảng 1.7 GiB RAM trên phân vùng Btrfs với snapshot tự động.',
-      'Dưới đây là màn hình fastfetch thực tế và cấu hình tự động dọn gói apt hàng tuần:',
+      'Nhiều bạn khi mới làm quen với PipeWire trên Linux thường gặp khó khăn trong việc cân bằng giữa mức tiêu thụ CPU và độ trễ âm thanh khi cắm tai nghe DAC hoặc micro thu âm.',
+      'Bài viết này tổng hợp toàn bộ các bước thiết lập WirePlumber policy, quyền hạn nhóm realtime trong /etc/security/limits.d, và cách kiểm tra thông số buffer trực tiếp từ terminal.',
+      'Dưới đây là sơ đồ kiến trúc định tuyến và file cấu hình mẫu:',
     ],
-    tags: ['debian13', 'xfce', 'btrfs', 'fcitx5', 'kinhnghiem'],
-    attachment: LinuxDesktopAttachment(
-      distroHeader: 'debian 13',
-      terminalTitle: 'terminal - annguyen@debian: ~',
-      userHost: 'annguyen@debian',
-      osLine: 'Debian GNU/Linux 13 (trixie) x86_64',
-      kernelLine: 'Linux 6.12.10+deb13-amd64',
-      uptimeLine: '35 mins',
-      packagesLine: '1813 (dpkg), 6 (flatpak)',
-      shellLine: 'bash 5.2.37',
-      deLine: 'Xfce 4.20',
-      wmLine: 'Xfwm4 (X11) / Default',
-      cpuLine: 'Intel(R) Core(TM) i5-8250U (8) @ 3.40 GHz',
-      memoryLine: '1.73 GiB / 7.76 GiB (22%) - btrfs',
+    tags: ['pipewire', 'audio', 'realtime', 'linux-pro'],
+    attachment: ImagePlaceholderAttachment(
+      aspectRatio: 16 / 9,
+      label: 'Sơ đồ kết nối PipeWire node graph',
     ),
-    voteScore: 48,
+    voteScore: 36,
     viewerVote: VoteState.upvoted,
-    commentCount: 6,
+    commentCount: 5,
     isBookmarked: true,
   );
 
   static const List<CommentNodeData> threadComments = [
     CommentNodeData(
       id: 'c-1',
-      author: authorHoangDung,
-      relativeTime: '45 phút',
-      body: 'Chuẩn bài rồi bạn! Máy văn phòng hoặc máy ít bật thì Debian Trixie + XFCE là chân ái. Kết hợp thêm snapper cho phân vùng btrfs nữa là yên tâm tuyệt đối.',
-      inlineCode: 'sudo apt install snapper btrfs-assistant && sudo snapper -c root create-config /',
-      voteScore: 14,
+      author: authorMai,
+      relativeTime: '1 giờ',
+      body: 'Cấu hình này rất chi tiết! Mình bổ sung thêm là nên kiểm tra quyền nhóm audio và thêm người dùng vào nhóm realtime để tránh tình trạng kernel priority scheduling bị từ chối.',
+      inlineCode: 'pw-top # Theo dõi trực tiếp buffer và latency từng node',
+      voteScore: 11,
       viewerVote: VoteState.upvoted,
       replies: [
         CommentNodeData(
           id: 'c-1-1',
-          author: authorAn,
-          relativeTime: '32 phút',
-          body: 'Cảm ơn anh! Em vừa cấu hình thêm hook apt để tự tạo snapshot trước mỗi lần upgrade luôn ạ.',
-          voteScore: 6,
+          author: authorNam,
+          relativeTime: '40 phút',
+          body: 'Chính xác bạn! Thêm rule trong /etc/security/limits.d/99-realtime.conf với rtprio 95 và memlock unlimited là chạy mượt mà ngay.',
+          voteScore: 5,
           viewerVote: VoteState.neutral,
           replies: [
             CommentNodeData(
               id: 'c-1-1-1',
-              author: authorTuxArch,
-              relativeTime: '18 phút',
-              body: 'Nhớ giới hạn NUMBER_LIMIT="10" trong /etc/snapper/configs/root để tránh đầy ổ cứng nhé!',
-              voteScore: 9,
+              author: authorBao,
+              relativeTime: '20 phút',
+              body: 'Đã áp dụng thành công trên máy của mình, độ trễ tai nghe giảm hẳn!',
+              voteScore: 4,
               viewerVote: VoteState.upvoted,
             ),
           ],
@@ -213,56 +169,50 @@ abstract final class VnlfGalleryFixtures {
     ),
     CommentNodeData(
       id: 'c-2',
-      author: authorLinhChi,
-      relativeTime: '25 phút',
-      body: 'Giao diện XFCE 4.20 nhìn gọn quá, font Be Vietnam Pro hiển thị Tiếng Việt: ặ ữ ờ ẫ ệ trên thanh panel rất rõ ràng.',
-      voteScore: 5,
+      author: authorHa,
+      relativeTime: '30 phút',
+      body: 'Bài viết rất hữu ích cho cộng đồng anh em làm nhạc và dựng video trên Linux. Cảm ơn bạn đã đóng góp!',
+      voteScore: 8,
       viewerVote: VoteState.neutral,
     ),
   ];
 
-  static const ProjectShowcaseData projectCaramControl = ProjectShowcaseData(
-    id: 'proj-caram-welcome',
-    name: 'caramos-control-center',
-    summary: 'Trung tâm cấu hình nhanh trình điều khiển, bộ gõ Tiếng Việt: ặ ữ ờ ẫ ệ và kho ứng dụng cho CaramOS.',
-    category: 'CaramOS',
-    language: 'Rust / GTK4',
-    stars: 342,
-    forks: 41,
-    rating: 4.9,
-    tags: ['gtk4', 'rust', 'linux-vn'],
+  static const ProjectShowcaseData projectFlutterWayland = ProjectShowcaseData(
+    id: 'proj-flutter-wayland-shell',
+    name: 'vnlf-wayland-toolkit',
+    description: 'Thư viện tiện ích tối ưu hóa trải nghiệm native cho ứng dụng Flutter trên Wayland và Linux desktop.',
+    primaryLanguage: 'Dart / C++',
+    tag: 'Wayland',
+    stars: 218,
+    forks: 32,
   );
 
   static const List<ProjectShowcaseData> featuredProjects = [
-    projectCaramControl,
+    projectFlutterWayland,
     ProjectShowcaseData(
-      id: 'proj-vnlf-cli',
-      name: 'vnlf-dotenv-sync',
-      summary: 'Công cụ đồng bộ cấu hình dotfiles (Hyprland, Waybar, Neovim, Kitty) tự động sao lưu qua Git.',
-      category: 'Tiện ích',
-      language: 'Shell / Go',
-      stars: 189,
-      forks: 23,
-      rating: 4.8,
-      tags: ['dotfiles', 'hyprland', 'cli'],
+      id: 'proj-pipewire-gui',
+      name: 'wireplumber-patchbay',
+      description: 'Giao diện đồ họa nhẹ nhàng quản lý kết nối và mức âm lượng thời gian thực cho PipeWire.',
+      primaryLanguage: 'Rust / GTK4',
+      tag: 'Audio',
+      stars: 164,
+      forks: 19,
     ),
   ];
 
   static const List<ChatMessageData> sampleChatMessages = [
     ChatMessageData(
-      id: 'msg-1',
-      author: authorTuxArch,
-      timestamp: '10:24',
-      text: 'Chào buổi sáng anh em! Bản ISO thử nghiệm CaramOS 2026.11 đã cập nhật nhân Linux 6.12 LTS và sửa lỗi gõ Tiếng Việt: ặ ữ ờ ẫ ệ trên Wayland.',
-      stickerLabel: 'Sticker: Tux Thả Tim 🐧💚',
-      reactions: {'🐧': 8, '🔥': 5, '❤️': 4},
+      id: 'msg-01',
+      author: authorNam,
+      timestamp: '14:20',
+      text: 'Chào mọi người, dự án toolkit đã có bản cập nhật mới hỗ trợ Wayland.',
     ),
     ChatMessageData(
-      id: 'msg-2',
-      author: authorLinhChi,
-      timestamp: '10:26',
-      text: 'Mình vừa tải về chạy thử trên máy ảo QEMU, tốc độ khởi động vào phiên làm việc nhanh hơn hẳn!',
-      reactions: {'🎉': 3, '👍': 4},
+      id: 'msg-02',
+      author: authorMai,
+      timestamp: '14:22',
+      text:
+          'Tuyệt vời quá! Mình vừa kiểm tra trên NixOS, hoạt động rất ổn định.',
     ),
   ];
 }

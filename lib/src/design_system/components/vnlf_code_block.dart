@@ -62,14 +62,14 @@ class _VnlfCodeBlockState extends State<VnlfCodeBlock> {
               if (widget.showHorizontalScrollbar)
                 Container(
                   height: 11,
-                  color: const Color(0xFF1F2421),
+                  color: colors.brandStrong,
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.arrow_left_rounded,
                         size: 11,
-                        color: Color(0xFF9CA3AF),
+                        color: colors.muted,
                       ),
                       Expanded(
                         child: Align(
@@ -79,17 +79,17 @@ class _VnlfCodeBlockState extends State<VnlfCodeBlock> {
                             child: Container(
                               height: 6,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFC7CCC9),
+                                color: colors.line,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.arrow_right_rounded,
                         size: 11,
-                        color: Color(0xFF9CA3AF),
+                        color: colors.muted,
                       ),
                     ],
                   ),
@@ -115,7 +115,7 @@ class _VnlfCodeBlockState extends State<VnlfCodeBlock> {
                       VnlfDimensions.radiusSm,
                     ),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.14),
+                      color: colors.codeBlockText.withValues(alpha: 0.18),
                     ),
                   ),
                   child: Text(

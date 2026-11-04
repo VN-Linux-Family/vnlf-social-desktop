@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Avatar frame types from `DESIGN_REFERENCE.md` and `API_NOTES.md`.
-enum AvatarFrameType { none, matrix, neon, stars }
+/// Avatar frame types: neutral generic ring in core design system.
+/// Unconfirmed site cosmetic effects (matrix, neon, stars) are isolated in unconfirmed_avatar_frames.dart.
+enum AvatarFrameType { none, ring }
 
 /// Name effect types from `DESIGN_REFERENCE.md` and `API_NOTES.md`.
 enum NameEffectType { none, rainbow, glitch, cursor }
@@ -98,36 +99,16 @@ sealed class PostAttachment {
   const PostAttachment();
 }
 
-/// Renders an authentic Linux desktop + fastfetch/neofetch terminal preview.
+/// Renders a neutral image placeholder attachment for offline previews.
 @immutable
-final class LinuxDesktopAttachment extends PostAttachment {
-  const LinuxDesktopAttachment({
-    required this.distroHeader,
-    required this.terminalTitle,
-    required this.userHost,
-    required this.osLine,
-    required this.kernelLine,
-    required this.uptimeLine,
-    required this.packagesLine,
-    required this.shellLine,
-    required this.deLine,
-    required this.wmLine,
-    required this.cpuLine,
-    required this.memoryLine,
+final class ImagePlaceholderAttachment extends PostAttachment {
+  const ImagePlaceholderAttachment({
+    this.aspectRatio = 16 / 9,
+    this.label = 'Hình ảnh đính kèm',
   });
 
-  final String distroHeader;
-  final String terminalTitle;
-  final String userHost;
-  final String osLine;
-  final String kernelLine;
-  final String uptimeLine;
-  final String packagesLine;
-  final String shellLine;
-  final String deLine;
-  final String wmLine;
-  final String cpuLine;
-  final String memoryLine;
+  final double aspectRatio;
+  final String label;
 }
 
 /// Renders a dark forest-green terminal code snippet with a "Sao chép" pill.
@@ -249,24 +230,27 @@ class ProjectShowcaseData {
   const ProjectShowcaseData({
     required this.id,
     required this.name,
-    required this.summary,
-    required this.category,
-    required this.language,
+    required this.description,
+    required this.primaryLanguage,
+    required this.tag,
     required this.stars,
     required this.forks,
-    required this.rating,
-    this.tags = const [],
+    this.rating = 5.0,
   });
 
   final String id;
   final String name;
-  final String summary;
-  final String category;
-  final String language;
+  final String description;
+  final String primaryLanguage;
+  final String tag;
   final int stars;
   final int forks;
   final double rating;
-  final List<String> tags;
+
+  String get summary => description;
+  String get language => primaryLanguage;
+  String get category => tag;
+  List<String> get tags => [tag];
 }
 
 /// Direct message / channel chat message bubble data.

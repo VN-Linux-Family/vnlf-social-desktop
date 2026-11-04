@@ -43,9 +43,9 @@ class VnlfAuthorNameRow extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: style.nameEffect == NameEffectType.glitch
           ? baseTextStyle.copyWith(
-              shadows: const [
-                Shadow(color: Color(0xFF06B6D4), offset: Offset(-0.8, 0)),
-                Shadow(color: Color(0xFFF43F5E), offset: Offset(0.8, 0)),
+              shadows: [
+                Shadow(color: colors.cyan, offset: const Offset(-0.8, 0)),
+                Shadow(color: colors.red, offset: const Offset(0.8, 0)),
               ],
             )
           : baseTextStyle,
@@ -54,13 +54,8 @@ class VnlfAuthorNameRow extends StatelessWidget {
     if (style.nameEffect == NameEffectType.rainbow) {
       nameText = ShaderMask(
         blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => const LinearGradient(
-          colors: [
-            Color(0xFF0D9488),
-            Color(0xFF0284C7),
-            Color(0xFF7C3AED),
-            Color(0xFFDB2777),
-          ],
+        shaderCallback: (bounds) => LinearGradient(
+          colors: [colors.brand, colors.cyan, colors.purple, colors.red],
         ).createShader(bounds),
         child: nameText,
       );
@@ -127,13 +122,14 @@ class VnlfInlineDistroIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
     final (Color bg, Color fg, String glyph) = switch (badge) {
-      DistroBadgeType.cachyos => (const Color(0xFF06B6D4), Colors.white, 'C'),
-      DistroBadgeType.caramos => (const Color(0xFF10B981), Colors.white, 'C'),
-      DistroBadgeType.arch => (const Color(0xFF0284C7), Colors.white, 'A'),
-      DistroBadgeType.debian => (const Color(0xFFE11D48), Colors.white, 'D'),
-      DistroBadgeType.nixos => (const Color(0xFF0EA5E9), Colors.white, 'N'),
-      DistroBadgeType.fedora => (const Color(0xFF2563EB), Colors.white, 'f'),
+      DistroBadgeType.cachyos => (colors.cyan, colors.surface, 'C'),
+      DistroBadgeType.caramos => (colors.green, colors.surface, 'C'),
+      DistroBadgeType.arch => (colors.blue, colors.surface, 'A'),
+      DistroBadgeType.debian => (colors.red, colors.surface, 'D'),
+      DistroBadgeType.nixos => (colors.cyan, colors.surface, 'N'),
+      DistroBadgeType.fedora => (colors.blue, colors.surface, 'f'),
       DistroBadgeType.none => (Colors.transparent, Colors.transparent, ''),
     };
 
@@ -203,22 +199,23 @@ class _TerminalMiniBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
     return Container(
       width: 15,
       height: 15,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: const Color(0xFF15803D),
+        color: colors.brand,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: const Text(
+      child: Text(
         '>_',
         style: TextStyle(
           fontFamily: VnlfTypography.monoFontFamily,
           fontSize: 7.5,
           height: 1.0,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: colors.surface,
         ),
       ),
     );
@@ -250,15 +247,13 @@ class _GoldStarMiniBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
     return Container(
       width: 15,
       height: 15,
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Color(0xFFF59E0B),
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(Icons.star_rounded, size: 10.5, color: Colors.white),
+      decoration: BoxDecoration(color: colors.amber, shape: BoxShape.circle),
+      child: Icon(Icons.star_rounded, size: 10.5, color: colors.surface),
     );
   }
 }

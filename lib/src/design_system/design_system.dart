@@ -1,3 +1,4 @@
+export 'components/brand_assets.dart';
 export 'components/vnlf_author_identity.dart';
 export 'components/vnlf_avatar.dart';
 export 'components/vnlf_code_block.dart';

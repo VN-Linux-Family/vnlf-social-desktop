@@ -120,7 +120,7 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Cấu hình Fcitx5 & tự động dọn gói apt (/etc/environment)',
+                        'Cấu hình bộ đệm PipeWire quantum 64/48000',
                         style: VnlfTypography.h3(colors.ink),
                       ),
                     ),
@@ -129,13 +129,14 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                 const SizedBox(height: 10),
                 const VnlfCodeBlock(
                   code:
-                      '# Thiết lập bộ gõ Tiếng Việt: ặ ữ ờ ẫ ệ cho XFCE & Wayland\n'
-                      'GTK_IM_MODULE=fcitx\n'
-                      'QT_IM_MODULE=fcitx\n'
-                      'XMODIFIERS=@im=fcitx\n'
+                      '# Cấu hình PipeWire quantum siêu thấp (Tiếng Việt: ặ ữ ờ ẫ ệ)\n'
+                      'default.clock.rate = 48000\n'
+                      'default.clock.quantum = 64\n'
+                      'default.clock.min-quantum = 32\n'
+                      'default.clock.max-quantum = 1024\n'
                       '\n'
-                      '# Kiểm tra trạng thái dịch vụ snapshot Btrfs\n'
-                      'systemctl status snapper-timeline.timer snapper-cleanup.timer',
+                      '# Khởi động lại dịch vụ người dùng\n'
+                      'systemctl --user restart pipewire wireplumber',
                   showHorizontalScrollbar: false,
                 ),
               ],
@@ -210,7 +211,7 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                             child: Text(
                               'Gửi bình luận',
                               style: VnlfTypography.control(
-                                colors.isDark ? colors.bg : Colors.white,
+                                colors.isDark ? colors.bg : colors.surface,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -297,7 +298,7 @@ class _ThreadAuthorCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Kỹ sư hệ thống Linux & người đóng góp tài liệu Debian / CaramOS cho cộng đồng.',
+            'Kỹ sư hệ thống Linux & người đóng góp tài liệu mã nguồn mở cho cộng đồng.',
             style: VnlfTypography.body(colors.ink),
           ),
           const SizedBox(height: 12),

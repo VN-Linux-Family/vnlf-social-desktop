@@ -142,8 +142,11 @@ class VnlfPostCard extends StatelessWidget {
                 if (post.attachment != null) ...[
                   const SizedBox(height: 12),
                   switch (post.attachment!) {
-                    final LinuxDesktopAttachment desktop =>
-                      VnlfLinuxDesktopPreview(attachment: desktop),
+                    final ImagePlaceholderAttachment imagePlaceholder =>
+                      VnlfImagePlaceholder(
+                        aspectRatio: imagePlaceholder.aspectRatio,
+                        label: imagePlaceholder.label,
+                      ),
                     final CodeBlockAttachment codeBlock => VnlfCodeBlock(
                       code: codeBlock.code,
                       showHorizontalScrollbar:

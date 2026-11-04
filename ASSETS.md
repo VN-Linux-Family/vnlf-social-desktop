@@ -1,0 +1,16 @@
+# ASSETS.md: Asset Ledger
+
+This document tracks all external, site-original, and third-party assets utilized or referenced in the VNLF Flutter client codebase, along with ownership, license sources, and compliance decisions.
+
+| Asset | File and Lines | Source | License / Ownership | Status | Decision |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **VnlfLinuxDesktopPreview** | Removed from `lib/src/design_system/components/vnlf_media_preview.dart` | Procedural vector illustration replicating a specific desktop screenshot post | `vietnamlinuxfamily.net` community post author | Removed | **Removed from design_system.** Illustrates one specific post. Gallery and fixtures use neutral `VnlfImagePlaceholder`. Real post images load from API at runtime and are never bundled. |
+| **VnlfLogoEmblem** | `lib/src/design_system/components/brand_assets.dart:58-127` | Replicated vector geometry of community site favicon/emblem | `vietnamlinuxfamily.net` site owners | Unknown ownership (Unlicensed for public distribution) | **Kept for local dev only, behind single `BrandAssets` interface.** Defaults to neutral geometric placeholder (`_NeutralLogoPlaceholder`). Dev emblem toggled via `BrandAssets.useLocalDevEmblem`. Nothing public until owners agree. |
+| **Avatar Frames (`matrix`, `neon`, `stars`)** | `lib/src/design_system/components/unconfirmed_avatar_frames.dart:1-70` | Procedural canvas painters replicating cosmetic website frames | `vietnamlinuxfamily.net` site owners | Unknown ownership / Unconfirmed API schema | **Design system barrel exports only 1 neutral generic ring (`AvatarFrameType.ring`).** The three site-style effects are isolated in `unconfirmed_avatar_frames.dart` marked "unknown ownership", not exported by barrel. Real frames wired only once API field is confirmed in Phase 3. |
+| **Distro Badges (`arch`, `debian`, `cachyos`, `caramos`, `nixos`, `fedora`)** | `lib/src/design_system/components/vnlf_author_identity.dart:123-195` | Generic letter chips with token-driven background colors | Arch Linux, Debian Project, Fedora Project, NixOS Foundation, CachyOS, CaramOS trademarks | Known third-party trademarks; chips use generic letter typography only | **Keep colored letter chips, data-driven by distro id.** Zero hand-drawn official logos. Use official logo packs only after checking each project's trademark guidelines. |
+| **Be Vietnam Pro (Fonts)** | `assets/fonts/BeVietnamPro-*.ttf`, `assets/fonts/OFL.txt:1-93` | Upstream repository: [bettergui/BeVietnamPro](https://github.com/bettergui/BeVietnamPro) | SIL Open Font License 1.1 (Copyright 2021 The Be Vietnam Pro Project Authors) | Known open source license (SIL OFL-1.1 verified) | **Retained.** Tracked OFL text file with source URL placed directly in `assets/fonts/OFL.txt`. |
+
+## Compliance Rules
+1. **Zero Unconfirmed Assets in Public Builds**: Only assets with verified open-source licenses or neutral placeholders are exported by the design system barrel.
+2. **Local Development Isolation**: Any site-original emblems or unconfirmed decorative effects must remain isolated behind swappable interfaces and unexported files.
+3. **No Pushing or Sharing**: Do not push or share the repository anywhere until all rows marked "Unknown ownership" have been explicitly reviewed and accepted by the project owner.

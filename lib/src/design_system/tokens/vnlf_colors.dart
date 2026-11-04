@@ -18,6 +18,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
     required this.orange,
     required this.red,
     required this.blue,
+    required this.green,
+    required this.cyan,
+    required this.purple,
+    required this.amber,
     required this.tierPartner,
     required this.ratingStar,
     required this.codeBlockBg,
@@ -69,6 +73,18 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
   /// `--blue`: Links, informational badges, Discord links (`#2f6e9e` light / `#86bade` dark).
   final Color blue;
 
+  /// Semantic green accent for success badges and online indicators.
+  final Color green;
+
+  /// Semantic cyan accent for technical badges and terminal links.
+  final Color cyan;
+
+  /// Semantic purple accent for special roles and tags.
+  final Color purple;
+
+  /// Semantic amber accent for rank medals, warnings, and stars.
+  final Color amber;
+
   /// `--tier-partner`: Partner / sponsor badge accent (`#8f5408` light / `#e8b45c` dark).
   final Color tierPartner;
 
@@ -106,6 +122,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
     orange: Color(0xFF9A5B0C),
     red: Color(0xFFC0392B),
     blue: Color(0xFF2F6E9E),
+    green: Color(0xFF16A34A),
+    cyan: Color(0xFF0284C7),
+    purple: Color(0xFF7C3AED),
+    amber: Color(0xFFD97706),
     tierPartner: Color(0xFF8F5408),
     ratingStar: Color(0xFFD99A06),
     codeBlockBg: Color(0xFF113B26),
@@ -131,6 +151,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
     orange: Color(0xFFE0A458),
     red: Color(0xFFF08A7E),
     blue: Color(0xFF86BADE),
+    green: Color(0xFF4ADE80),
+    cyan: Color(0xFF38BDF8),
+    purple: Color(0xFFC084FC),
+    amber: Color(0xFFFBBF24),
     tierPartner: Color(0xFFE8B45C),
     ratingStar: Color(0xFFF2C14E),
     codeBlockBg: Color(0xFF0D2B1C),
@@ -161,6 +185,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
     Color? orange,
     Color? red,
     Color? blue,
+    Color? green,
+    Color? cyan,
+    Color? purple,
+    Color? amber,
     Color? tierPartner,
     Color? ratingStar,
     Color? codeBlockBg,
@@ -184,6 +212,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
       orange: orange ?? this.orange,
       red: red ?? this.red,
       blue: blue ?? this.blue,
+      green: green ?? this.green,
+      cyan: cyan ?? this.cyan,
+      purple: purple ?? this.purple,
+      amber: amber ?? this.amber,
       tierPartner: tierPartner ?? this.tierPartner,
       ratingStar: ratingStar ?? this.ratingStar,
       codeBlockBg: codeBlockBg ?? this.codeBlockBg,
@@ -212,6 +244,10 @@ class VnlfColors extends ThemeExtension<VnlfColors> {
       orange: Color.lerp(orange, other.orange, t)!,
       red: Color.lerp(red, other.red, t)!,
       blue: Color.lerp(blue, other.blue, t)!,
+      green: Color.lerp(green, other.green, t)!,
+      cyan: Color.lerp(cyan, other.cyan, t)!,
+      purple: Color.lerp(purple, other.purple, t)!,
+      amber: Color.lerp(amber, other.amber, t)!,
       tierPartner: Color.lerp(tierPartner, other.tierPartner, t)!,
       ratingStar: Color.lerp(ratingStar, other.ratingStar, t)!,
       codeBlockBg: Color.lerp(codeBlockBg, other.codeBlockBg, t)!,

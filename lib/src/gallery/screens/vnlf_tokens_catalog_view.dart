@@ -69,12 +69,12 @@ class VnlfTokensCatalogView extends StatelessWidget {
                       _TypeRow(
                         token: 'text-meta (12/16 Regular)',
                         style: VnlfTypography.meta(colors.muted),
-                        sample: '@nguyenvanan · 1 giờ trước · 42 bình chọn',
+                        sample: '@tranvannam · 1 giờ trước · 42 bình chọn',
                       ),
                       _TypeRow(
                         token: 'text-caption (11/14 Medium)',
                         style: VnlfTypography.caption(colors.brand),
-                        sample: '#caramos  #debian13  #archlinux  #wayland',
+                        sample: '#wayland  #pipewire  #flutter  #linux',
                       ),
                     ],
                   ),
@@ -123,16 +123,16 @@ class VnlfTokensCatalogView extends StatelessWidget {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: const [
                           VnlfAuthorNameRow(
-                            author: VnlfGalleryFixtures.authorAn,
+                            author: VnlfGalleryFixtures.authorNam,
                           ),
                           VnlfAuthorNameRow(
-                            author: VnlfGalleryFixtures.authorHoangDung,
+                            author: VnlfGalleryFixtures.authorMai,
                           ),
                           VnlfAuthorNameRow(
-                            author: VnlfGalleryFixtures.authorLinhChi,
+                            author: VnlfGalleryFixtures.authorBao,
                           ),
                           VnlfAuthorNameRow(
-                            author: VnlfGalleryFixtures.authorTuxArch,
+                            author: VnlfGalleryFixtures.authorHa,
                           ),
                         ],
                       ),
