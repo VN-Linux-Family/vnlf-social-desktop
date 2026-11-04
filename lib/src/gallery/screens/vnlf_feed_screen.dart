@@ -137,6 +137,13 @@ class _VnlfFeedScreenState extends State<VnlfFeedScreen> {
             if (i > 0) const SizedBox(height: 12),
             VnlfPostCard(
               post: visiblePosts[i],
+              emptyTitle: VnlfGalleryFixtures.feedEmptyTitle,
+              emptyMessage: VnlfGalleryFixtures.feedEmptyMessage,
+              emptyActionLabel: VnlfGalleryFixtures.refreshActionLabel,
+              errorTitle: VnlfGalleryFixtures.feedErrorTitle,
+              retryLabel: VnlfGalleryFixtures.retryActionLabel,
+              loadingSemanticLabel:
+                  VnlfGalleryFixtures.postCardSkeletonSemanticLabel,
               codeCopyLabel: VnlfGalleryFixtures.codeCopyLabel,
               codeCopiedLabel: VnlfGalleryFixtures.codeCopiedLabel,
               moreOptionsSemanticLabel:

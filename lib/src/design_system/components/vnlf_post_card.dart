@@ -8,6 +8,8 @@ import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
 import 'vnlf_code_block.dart';
 import 'vnlf_media_preview.dart';
+import 'vnlf_skeleton.dart';
+import 'vnlf_state_cards.dart';
 import 'vnlf_vote_capsule.dart';
 
 export 'vnlf_skeleton.dart'
@@ -15,7 +17,8 @@ export 'vnlf_skeleton.dart'
         VnlfFeedPostSkeleton,
         VnlfFeedPostsSkeleton,
         VnlfFeedSkeletonList,
-        VnlfPostCardSkeleton;
+        VnlfPostCardSkeleton,
+        VnlfSkeletonShimmerScope;
 export 'vnlf_state_cards.dart' show VnlfFeedEmptyState, VnlfFeedErrorState;
 
 /// Composer prompt card at the top of the feed.
@@ -93,10 +96,30 @@ class VnlfComposerPromptCard extends StatelessWidget {
 ///
 /// Places the 40x40 framed avatar in the left column and aligns the header,
 /// body paragraphs, attachments, and interaction bar in the right column.
+/// Supports loading, empty, and error state variants via constructor parameters
+/// without any localization imports.
 class VnlfPostCard extends StatelessWidget {
   const VnlfPostCard({
     super.key,
-    required this.post,
+    this.post,
+    this.isLoading = false,
+    this.isEmpty = false,
+    this.controller,
+    this.shimmerController,
+    this.showSkeletonTitle = false,
+    this.showSkeletonAttachment = false,
+    this.emptyTitle = '',
+    this.emptyMessage = '',
+    this.emptyActionLabel,
+    this.onEmptyAction,
+    this.errorTitle = '',
+    this.errorMessage,
+    this.retryLabel = '',
+    this.onRetry,
+    this.loadingSemanticLabel,
+    this.emptySemanticLabel,
+    this.errorSemanticLabel,
+    this.actionSemanticLabel,
     this.onVoteChanged,
     this.onCommentTap,
     this.onBookmarkToggle,
@@ -116,7 +139,142 @@ class VnlfPostCard extends StatelessWidget {
     this.bookmarkSemanticLabel,
   });
 
-  final PostData post;
+  const VnlfPostCard.loading({
+    super.key,
+    this.controller,
+    this.shimmerController,
+    this.showSkeletonTitle = false,
+    this.showSkeletonAttachment = false,
+    this.showBottomActions = true,
+    this.semanticLabel,
+    this.loadingSemanticLabel,
+  }) : post = null,
+       isLoading = true,
+       isEmpty = false,
+       emptyTitle = '',
+       emptyMessage = '',
+       emptyActionLabel = null,
+       onEmptyAction = null,
+       errorTitle = '',
+       errorMessage = null,
+       retryLabel = '',
+       onRetry = null,
+       emptySemanticLabel = null,
+       errorSemanticLabel = null,
+       actionSemanticLabel = null,
+       onVoteChanged = null,
+       onCommentTap = null,
+       onBookmarkToggle = null,
+       onAuthorTap = null,
+       authorAvatarSemanticLabel = null,
+       moreOptionsSemanticLabel = null,
+       codeCopyLabel = '',
+       codeCopiedLabel = '',
+       codeBlockSemanticLabel = null,
+       voteSemanticLabel = null,
+       upvoteSemanticLabel = null,
+       downvoteSemanticLabel = null,
+       commentSemanticLabel = null,
+       shareSemanticLabel = null,
+       bookmarkSemanticLabel = null;
+
+  const VnlfPostCard.empty({
+    super.key,
+    this.emptyTitle = '',
+    this.emptyMessage = '',
+    this.emptyActionLabel,
+    this.onEmptyAction,
+    this.onRetry,
+    this.semanticLabel,
+    this.emptySemanticLabel,
+    this.actionSemanticLabel,
+  }) : post = null,
+       isLoading = false,
+       isEmpty = true,
+       controller = null,
+       shimmerController = null,
+       showSkeletonTitle = false,
+       showSkeletonAttachment = false,
+       errorTitle = '',
+       errorMessage = null,
+       retryLabel = '',
+       loadingSemanticLabel = null,
+       errorSemanticLabel = null,
+       onVoteChanged = null,
+       onCommentTap = null,
+       onBookmarkToggle = null,
+       onAuthorTap = null,
+       showBottomActions = true,
+       authorAvatarSemanticLabel = null,
+       moreOptionsSemanticLabel = null,
+       codeCopyLabel = '',
+       codeCopiedLabel = '',
+       codeBlockSemanticLabel = null,
+       voteSemanticLabel = null,
+       upvoteSemanticLabel = null,
+       downvoteSemanticLabel = null,
+       commentSemanticLabel = null,
+       shareSemanticLabel = null,
+       bookmarkSemanticLabel = null;
+
+  const VnlfPostCard.error({
+    super.key,
+    this.errorTitle = '',
+    this.errorMessage = '',
+    this.retryLabel = '',
+    this.onRetry,
+    this.semanticLabel,
+    this.errorSemanticLabel,
+    this.actionSemanticLabel,
+  }) : post = null,
+       isLoading = false,
+       isEmpty = false,
+       controller = null,
+       shimmerController = null,
+       showSkeletonTitle = false,
+       showSkeletonAttachment = false,
+       emptyTitle = '',
+       emptyMessage = '',
+       emptyActionLabel = null,
+       onEmptyAction = null,
+       loadingSemanticLabel = null,
+       emptySemanticLabel = null,
+       onVoteChanged = null,
+       onCommentTap = null,
+       onBookmarkToggle = null,
+       onAuthorTap = null,
+       showBottomActions = true,
+       authorAvatarSemanticLabel = null,
+       moreOptionsSemanticLabel = null,
+       codeCopyLabel = '',
+       codeCopiedLabel = '',
+       codeBlockSemanticLabel = null,
+       voteSemanticLabel = null,
+       upvoteSemanticLabel = null,
+       downvoteSemanticLabel = null,
+       commentSemanticLabel = null,
+       shareSemanticLabel = null,
+       bookmarkSemanticLabel = null;
+
+  final PostData? post;
+  final bool isLoading;
+  final bool isEmpty;
+  final Animation<double>? controller;
+  final Animation<double>? shimmerController;
+  final bool showSkeletonTitle;
+  final bool showSkeletonAttachment;
+  final String emptyTitle;
+  final String emptyMessage;
+  final String? emptyActionLabel;
+  final VoidCallback? onEmptyAction;
+  final String errorTitle;
+  final String? errorMessage;
+  final String retryLabel;
+  final VoidCallback? onRetry;
+  final String? loadingSemanticLabel;
+  final String? emptySemanticLabel;
+  final String? errorSemanticLabel;
+  final String? actionSemanticLabel;
   final ValueChanged<VoteState>? onVoteChanged;
   final VoidCallback? onCommentTap;
   final VoidCallback? onBookmarkToggle;
@@ -137,6 +295,39 @@ class VnlfPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return VnlfPostCardSkeleton(
+        controller: controller ?? shimmerController,
+        showTitle: showSkeletonTitle,
+        showAttachment: showSkeletonAttachment,
+        showBottomActions: showBottomActions,
+        semanticLabel: loadingSemanticLabel ?? semanticLabel,
+      );
+    }
+
+    if (errorMessage != null || errorTitle.isNotEmpty) {
+      return VnlfFeedErrorState(
+        title: errorTitle,
+        message: errorMessage ?? '',
+        retryLabel: retryLabel,
+        onRetry: onRetry,
+        semanticLabel: errorSemanticLabel ?? semanticLabel,
+        actionSemanticLabel: actionSemanticLabel,
+      );
+    }
+
+    if (isEmpty || post == null) {
+      return VnlfFeedEmptyState(
+        title: emptyTitle,
+        message: emptyMessage,
+        actionLabel: emptyActionLabel,
+        onRetry: onEmptyAction ?? onRetry,
+        semanticLabel: emptySemanticLabel ?? semanticLabel,
+        actionSemanticLabel: actionSemanticLabel,
+      );
+    }
+
+    final loadedPost = post!;
     final colors = VnlfColors.of(context);
 
     final card = Container(
@@ -152,7 +343,7 @@ class VnlfPostCard extends StatelessWidget {
           GestureDetector(
             onTap: onAuthorTap,
             child: VnlfAvatar(
-              author: post.author,
+              author: loadedPost.author,
               size: 40,
               semanticLabel: authorAvatarSemanticLabel,
             ),
@@ -169,12 +360,12 @@ class VnlfPostCard extends StatelessWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: onAuthorTap,
-                        child: VnlfAuthorNameRow(author: post.author),
+                        child: VnlfAuthorNameRow(author: loadedPost.author),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      post.relativeTime,
+                      loadedPost.relativeTime,
                       style: VnlfTypography.meta(colors.textSubtle),
                     ),
                     const SizedBox(width: 6),
@@ -188,23 +379,24 @@ class VnlfPostCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (post.title != null && post.title!.isNotEmpty) ...[
+                if (loadedPost.title != null &&
+                    loadedPost.title!.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Text(post.title!, style: VnlfTypography.h2(colors.ink)),
+                  Text(loadedPost.title!, style: VnlfTypography.h2(colors.ink)),
                 ],
                 const SizedBox(height: 6),
                 // Paragraphs
-                for (var i = 0; i < post.paragraphs.length; i++) ...[
+                for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
                   if (i > 0) const SizedBox(height: 8),
                   Text(
-                    post.paragraphs[i],
+                    loadedPost.paragraphs[i],
                     style: VnlfTypography.body(colors.ink),
                   ),
                 ],
                 // Optional Attachment
-                if (post.attachment != null) ...[
+                if (loadedPost.attachment != null) ...[
                   const SizedBox(height: 12),
-                  switch (post.attachment!) {
+                  switch (loadedPost.attachment!) {
                     final ImagePlaceholderAttachment imagePlaceholder =>
                       VnlfImagePlaceholder(
                         aspectRatio: imagePlaceholder.aspectRatio,
@@ -231,13 +423,13 @@ class VnlfPostCard extends StatelessWidget {
                   },
                 ],
                 // Optional Category Tags
-                if (post.tags.isNotEmpty) ...[
+                if (loadedPost.tags.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      for (final tag in post.tags)
+                      for (final tag in loadedPost.tags)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -261,10 +453,10 @@ class VnlfPostCard extends StatelessWidget {
                 if (showBottomActions) ...[
                   const SizedBox(height: 12),
                   VnlfPostInteractionBar(
-                    voteScore: post.voteScore,
-                    voteState: post.viewerVote,
-                    commentCount: post.commentCount,
-                    isBookmarked: post.isBookmarked,
+                    voteScore: loadedPost.voteScore,
+                    voteState: loadedPost.viewerVote,
+                    commentCount: loadedPost.commentCount,
+                    isBookmarked: loadedPost.isBookmarked,
                     onVoteChanged: onVoteChanged,
                     onCommentTap: onCommentTap,
                     onBookmarkToggle: onBookmarkToggle,
