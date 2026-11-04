@@ -63,18 +63,20 @@ class VnlfPostCardSkeleton extends StatelessWidget {
     this.showTitle = false,
     this.showAttachment = false,
     this.showBottomActions = true,
+    this.semanticLabel,
   });
 
   final bool showTitle;
   final bool showAttachment;
   final bool showBottomActions;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
     return Semantics(
-      label: 'Đang tải bài viết',
+      label: semanticLabel,
       container: true,
       child: Container(
         decoration: BoxDecoration(
@@ -202,22 +204,30 @@ class VnlfFeedSkeletonList extends StatelessWidget {
     super.key,
     this.itemCount = 3,
     this.spacing = 12.0,
+    this.semanticLabel,
+    this.itemSemanticLabel,
   });
 
   final int itemCount;
   final double spacing;
+  final String? semanticLabel;
+  final String? itemSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Đang tải danh sách bài viết bảng tin',
+      label: semanticLabel,
       container: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < itemCount; i++) ...[
             if (i > 0) SizedBox(height: spacing),
-            VnlfPostCardSkeleton(showTitle: i.isOdd, showAttachment: i == 0),
+            VnlfPostCardSkeleton(
+              showTitle: i.isOdd,
+              showAttachment: i == 0,
+              semanticLabel: itemSemanticLabel,
+            ),
           ],
         ],
       ),
@@ -229,11 +239,13 @@ typedef VnlfFeedPostsSkeleton = VnlfFeedSkeletonList;
 
 /// Single row skeleton matching a ranked row in [VnlfLeaderboardCard].
 class VnlfLeaderboardRowSkeleton extends StatelessWidget {
-  const VnlfLeaderboardRowSkeleton({super.key});
+  const VnlfLeaderboardRowSkeleton({super.key, this.semanticLabel});
+
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
         const SizedBox(
           width: 20,
@@ -265,29 +277,45 @@ class VnlfLeaderboardRowSkeleton extends StatelessWidget {
         const VnlfSkeletonBox(width: 24, height: 14),
       ],
     );
+
+    if (semanticLabel == null) {
+      return row;
+    }
+    return Semantics(label: semanticLabel, container: true, child: row);
   }
 }
 
-/// Skeleton-loading component for the `304px` right-sidebar weekly leaderboard
-/// (`Xếp hạng tuần`).
+/// Skeleton-loading component for the `304px` right-sidebar weekly leaderboard.
 class VnlfLeaderboardCardSkeleton extends StatelessWidget {
   const VnlfLeaderboardCardSkeleton({
     super.key,
     this.itemCount = 3,
     this.width = VnlfDimensions.rightSidebarWidth,
     this.showFooter = true,
+    this.title = '',
+    this.footerCopyright = '',
+    this.communityRulesLabel = '',
+    this.privacyLabel = '',
+    this.semanticLabel,
+    this.rowSemanticLabel,
   });
 
   final int itemCount;
   final double width;
   final bool showFooter;
+  final String title;
+  final String footerCopyright;
+  final String communityRulesLabel;
+  final String privacyLabel;
+  final String? semanticLabel;
+  final String? rowSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
     return Semantics(
-      label: 'Đang tải bảng xếp hạng tuần',
+      label: semanticLabel,
       container: true,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: width),
@@ -325,12 +353,15 @@ class VnlfLeaderboardCardSkeleton extends StatelessWidget {
                             spacing: 8,
                             runSpacing: 4,
                             children: [
-                              Text(
-                                'Xếp hạng tuần',
-                                softWrap: true,
-                                style: VnlfTypography.h3(colors.ink)
-                                    .copyWith(fontWeight: FontWeight.w700),
-                              ),
+                              if (title.isNotEmpty)
+                                Text(
+                                  title,
+                                  softWrap: true,
+                                  style: VnlfTypography.h3(colors.ink)
+                                      .copyWith(fontWeight: FontWeight.w700),
+                                )
+                              else
+                                const VnlfSkeletonBox(width: 96, height: 14),
                               const VnlfSkeletonBox(width: 68, height: 12),
                             ],
                           ),
@@ -340,40 +371,52 @@ class VnlfLeaderboardCardSkeleton extends StatelessWidget {
                     const SizedBox(height: 14),
                     for (var i = 0; i < itemCount; i++) ...[
                       if (i > 0) const SizedBox(height: 12),
-                      const VnlfLeaderboardRowSkeleton(),
+                      VnlfLeaderboardRowSkeleton(
+                        semanticLabel: rowSemanticLabel,
+                      ),
                     ],
                   ],
                 ),
               ),
-              if (showFooter) ...[
+              if (showFooter &&
+                  (footerCopyright.isNotEmpty ||
+                      communityRulesLabel.isNotEmpty ||
+                      privacyLabel.isNotEmpty)) ...[
                 const SizedBox(height: 14),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'VNLF Social · 2026',
-                        softWrap: true,
-                        style: VnlfTypography.meta(colors.muted),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 4,
-                        children: [
-                          Text(
-                            'Quy chuẩn cộng đồng',
-                            softWrap: true,
-                            style: VnlfTypography.meta(colors.muted),
-                          ),
-                          Text(
-                            'Riêng tư',
-                            softWrap: true,
-                            style: VnlfTypography.meta(colors.muted),
-                          ),
-                        ],
-                      ),
+                      if (footerCopyright.isNotEmpty)
+                        Text(
+                          footerCopyright,
+                          softWrap: true,
+                          style: VnlfTypography.meta(colors.muted),
+                        ),
+                      if (communityRulesLabel.isNotEmpty ||
+                          privacyLabel.isNotEmpty) ...[
+                        if (footerCopyright.isNotEmpty)
+                          const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 4,
+                          children: [
+                            if (communityRulesLabel.isNotEmpty)
+                              Text(
+                                communityRulesLabel,
+                                softWrap: true,
+                                style: VnlfTypography.meta(colors.muted),
+                              ),
+                            if (privacyLabel.isNotEmpty)
+                              Text(
+                                privacyLabel,
+                                softWrap: true,
+                                style: VnlfTypography.meta(colors.muted),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

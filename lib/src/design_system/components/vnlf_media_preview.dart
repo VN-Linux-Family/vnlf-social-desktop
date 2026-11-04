@@ -14,34 +14,44 @@ class VnlfImagePlaceholder extends StatelessWidget {
   const VnlfImagePlaceholder({
     super.key,
     this.aspectRatio = 16 / 9,
-    this.label = 'Hình ảnh đính kèm',
+    this.label = '',
     this.icon = Icons.image_outlined,
+    this.semanticLabel,
   });
 
   final double aspectRatio;
   final String label;
   final IconData icon;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final effectiveSemantics =
+        semanticLabel ?? (label.isNotEmpty ? label : null);
 
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colors.surfaceSoft,
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-          border: Border.all(color: colors.line),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 36, color: colors.muted),
-              const SizedBox(height: 8),
-              Text(label, style: VnlfTypography.caption(colors.muted)),
-            ],
+    return Semantics(
+      label: effectiveSemantics,
+      image: true,
+      child: AspectRatio(
+        aspectRatio: aspectRatio,
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.surfaceSoft,
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+            border: Border.all(color: colors.line),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 36, color: colors.muted),
+                if (label.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(label, style: VnlfTypography.caption(colors.muted)),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -51,15 +61,24 @@ class VnlfImagePlaceholder extends StatelessWidget {
 
 /// Embedded project showcase card for posts and profile showcases.
 class VnlfProjectPreviewCard extends StatelessWidget {
-  const VnlfProjectPreviewCard({super.key, required this.project});
+  const VnlfProjectPreviewCard({
+    super.key,
+    required this.project,
+    this.semanticLabel,
+    this.starsSemanticLabel,
+    this.forksSemanticLabel,
+  });
 
   final ProjectShowcaseData project;
+  final String? semanticLabel;
+  final String? starsSemanticLabel;
+  final String? forksSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -128,36 +147,51 @@ class VnlfProjectPreviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star_outline_rounded,
-                    size: 14,
-                    color: colors.muted,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${project.stars}',
-                    style: VnlfTypography.meta(colors.muted),
-                  ),
-                ],
+              Semantics(
+                label: starsSemanticLabel,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.star_outline_rounded,
+                      size: 14,
+                      color: colors.muted,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${project.stars}',
+                      style: VnlfTypography.meta(colors.muted),
+                    ),
+                  ],
+                ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.call_split_rounded, size: 14, color: colors.muted),
-                  const SizedBox(width: 3),
-                  Text(
-                    '${project.forks}',
-                    style: VnlfTypography.meta(colors.muted),
-                  ),
-                ],
+              Semantics(
+                label: forksSemanticLabel,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.call_split_rounded,
+                      size: 14,
+                      color: colors.muted,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${project.forks}',
+                      style: VnlfTypography.meta(colors.muted),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return card;
+    }
+    return Semantics(label: semanticLabel, container: true, child: card);
   }
 }

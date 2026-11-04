@@ -8,25 +8,7 @@ enum AvatarFrameType { none, ring }
 enum NameEffectType { none, rainbow, glitch, cursor }
 
 /// Linux distribution badges displayed next to author names.
-enum DistroBadgeType {
-  none,
-  arch,
-  debian,
-  cachyos,
-  caramos,
-  nixos,
-  fedora;
-
-  String get label => switch (this) {
-    DistroBadgeType.none => '',
-    DistroBadgeType.arch => 'arch',
-    DistroBadgeType.debian => 'debian',
-    DistroBadgeType.cachyos => 'cachyos',
-    DistroBadgeType.caramos => 'caramos',
-    DistroBadgeType.nixos => 'nixos',
-    DistroBadgeType.fedora => 'fedora',
-  };
-}
+enum DistroBadgeType { none, arch, debian, cachyos, caramos, nixos, fedora }
 
 /// Offline vector illustration preset for user avatars (zero network calls).
 enum AvatarVisualPreset {
@@ -58,6 +40,7 @@ class AuthorStyleData {
     this.frame = AvatarFrameType.none,
     this.nameEffect = NameEffectType.none,
     this.distroBadge = DistroBadgeType.none,
+    this.distroBadgeLabel,
     this.hasTerminalBadge = false,
     this.hasPartnerStar = false,
     this.hasPixelBadge = false,
@@ -69,6 +52,7 @@ class AuthorStyleData {
   final AvatarFrameType frame;
   final NameEffectType nameEffect;
   final DistroBadgeType distroBadge;
+  final String? distroBadgeLabel;
   final bool hasTerminalBadge;
   final bool hasPartnerStar;
   final bool hasPixelBadge;
@@ -81,7 +65,7 @@ class AuthorData {
     required this.id,
     required this.username,
     required this.displayName,
-    this.role = 'MEMBER',
+    this.role = '',
     this.style = const AuthorStyleData(),
     this.avatarPreset = AvatarVisualPreset.tuxMascot,
   });
@@ -104,25 +88,35 @@ sealed class PostAttachment {
 final class ImagePlaceholderAttachment extends PostAttachment {
   const ImagePlaceholderAttachment({
     this.aspectRatio = 16 / 9,
-    this.label = 'Hình ảnh đính kèm',
+    this.label = '',
+    this.semanticLabel,
   });
 
   final double aspectRatio;
   final String label;
+  final String? semanticLabel;
 }
 
-/// Renders a dark forest-green terminal code snippet with a "Sao chép" pill.
+/// Renders a dark forest-green terminal code snippet with a copy action pill.
 @immutable
 final class CodeBlockAttachment extends PostAttachment {
   const CodeBlockAttachment({
     required this.code,
-    this.language = 'python',
+    this.language = '',
     this.showHorizontalScrollbar = true,
+    this.copyLabel = '',
+    this.copiedLabel = '',
+    this.semanticLabel,
+    this.copyButtonSemanticLabel,
   });
 
   final String code;
   final String language;
   final bool showHorizontalScrollbar;
+  final String copyLabel;
+  final String copiedLabel;
+  final String? semanticLabel;
+  final String? copyButtonSemanticLabel;
 }
 
 /// Renders an embedded open-source project card inside a post.

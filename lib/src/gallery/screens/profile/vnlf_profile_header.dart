@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../fixtures/vnlf_gallery_fixtures.dart';
 
 /// Top profile header card presenting user identity, bio, badges, and stats.
 class VnlfProfileHeaderCard extends StatelessWidget {
@@ -79,8 +80,11 @@ class VnlfProfileHeaderCard extends StatelessWidget {
                                 '@${author.username}',
                                 style: VnlfTypography.meta(colors.muted),
                               ),
-                              const VnlfDistroBadgePill(
+                              VnlfDistroBadgePill(
                                 badge: DistroBadgeType.nixos,
+                                label: VnlfGalleryFixtures.distroBadgeLabel(
+                                  DistroBadgeType.nixos,
+                                ),
                               ),
                             ],
                           ),

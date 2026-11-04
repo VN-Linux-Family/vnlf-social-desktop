@@ -17,7 +17,7 @@ export 'vnlf_skeleton.dart'
 export 'vnlf_state_cards.dart'
     show VnlfLeaderboardEmptyState, VnlfLeaderboardErrorState;
 
-/// Weekly Leaderboard widget ("Xếp hạng tuần") displayed in the `304px` right
+/// Weekly Leaderboard widget displayed in the `304px` right
 /// sidebar on Desktop (`>= 1181px`) and in the component gallery.
 class VnlfLeaderboardCard extends StatelessWidget {
   const VnlfLeaderboardCard({
@@ -28,6 +28,21 @@ class VnlfLeaderboardCard extends StatelessWidget {
     this.isLoading = false,
     this.errorMessage,
     this.onRetry,
+    this.title = '',
+    this.viewAllLabel = '',
+    this.footerCopyright = '',
+    this.communityRulesLabel = '',
+    this.privacyLabel = '',
+    this.emptyTitle = '',
+    this.emptyMessage = '',
+    this.emptyActionLabel,
+    this.errorTitle = '',
+    this.retryLabel = '',
+    this.semanticLabel,
+    this.viewAllSemanticLabel,
+    this.loadingSemanticLabel,
+    this.emptySemanticLabel,
+    this.errorSemanticLabel,
   });
 
   final List<LeaderboardEntryData> entries;
@@ -36,16 +51,38 @@ class VnlfLeaderboardCard extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback? onRetry;
+  final String title;
+  final String viewAllLabel;
+  final String footerCopyright;
+  final String communityRulesLabel;
+  final String privacyLabel;
+  final String emptyTitle;
+  final String emptyMessage;
+  final String? emptyActionLabel;
+  final String errorTitle;
+  final String retryLabel;
+  final String? semanticLabel;
+  final String? viewAllSemanticLabel;
+  final String? loadingSemanticLabel;
+  final String? emptySemanticLabel;
+  final String? errorSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return VnlfLeaderboardCardSkeleton(width: width);
+      return VnlfLeaderboardCardSkeleton(
+        width: width,
+        title: title,
+        footerCopyright: footerCopyright,
+        communityRulesLabel: communityRulesLabel,
+        privacyLabel: privacyLabel,
+        semanticLabel: loadingSemanticLabel,
+      );
     }
 
     final colors = VnlfColors.of(context);
 
-    return ConstrainedBox(
+    final card = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: width),
       child: SizedBox(
         width: width,
@@ -62,53 +99,71 @@ class VnlfLeaderboardCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 1.5),
-                        child: Icon(
-                          Icons.emoji_events_outlined,
-                          size: 17,
-                          color: colors.ink,
+                  if (title.isNotEmpty || viewAllLabel.isNotEmpty) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 1.5),
+                          child: Icon(
+                            Icons.emoji_events_outlined,
+                            size: 17,
+                            color: colors.ink,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 7),
-                      Expanded(
-                        child: Wrap(
-                          alignment: WrapAlignment.spaceBetween,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: [
-                            Text(
-                              'Xếp hạng tuần',
-                              softWrap: true,
-                              style: VnlfTypography.h3(colors.ink)
-                                  .copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            Text(
-                              'Xem tất cả ↗',
-                              softWrap: true,
-                              style: VnlfTypography.meta(
-                                colors.brand,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              if (title.isNotEmpty)
+                                Text(
+                                  title,
+                                  softWrap: true,
+                                  style: VnlfTypography.h3(colors.ink)
+                                      .copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              if (viewAllLabel.isNotEmpty)
+                                Semantics(
+                                  button: true,
+                                  label: viewAllSemanticLabel ?? viewAllLabel,
+                                  child: Text(
+                                    viewAllLabel,
+                                    softWrap: true,
+                                    style: VnlfTypography.meta(
+                                      colors.brand,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   if (errorMessage != null)
                     VnlfLeaderboardErrorState(
                       embedded: true,
+                      title: errorTitle,
                       message: errorMessage!,
+                      retryLabel: retryLabel,
                       onRetry: onRetry,
+                      semanticLabel: errorSemanticLabel,
                     )
                   else if (entries.isEmpty)
-                    VnlfLeaderboardEmptyState(embedded: true, onRetry: onRetry)
+                    VnlfLeaderboardEmptyState(
+                      embedded: true,
+                      title: emptyTitle,
+                      message: emptyMessage,
+                      actionLabel: emptyActionLabel,
+                      onRetry: onRetry,
+                      semanticLabel: emptySemanticLabel,
+                    )
                   else
                     for (var i = 0; i < entries.length; i++) ...[
                       if (i > 0) const SizedBox(height: 12),
@@ -122,41 +177,56 @@ class VnlfLeaderboardCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'VNLF Social · 2026',
-                    softWrap: true,
-                    style: VnlfTypography.meta(colors.muted),
-                  ),
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 4,
-                    children: [
+            if (footerCopyright.isNotEmpty ||
+                communityRulesLabel.isNotEmpty ||
+                privacyLabel.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (footerCopyright.isNotEmpty)
                       Text(
-                        'Quy chuẩn cộng đồng',
+                        footerCopyright,
                         softWrap: true,
                         style: VnlfTypography.meta(colors.muted),
                       ),
-                      Text(
-                        'Riêng tư',
-                        softWrap: true,
-                        style: VnlfTypography.meta(colors.muted),
+                    if (communityRulesLabel.isNotEmpty ||
+                        privacyLabel.isNotEmpty) ...[
+                      if (footerCopyright.isNotEmpty) const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 4,
+                        children: [
+                          if (communityRulesLabel.isNotEmpty)
+                            Text(
+                              communityRulesLabel,
+                              softWrap: true,
+                              style: VnlfTypography.meta(colors.muted),
+                            ),
+                          if (privacyLabel.isNotEmpty)
+                            Text(
+                              privacyLabel,
+                              softWrap: true,
+                              style: VnlfTypography.meta(colors.muted),
+                            ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
     );
+
+    if (semanticLabel == null) {
+      return card;
+    }
+    return Semantics(label: semanticLabel, container: true, child: card);
   }
 }
 

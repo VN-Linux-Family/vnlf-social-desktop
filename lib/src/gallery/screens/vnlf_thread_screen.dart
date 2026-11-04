@@ -41,6 +41,34 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
       themeMode: widget.themeMode,
       onThemeModeChanged: widget.onThemeModeChanged,
       onProfileTap: widget.onOpenProfile,
+      destinationLabels: VnlfGalleryFixtures.destinationLabels,
+      brandTitlePrefix: VnlfGalleryFixtures.brandTitlePrefix,
+      brandTitleAccent: VnlfGalleryFixtures.brandTitleAccent,
+      brandLogoSemanticLabel: VnlfGalleryFixtures.brandLogoSemanticLabel,
+      loginLabel: VnlfGalleryFixtures.loginLabel,
+      loginSubtitleLabel: VnlfGalleryFixtures.loginSubtitleLabel,
+      supportLabel: VnlfGalleryFixtures.supportLabel,
+      supportBadgeText: VnlfGalleryFixtures.supportBadgeText,
+      feedbackLabel: VnlfGalleryFixtures.feedbackLabel,
+      socialSectionLabel: VnlfGalleryFixtures.socialSectionLabel,
+      facebookBadgeLabel: VnlfGalleryFixtures.facebookBadgeLabel,
+      facebookSemanticLabel: VnlfGalleryFixtures.facebookSemanticLabel,
+      telegramSemanticLabel: VnlfGalleryFixtures.telegramSemanticLabel,
+      discordSemanticLabel: VnlfGalleryFixtures.discordSemanticLabel,
+      settingsLabel: VnlfGalleryFixtures.settingsLabel,
+      helpLabel: VnlfGalleryFixtures.helpLabel,
+      lightThemeTooltip: VnlfGalleryFixtures.lightThemeTooltip,
+      darkThemeTooltip: VnlfGalleryFixtures.darkThemeTooltip,
+      systemThemeTooltip: VnlfGalleryFixtures.systemThemeTooltip,
+      themePickerSemanticLabel: VnlfGalleryFixtures.themePickerSemanticLabel,
+      railThemeToggleTooltip: VnlfGalleryFixtures.railThemeToggleTooltip,
+      openDrawerTooltip: VnlfGalleryFixtures.openDrawerTooltip,
+      searchSemanticLabel: VnlfGalleryFixtures.searchSemanticLabel,
+      notificationsSemanticLabel:
+          VnlfGalleryFixtures.notificationsSemanticLabel,
+      profileSemanticLabel: VnlfGalleryFixtures.profileSemanticLabel,
+      collapseSidebarSemanticLabel:
+          VnlfGalleryFixtures.collapseSidebarSemanticLabel,
       rightSidebarChild: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -52,6 +80,18 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
           VnlfLeaderboardCard(
             entries: VnlfGalleryFixtures.weeklyLeaderboard,
             onAuthorTap: (_) => widget.onOpenProfile?.call(),
+            title: VnlfGalleryFixtures.leaderboardTitle,
+            viewAllLabel: VnlfGalleryFixtures.leaderboardViewAllLabel,
+            footerCopyright: VnlfGalleryFixtures.footerCopyright,
+            communityRulesLabel: VnlfGalleryFixtures.communityRulesLabel,
+            privacyLabel: VnlfGalleryFixtures.privacyLabel,
+            emptyTitle: VnlfGalleryFixtures.leaderboardEmptyTitle,
+            emptyMessage: VnlfGalleryFixtures.leaderboardEmptyMessage,
+            emptyActionLabel: VnlfGalleryFixtures.refreshActionLabel,
+            errorTitle: VnlfGalleryFixtures.leaderboardErrorTitle,
+            retryLabel: VnlfGalleryFixtures.retryActionLabel,
+            loadingSemanticLabel:
+                VnlfGalleryFixtures.leaderboardLoadingSemanticLabel,
           ),
         ],
       ),
@@ -86,6 +126,20 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
           VnlfPostCard(
             post: _post,
             onAuthorTap: widget.onOpenProfile,
+            codeCopyLabel: VnlfGalleryFixtures.codeCopyLabel,
+            codeCopiedLabel: VnlfGalleryFixtures.codeCopiedLabel,
+            moreOptionsSemanticLabel:
+                VnlfGalleryFixtures.moreOptionsSemanticLabel,
+            voteSemanticLabel: VnlfGalleryFixtures.voteCapsuleSemanticLabel(
+              _post.voteScore,
+            ),
+            upvoteSemanticLabel: VnlfGalleryFixtures.upvoteSemanticLabel,
+            downvoteSemanticLabel: VnlfGalleryFixtures.downvoteSemanticLabel,
+            commentSemanticLabel:
+                VnlfGalleryFixtures.commentActionSemanticLabel,
+            shareSemanticLabel: VnlfGalleryFixtures.shareActionSemanticLabel,
+            bookmarkSemanticLabel:
+                VnlfGalleryFixtures.bookmarkActionSemanticLabel,
             onVoteChanged: (next) {
               final delta = next.value - _post.viewerVote.value;
               setState(() {
@@ -128,6 +182,9 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                 ),
                 const SizedBox(height: 10),
                 const VnlfCodeBlock(
+                  copyLabel: VnlfGalleryFixtures.codeCopyLabel,
+                  copiedLabel: VnlfGalleryFixtures.codeCopiedLabel,
+                  semanticLabel: 'Đoạn mã cấu hình PipeWire quantum',
                   code:
                       '# Cấu hình PipeWire quantum siêu thấp (Tiếng Việt: ặ ữ ờ ẫ ệ)\n'
                       'default.clock.rate = 48000\n'
@@ -238,6 +295,11 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
                   ],
                   VnlfCommentTree(
                     comment: VnlfGalleryFixtures.threadComments[i],
+                    replyLabel: VnlfGalleryFixtures.commentReplyLabel,
+                    upvoteSemanticLabel:
+                        VnlfGalleryFixtures.upvoteSemanticLabel,
+                    downvoteSemanticLabel:
+                        VnlfGalleryFixtures.downvoteSemanticLabel,
                   ),
                 ],
               ],

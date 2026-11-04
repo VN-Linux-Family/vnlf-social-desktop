@@ -43,6 +43,34 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
       activeDestination: VnlfNavDestination.feed,
       themeMode: widget.themeMode,
       onThemeModeChanged: widget.onThemeModeChanged,
+      destinationLabels: VnlfGalleryFixtures.destinationLabels,
+      brandTitlePrefix: VnlfGalleryFixtures.brandTitlePrefix,
+      brandTitleAccent: VnlfGalleryFixtures.brandTitleAccent,
+      brandLogoSemanticLabel: VnlfGalleryFixtures.brandLogoSemanticLabel,
+      loginLabel: VnlfGalleryFixtures.loginLabel,
+      loginSubtitleLabel: VnlfGalleryFixtures.loginSubtitleLabel,
+      supportLabel: VnlfGalleryFixtures.supportLabel,
+      supportBadgeText: VnlfGalleryFixtures.supportBadgeText,
+      feedbackLabel: VnlfGalleryFixtures.feedbackLabel,
+      socialSectionLabel: VnlfGalleryFixtures.socialSectionLabel,
+      facebookBadgeLabel: VnlfGalleryFixtures.facebookBadgeLabel,
+      facebookSemanticLabel: VnlfGalleryFixtures.facebookSemanticLabel,
+      telegramSemanticLabel: VnlfGalleryFixtures.telegramSemanticLabel,
+      discordSemanticLabel: VnlfGalleryFixtures.discordSemanticLabel,
+      settingsLabel: VnlfGalleryFixtures.settingsLabel,
+      helpLabel: VnlfGalleryFixtures.helpLabel,
+      lightThemeTooltip: VnlfGalleryFixtures.lightThemeTooltip,
+      darkThemeTooltip: VnlfGalleryFixtures.darkThemeTooltip,
+      systemThemeTooltip: VnlfGalleryFixtures.systemThemeTooltip,
+      themePickerSemanticLabel: VnlfGalleryFixtures.themePickerSemanticLabel,
+      railThemeToggleTooltip: VnlfGalleryFixtures.railThemeToggleTooltip,
+      openDrawerTooltip: VnlfGalleryFixtures.openDrawerTooltip,
+      searchSemanticLabel: VnlfGalleryFixtures.searchSemanticLabel,
+      notificationsSemanticLabel:
+          VnlfGalleryFixtures.notificationsSemanticLabel,
+      profileSemanticLabel: VnlfGalleryFixtures.profileSemanticLabel,
+      collapseSidebarSemanticLabel:
+          VnlfGalleryFixtures.collapseSidebarSemanticLabel,
       rightSidebarChild: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -50,6 +78,18 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
           const SizedBox(height: 16),
           const VnlfLeaderboardCard(
             entries: VnlfGalleryFixtures.weeklyLeaderboard,
+            title: VnlfGalleryFixtures.leaderboardTitle,
+            viewAllLabel: VnlfGalleryFixtures.leaderboardViewAllLabel,
+            footerCopyright: VnlfGalleryFixtures.footerCopyright,
+            communityRulesLabel: VnlfGalleryFixtures.communityRulesLabel,
+            privacyLabel: VnlfGalleryFixtures.privacyLabel,
+            emptyTitle: VnlfGalleryFixtures.leaderboardEmptyTitle,
+            emptyMessage: VnlfGalleryFixtures.leaderboardEmptyMessage,
+            emptyActionLabel: VnlfGalleryFixtures.refreshActionLabel,
+            errorTitle: VnlfGalleryFixtures.leaderboardErrorTitle,
+            retryLabel: VnlfGalleryFixtures.retryActionLabel,
+            loadingSemanticLabel:
+                VnlfGalleryFixtures.leaderboardLoadingSemanticLabel,
           ),
         ],
       ),
@@ -113,6 +153,22 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
               if (i > 0) const SizedBox(height: 12),
               VnlfPostCard(
                 post: VnlfGalleryFixtures.feedPosts[i],
+                codeCopyLabel: VnlfGalleryFixtures.codeCopyLabel,
+                codeCopiedLabel: VnlfGalleryFixtures.codeCopiedLabel,
+                moreOptionsSemanticLabel:
+                    VnlfGalleryFixtures.moreOptionsSemanticLabel,
+                voteSemanticLabel: VnlfGalleryFixtures.voteCapsuleSemanticLabel(
+                  VnlfGalleryFixtures.feedPosts[i].voteScore,
+                ),
+                upvoteSemanticLabel: VnlfGalleryFixtures.upvoteSemanticLabel,
+                downvoteSemanticLabel:
+                    VnlfGalleryFixtures.downvoteSemanticLabel,
+                commentSemanticLabel:
+                    VnlfGalleryFixtures.commentActionSemanticLabel,
+                shareSemanticLabel:
+                    VnlfGalleryFixtures.shareActionSemanticLabel,
+                bookmarkSemanticLabel:
+                    VnlfGalleryFixtures.bookmarkActionSemanticLabel,
                 onCommentTap: widget.onOpenThread,
               ),
             ],

@@ -9,10 +9,7 @@ abstract final class VnlfTypography {
   static const String fontFamily = 'BeVietnamPro';
   static const String monoFontFamily = 'monospace';
 
-  /// Mandatory Vietnamese diacritic verification phrase.
-  static const String diacriticSample = 'Tiếng Việt: ặ ữ ờ ẫ ệ';
-
-  /// `text-h1`: 18px / 24px, weight 700 (Bold). Main screen headings ("Bảng tin", "Khám phá").
+  /// `text-h1`: 18px / 24px, weight 700 (Bold). Main screen headings (feed, explore).
   static TextStyle h1(Color color) => TextStyle(
     fontFamily: fontFamily,
     fontSize: 18,
@@ -22,7 +19,7 @@ abstract final class VnlfTypography {
     letterSpacing: -0.2,
   );
 
-  /// `text-h2`: 16px / 22px, weight 700 (Bold). Section headings ("Xếp hạng tuần", Project title).
+  /// `text-h2`: 16px / 22px, weight 700 (Bold). Section headings (weekly leaderboard, project title).
   static TextStyle h2(Color color) => TextStyle(
     fontFamily: fontFamily,
     fontSize: 16,

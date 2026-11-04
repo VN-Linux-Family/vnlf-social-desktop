@@ -17,12 +17,18 @@ class VnlfVoteCapsule extends StatelessWidget {
     required this.voteState,
     this.onVoteChanged,
     this.compact = false,
+    this.semanticLabel,
+    this.upvoteSemanticLabel,
+    this.downvoteSemanticLabel,
   });
 
   final int score;
   final VoteState voteState;
   final ValueChanged<VoteState>? onVoteChanged;
   final bool compact;
+  final String? semanticLabel;
+  final String? upvoteSemanticLabel;
+  final String? downvoteSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +57,8 @@ class VnlfVoteCapsule extends StatelessWidget {
     };
 
     return Semantics(
-      label: 'Bình chọn bài viết, điểm hiện tại $score',
+      label: semanticLabel,
+      container: true,
       child: AnimatedContainer(
         duration: VnlfDimensions.resolveDuration(
           context,
@@ -67,24 +74,28 @@ class VnlfVoteCapsule extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
-              onTap: onVoteChanged == null
-                  ? null
-                  : () {
-                      final next = voteState == VoteState.upvoted
-                          ? VoteState.neutral
-                          : VoteState.upvoted;
-                      onVoteChanged!(next);
-                    },
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: CustomPaint(
-                  size: const Size(13, 13),
-                  painter: _HollowVoteArrowPainter(
-                    color: upColor,
-                    isUp: true,
-                    filled: voteState == VoteState.upvoted,
+            Semantics(
+              button: true,
+              label: upvoteSemanticLabel,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
+                onTap: onVoteChanged == null
+                    ? null
+                    : () {
+                        final next = voteState == VoteState.upvoted
+                            ? VoteState.neutral
+                            : VoteState.upvoted;
+                        onVoteChanged!(next);
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: CustomPaint(
+                    size: const Size(13, 13),
+                    painter: _HollowVoteArrowPainter(
+                      color: upColor,
+                      isUp: true,
+                      filled: voteState == VoteState.upvoted,
+                    ),
                   ),
                 ),
               ),
@@ -99,24 +110,28 @@ class VnlfVoteCapsule extends StatelessWidget {
                 ).copyWith(fontSize: compact ? 11.5 : 12.5),
               ),
             ),
-            InkWell(
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
-              onTap: onVoteChanged == null
-                  ? null
-                  : () {
-                      final next = voteState == VoteState.downvoted
-                          ? VoteState.neutral
-                          : VoteState.downvoted;
-                      onVoteChanged!(next);
-                    },
-              child: Padding(
-                padding: const EdgeInsets.all(3),
-                child: CustomPaint(
-                  size: const Size(13, 13),
-                  painter: _HollowVoteArrowPainter(
-                    color: downColor,
-                    isUp: false,
-                    filled: voteState == VoteState.downvoted,
+            Semantics(
+              button: true,
+              label: downvoteSemanticLabel,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
+                onTap: onVoteChanged == null
+                    ? null
+                    : () {
+                        final next = voteState == VoteState.downvoted
+                            ? VoteState.neutral
+                            : VoteState.downvoted;
+                        onVoteChanged!(next);
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: CustomPaint(
+                    size: const Size(13, 13),
+                    painter: _HollowVoteArrowPainter(
+                      color: downColor,
+                      isUp: false,
+                      filled: voteState == VoteState.downvoted,
+                    ),
                   ),
                 ),
               ),
@@ -140,6 +155,13 @@ class VnlfPostInteractionBar extends StatelessWidget {
     this.onCommentTap,
     this.onShareTap,
     this.onBookmarkToggle,
+    this.semanticLabel,
+    this.voteSemanticLabel,
+    this.upvoteSemanticLabel,
+    this.downvoteSemanticLabel,
+    this.commentSemanticLabel,
+    this.shareSemanticLabel,
+    this.bookmarkSemanticLabel,
   });
 
   final int voteScore;
@@ -150,12 +172,19 @@ class VnlfPostInteractionBar extends StatelessWidget {
   final VoidCallback? onCommentTap;
   final VoidCallback? onShareTap;
   final VoidCallback? onBookmarkToggle;
+  final String? semanticLabel;
+  final String? voteSemanticLabel;
+  final String? upvoteSemanticLabel;
+  final String? downvoteSemanticLabel;
+  final String? commentSemanticLabel;
+  final String? shareSemanticLabel;
+  final String? bookmarkSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Wrap(
+    final bar = Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 12,
       runSpacing: 4,
@@ -164,50 +193,73 @@ class VnlfPostInteractionBar extends StatelessWidget {
           score: voteScore,
           voteState: voteState,
           onVoteChanged: onVoteChanged,
+          semanticLabel: voteSemanticLabel,
+          upvoteSemanticLabel: upvoteSemanticLabel,
+          downvoteSemanticLabel: downvoteSemanticLabel,
         ),
-        InkWell(
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-          onTap: onCommentTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.mode_comment_outlined,
-                  size: 15,
-                  color: colors.muted,
-                ),
-                const SizedBox(width: 5),
-                Text('$commentCount', style: VnlfTypography.meta(colors.muted)),
-              ],
+        Semantics(
+          button: true,
+          label: commentSemanticLabel,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+            onTap: onCommentTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.mode_comment_outlined,
+                    size: 15,
+                    color: colors.muted,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    '$commentCount',
+                    style: VnlfTypography.meta(colors.muted),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-        InkWell(
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-          onTap: onShareTap,
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
+        Semantics(
+          button: true,
+          label: shareSemanticLabel,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+            onTap: onShareTap,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
+            ),
           ),
         ),
-        InkWell(
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-          onTap: onBookmarkToggle,
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Icon(
-              isBookmarked
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
-              size: 16,
-              color: isBookmarked ? colors.brand : colors.muted,
+        Semantics(
+          button: true,
+          label: bookmarkSemanticLabel,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+            onTap: onBookmarkToggle,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(
+                isBookmarked
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
+                size: 16,
+                color: isBookmarked ? colors.brand : colors.muted,
+              ),
             ),
           ),
         ),
       ],
     );
+
+    if (semanticLabel == null) {
+      return bar;
+    }
+    return Semantics(label: semanticLabel, container: true, child: bar);
   }
 }
 

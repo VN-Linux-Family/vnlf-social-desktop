@@ -3,22 +3,36 @@ import 'package:flutter/material.dart';
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
 
-/// 3-state segment toggle (`Sáng`, `Tối`, `Tự động`) at the bottom of the sidebar.
+/// 3-state segment toggle at the bottom of the sidebar.
 class VnlfThemeSegmentPicker extends StatelessWidget {
   const VnlfThemeSegmentPicker({
     super.key,
     required this.themeMode,
     this.onThemeModeChanged,
+    this.lightTooltip = '',
+    this.darkTooltip = '',
+    this.systemTooltip = '',
+    this.semanticLabel,
+    this.lightSemanticLabel,
+    this.darkSemanticLabel,
+    this.systemSemanticLabel,
   });
 
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
+  final String lightTooltip;
+  final String darkTooltip;
+  final String systemTooltip;
+  final String? semanticLabel;
+  final String? lightSemanticLabel;
+  final String? darkSemanticLabel;
+  final String? systemSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    return Container(
+    final picker = Container(
       height: 36,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
@@ -30,25 +44,33 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
         children: [
           _SegmentBtn(
             icon: Icons.wb_sunny_outlined,
-            tooltip: 'Sáng',
+            tooltip: lightTooltip,
+            semanticLabel: lightSemanticLabel,
             selected: themeMode == ThemeMode.light,
             onTap: () => onThemeModeChanged?.call(ThemeMode.light),
           ),
           _SegmentBtn(
             icon: Icons.dark_mode_outlined,
-            tooltip: 'Tối',
+            tooltip: darkTooltip,
+            semanticLabel: darkSemanticLabel,
             selected: themeMode == ThemeMode.dark,
             onTap: () => onThemeModeChanged?.call(ThemeMode.dark),
           ),
           _SegmentBtn(
             icon: Icons.desktop_windows_outlined,
-            tooltip: 'Tự động',
+            tooltip: systemTooltip,
+            semanticLabel: systemSemanticLabel,
             selected: themeMode == ThemeMode.system,
             onTap: () => onThemeModeChanged?.call(ThemeMode.system),
           ),
         ],
       ),
     );
+
+    if (semanticLabel == null) {
+      return picker;
+    }
+    return Semantics(label: semanticLabel, container: true, child: picker);
   }
 }
 
@@ -58,40 +80,50 @@ class _SegmentBtn extends StatelessWidget {
     required this.tooltip,
     required this.selected,
     required this.onTap,
+    this.semanticLabel,
   });
 
   final IconData icon;
   final String tooltip;
   final bool selected;
   final VoidCallback onTap;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final effectiveSemantics =
+        semanticLabel ?? (tooltip.isNotEmpty ? tooltip : null);
 
-    return Expanded(
-      child: Tooltip(
-        message: tooltip,
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            decoration: BoxDecoration(
-              color: selected ? colors.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-              boxShadow: selected
-                  ? VnlfDimensions.subtleShadow(isDark: colors.isDark)
-                  : null,
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              size: 16,
-              color: selected ? colors.brand : colors.muted,
-            ),
+    Widget button = Semantics(
+      button: true,
+      selected: selected,
+      label: effectiveSemantics,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: BoxDecoration(
+            color: selected ? colors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+            boxShadow: selected
+                ? VnlfDimensions.subtleShadow(isDark: colors.isDark)
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            size: 16,
+            color: selected ? colors.brand : colors.muted,
           ),
         ),
       ),
     );
+
+    if (tooltip.isNotEmpty) {
+      button = Tooltip(message: tooltip, child: button);
+    }
+
+    return Expanded(child: button);
   }
 }

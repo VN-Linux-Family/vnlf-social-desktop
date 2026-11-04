@@ -5,6 +5,96 @@ import '../../design_system/design_system.dart';
 /// Strictly compliant with zero-reference-content rules: 100% synthetic discussions,
 /// invented identities, and neutral placeholders. Zero production names or screenshot text.
 abstract final class VnlfGalleryFixtures {
+  /// Mandatory Vietnamese diacritic verification phrase.
+  static const String diacriticSample = 'Tiếng Việt: ặ ữ ờ ẫ ệ';
+
+  // Shell sample labels
+  static const Map<VnlfNavDestination, String> destinationLabels = {
+    VnlfNavDestination.feed: 'Bảng tin',
+    VnlfNavDestination.explore: 'Khám phá',
+    VnlfNavDestination.messages: 'Tin nhắn',
+    VnlfNavDestination.voice: 'Voice',
+    VnlfNavDestination.projects: 'Dự án',
+  };
+
+  static const String brandTitlePrefix = 'VNLF ';
+  static const String brandTitleAccent = 'Social';
+  static const String brandLogoSemanticLabel = 'Biểu trưng VNLF Social';
+  static const String loginLabel = 'Đăng nhập';
+  static const String loginSubtitleLabel = 'Để dùng đầy đủ tí...';
+  static const String supportLabel = 'Hỗ trợ cộng đồng';
+  static const String supportBadgeText = '3';
+  static const String feedbackLabel = 'Góp ý & báo lỗi';
+  static const String socialSectionLabel = 'VNLF trên các mạng xã hội khác';
+  static const String facebookBadgeLabel = 'f';
+  static const String facebookSemanticLabel = 'Facebook cộng đồng';
+  static const String telegramSemanticLabel = 'Telegram cộng đồng';
+  static const String discordSemanticLabel = 'Discord cộng đồng';
+  static const String settingsLabel = 'Cài đặt';
+  static const String helpLabel = 'Trợ giúp';
+  static const String lightThemeTooltip = 'Sáng';
+  static const String darkThemeTooltip = 'Tối';
+  static const String systemThemeTooltip = 'Tự động';
+  static const String themePickerSemanticLabel = 'Chọn giao diện sáng tối';
+  static const String railThemeToggleTooltip = 'Chế độ giao diện';
+  static const String openDrawerTooltip = 'Mở menu điều hướng';
+  static const String searchSemanticLabel = 'Tìm kiếm';
+  static const String notificationsSemanticLabel = 'Thông báo';
+  static const String profileSemanticLabel = 'Tài khoản cá nhân';
+  static const String collapseSidebarSemanticLabel = 'Thu gọn thanh bên';
+
+  // Leaderboard sample labels
+  static const String leaderboardTitle = 'Xếp hạng tuần';
+  static const String leaderboardViewAllLabel = 'Xem tất cả ↗';
+  static const String footerCopyright = 'VNLF Social · 2026';
+  static const String communityRulesLabel = 'Quy chuẩn cộng đồng';
+  static const String privacyLabel = 'Riêng tư';
+  static const String leaderboardEmptyTitle = 'Chưa có dữ liệu xếp hạng';
+  static const String leaderboardEmptyMessage =
+      'Bảng xếp hạng tuần này đang được cập nhật.';
+  static const String leaderboardErrorTitle = 'Không thể tải bảng xếp hạng';
+  static const String leaderboardErrorMessage =
+      'Đã xảy ra sự cố khi tải dữ liệu xếp hạng tuần.';
+  static const String leaderboardLoadingSemanticLabel =
+      'Đang tải bảng xếp hạng tuần';
+
+  // Feed & Post sample labels
+  static const String composerPromptText = 'Hôm nay bạn muốn chia sẻ điều gì?';
+  static const String addMediaSemanticLabel = 'Thêm hình ảnh đính kèm';
+  static const String codeCopyLabel = 'Sao chép';
+  static const String codeCopiedLabel = 'Đã chép';
+  static const String commentReplyLabel = 'Trả lời';
+  static const String upvoteSemanticLabel = 'Bình chọn tăng';
+  static const String downvoteSemanticLabel = 'Bình chọn giảm';
+  static const String commentActionSemanticLabel = 'Xem bình luận';
+  static const String shareActionSemanticLabel = 'Sao chép liên kết';
+  static const String bookmarkActionSemanticLabel = 'Lưu bài viết';
+  static const String moreOptionsSemanticLabel = 'Tùy chọn bài viết';
+  static const String feedEmptyTitle = 'Chưa có bài viết nào';
+  static const String feedEmptyMessage =
+      'Bảng tin hiện chưa có bài viết trong mục này. Hãy thử chuyển sang mục khác hoặc làm mới.';
+  static const String refreshActionLabel = 'Làm mới';
+  static const String feedErrorTitle = 'Không thể tải bảng tin';
+  static const String feedErrorMessage =
+      'Đã xảy ra sự cố khi tải danh sách bài viết. Vui lòng kiểm tra kết nối và thử lại.';
+  static const String retryActionLabel = 'Thử lại';
+  static const String postCardSkeletonSemanticLabel = 'Đang tải bài viết';
+  static const String feedSkeletonListSemanticLabel =
+      'Đang tải danh sách bài viết bảng tin';
+
+  static String voteCapsuleSemanticLabel(int score) =>
+      'Bình chọn bài viết, điểm hiện tại $score';
+
+  static String distroBadgeLabel(DistroBadgeType badge) => switch (badge) {
+    DistroBadgeType.none => '',
+    DistroBadgeType.arch => 'arch',
+    DistroBadgeType.debian => 'debian',
+    DistroBadgeType.cachyos => 'cachyos',
+    DistroBadgeType.caramos => 'caramos',
+    DistroBadgeType.nixos => 'nixos',
+    DistroBadgeType.fedora => 'fedora',
+  };
+
   static const AuthorData authorNam = AuthorData(
     id: '00000000-0000-7000-8000-000000000011',
     username: 'tranvannam',
@@ -13,6 +103,7 @@ abstract final class VnlfGalleryFixtures {
     style: AuthorStyleData(
       frame: AvatarFrameType.ring,
       distroBadge: DistroBadgeType.fedora,
+      distroBadgeLabel: 'fedora',
       hasTerminalBadge: true,
     ),
   );
@@ -25,6 +116,7 @@ abstract final class VnlfGalleryFixtures {
     style: AuthorStyleData(
       frame: AvatarFrameType.none,
       distroBadge: DistroBadgeType.nixos,
+      distroBadgeLabel: 'nixos',
       hasPartnerStar: true,
     ),
   );
@@ -37,6 +129,7 @@ abstract final class VnlfGalleryFixtures {
     style: AuthorStyleData(
       frame: AvatarFrameType.none,
       distroBadge: DistroBadgeType.arch,
+      distroBadgeLabel: 'arch',
       hasPixelBadge: true,
     ),
   );
@@ -49,6 +142,7 @@ abstract final class VnlfGalleryFixtures {
     style: AuthorStyleData(
       frame: AvatarFrameType.ring,
       distroBadge: DistroBadgeType.debian,
+      distroBadgeLabel: 'debian',
       hasTerminalBadge: true,
     ),
   );
@@ -71,6 +165,7 @@ abstract final class VnlfGalleryFixtures {
       attachment: ImagePlaceholderAttachment(
         aspectRatio: 16 / 9,
         label: 'Sơ đồ định tuyến luồng âm thanh PipeWire & JACK',
+        semanticLabel: 'Hình minh họa sơ đồ định tuyến luồng âm thanh PipeWire',
       ),
       voteScore: 12,
       viewerVote: VoteState.neutral,
@@ -85,6 +180,10 @@ abstract final class VnlfGalleryFixtures {
         'Đoạn script ngắn gọn sử dụng cú pháp chuẩn POSIX và hỗ trợ thư mục Tiếng Việt: ặ ữ ờ ẫ ệ:',
       ],
       attachment: CodeBlockAttachment(
+        language: 'bash',
+        copyLabel: codeCopyLabel,
+        copiedLabel: codeCopiedLabel,
+        semanticLabel: 'Đoạn mã bash chuyển đổi âm thanh đa luồng',
         code:
             '#!/usr/bin/env bash\n'
             '# Chuyển đổi video đa luồng với GNU Parallel\n'
@@ -130,6 +229,7 @@ abstract final class VnlfGalleryFixtures {
     attachment: ImagePlaceholderAttachment(
       aspectRatio: 16 / 9,
       label: 'Sơ đồ kết nối PipeWire node graph',
+      semanticLabel: 'Hình minh họa sơ đồ kết nối PipeWire node graph',
     ),
     voteScore: 36,
     viewerVote: VoteState.upvoted,
