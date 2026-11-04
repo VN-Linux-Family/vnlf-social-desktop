@@ -8,6 +8,7 @@ import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../../shared/presentation/post_interactions.dart';
 import 'thread_comments.dart';
 
 final threadPostProvider = FutureProvider.autoDispose.family<FeedPost?, String>(
@@ -55,18 +56,16 @@ class ThreadScreen extends ConsumerWidget {
   }
 }
 
-class ThreadContent extends StatefulWidget {
+class ThreadContent extends ConsumerStatefulWidget {
   const ThreadContent({super.key, required this.post});
 
   final FeedPost post;
 
   @override
-  State<ThreadContent> createState() => _ThreadContentState();
+  ConsumerState<ThreadContent> createState() => _ThreadContentState();
 }
 
-class _ThreadContentState extends State<ThreadContent> {
-  VoteState? _vote;
-  bool? _bookmarked;
+class _ThreadContentState extends ConsumerState<ThreadContent> {
   final _commentFocus = FocusNode();
 
   @override
@@ -80,20 +79,22 @@ class _ThreadContentState extends State<ThreadContent> {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final source = widget.post;
     final summary = presentPost(source, english: english);
-    final vote = _vote ?? summary.viewerVote;
-    final detail = PostData(
-      id: source.id,
-      author: summary.author,
-      relativeTime: summary.relativeTime,
-      title: source.title,
-      paragraphs:
-          (source.contentText.isEmpty ? source.excerpt : source.contentText)
-              .split('\n\n'),
-      tags: source.tags,
-      voteScore: source.voteScore + vote.value - summary.viewerVote.value,
-      viewerVote: vote,
-      isBookmarked: _bookmarked ?? source.viewerBookmarked,
-      commentCount: source.commentCount,
+    final interaction = ref.watch(postInteractionProvider(source.id));
+    final detail = interaction.apply(
+      PostData(
+        id: source.id,
+        author: summary.author,
+        relativeTime: summary.relativeTime,
+        title: source.title,
+        paragraphs:
+            (source.contentText.isEmpty ? source.excerpt : source.contentText)
+                .split('\n\n'),
+        tags: source.tags,
+        voteScore: source.voteScore,
+        viewerVote: summary.viewerVote,
+        isBookmarked: source.viewerBookmarked,
+        commentCount: source.commentCount,
+      ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -113,10 +114,17 @@ class _ThreadContentState extends State<ThreadContent> {
           ),
           onCommentTap: _commentFocus.requestFocus,
           onVoteChanged: offlineFeatures
-              ? (value) => setState(() => _vote = value)
+              ? (value) => ref
+                    .read(postInteractionsProvider.notifier)
+                    .vote(source.id, value)
               : null,
           onBookmarkToggle: offlineFeatures
-              ? () => setState(() => _bookmarked = !detail.isBookmarked)
+              ? () => ref
+                    .read(postInteractionsProvider.notifier)
+                    .toggleBookmark(
+                      source.id,
+                      initialValue: source.viewerBookmarked,
+                    )
               : null,
           upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
           downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',

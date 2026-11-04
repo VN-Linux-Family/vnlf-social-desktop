@@ -72,7 +72,13 @@ void main() {
     expect(router.routeInformationProvider.value.uri.path, '/projects');
     expect(find.byType(VnlfProjectPreviewCard), findsOneWidget);
     expect(find.text('vnlf-cli'), findsOneWidget);
-    expect(find.text('Dart'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(VnlfProjectPreviewCard),
+        matching: find.text('Dart'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('128'), findsOneWidget);
     expect(find.text('24'), findsOneWidget);
     expect(tester.takeException(), isNull);

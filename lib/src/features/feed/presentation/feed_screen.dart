@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../shared/presentation/feature_samples.dart';
+import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
 import 'post_mapper.dart';
 
@@ -26,10 +28,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       children: [
         VnlfCenterPageHeader(
           title: english ? 'Feed' : 'Bảng tin',
-          trailing: IconButton(
-            tooltip: english ? 'Settings' : 'Cài đặt',
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: english ? 'Search' : 'Tìm kiếm',
+                icon: const Icon(Icons.search),
+                onPressed: () => context.push('/search'),
+              ),
+              IconButton(
+                tooltip: english ? 'Settings' : 'Cài đặt',
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => context.push('/settings'),
+              ),
+            ],
           ),
         ),
         VnlfFeedTabBar(
@@ -97,42 +109,71 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       ),
                     SliverList.builder(
                       itemCount: data.posts.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          onTap: () => context.push(
-                            '/thread/${Uri.encodeComponent(data.posts[index].id)}',
-                          ),
-                          child: VnlfPostCard(
-                            key: ValueKey(data.posts[index].id),
-                            post: presentPost(
-                              data.posts[index],
-                              english: english,
+                      itemBuilder: (context, index) => Consumer(
+                        builder: (context, ref, child) {
+                          final source = data.posts[index];
+                          final interaction = ref.watch(
+                            postInteractionProvider(source.id),
+                          );
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: InkWell(
+                              onTap: () => context.push(
+                                '/thread/${Uri.encodeComponent(data.posts[index].id)}',
+                              ),
+                              child: VnlfPostCard(
+                                key: ValueKey(data.posts[index].id),
+                                post: interaction.apply(
+                                  presentPost(source, english: english),
+                                ),
+                                onVoteChanged: offlineFeatures
+                                    ? (vote) => ref
+                                          .read(
+                                            postInteractionsProvider.notifier,
+                                          )
+                                          .vote(source.id, vote)
+                                    : null,
+                                onBookmarkToggle: offlineFeatures
+                                    ? () => ref
+                                          .read(
+                                            postInteractionsProvider.notifier,
+                                          )
+                                          .toggleBookmark(
+                                            source.id,
+                                            initialValue:
+                                                source.viewerBookmarked,
+                                          )
+                                    : null,
+                                authorAvatarSemanticLabel:
+                                    data.posts[index].author.displayName,
+                                onAuthorTap: () => context.push(
+                                  '/profile/${Uri.encodeComponent(data.posts[index].author.username)}',
+                                ),
+                                onCommentTap: () => context.push(
+                                  '/thread/${Uri.encodeComponent(data.posts[index].id)}',
+                                ),
+                                moreOptionsSemanticLabel: english
+                                    ? 'More options'
+                                    : 'Tùy chọn',
+                                upvoteSemanticLabel: english
+                                    ? 'Upvote'
+                                    : 'Ủng hộ',
+                                downvoteSemanticLabel: english
+                                    ? 'Downvote'
+                                    : 'Phản đối',
+                                commentSemanticLabel: english
+                                    ? 'Comments'
+                                    : 'Bình luận',
+                                shareSemanticLabel: english
+                                    ? 'Share'
+                                    : 'Chia sẻ',
+                                bookmarkSemanticLabel: english
+                                    ? 'Bookmark'
+                                    : 'Lưu bài viết',
+                              ),
                             ),
-                            authorAvatarSemanticLabel:
-                                data.posts[index].author.displayName,
-                            onAuthorTap: () => context.push(
-                              '/profile/${Uri.encodeComponent(data.posts[index].author.username)}',
-                            ),
-                            onCommentTap: () => context.push(
-                              '/thread/${Uri.encodeComponent(data.posts[index].id)}',
-                            ),
-                            moreOptionsSemanticLabel: english
-                                ? 'More options'
-                                : 'Tùy chọn',
-                            upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
-                            downvoteSemanticLabel: english
-                                ? 'Downvote'
-                                : 'Phản đối',
-                            commentSemanticLabel: english
-                                ? 'Comments'
-                                : 'Bình luận',
-                            shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
-                            bookmarkSemanticLabel: english
-                                ? 'Bookmark'
-                                : 'Lưu bài viết',
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
                     if (data.isLoadingMore)
