@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
@@ -6,6 +8,9 @@ import '../core/session_storage.dart';
 import '../data/fixture_repositories.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
+
+/// Null follows the system locale; set a locale to override it for this session.
+final localeProvider = StateProvider<Locale?>((ref) => null);
 
 final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),
