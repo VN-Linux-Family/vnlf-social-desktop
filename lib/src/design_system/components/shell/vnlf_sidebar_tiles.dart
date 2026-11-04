@@ -175,7 +175,9 @@ class SidebarUtilityTile extends StatelessWidget {
             children: [
               Icon(icon, size: 17, color: colors.muted),
               const SizedBox(width: 10),
-              Text(label, style: VnlfTypography.control(colors.muted)),
+              Expanded(
+                child: Text(label, style: VnlfTypography.control(colors.muted)),
+              ),
             ],
           ),
         ),

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../design_system/design_system.dart';
+import '../features/discover/presentation/discover_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
 import '../features/projects/presentation/projects_screen.dart';
+import '../features/profile/presentation/profile_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+import '../features/thread/presentation/thread_screen.dart';
+import '../features/thread/presentation/thread_sidebar.dart';
 import '../gallery/gallery_page.dart';
+import 'providers.dart';
 
 const _paths = <VnlfNavDestination, String>{
   VnlfNavDestination.feed: '/',
@@ -101,45 +108,61 @@ GoRouter createMainRouter() {
                   .map((entry) => entry.key)
                   .firstOrNull ??
               VnlfNavDestination.feed;
-          return VnlfAdaptiveShell(
-            activeDestination: active,
-            onDestinationSelected: (destination) =>
-                context.go(destinations[destination]!),
-            centerChildHandlesScroll: const [
-              '/',
-              '/leaderboard',
-              '/projects',
-            ].contains(state.uri.path),
-            rightSidebarChild: state.uri.path == '/'
-                ? const LeaderboardPanel(sidebar: true)
-                : null,
-            destinationLabels: labels,
-            brandTitlePrefix: 'VNLF ',
-            brandTitleAccent: 'Social',
-            brandLogoSemanticLabel: 'VNLF Social',
-            loginLabel: english ? 'Log in' : 'Đăng nhập',
-            loginSubtitleLabel: english
-                ? 'Access all community features'
-                : 'Để dùng đầy đủ tính năng',
-            supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
-            feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
-            socialSectionLabel: english
-                ? 'VNLF on social networks'
-                : 'VNLF trên các mạng xã hội khác',
-            settingsLabel: english ? 'Settings' : 'Cài đặt',
-            helpLabel: english ? 'Help' : 'Trợ giúp',
-            lightThemeTooltip: english ? 'Light' : 'Sáng',
-            darkThemeTooltip: english ? 'Dark' : 'Tối',
-            systemThemeTooltip: english ? 'System' : 'Tự động',
-            openDrawerTooltip: english
-                ? 'Open navigation menu'
-                : 'Mở menu điều hướng',
-            searchSemanticLabel: english ? 'Search' : 'Tìm kiếm',
-            notificationsSemanticLabel: english ? 'Notifications' : 'Thông báo',
-            profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
-            leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
-            mobileBottomNavSemanticLabel: english ? 'Navigation' : 'Điều hướng',
-            centerChild: child,
+          return Consumer(
+            builder: (context, ref, _) => VnlfAdaptiveShell(
+              themeMode: ref.watch(themeModeProvider),
+              onThemeModeChanged: (mode) =>
+                  ref.read(themeModeProvider.notifier).state = mode,
+              activeDestination: active,
+              onDestinationSelected: (destination) =>
+                  context.go(destinations[destination]!),
+              centerChildHandlesScroll:
+                  const [
+                    '/',
+                    '/leaderboard',
+                    '/projects',
+                    '/settings',
+                    '/discover',
+                  ].contains(state.uri.path) ||
+                  state.uri.path.startsWith('/thread/') ||
+                  state.uri.path.startsWith('/profile/'),
+              rightSidebarChild: state.uri.path.startsWith('/thread/')
+                  ? ThreadSidebar(postId: state.pathParameters['id']!)
+                  : state.uri.path == '/'
+                  ? const LeaderboardPanel(sidebar: true)
+                  : null,
+              destinationLabels: labels,
+              brandTitlePrefix: 'VNLF ',
+              brandTitleAccent: 'Social',
+              brandLogoSemanticLabel: 'VNLF Social',
+              loginLabel: english ? 'Log in' : 'Đăng nhập',
+              loginSubtitleLabel: english
+                  ? 'Access all community features'
+                  : 'Để dùng đầy đủ tính năng',
+              supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
+              feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
+              socialSectionLabel: english
+                  ? 'VNLF on social networks'
+                  : 'VNLF trên các mạng xã hội khác',
+              settingsLabel: english ? 'Settings' : 'Cài đặt',
+              helpLabel: english ? 'Help' : 'Trợ giúp',
+              lightThemeTooltip: english ? 'Light' : 'Sáng',
+              darkThemeTooltip: english ? 'Dark' : 'Tối',
+              systemThemeTooltip: english ? 'System' : 'Tự động',
+              openDrawerTooltip: english
+                  ? 'Open navigation menu'
+                  : 'Mở menu điều hướng',
+              searchSemanticLabel: english ? 'Search' : 'Tìm kiếm',
+              notificationsSemanticLabel: english
+                  ? 'Notifications'
+                  : 'Thông báo',
+              profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
+              leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
+              mobileBottomNavSemanticLabel: english
+                  ? 'Navigation'
+                  : 'Điều hướng',
+              centerChild: child,
+            ),
           );
         },
         routes: [
@@ -152,13 +175,27 @@ GoRouter createMainRouter() {
             path: '/projects',
             builder: (context, state) => const ProjectsScreen(),
           ),
+          GoRoute(
+            path: '/thread/:id',
+            builder: (context, state) =>
+                ThreadScreen(postId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/profile/:id',
+            builder: (context, state) =>
+                ProfileScreen(username: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/discover',
+            builder: (context, state) => const DiscoverScreen(),
+          ),
           for (final entry in <String, (String, String, IconData)>{
-            '/thread/:id': ('Bài viết', 'Thread', Icons.forum_outlined),
-            '/profile/:id': ('Trang cá nhân', 'Profile', Icons.person_outline),
             '/search': ('Tìm kiếm', 'Search', Icons.search),
             '/channels': ('Kênh', 'Channels', Icons.chat_bubble_outline),
-            '/discover': ('Khám phá', 'Discover', Icons.explore_outlined),
-            '/settings': ('Cài đặt', 'Settings', Icons.settings_outlined),
             '/voice': ('Voice', 'Voice', Icons.mic_none),
           }.entries)
             GoRoute(

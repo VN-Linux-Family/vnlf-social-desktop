@@ -108,12 +108,8 @@ void main() {
 }
 
 const _placeholderRoutes = <({String path, String vietnamese, String english})>[
-  (path: '/thread/123', vietnamese: 'Bài viết', english: 'Thread'),
-  (path: '/profile/123', vietnamese: 'Trang cá nhân', english: 'Profile'),
   (path: '/search', vietnamese: 'Tìm kiếm', english: 'Search'),
   (path: '/channels', vietnamese: 'Kênh', english: 'Channels'),
-  (path: '/discover', vietnamese: 'Khám phá', english: 'Discover'),
-  (path: '/settings', vietnamese: 'Cài đặt', english: 'Settings'),
   (path: '/voice', vietnamese: 'Voice', english: 'Voice'),
 ];
 

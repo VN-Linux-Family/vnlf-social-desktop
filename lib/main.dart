@@ -42,6 +42,7 @@ class _AppState extends ConsumerState<_App> {
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: VnlfTheme.light(),
       darkTheme: VnlfTheme.dark(),
+      themeMode: ref.watch(themeModeProvider),
       locale: ref.watch(localeProvider),
       localizationsDelegates: const [
         AppLocalizations.delegate,

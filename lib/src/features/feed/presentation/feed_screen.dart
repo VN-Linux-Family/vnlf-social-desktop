@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 import 'feed_notifier.dart';
@@ -23,7 +24,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(title: english ? 'Feed' : 'Bảng tin'),
+        VnlfCenterPageHeader(
+          title: english ? 'Feed' : 'Bảng tin',
+          trailing: IconButton(
+            tooltip: english ? 'Settings' : 'Cài đặt',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
+          ),
+        ),
         VnlfFeedTabBar(
           tabs: english
               ? const ['Latest', 'Featured', 'Article']
@@ -91,28 +99,39 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       itemCount: data.posts.length,
                       itemBuilder: (context, index) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: VnlfPostCard(
-                          key: ValueKey(data.posts[index].id),
-                          post: presentPost(
-                            data.posts[index],
-                            english: english,
+                        child: InkWell(
+                          onTap: () => context.push(
+                            '/thread/${Uri.encodeComponent(data.posts[index].id)}',
                           ),
-                          authorAvatarSemanticLabel:
-                              data.posts[index].author.displayName,
-                          moreOptionsSemanticLabel: english
-                              ? 'More options'
-                              : 'Tùy chọn',
-                          upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
-                          downvoteSemanticLabel: english
-                              ? 'Downvote'
-                              : 'Phản đối',
-                          commentSemanticLabel: english
-                              ? 'Comments'
-                              : 'Bình luận',
-                          shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
-                          bookmarkSemanticLabel: english
-                              ? 'Bookmark'
-                              : 'Lưu bài viết',
+                          child: VnlfPostCard(
+                            key: ValueKey(data.posts[index].id),
+                            post: presentPost(
+                              data.posts[index],
+                              english: english,
+                            ),
+                            authorAvatarSemanticLabel:
+                                data.posts[index].author.displayName,
+                            onAuthorTap: () => context.push(
+                              '/profile/${Uri.encodeComponent(data.posts[index].author.username)}',
+                            ),
+                            onCommentTap: () => context.push(
+                              '/thread/${Uri.encodeComponent(data.posts[index].id)}',
+                            ),
+                            moreOptionsSemanticLabel: english
+                                ? 'More options'
+                                : 'Tùy chọn',
+                            upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
+                            downvoteSemanticLabel: english
+                                ? 'Downvote'
+                                : 'Phản đối',
+                            commentSemanticLabel: english
+                                ? 'Comments'
+                                : 'Bình luận',
+                            shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
+                            bookmarkSemanticLabel: english
+                                ? 'Bookmark'
+                                : 'Lưu bài viết',
+                          ),
                         ),
                       ),
                     ),

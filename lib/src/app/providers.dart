@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
@@ -11,6 +12,8 @@ import '../domain/repositories.dart';
 
 /// Null follows the system locale; set a locale to override it for this session.
 final localeProvider = StateProvider<Locale?>((ref) => null);
+
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
 final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),

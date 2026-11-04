@@ -7,6 +7,10 @@ import 'package:vnlfsocialapp/main.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
+import 'package:vnlfsocialapp/src/features/discover/presentation/discover_screen.dart';
+import 'package:vnlfsocialapp/src/features/profile/presentation/profile_screen.dart';
+import 'package:vnlfsocialapp/src/features/settings/presentation/settings_screen.dart';
+import 'package:vnlfsocialapp/src/features/thread/presentation/thread_screen.dart';
 
 void main() {
   testWidgets('shell adapts and navigates to the requested destinations', (
@@ -37,18 +41,18 @@ void main() {
     await tester.tap(find.text('Discover'));
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/discover');
-    for (final path in [
-      '/thread/1',
-      '/profile/1',
-      '/search',
-      '/channels',
-      '/discover',
-      '/settings',
-    ]) {
-      router.go(path);
+    for (final entry in <String, Type>{
+      '/thread/1': ThreadScreen,
+      '/profile/1': ProfileScreen,
+      '/search': VnlfStateCard,
+      '/channels': VnlfStateCard,
+      '/discover': DiscoverScreen,
+      '/settings': SettingsScreen,
+    }.entries) {
+      router.go(entry.key);
       await tester.pumpAndSettle();
-      expect(find.byType(VnlfStateCard), findsOneWidget, reason: path);
-      expect(router.routeInformationProvider.value.uri.path, path);
+      expect(find.byType(entry.value), findsOneWidget, reason: entry.key);
+      expect(router.routeInformationProvider.value.uri.path, entry.key);
     }
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pumpAndSettle();
