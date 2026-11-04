@@ -14,11 +14,13 @@ class VnlfAuthorNameRow extends StatelessWidget {
     required this.author,
     this.showHandleInline = true,
     this.fontSize = 13.5,
+    this.allowWrap = true,
   });
 
   final AuthorData author;
   final bool showHandleInline;
   final double fontSize;
+  final bool allowWrap;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +41,9 @@ class VnlfAuthorNameRow extends StatelessWidget {
 
     Widget nameText = Text(
       author.displayName,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      softWrap: allowWrap,
+      maxLines: allowWrap ? null : 1,
+      overflow: allowWrap ? null : TextOverflow.ellipsis,
       style: style.nameEffect == NameEffectType.glitch
           ? baseTextStyle.copyWith(
               shadows: [
@@ -100,6 +103,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
             padding: const EdgeInsets.only(left: 2),
             child: Text(
               '@${author.username}',
+              softWrap: allowWrap,
               style: VnlfTypography.meta(colors.muted).copyWith(fontSize: 12.5),
             ),
           ),
