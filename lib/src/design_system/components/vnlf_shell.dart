@@ -95,9 +95,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
                             ),
                             if (rightSidebarChild != null) ...[
                               const SizedBox(width: 28),
-                              SizedBox(
+                              VnlfDesktopRightSidebar(
                                 width: VnlfDimensions.rightSidebarWidth,
-                                child: rightSidebarChild,
+                                child: rightSidebarChild!,
                               ),
                             ],
                           ],
