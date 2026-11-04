@@ -2,6 +2,28 @@
 
 All endpoints, payload schemas, and realtime events documented here are derived directly from `vietnamlinuxfamily.net` production client bundles and live network inspection. Never invent endpoints.
 
+## Phase 2 fixture inventory
+
+All fixture values are synthetic. Confidence applies to field names only; no
+fixture demonstrates a live value or authenticated behavior.
+
+- `test/fixtures/feed.json` and the matching inline `fixtureTransport` feed
+  model `GET /api/v1/feed`: `items` and `nextCursor` are [CONFIRMED]. Item
+  fields `id`, `excerpt`, `voteScore`, `commentCount`, `author`,
+  `author.username`, and `author.displayName` follow the post shape documented
+  below [CONFIRMED shape]; the particular item and every value are synthetic.
+- The inline empty projects fixture models `GET /api/v1/projects`:
+  `items`, `nextCursor`, and `facets` are [CONFIRMED] field names. The empty
+  collection, null cursor, and empty facets object are [INFERRED] examples;
+  project item fields and their types remain [UNKNOWN].
+- The inline empty leaderboard fixture models `GET /api/v1/leaderboards`:
+  `period`, `periodStart`, `periodEnd`, `computedAt`, and `items` are
+  [CONFIRMED] field names. Their example values and nullability are [INFERRED];
+  leaderboard item fields and types remain [UNKNOWN].
+- The post repository searches the synthetic feed fixture; it does not model a
+  post-detail response. Channels currently return an empty local list without
+  modeling `/api/v1/channels`, whose response fields remain [UNKNOWN].
+
 ---
 
 ## 1. Client Protocol & Anti-Corruption Layer

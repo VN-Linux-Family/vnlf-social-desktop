@@ -3,12 +3,8 @@ import 'dart:io';
 
 /// Serves synthetic content in the observed public feed shape on loopback only.
 Future<void> main() async {
-  final rawPort =
-      Platform.environment['VNLF_FAKE_SERVER_PORT'] ??
-      Platform.environment['FAKE_SERVER_PORT'] ??
-      Platform.environment['PORT'] ??
-      '8080';
-  final port = int.tryParse(rawPort);
+  final rawPort = Platform.environment['VNLF_FAKE_SERVER_PORT'];
+  final port = rawPort == null ? null : int.tryParse(rawPort);
   if (port == null || port < 0 || port > 65535) {
     stderr.writeln('Invalid fixture server port');
     exitCode = 64;

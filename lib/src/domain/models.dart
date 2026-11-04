@@ -60,3 +60,29 @@ final class CommunityChannel {
   final String id;
   final String name;
 }
+
+final class ProjectSummary {
+  const ProjectSummary({required this.id, required this.name});
+  final String id;
+  final String name;
+}
+
+final class DiscoverPage {
+  DiscoverPage({required List<ProjectSummary> items, this.nextCursor})
+    : items = List.unmodifiable(items);
+  final List<ProjectSummary> items;
+  final String? nextCursor;
+}
+
+final class LeaderboardEntry {
+  const LeaderboardEntry({required this.username, required this.points});
+  final String username;
+  final int points;
+}
+
+final class Leaderboard {
+  Leaderboard({required this.period, required List<LeaderboardEntry> items})
+    : items = List.unmodifiable(items);
+  final String period;
+  final List<LeaderboardEntry> items;
+}

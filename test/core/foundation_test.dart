@@ -101,6 +101,8 @@ void main() {
     tester,
   ) async {
     final router = createAppRouter(
+      postScreen: (_, id) => Text(id),
+      profileScreen: (_, username) => Text(username),
       screens: {
         for (final destination in VnlfNavDestination.values)
           destination: (_) => Text('screen ${destination.name}'),

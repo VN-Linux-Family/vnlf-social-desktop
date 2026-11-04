@@ -23,6 +23,18 @@ final feedRepositoryProvider = Provider<FeedRepository>(
 final communityRepositoryProvider = Provider<CommunityRepository>(
   (ref) => const FixtureCommunityRepository(),
 );
+final channelsRepositoryProvider = Provider<ChannelsRepository>(
+  (ref) => const FixtureCommunityRepository(),
+);
+final postRepositoryProvider = Provider<PostRepository>(
+  (ref) => FixturePostRepository(ref.watch(feedRepositoryProvider)),
+);
+final discoverRepositoryProvider = Provider<DiscoverRepository>(
+  (ref) => FixtureDiscoverRepository(ref.watch(apiClientProvider)),
+);
+final leaderboardsRepositoryProvider = Provider<LeaderboardsRepository>(
+  (ref) => FixtureLeaderboardsRepository(ref.watch(apiClientProvider)),
+);
 
 final sessionProvider = FutureProvider<Session?>(
   (ref) => ref.watch(authRepositoryProvider).currentSession(),

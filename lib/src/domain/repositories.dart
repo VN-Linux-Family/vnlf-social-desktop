@@ -11,3 +11,17 @@ abstract interface class FeedRepository {
 abstract interface class CommunityRepository {
   Future<List<CommunityChannel>> getChannels();
 }
+
+abstract interface class ChannelsRepository implements CommunityRepository {}
+
+abstract interface class PostRepository {
+  Future<FeedPost?> getPost(String id);
+}
+
+abstract interface class DiscoverRepository {
+  Future<DiscoverPage> getProjects();
+}
+
+abstract interface class LeaderboardsRepository {
+  Future<Leaderboard> getLeaderboard();
+}
