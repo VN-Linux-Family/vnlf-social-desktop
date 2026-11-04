@@ -6,6 +6,8 @@ assets/reference/
 *.webp
 *.har
 *.css.extracted
+.env
+.env.*
 
 # Dart / Flutter build artifacts
 .dart_tool/
@@ -16,3 +18,8 @@ build/
 
 # Scratch files
 scratch/
+
+# Editor and Flutter-generated local files
+.idea/
+*.iml
+android/local.properties
