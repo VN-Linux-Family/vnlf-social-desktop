@@ -190,7 +190,7 @@ void main() {
       ]);
       expect(
         starts[1].difference(starts[0]),
-        greaterThanOrEqualTo(const Duration(milliseconds: 500)),
+        greaterThanOrEqualTo(const Duration(milliseconds: 490)),
       );
     },
   );

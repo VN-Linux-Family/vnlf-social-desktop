@@ -243,7 +243,7 @@ final class _HostPolicy {
         _checkPause();
       }
       final last = _lastRequest;
-      if (last != null) {
+      while (last != null && DateTime.now().difference(last) < interval) {
         final delay = interval - DateTime.now().difference(last);
         if (delay > Duration.zero) await Future<void>.delayed(delay);
       }
