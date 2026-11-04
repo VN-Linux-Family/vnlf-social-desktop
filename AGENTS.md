@@ -10,7 +10,7 @@ web as feasible), lightweight, smooth, same look as the website.
 ## Working with a server we don't own
 - Use only endpoints the site's own web client calls, with the owner's test account.
   Never bypass auth, rate limits or access controls. Never touch other users' private data.
-- Be gentle: cache, debounce, back off, clear User-Agent, low request rates.
+- Be gentle: cache, debounce, back off, clear User-Agent, low request rates. Non-idempotent requests (POST, PUT, PATCH, DELETE) are never retried automatically.
 - Read-only by default. Writes (post, comment, react) only when your card says so, on
   the named test account or thread.
 - No credentials, cookies, tokens, emails or HAR files in the repo, logs or reports.
