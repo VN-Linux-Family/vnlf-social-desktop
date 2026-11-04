@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../design_system/design_system.dart';
+import '../features/feed/presentation/feed_screen.dart';
+import '../features/leaderboard/presentation/leaderboard_screen.dart';
+import '../features/projects/presentation/projects_screen.dart';
 import '../gallery/gallery_page.dart';
 
 const _paths = <VnlfNavDestination, String>{
@@ -59,7 +62,7 @@ GoRouter createAppRouter({
   );
 }
 
-/// App routes use design-system states until feature screens are connected.
+/// Public feature routes use repository-backed native screens.
 GoRouter createMainRouter() {
   const destinations = <VnlfNavDestination, String>{
     VnlfNavDestination.feed: '/',
@@ -102,10 +105,32 @@ GoRouter createMainRouter() {
             activeDestination: active,
             onDestinationSelected: (destination) =>
                 context.go(destinations[destination]!),
+            centerChildHandlesScroll: const [
+              '/',
+              '/leaderboard',
+              '/projects',
+            ].contains(state.uri.path),
+            rightSidebarChild: state.uri.path == '/'
+                ? const LeaderboardPanel(sidebar: true)
+                : null,
             destinationLabels: labels,
             brandTitlePrefix: 'VNLF ',
             brandTitleAccent: 'Social',
             brandLogoSemanticLabel: 'VNLF Social',
+            loginLabel: english ? 'Log in' : 'Đăng nhập',
+            loginSubtitleLabel: english
+                ? 'Access all community features'
+                : 'Để dùng đầy đủ tính năng',
+            supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
+            feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
+            socialSectionLabel: english
+                ? 'VNLF on social networks'
+                : 'VNLF trên các mạng xã hội khác',
+            settingsLabel: english ? 'Settings' : 'Cài đặt',
+            helpLabel: english ? 'Help' : 'Trợ giúp',
+            lightThemeTooltip: english ? 'Light' : 'Sáng',
+            darkThemeTooltip: english ? 'Dark' : 'Tối',
+            systemThemeTooltip: english ? 'System' : 'Tự động',
             openDrawerTooltip: english
                 ? 'Open navigation menu'
                 : 'Mở menu điều hướng',
@@ -118,21 +143,23 @@ GoRouter createMainRouter() {
           );
         },
         routes: [
+          GoRoute(path: '/', builder: (context, state) => const FeedScreen()),
+          GoRoute(
+            path: '/leaderboard',
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
+            path: '/projects',
+            builder: (context, state) => const ProjectsScreen(),
+          ),
           for (final entry in <String, (String, String, IconData)>{
-            '/': ('Bảng tin', 'Feed', Icons.article_outlined),
             '/thread/:id': ('Bài viết', 'Thread', Icons.forum_outlined),
             '/profile/:id': ('Trang cá nhân', 'Profile', Icons.person_outline),
             '/search': ('Tìm kiếm', 'Search', Icons.search),
             '/channels': ('Kênh', 'Channels', Icons.chat_bubble_outline),
             '/discover': ('Khám phá', 'Discover', Icons.explore_outlined),
-            '/leaderboard': (
-              'Bảng xếp hạng',
-              'Leaderboard',
-              Icons.emoji_events_outlined,
-            ),
             '/settings': ('Cài đặt', 'Settings', Icons.settings_outlined),
             '/voice': ('Voice', 'Voice', Icons.mic_none),
-            '/projects': ('Dự án', 'Projects', Icons.workspaces_outline),
           }.entries)
             GoRoute(
               path: entry.key,

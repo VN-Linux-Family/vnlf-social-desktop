@@ -83,6 +83,21 @@ class VnlfAuthorNameRow extends StatelessWidget {
       );
     }
 
+    final nameplateColor = colors.isDark
+        ? style.nameplateDarkColor ?? style.nameplateColor
+        : style.nameplateColor;
+    if (style.nameplateId != null && nameplateColor != null) {
+      nameText = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: nameplateColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+          border: Border.all(color: nameplateColor.withValues(alpha: 0.4)),
+        ),
+        child: nameText,
+      );
+    }
+
     final row = Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 4,

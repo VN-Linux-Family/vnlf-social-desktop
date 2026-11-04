@@ -38,6 +38,11 @@ class AuthorStyleData {
     this.nameGradientLight,
     this.nameGradientDark,
     this.frame = AvatarFrameType.none,
+    this.frameColor,
+    this.frameDarkColor,
+    this.nameplateId,
+    this.nameplateColor,
+    this.nameplateDarkColor,
     this.nameEffect = NameEffectType.none,
     this.distroBadge = DistroBadgeType.none,
     this.distroBadgeLabel,
@@ -50,6 +55,11 @@ class AuthorStyleData {
   final List<Color>? nameGradientLight;
   final List<Color>? nameGradientDark;
   final AvatarFrameType frame;
+  final Color? frameColor;
+  final Color? frameDarkColor;
+  final String? nameplateId;
+  final Color? nameplateColor;
+  final Color? nameplateDarkColor;
   final NameEffectType nameEffect;
   final DistroBadgeType distroBadge;
   final String? distroBadgeLabel;
@@ -68,6 +78,8 @@ class AuthorData {
     this.role = '',
     this.style = const AuthorStyleData(),
     this.avatarPreset = AvatarVisualPreset.tuxMascot,
+    this.avatarUrl = '',
+    this.loadNetworkAvatar = false,
   });
 
   final String id;
@@ -76,6 +88,8 @@ class AuthorData {
   final String role;
   final AuthorStyleData style;
   final AvatarVisualPreset avatarPreset;
+  final String avatarUrl;
+  final bool loadNetworkAvatar;
 }
 
 /// Sealed attachment hierarchy for feed and thread cards.

@@ -27,13 +27,18 @@ void main() {
         isEmpty,
       );
       expect(
-        (await container.read(discoverRepositoryProvider).getProjects()).items,
-        isEmpty,
+        (await container.read(discoverRepositoryProvider).getProjects())
+            .items
+            .single
+            .name,
+        'vnlf-cli',
       );
       expect(
         (await container.read(leaderboardsRepositoryProvider).getLeaderboard())
-            .items,
-        isEmpty,
+            .items
+            .first
+            .username,
+        'hoangnam',
       );
     },
   );

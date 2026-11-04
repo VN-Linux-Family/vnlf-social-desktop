@@ -6,7 +6,7 @@ import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 
 /// Renders a user avatar with optional neutral generic ring frame
-/// and fallback initials / icon. Zero network calls or bundled third-party photos.
+/// and fallback initials. Network images are explicitly enabled by the app.
 class VnlfAvatar extends StatelessWidget {
   const VnlfAvatar({
     super.key,
@@ -30,6 +30,13 @@ class VnlfAvatar extends StatelessWidget {
         ? author.displayName.characters.first.toUpperCase()
         : fallbackInitial;
 
+    final initials = Text(
+      initial,
+      style: VnlfTypography.caption(
+        colors.brand,
+        fontWeight: FontWeight.w700,
+      ).copyWith(fontSize: size * 0.42),
+    );
     final coreAvatar = Container(
       width: size,
       height: size,
@@ -39,13 +46,18 @@ class VnlfAvatar extends StatelessWidget {
         border: Border.all(color: colors.line),
       ),
       alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: VnlfTypography.caption(
-          colors.brand,
-          fontWeight: FontWeight.w700,
-        ).copyWith(fontSize: size * 0.42),
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: author.loadNetworkAvatar && author.avatarUrl.isNotEmpty
+          ? Image.network(
+              author.avatarUrl,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
+              errorBuilder: (context, error, stackTrace) => initials,
+            )
+          : initials,
     );
 
     final Widget avatarWidget = frame == AvatarFrameType.ring
@@ -55,7 +67,14 @@ class VnlfAvatar extends StatelessWidget {
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: colors.brand, width: 1.5),
+              border: Border.all(
+                color:
+                    (colors.isDark
+                        ? author.style.frameDarkColor ?? author.style.frameColor
+                        : author.style.frameColor) ??
+                    colors.brand,
+                width: 1.5,
+              ),
             ),
             child: coreAvatar,
           )

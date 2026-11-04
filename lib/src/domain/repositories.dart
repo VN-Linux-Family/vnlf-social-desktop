@@ -5,7 +5,11 @@ abstract interface class AuthRepository {
 }
 
 abstract interface class FeedRepository {
-  Future<FeedPage> getFeed({String? cursor});
+  Future<FeedPage> getFeed({
+    String? cursor,
+    String? type,
+    bool refresh = false,
+  });
 }
 
 abstract interface class CommunityRepository {

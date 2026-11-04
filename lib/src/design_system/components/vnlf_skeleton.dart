@@ -4,6 +4,44 @@ import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 
+/// Owns one shared loading animation and stops it when reduced motion is set.
+class VnlfLoadingShimmer extends StatefulWidget {
+  const VnlfLoadingShimmer({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<VnlfLoadingShimmer> createState() => _VnlfLoadingShimmerState();
+}
+
+class _VnlfLoadingShimmerState extends State<VnlfLoadingShimmer>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+      _controller.stop();
+    } else {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      VnlfSkeletonShimmerScope(controller: _controller, child: widget.child);
+}
+
 /// Scope that shares a single list-level shimmer [Animation] across all
 /// descendant [VnlfPostCardSkeleton], [VnlfLeaderboardRowSkeleton], and
 /// [VnlfSkeletonBox] widgets without creating per-row [AnimationController]s.

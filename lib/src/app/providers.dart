@@ -19,7 +19,12 @@ final sessionStorageProvider = Provider<SessionStorage>(
 /// Live requests are enabled only by an explicit build-time opt-in.
 final apiClientProvider = Provider<ApiClient>((ref) {
   if (!const bool.fromEnvironment('VNLF_LIVE')) {
-    return ApiClient(transport: fixtureTransport);
+    return ApiClient(
+      transport: fixtureTransport,
+      throttleInterval: Duration.zero,
+      // A fixture client owns its queue, including the widget test clock.
+      hostKey: Object(),
+    );
   }
   final uri = Uri.parse('https://vietnamlinuxfamily.net');
   final transport = IoApiTransport(uri);

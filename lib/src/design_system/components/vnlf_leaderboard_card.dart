@@ -30,6 +30,7 @@ class VnlfLeaderboardCard extends StatelessWidget {
     this.onRetry,
     this.title = '',
     this.viewAllLabel = '',
+    this.onViewAll,
     this.footerCopyright = '',
     this.communityRulesLabel = '',
     this.privacyLabel = '',
@@ -53,6 +54,7 @@ class VnlfLeaderboardCard extends StatelessWidget {
   final VoidCallback? onRetry;
   final String title;
   final String viewAllLabel;
+  final VoidCallback? onViewAll;
   final String footerCopyright;
   final String communityRulesLabel;
   final String privacyLabel;
@@ -130,12 +132,15 @@ class VnlfLeaderboardCard extends StatelessWidget {
                                 Semantics(
                                   button: true,
                                   label: viewAllSemanticLabel ?? viewAllLabel,
-                                  child: Text(
-                                    viewAllLabel,
-                                    softWrap: true,
-                                    style: VnlfTypography.meta(
-                                      colors.brand,
-                                      fontWeight: FontWeight.w600,
+                                  child: InkWell(
+                                    onTap: onViewAll,
+                                    child: Text(
+                                      viewAllLabel,
+                                      softWrap: true,
+                                      style: VnlfTypography.meta(
+                                        colors.brand,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),

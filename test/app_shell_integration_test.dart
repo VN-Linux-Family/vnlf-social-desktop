@@ -108,16 +108,13 @@ void main() {
 }
 
 const _placeholderRoutes = <({String path, String vietnamese, String english})>[
-  (path: '/', vietnamese: 'Bảng tin', english: 'Feed'),
   (path: '/thread/123', vietnamese: 'Bài viết', english: 'Thread'),
   (path: '/profile/123', vietnamese: 'Trang cá nhân', english: 'Profile'),
   (path: '/search', vietnamese: 'Tìm kiếm', english: 'Search'),
   (path: '/channels', vietnamese: 'Kênh', english: 'Channels'),
   (path: '/discover', vietnamese: 'Khám phá', english: 'Discover'),
-  (path: '/leaderboard', vietnamese: 'Bảng xếp hạng', english: 'Leaderboard'),
   (path: '/settings', vietnamese: 'Cài đặt', english: 'Settings'),
   (path: '/voice', vietnamese: 'Voice', english: 'Voice'),
-  (path: '/projects', vietnamese: 'Dự án', english: 'Projects'),
 ];
 
 Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {

@@ -36,6 +36,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     super.key,
     required this.centerChild,
     this.rightSidebarChild,
+    this.centerChildHandlesScroll = false,
     this.activeDestination = VnlfNavDestination.feed,
     this.onDestinationSelected,
     this.themeMode = ThemeMode.light,
@@ -84,6 +85,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   });
 
   final Widget centerChild;
+  final bool centerChildHandlesScroll;
   final Widget? rightSidebarChild;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
@@ -130,6 +132,11 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String? mobileHeaderSemanticLabel;
   final String? mobileBottomNavSemanticLabel;
   final String? semanticLabel;
+
+  Widget _scrollArea({required EdgeInsets padding, required Widget child}) =>
+      centerChildHandlesScroll
+      ? Padding(padding: padding, child: child)
+      : SingleChildScrollView(padding: padding, child: child);
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +189,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   semanticLabel: leftSidebarSemanticLabel,
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: _scrollArea(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 20,
@@ -191,7 +198,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1053),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: centerChildHandlesScroll
+                              ? CrossAxisAlignment.stretch
+                              : CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: ConstrainedBox(
@@ -206,7 +215,11 @@ class VnlfAdaptiveShell extends StatelessWidget {
                               VnlfDesktopRightSidebar(
                                 width: VnlfDimensions.rightSidebarWidth,
                                 semanticLabel: rightSidebarSemanticLabel,
-                                child: rightSidebarChild!,
+                                child: centerChildHandlesScroll
+                                    ? SingleChildScrollView(
+                                        child: rightSidebarChild!,
+                                      )
+                                    : rightSidebarChild!,
                               ),
                             ],
                           ],
@@ -238,7 +251,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   semanticLabel: tabletRailSemanticLabel,
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: _scrollArea(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 16,
@@ -324,7 +337,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   semanticLabel: mobileHeaderSemanticLabel,
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: _scrollArea(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
                     child: centerChild,
                   ),

@@ -22,18 +22,145 @@ Future<ApiResponse> fixtureTransport(ApiRequest request) async {
 Map<String, dynamic>? _fixture(ApiRequest request) {
   if (request.path == '/api/v1/projects') {
     return {
-      'items': <Object>[],
+      'items': [
+        {
+          'id': 'proj-synth-1',
+          'name': 'vnlf-cli',
+          'slug': 'vnlf-cli',
+          'tagline': 'Công cụ dòng lệnh quản lý gói và cấu hình Linux cộng đồng: ặ ữ ờ ẫ ệ',
+          'type': 'tool',
+          'tier': 'community',
+          'relation': 'owner',
+          'seeking': false,
+          'featured': true,
+          'status': 'active',
+          'logoUrl':
+              'https://vietnamlinuxfamily.net/assets/projects/vnlf-cli.png',
+          'accentColor': '#2563EB',
+          'owner': {
+            'id': 'user-synth-1',
+            'username': 'hoangnam',
+            'displayName': 'Hoàng Nam',
+            'avatarUrl':
+                'https://vietnamlinuxfamily.net/assets/avatars/user1.png',
+            'style': null,
+          },
+          'repo': {
+            'provider': 'github',
+            'owner': 'vietnamlinuxfamily',
+            'name': 'vnlf-cli',
+            'url': 'https://github.com/vietnamlinuxfamily/vnlf-cli',
+            'stars': 128,
+            'forks': 24,
+            'language': 'Dart',
+            'languageColor': '#00B4AB',
+            'archived': false,
+            'fork': false,
+            'pushedAt': '2026-11-03T18:00:00.000Z',
+            'starsWeek': null,
+            'unavailable': false,
+          },
+          'rating': {'average': 4.9, 'count': 35},
+          'commentCount': 12,
+          'approvedAt': '2026-10-15T08:00:00.000Z',
+        },
+      ],
+      'facets': {
+        'languages': [
+          {'name': 'Dart', 'color': '#00B4AB', 'count': 1},
+        ],
+        'types': [
+          {'type': 'tool', 'count': 1},
+        ],
+      },
       'nextCursor': null,
-      'facets': <String, Object>{},
     };
   }
   if (request.path == '/api/v1/leaderboards') {
     return {
-      'period': 'weekly',
-      'periodStart': null,
-      'periodEnd': null,
-      'computedAt': null,
-      'items': <Object>[],
+      'period': 'week',
+      'periodStart': '2026-11-01T00:00:00.000Z',
+      'periodEnd': '2026-11-07T23:59:59.999Z',
+      'computedAt': '2026-11-04T12:00:00.000Z',
+      'items': [
+        {
+          'userId': 'user-synth-1',
+          'username': 'hoangnam',
+          'displayName': 'Hoàng Nam',
+          'avatarUrl':
+              'https://vietnamlinuxfamily.net/assets/avatars/user1.png',
+          'earnedPoints': 450,
+          'rank': 1,
+          'style': {
+            'avatarAnimatedUrl': null,
+            'distroBadge': 'arch',
+            'frame': {
+              'id': 'frame-gold',
+              'color': {'light': '#D97706', 'dark': '#F59E0B'},
+              'color2': null,
+            },
+            'icon': {
+              'name': 'trophy',
+              'url': 'https://vietnamlinuxfamily.net/assets/icons/trophy.png',
+              'pixelArt': true,
+            },
+            'nameColor': null,
+            'nameEffect': 'none',
+            'nameGradient': null,
+            'nameplate': {
+              'id': 'np-gold',
+              'color': null,
+              'name': null,
+              'name2': null,
+            },
+            'status': {'emoji': '👑', 'text': 'Top Contributor'},
+          },
+        },
+        {
+          'userId': 'user-synth-2',
+          'username': 'minhtri',
+          'displayName': 'Minh Trí',
+          'avatarUrl':
+              'https://vietnamlinuxfamily.net/assets/avatars/user2.png',
+          'earnedPoints': 320,
+          'rank': 2,
+          'style': {
+            'avatarAnimatedUrl': null,
+            'distroBadge': 'cachyos',
+            'frame': {
+              'id': 'frame-silver',
+              'color': {'light': '#4B5563', 'dark': '#9CA3AF'},
+              'color2': null,
+            },
+            'icon': null,
+            'nameColor': null,
+            'nameEffect': 'none',
+            'nameGradient': null,
+            'nameplate': null,
+            'status': {'emoji': '⚡', 'text': 'Active Builder'},
+          },
+        },
+        {
+          'userId': 'user-synth-3',
+          'username': 'linhdan',
+          'displayName': 'Linh Đan',
+          'avatarUrl':
+              'https://vietnamlinuxfamily.net/assets/avatars/user3.png',
+          'earnedPoints': 280,
+          'rank': 3,
+          'style': {
+            'avatarAnimatedUrl': null,
+            'distroBadge': 'debian',
+            'frame': null,
+            'icon': null,
+            'nameColor': null,
+            'nameEffect': 'none',
+            'nameGradient': null,
+            'nameplate': null,
+            'status': null,
+          },
+        },
+      ],
     };
   }
   if (request.path != '/api/v1/feed') return null;
@@ -45,7 +172,9 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
               'id': 'fixture-post-1',
               'authorId': 'user-synth-1',
               'slug': 'chao-mung-cong-dong-linux-viet-nam',
-              'title': 'Chào mừng đến với Vietnam Linux Family!',
+              'title': request.query['type'] == 'article'
+                  ? 'Hướng dẫn Linux từ cộng đồng'
+                  : 'Chào mừng đến với Vietnam Linux Family!',
               'excerpt': 'Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ',
               'contentText': 'Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.',
               'contentHtml': '<p>Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.</p>',
@@ -66,7 +195,7 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
               'coverUrl': null,
               'coverAssetId': null,
               'coverAlt': '',
-              'format': 'post',
+              'format': request.query['type'] == 'article' ? 'article' : 'post',
               'status': 'published',
               'version': 1,
               'likeCount': 12,
@@ -128,11 +257,18 @@ final class FixtureFeedRepository implements FeedRepository {
   const FixtureFeedRepository(this._client);
   final ApiClient _client;
   @override
-  Future<FeedPage> getFeed({String? cursor}) => _client.get(
-    '/api/v1/feed',
-    query: {'cursor': ?cursor},
-    decode: (json) => FeedPageDto.fromJson(json).toDomain(),
-  );
+  Future<FeedPage> getFeed({
+    String? cursor,
+    String? type,
+    bool refresh = false,
+  }) {
+    if (refresh) _client.clearCache();
+    return _client.get(
+      '/api/v1/feed',
+      query: {'cursor': ?cursor, 'type': ?type},
+      decode: (json) => FeedPageDto.fromJson(json).toDomain(),
+    );
+  }
 }
 
 /// The authenticated response shape is unknown, so no session is fabricated.
