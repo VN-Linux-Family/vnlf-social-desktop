@@ -41,6 +41,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Finder permanentDesktopSidebar() => find.byWidgetPredicate(
+    (widget) => widget is VnlfDesktopSidebar && !widget.isDrawer,
+    description: 'permanent desktop sidebar',
+  );
+
   // 1. Multi-breakpoint responsive layout checks
   const breakpoints = [360.0, 840.0, 841.0, 1180.0, 1181.0, 1440.0];
   for (final width in breakpoints) {
@@ -58,6 +63,65 @@ void main() {
         expect(find.text('Thư viện giao diện'), findsOneWidget);
       });
     }
+  }
+
+  // The 840px and 1180px cutoffs follow the production responsive tiers
+  // recorded in DESIGN_REFERENCE.md.
+  testWidgets('360px shows mobile navigation and an accessible drawer', (
+    tester,
+  ) async {
+    await openGallery(tester, const Size(360, 900));
+
+    expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
+    expect(find.byType(VnlfTabletRail), findsNothing);
+    expect(permanentDesktopSidebar(), findsNothing);
+
+    final menuButton = find.byTooltip('Mở menu điều hướng');
+    expect(menuButton, findsOneWidget);
+    await tester.tap(menuButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Drawer), findsOneWidget);
+    expect(find.byType(VnlfDesktopSidebar), findsOneWidget);
+    expect(find.text('Hỗ trợ cộng đồng'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('900px shows the tablet rail only', (tester) async {
+    await openGallery(tester, const Size(900, 1000));
+
+    expect(find.byType(VnlfTabletRail), findsOneWidget);
+    expect(find.byType(VnlfMobileBottomNav), findsNothing);
+    expect(permanentDesktopSidebar(), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('1440px shows the desktop sidebar and leaderboard', (
+    tester,
+  ) async {
+    await openGallery(tester, const Size(1440, 1000));
+
+    expect(permanentDesktopSidebar(), findsOneWidget);
+    expect(find.byType(VnlfLeaderboardCard), findsOneWidget);
+    expect(find.byType(VnlfTabletRail), findsNothing);
+    expect(find.byType(VnlfMobileBottomNav), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final viewport in [
+    (name: '600x900 portrait', size: const Size(600, 900)),
+    (name: '700x360 landscape phone', size: const Size(700, 360)),
+  ]) {
+    testWidgets('${viewport.name} uses mobile layout without overflow', (
+      tester,
+    ) async {
+      await openGallery(tester, viewport.size);
+
+      expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
+      expect(find.byType(VnlfTabletRail), findsNothing);
+      expect(permanentDesktopSidebar(), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
   }
 
   // 2. Vietnamese diacritic rendering & 200% text scaling
