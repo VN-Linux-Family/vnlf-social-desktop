@@ -1,0 +1,18 @@
+# References & extracted design assets (kept local, out of git)
+assets/reference/
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.har
+*.css.extracted
+
+# Dart / Flutter build artifacts
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Scratch files
+scratch/

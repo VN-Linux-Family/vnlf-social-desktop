@@ -122,15 +122,15 @@ Dev Dependencies:
 
 ---
 
-## 5. Risks & Mitigations
+## 5. Risks, Constraints & Gate 0 Decisions
 
-| Risk | Impact | Mitigation Strategy |
+| Risk / Area | Severity | Impact & Policy Decisions |
 | :--- | :--- | :--- |
-| **CORS on Flutter Web** | High for Web, Zero for Native | Production server emits no `Access-Control-Allow-Origin` and fails OPTIONS preflight. Web deployment must use a reverse proxy or same-origin hosting. Linux/Android/Desktop run native network sockets without browser CORS restrictions. |
-| **Session Cookie Management** | Medium | Mobile/desktop Flutter does not have a browser cookie jar by default. Mitigated by pairing `dio` with `dio_cookie_manager` and encrypted persistent storage. |
-| **Server Rate Limits & Closed-Source API** | Medium | Be gentle: strict request debouncing, exponential backoff on 429, zero polling in loops, and using recorded-fixture fake server for dev and CI. |
-| **Rich Post Formatting & HTML Fallback** | Medium | Most posts deliver `contentJson` (ProseMirror doc tree) and `contentText`. Parse JSON tree into native Flutter Spans; fall back to safe sanitized markdown parser. HTML parsing isolated in one adapter. |
-| **Voice LiveKit Native Toolchains** | Medium | Isolate voice in a feature module. Provide graceful fallback if audio hardware permissions are denied. |
+| **CORS & Web Platform** | High for Web, None for Native | **Decision (Gate 0)**: Native platforms (Linux and Android first-class; iOS, Windows, macOS) are shipped directly without CORS issues. Flutter Web is strictly **dev-only through a local proxy** and is **not shipped**. No hosted proxy will be built or proposed. Recorded as a permanent risk; to be revisited only if site owners enable CORS headers in production. |
+| **Test Environment & Fixtures** | Zero risk to prod | **Decision (Gate 0)**: Core and Features develop against the recorded fake server (`VNLF_FAKE_SERVER_PORT`) exclusively. No live writes until the coordinator is provided a dedicated test account and sandbox thread. All fixtures preserve exact production JSON shapes while using **invented Vietnamese content and synthetic names** (zero real user data, avatars, tokens, or emails). |
+| **Session Cookie Management** | Medium | Managed via `dio` + `dio_cookie_manager` and encrypted persistent storage. Replicates web client's cookie jar behavior and client-id injection. |
+| **Server Rate Limits & Live Traffic** | High | Strict policy: No automated polling loops. Every new live request outside read-only GETs requires explicit user approval. All discovery traffic was audited and sanitized. |
+| **Typography & Font Licensing** | Low | `Be Vietnam Pro` is licensed under the SIL Open Font License 1.1 (OFL-1.1), permitting embedding and bundling. Asset files will be verified and checked into the project skeleton. |
 
 ---
 
@@ -139,11 +139,13 @@ Dev Dependencies:
 ```mermaid
 flowchart TD
     P0["Phase 0: Discovery & Contract (Antigravity Coordinator)"] --> G0{"Gate 0: User Approval"}
-    G0 --> P1A["Phase 1A: Tokens & Components (Sol / Codex)"]
-    G0 --> P1B["Phase 1B: Screens & Shells (Argon / Antigravity)"]
-    P1A --> P1Merge["P1 Review & Merge winner"]
-    P1B --> P1Merge
-    P1Merge --> G1{"Gate 1: Design Review"}
+    G0 --> P1Prep["Phase 1 Prep: Minimal App Skeleton on main (Terra / Codex)"]
+    P1Prep --> P1Fork{"Fork Identical Design Cards"}
+    P1Fork --> P1A["Phase 1A: Tokens + Gallery + 3 Screens (Sol / Codex)"]
+    P1Fork --> P1B["Phase 1B: Tokens + Gallery + 3 Screens (Argon / Antigravity)"]
+    P1A --> P1Compare["Screenshot Mismatch Evaluation"]
+    P1B --> P1Compare
+    P1Compare --> G1{"Gate 1: User Picks Winner"}
     G1 --> P2["Phase 2: Core Foundation & ApiClient (Terra / Codex)"]
     P2 --> G2{"Gate 2: Foundation Verification"}
     G2 --> P3A["Phase 3A: Feed & Thread Slices (Luna / Codex)"]
@@ -151,10 +153,26 @@ flowchart TD
     G2 --> P3C["Phase 3C: Chat & DM Slices (Sol / Codex)"]
     P3A --> P3Merge["Integration & Acceptance Merge"]
     P3B --> P3Merge
-    P3C --> P3Merge
     P3Merge --> G3{"Gate 3: Feature Completeness"}
     G3 --> P4["Phase 4: Polish, Profiling & Drift Check"]
 ```
+
+### Phase 1 Execution Sequence
+1. **Skeleton Commit on main (Core: Codex, GPT-6.1 Terra)**:
+   - Create minimal Flutter app skeleton: `flutter create --org net.vietnamlinuxfamily --project-name vnlfsocialapp .`
+   - Configure strict `analysis_options.yaml`.
+   - Configure `pubspec.yaml` with only justified dependencies (`flutter_riverpod`, `riverpod_annotation`, `go_router`, `freezed_annotation`, `json_annotation`, `dio`, `dio_cookie_manager`, `cookie_jar`, `flutter_secure_storage`, `intl`, `flutter_svg`).
+   - Bundle `Be Vietnam Pro` font asset in `assets/fonts/` with license file.
+   - Scaffold empty `lib/src/design_system/` and a gallery entry route at `/gallery`.
+   - Verify `flutter analyze` and commit directly to `main`.
+2. **Parallel Exploration (Max 2 Workers)**:
+   - Fork child worktree `vnlf-design-sol` (UX/UI A: Codex, GPT-6.1 Sol).
+   - Fork child worktree `vnlf-design-argon` (UX/UI B: Antigravity, Gemini 4 Argon).
+   - **Identical Task Cards**: Design tokens, component gallery, and 3 key screens (`feed`, `thread`, `profile`) rendered at phone (<= 840px) and desktop (>= 1181px) widths.
+   - **Owned Paths**: `lib/src/design_system/**`, `lib/src/gallery/**`. Read-only: `pubspec.yaml` (never edit).
+3. **Evaluation**:
+   - Compare Linux app screenshots against reference capture.
+   - Produce side-by-side mismatch lists per branch for user selection at Gate 1.
 
 ### Team Role & Worker Mapping
 
