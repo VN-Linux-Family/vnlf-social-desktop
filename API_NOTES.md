@@ -7,11 +7,17 @@ All endpoints, payload schemas, and realtime events documented here are derived 
 All fixture values are synthetic. Confidence applies to field names only; no
 fixture demonstrates a live value or authenticated behavior.
 
-- `test/fixtures/feed.json` and the matching inline `fixtureTransport` feed
-  model `GET /api/v1/feed`: `items` and `nextCursor` are [CONFIRMED]. Item
-  fields `id`, `excerpt`, `voteScore`, `commentCount`, `author`,
-  `author.username`, and `author.displayName` follow the post shape documented
-  below [CONFIRMED shape]; the particular item and every value are synthetic.
+- `test/fixtures/feed.json` and the matching inline `fixtureTransport` feed model `GET /api/v1/feed` (per-field audit: field names read from real unauthenticated response vs inferred; all values synthetic):
+  - `items`: [CONFIRMED] read from real unauthenticated response.
+  - `nextCursor`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].id`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].excerpt`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].voteScore`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].commentCount`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].author`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].author.username`: [CONFIRMED] read from real unauthenticated response.
+  - `items[].author.displayName`: [CONFIRMED] read from real unauthenticated response.
+  (All 9 field names in `feed.json` were read from real unauthenticated response; 0 are inferred. All values are synthetic).
 - The inline empty projects fixture models `GET /api/v1/projects`:
   `items`, `nextCursor`, and `facets` are [CONFIRMED] field names. The empty
   collection, null cursor, and empty facets object are [INFERRED] examples;
