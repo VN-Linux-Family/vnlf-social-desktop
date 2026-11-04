@@ -158,5 +158,5 @@ Production media queries establish 3 core viewports:
 
 ## 7. Captured Visual Reference
 
-Reference screenshot captured from production session (stored locally, gitignored per policy):
-- Path: `assets/reference/reference_feed_desktop.png` (Local workspace / artifact cache)
+Reference screenshot captured from production session (stored outside repo per policy):
+- Path: `/home/dat/vlf-reference/reference_feed_desktop.png` (Local host reference, read-only)
