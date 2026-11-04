@@ -1,0 +1,7 @@
+{
+  "@@locale": "vi",
+  "appTitle": "VNLF Social",
+  "@appTitle": {
+    "description": "The application title."
+  }
+}

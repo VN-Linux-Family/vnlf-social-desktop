@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.3
   # Application-wide dependency injection and state management.
   flutter_riverpod: ^2.6.1
   # Declarative navigation and deep links.
@@ -22,6 +25,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   fonts:
     - family: BeVietnamPro
