@@ -1,0 +1,59 @@
+{
+  "articles": [
+    {
+      "id": "art-synth-1",
+      "authorId": "user-synth-1",
+      "slug": "huong-dan-toi-uu-wayland-tren-arch",
+      "title": "Hướng dẫn tối ưu Wayland trên Arch Linux",
+      "excerpt": "Các tinh chỉnh giúp Hyprland và Wayland hoạt động mượt mà không bị xé hình.",
+      "format": "article",
+      "username": "hoangnam",
+      "displayName": "Hoàng Nam",
+      "avatarUrl": "https://vietnamlinuxfamily.net/assets/avatars/user1.png",
+      "publishedAt": "2026-11-02T14:00:00.000Z",
+      "style": null
+    }
+  ],
+  "projects": [],
+  "tags": [
+    {
+      "id": "tag-1",
+      "name": "Arch Linux",
+      "slug": "arch-linux"
+    },
+    {
+      "id": "tag-2",
+      "name": "Wayland",
+      "slug": "wayland"
+    }
+  ],
+  "users": [
+    {
+      "id": "user-synth-1",
+      "username": "hoangnam",
+      "displayName": "Hoàng Nam",
+      "avatarUrl": "https://vietnamlinuxfamily.net/assets/avatars/user1.png",
+      "bio": "Linux enthusiast và cộng tác viên mã nguồn mở",
+      "role": "member",
+      "followerCount": 85,
+      "followedByViewer": false,
+      "style": {
+        "avatarAnimatedUrl": null,
+        "distroBadge": "arch",
+        "frame": null,
+        "icon": null,
+        "nameColor": null,
+        "nameEffect": null,
+        "nameGradient": null,
+        "nameplate": null,
+        "status": null
+      }
+    }
+  ],
+  "hasMore": {
+    "articles": false,
+    "projects": false,
+    "tags": false,
+    "users": false
+  }
+}

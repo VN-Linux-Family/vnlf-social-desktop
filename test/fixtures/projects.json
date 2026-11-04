@@ -1,0 +1,62 @@
+{
+  "items": [
+    {
+      "id": "proj-synth-1",
+      "name": "vnlf-cli",
+      "slug": "vnlf-cli",
+      "tagline": "Công cụ dòng lệnh quản lý gói và cấu hình Linux cộng đồng: ặ ữ ờ ẫ ệ",
+      "type": "tool",
+      "tier": "community",
+      "relation": "owner",
+      "seeking": false,
+      "featured": true,
+      "status": "active",
+      "logoUrl": "https://vietnamlinuxfamily.net/assets/projects/vnlf-cli.png",
+      "accentColor": "#2563EB",
+      "owner": {
+        "id": "user-synth-1",
+        "username": "hoangnam",
+        "displayName": "Hoàng Nam",
+        "avatarUrl": "https://vietnamlinuxfamily.net/assets/avatars/user1.png",
+        "style": null
+      },
+      "repo": {
+        "provider": "github",
+        "owner": "vietnamlinuxfamily",
+        "name": "vnlf-cli",
+        "url": "https://github.com/vietnamlinuxfamily/vnlf-cli",
+        "stars": 128,
+        "forks": 24,
+        "language": "Dart",
+        "languageColor": "#00B4AB",
+        "archived": false,
+        "fork": false,
+        "pushedAt": "2026-11-03T18:00:00.000Z",
+        "starsWeek": null,
+        "unavailable": false
+      },
+      "rating": {
+        "average": 4.9,
+        "count": 35
+      },
+      "commentCount": 12,
+      "approvedAt": "2026-10-15T08:00:00.000Z"
+    }
+  ],
+  "facets": {
+    "languages": [
+      {
+        "name": "Dart",
+        "color": "#00B4AB",
+        "count": 1
+      }
+    ],
+    "types": [
+      {
+        "type": "tool",
+        "count": 1
+      }
+    ]
+  },
+  "nextCursor": null
+}

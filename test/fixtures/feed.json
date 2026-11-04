@@ -2,12 +2,84 @@
   "items": [
     {
       "id": "fixture-post-1",
+      "authorId": "user-synth-1",
+      "slug": "chao-mung-cong-dong-linux-viet-nam",
+      "title": "Chào mừng đến với Vietnam Linux Family!",
       "excerpt": "Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ",
-      "voteScore": 3,
+      "contentText": "Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.",
+      "contentHtml": "<p>Vietnam Linux Family là nơi chia sẻ kiến thức, kinh nghiệm cài đặt, tối ưu hóa các bản phân phối Linux và phát triển phần mềm mã nguồn mở. Tiếng Việt: ặ ữ ờ ẫ ệ.</p>",
+      "contentJson": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ."
+              }
+            ]
+          }
+        ]
+      },
+      "coverUrl": null,
+      "coverAssetId": null,
+      "coverAlt": "",
+      "format": "post",
+      "status": "published",
+      "version": 1,
+      "likeCount": 12,
       "commentCount": 0,
+      "bookmarkCount": 8,
+      "viewCount": 150,
+      "voteScore": 3,
+      "viewerVote": 1,
+      "viewerLiked": true,
+      "viewerBookmarked": false,
+      "canEdit": false,
+      "poll": null,
+      "tagSlugs": ["linux", "gioi-thieu", "cong-dong"],
+      "tags": ["Linux", "Giới thiệu", "Cộng đồng"],
+      "publishedAt": "2026-11-04T12:00:00.000Z",
+      "updatedAt": "2026-11-04T12:30:00.000Z",
+      "assets": [],
+      "attachments": [],
       "author": {
+        "id": "user-synth-1",
         "username": "thanhvien",
-        "displayName": "Thành viên"
+        "displayName": "Thành viên",
+        "avatarUrl": "https://vietnamlinuxfamily.net/assets/avatars/default.png",
+        "role": "member",
+        "style": {
+          "avatarAnimatedUrl": null,
+          "distroBadge": "arch",
+          "frame": {
+            "id": "frame-terminal",
+            "color": {
+              "light": "#2563EB",
+              "dark": "#60A5FA"
+            },
+            "color2": null
+          },
+          "icon": {
+            "name": "tux",
+            "url": "https://vietnamlinuxfamily.net/assets/icons/tux.png",
+            "pixelArt": true
+          },
+          "nameColor": null,
+          "nameEffect": "none",
+          "nameGradient": null,
+          "nameplate": {
+            "id": "np-default",
+            "color": null,
+            "name": null,
+            "name2": null
+          },
+          "status": {
+            "emoji": "🐧",
+            "text": "Đang dùng Arch Linux"
+          }
+        }
       }
     }
   ],
