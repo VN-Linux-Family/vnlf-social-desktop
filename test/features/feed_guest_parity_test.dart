@@ -28,6 +28,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Following'), findsOneWidget);
+      expect(find.text('What’s on your mind?'), findsOneWidget);
       await tester.tap(find.text('Following'));
       await tester.pumpAndSettle();
       expect(find.text('Sign in required'), findsOneWidget);

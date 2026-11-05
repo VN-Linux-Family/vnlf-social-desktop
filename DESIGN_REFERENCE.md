@@ -187,3 +187,20 @@ native editor; the desktop header frame/placement and grouping between feed
 cards still differ; full wardrobe effects, article layouts/captions, responsive
 references, and actual video playback require further side-by-side verification.
 The current captures are review evidence, not a claim of 1:1 parity.
+
+## Native composer checkpoint — 2026-11-05
+
+Native Linux release captures are `/tmp/vnlf-ui-review/native-composer-desktop.png`
+(1440×1000) and `native-composer-mobile.png` (430×1000). They use an isolated
+synthetic account, secure-storage fake and transport that cannot contact the
+server. No owner data or production writes are involved. The build ran under a
+3 GiB / 1.5 CPU cap; capture ran under a 1 GiB / 1 CPU cap and stopped its app/Xvfb
+processes afterward. All 11 native Linux ARM64 binaries passed architecture checks.
+No Flutter overflow/exception appeared; headless GTK emitted an ATK embedding
+warning, so this capture is not proof of native assistive-technology behavior.
+
+Composer body styles follow the pinned source's `.article-prosemirror` and
+`.post-editor-canvas` values: article body 17px/1.72 (16px at ≤520px), POST editor
+14px/1.65, H2 29px/1.14 and H3 23px/1.2. The authenticated web composer screenshot
+is still pending. Desktop modal framing, title/author treatment, article detail
+reader typography/layout and advanced editing still need direct comparison.

@@ -400,3 +400,29 @@ and releases audio on leave/account change. Tests use injected room/audio
 boundaries; no production audio call or real-device microphone check has yet
 been performed. Weekly rankings use the observed Vietnam-time Monday anchor;
 do not invent an all-time endpoint from old fixture labels.
+
+## Native composer validation (2026-11-05)
+
+Opening a new composition is read-only. The first save/upload/publish creates its
+server draft. Edits debounce saves by two seconds; failed writes are never
+retried automatically. Acknowledged versions advance without discarding newer
+local edits. Version conflicts retain local and fresh server copies for an
+explicit choice. HTTP failures retain a bounded server error code.
+
+Recovery stores draft content and a pending publish UUID in platform secure
+storage, partitioned by owner and composition slot. Credentials and presigned
+upload URLs are excluded. The publish identity is stored before sending; lost
+acknowledgment blocks further editing and manual retry reuses the identity.
+Account changes stop subsequent mutations; corrupt recovery is not overwritten.
+
+Images are limited to 10 MiB and videos to 200 MiB. Video completion can return
+PENDING without a URL; the UI shows processing and offers a fresh status check.
+Publishing waits for ready media. POST permits attachments and one video;
+ARTICLE permits inline/cover images and rejects video. Format conversion moves
+resolvable image IDs into attachments and stops on unresolved images.
+
+A separate TipTap/Delta codec is tested through the actual Parchment model for
+known marks, lists, headings, code, hard breaks and image attributes. Unsupported
+blocks/marks and complex list structures remain preserved embeds. Poll editing,
+advanced editor shortcuts/paste, new composer live-account writes/cleanup and
+real-device file/media checks remain incomplete or unverified.

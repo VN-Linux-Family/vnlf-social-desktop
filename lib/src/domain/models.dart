@@ -4,8 +4,9 @@ sealed class AppFailure implements Exception {
 }
 
 final class HttpFailure extends AppFailure {
-  const HttpFailure(this.statusCode);
+  const HttpFailure(this.statusCode, {this.code});
   final int statusCode;
+  final String? code;
 }
 
 final class RateLimited extends AppFailure {

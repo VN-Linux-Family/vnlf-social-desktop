@@ -157,7 +157,18 @@ final class ApiClient {
               response.statusCode == 429 ||
               (response.statusCode >= 500 && response.statusCode <= 599);
           if (!canRetry || !transient || attempt >= 2) {
-            throw HttpFailure(response.statusCode);
+            String? code;
+            try {
+              final error = jsonDecode(response.body);
+              final value = error is Map ? error['code'] : null;
+              if (value is String &&
+                  RegExp(r'^[A-Z][A-Z0-9_]{0,79}$').hasMatch(value)) {
+                code = value;
+              }
+            } catch (_) {
+              // Proxy errors may be HTML. Preserve the HTTP status either way.
+            }
+            throw HttpFailure(response.statusCode, code: code);
           }
           await _retryDelay(
             _retryAfter(response.headers['retry-after']) ?? _backoff(attempt),

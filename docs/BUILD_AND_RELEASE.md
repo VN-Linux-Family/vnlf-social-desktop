@@ -146,3 +146,22 @@ ARM source SDK checkout must retain the verified official release tag; a detache
 SHA without a local tag reports Flutter 0.0.0-unknown and fails SDK constraints.
 CI now checks both the native Dart ABI and exact Flutter version/revision before
 resolving app dependencies.
+
+## Hosted results — 2026-11-05
+
+Run `42072416319` at `e3e7199` passed every native binary job: macOS/Linux/Windows
+x64 and ARM64, Android armv7/ARM64/x64. Package checks verified actual machine
+architecture before packaging. Branch-run release creation then hit GitHub's
+workflow permission guard; the authorized CLI recovery preserved all nine binaries
+in private prerelease `ci-42072416319-1`. Every uploaded binary's GitHub digest and
+size matched its release manifest. Run `42070143206` has its seven completed
+binaries in a private draft with the two missing Windows targets recorded.
+
+Recovery now uploads sequentially after concurrent large uploads timed out on
+this workstation. A rerun skips only uploaded assets with an exact size and SHA-256
+match. A `--download-dir` argument reuses an existing artifact download; it does
+not download into a missing directory. Keep downloads outside the source tree.
+
+These native build results precede the new composer checkpoint. The composer
+passes 340 local Flutter tests, analysis, formatting and a native Linux release
+build; its new source still needs the next hosted matrix and device checks.

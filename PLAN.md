@@ -19,20 +19,27 @@ vote/bookmark failure handling; native article/media rendering and processing
 states; feedback validation and honest error handling; visible public-release
 update checks; bounded local build resources and removal of signing material from
 tracked files. The recovered live channel/voice/search/weekly-ranking slices have
-passed targeted tests and are undergoing full integration validation.
+passed full integration tests. The native composer supports rich editing,
+versioned autosave, secure local recovery, stable publish identities, image/video
+uploads, cover/inline images, format conversion and explicit conflict handling.
+340 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
+Its Linux desktop/phone captures use synthetic account data and no server writes.
 
 Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
 `--concurrency=1`. Gradle heap 1536 MB, two workers, no daemon. Full hosted build
 matrix uses native x64/arm64 runners and three Android ABIs, with an artifact
-inventory and checksums. Static workflow checks pass; hosted matrix results must
-be recorded after execution. Public repository creation failed with organization
+inventory and checksums. All nine native build targets passed in hosted run
+42072416319 and are preserved in private prerelease `ci-42072416319-1`. Windows
+uses Media Foundation on both architectures. Source-branch release creation hit
+GitHub's workflow-file permission guard; scoped publishing credentials and
+explicit private recovery are documented. Public repository creation failed with organization
 HTTP 403; an owner must create it and configure scoped publishing and stable
 signing secrets. User explicitly approved public stable/private CI distribution.
 
 Remaining work is tracked in `docs/source-parity-audit.md` and
 `docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
-UI, notification/report runtime checks, DM, fuller profile/settings/projects/chat support,
-real-device media/voice, visual parity/performance, platform builds and signing
+live-account checks, polls, notification/report runtime checks, DM, fuller profile/settings/projects/chat support,
+real-device media/voice, visual parity/performance and signing
 remain release gates. Do not replace these with simulated success states.
 
 ---
