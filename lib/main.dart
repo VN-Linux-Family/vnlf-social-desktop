@@ -6,6 +6,7 @@ import 'l10n/app_localizations.dart';
 import 'src/app/app_router.dart';
 import 'src/app/providers.dart';
 import 'src/design_system/design_system.dart';
+import 'src/features/updates/presentation/update_notifier.dart';
 
 void main() {
   runApp(const MainApp());
@@ -39,6 +40,8 @@ class _AppState extends ConsumerState<_App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      builder: (context, child) =>
+          AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: VnlfTheme.light(),
       darkTheme: VnlfTheme.dark(),

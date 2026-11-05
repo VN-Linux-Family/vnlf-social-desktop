@@ -8,6 +8,7 @@ import '../../../domain/models.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../../updates/presentation/update_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
 
@@ -35,6 +36,8 @@ class SettingsScreen extends ConsumerWidget {
           title: english ? 'Settings' : 'Cài đặt',
           showSettings: false,
         ),
+        const SizedBox(height: 12),
+        const AppUpdatePanel(),
         const SizedBox(height: 12),
         FeatureSurface(
           child: Column(
