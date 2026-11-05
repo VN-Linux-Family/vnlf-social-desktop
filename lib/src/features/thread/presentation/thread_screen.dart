@@ -2,21 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
 import '../../shared/presentation/post_share.dart';
-import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'thread_comments.dart';
+import 'thread_post_provider.dart';
 
-final threadPostProvider = FutureProvider.autoDispose.family<FeedPost?, String>(
-  (ref, id) async =>
-      await ref.watch(postRepositoryProvider).getPost(id) ??
-      (offlineFeatures ? samplePost : null),
-);
+export 'thread_post_provider.dart' show threadPostProvider;
 
 class ThreadScreen extends ConsumerWidget {
   const ThreadScreen({super.key, required this.postId});

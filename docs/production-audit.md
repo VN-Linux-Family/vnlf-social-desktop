@@ -88,3 +88,11 @@ No private responses, credentials, cookies, tokens, or HAR files belong here.
   Desktop comparison artifacts are outside the repository under
   `/tmp/vnlf-audit/`. Video playback, Android, performance and remaining feature
   parity are not yet certified.
+
+- Follow-up interaction hardening: overlapping post mutations are blocked;
+  failures restore previous state and are visible; account changes discard pending
+  results. Full suite now 219 passing; analyze clean.
+- Test-data cleanup: every tracked comment and article DELETE acknowledged;
+  article status is REMOVED for its owner, anonymous article/comments GET return
+  404, and authenticated comments GET returns 404. No temporary public content
+  remains. Production uses the site's soft deletion semantics.

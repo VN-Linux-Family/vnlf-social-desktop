@@ -211,11 +211,15 @@ class PostData {
     this.richContent,
     this.showInlineImages = false,
     this.selectableContent = false,
+    this.actionPending = false,
+    this.actionError,
   });
 
   final Map<String, dynamic>? richContent;
   final bool showInlineImages;
   final bool selectableContent;
+  final bool actionPending;
+  final String? actionError;
   final String id;
   final AuthorData author;
   final String relativeTime;
@@ -233,6 +237,8 @@ class PostData {
     int? voteScore,
     VoteState? viewerVote,
     bool? isBookmarked,
+    bool? actionPending,
+    String? actionError,
   }) {
     return PostData(
       id: id,
@@ -250,6 +256,8 @@ class PostData {
       richContent: richContent,
       showInlineImages: showInlineImages,
       selectableContent: selectableContent,
+      actionPending: actionPending ?? this.actionPending,
+      actionError: actionError,
     );
   }
 }

@@ -548,6 +548,14 @@ class VnlfPostCard extends StatelessWidget {
                       VnlfProjectPreviewCard(project: projectPreview.project),
                   },
                 ],
+                if (loadedPost.actionError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      loadedPost.actionError!,
+                      style: VnlfTypography.meta(colors.red),
+                    ),
+                  ),
                 // Optional Category Tags
                 if (loadedPost.tags.isNotEmpty) ...[
                   const SizedBox(height: 10),
@@ -583,7 +591,9 @@ class VnlfPostCard extends StatelessWidget {
                     voteState: loadedPost.viewerVote,
                     commentCount: loadedPost.commentCount,
                     isBookmarked: loadedPost.isBookmarked,
-                    onVoteChanged: onVoteChanged,
+                    onVoteChanged: loadedPost.actionPending
+                        ? null
+                        : onVoteChanged,
                     onCommentTap: onCommentTap,
                     onShareTap: onShareTap,
                     onBookmarkToggle: onBookmarkToggle,
