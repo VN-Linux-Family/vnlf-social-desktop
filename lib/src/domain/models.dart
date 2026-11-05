@@ -47,12 +47,18 @@ final class Session {
 
 final class AuthorStyle {
   const AuthorStyle({
+    this.nameColor,
+    this.nameGradient,
+    this.nameEffect,
     this.frame,
     this.icon,
     this.distroBadge,
     this.nameplate,
     this.status,
   });
+  final Map<String, dynamic>? nameColor;
+  final Map<String, dynamic>? nameGradient;
+  final String? nameEffect;
   final Map<String, dynamic>? frame;
   final Map<String, dynamic>? icon;
   final String? distroBadge;

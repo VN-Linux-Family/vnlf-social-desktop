@@ -99,14 +99,6 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (source.id == samplePost.id) ...[
-          Text(english ? 'Sample article' : 'Bài viết mẫu'),
-          const SizedBox(height: 8),
-        ],
-        if (source.publishedAt case final date?) ...[
-          Text(date.toLocal().toIso8601String().split('T').first),
-          const SizedBox(height: 8),
-        ],
         VnlfPostCard(
           post: detail,
           onAuthorTap: () => context.push(

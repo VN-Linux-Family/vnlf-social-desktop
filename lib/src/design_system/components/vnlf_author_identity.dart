@@ -39,12 +39,16 @@ class VnlfAuthorNameRow extends StatelessWidget {
     final colors = VnlfColors.of(context);
     final style = author.style;
 
+    final resolvedNameColor = colors.isDark
+        ? (style.nameDarkColor ?? style.nameColor ?? colors.ink)
+        : (style.nameColor ?? colors.ink);
+
     final baseTextStyle = TextStyle(
       fontFamily: VnlfTypography.fontFamily,
       fontSize: fontSize,
       height: 18 / 13.5,
       fontWeight: FontWeight.w700,
-      color: style.nameColor ?? colors.ink,
+      color: resolvedNameColor,
     );
 
     final gradientColors = colors.isDark
@@ -88,11 +92,10 @@ class VnlfAuthorNameRow extends StatelessWidget {
         : style.nameplateColor;
     if (style.nameplateId != null && nameplateColor != null) {
       nameText = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
         decoration: BoxDecoration(
-          color: nameplateColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-          border: Border.all(color: nameplateColor.withValues(alpha: 0.4)),
+          color: nameplateColor.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: nameText,
       );
@@ -120,6 +123,18 @@ class VnlfAuthorNameRow extends StatelessWidget {
             ],
           ],
         ),
+        if (style.iconUrl != null && style.iconUrl!.isNotEmpty)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.network(
+              style.iconUrl!,
+              width: 16,
+              height: 16,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const SizedBox.shrink(),
+            ),
+          ),
         if (style.distroBadge != DistroBadgeType.none)
           VnlfInlineDistroIcon(
             badge: style.distroBadge,

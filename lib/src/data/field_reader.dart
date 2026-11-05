@@ -65,6 +65,9 @@ AuthorStyle? styleValue(Object? value, String field) {
   final style = objectValue(value, field);
   if (style == null) return null;
   return AuthorStyle(
+    nameColor: objectValue(style['nameColor'], '$field.nameColor'),
+    nameGradient: objectValue(style['nameGradient'], '$field.nameGradient'),
+    nameEffect: nullableString(style['nameEffect'], '$field.nameEffect'),
     frame: objectValue(style['frame'], '$field.frame'),
     icon: objectValue(style['icon'], '$field.icon'),
     distroBadge: nullableString(style['distroBadge'], '$field.distroBadge'),

@@ -469,12 +469,19 @@ final class FixtureDiscoverRepository implements DiscoverRepository {
         );
       }).toList();
 
+      final hasMoreRaw = json['hasMore'];
+      final hasMore = hasMoreRaw is bool
+          ? hasMoreRaw
+          : hasMoreRaw is Map
+          ? hasMoreRaw.values.any((v) => v == true)
+          : false;
+
       return DiscoverData(
         articles: articles,
         users: users,
         tags: tags,
         projects: projects,
-        hasMore: json['hasMore'] as bool? ?? false,
+        hasMore: hasMore,
       );
     },
   );

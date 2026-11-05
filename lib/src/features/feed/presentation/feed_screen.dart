@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
 import '../../../design_system/design_system.dart';
+import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
 import 'post_mapper.dart';
@@ -24,6 +25,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final feed = ref.watch(feedNotifierProvider(_tab));
     final notifier = ref.read(feedNotifierProvider(_tab).notifier);
+    final session =
+        ref.watch(sessionStateProvider) ??
+        ref.watch(sessionProvider).valueOrNull;
+    final isLoggedIn = session != null || offlineFeatures;
+    final tabs = english
+        ? (isLoggedIn
+              ? const ['Latest', 'Featured', 'Articles', 'Following']
+              : const ['Latest', 'Featured', 'Articles'])
+        : (isLoggedIn
+              ? const ['Mới nhất', 'Được chú ý', 'Article', 'Đang theo dõi']
+              : const ['Mới nhất', 'Được chú ý', 'Article']);
+
+    if (!isLoggedIn && _tab == FeedTab.following) {
+      _tab = FeedTab.latest;
+    }
+
+    final selectedIndex = _tab.index < tabs.length ? _tab.index : 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -47,10 +65,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             ),
           ),
         VnlfFeedTabBar(
-          tabs: english
-              ? const ['Latest', 'Featured', 'Articles', 'Following']
-              : const ['Mới nhất', 'Được chú ý', 'Article', 'Đang theo dõi'],
-          selectedIndex: _tab.index,
+          tabs: tabs,
+          selectedIndex: selectedIndex,
           onTabSelected: (index) =>
               setState(() => _tab = FeedTab.values[index]),
         ),

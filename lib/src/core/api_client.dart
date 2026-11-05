@@ -95,9 +95,10 @@ final class ApiClient {
       method: normalizedMethod,
       body: body,
       query: query,
-      headers: const {
+      headers: {
         'User-Agent': 'vlf-flutter-dev/0.1 (unofficial community client)',
         'Accept': 'application/json',
+        if (body != null) 'Content-Type': 'application/json',
       },
     );
     try {

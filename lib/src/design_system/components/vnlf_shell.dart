@@ -37,6 +37,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     required this.centerChild,
     this.rightSidebarChild,
     this.centerChildHandlesScroll = false,
+    this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
     this.onDestinationSelected,
     this.themeMode = ThemeMode.light,
@@ -95,6 +96,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
 
   final Widget centerChild;
   final bool centerChildHandlesScroll;
+  final bool showMobileHeader;
   final Widget? rightSidebarChild;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
@@ -384,20 +386,23 @@ class VnlfAdaptiveShell extends StatelessWidget {
             ),
             body: Column(
               children: [
-                VnlfMobileStickyHeader(
-                  onProfileTap: onProfileTap,
-                  openDrawerTooltip: openDrawerTooltip,
-                  openDrawerSemanticLabel: openDrawerSemanticLabel,
-                  brandTitlePrefix: brandTitlePrefix,
-                  brandTitleAccent: brandTitleAccent,
-                  brandLogoSemanticLabel: brandLogoSemanticLabel,
-                  searchSemanticLabel: searchSemanticLabel,
-                  onSearchTap: onSearchTap,
-                  onNotificationsTap: onNotificationsTap,
-                  notificationsSemanticLabel: notificationsSemanticLabel,
-                  profileSemanticLabel: profileSemanticLabel,
-                  semanticLabel: mobileHeaderSemanticLabel,
-                ),
+                if (showMobileHeader)
+                  VnlfMobileStickyHeader(
+                    onProfileTap: onProfileTap,
+                    openDrawerTooltip: openDrawerTooltip,
+                    openDrawerSemanticLabel: openDrawerSemanticLabel,
+                    brandTitlePrefix: brandTitlePrefix,
+                    brandTitleAccent: brandTitleAccent,
+                    brandLogoSemanticLabel: brandLogoSemanticLabel,
+                    searchSemanticLabel: searchSemanticLabel,
+                    onSearchTap: onSearchTap,
+                    onNotificationsTap: onNotificationsTap,
+                    notificationsSemanticLabel: notificationsSemanticLabel,
+                    profileSemanticLabel: profileSemanticLabel,
+                    semanticLabel: mobileHeaderSemanticLabel,
+                  )
+                else
+                  SizedBox(height: MediaQuery.paddingOf(context).top),
                 Expanded(
                   child: SafeArea(
                     top: false,

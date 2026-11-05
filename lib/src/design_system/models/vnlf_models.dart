@@ -35,6 +35,7 @@ enum VoteState {
 class AuthorStyleData {
   const AuthorStyleData({
     this.nameColor,
+    this.nameDarkColor,
     this.nameGradientLight,
     this.nameGradientDark,
     this.frame = AvatarFrameType.none,
@@ -49,9 +50,12 @@ class AuthorStyleData {
     this.hasTerminalBadge = false,
     this.hasPartnerStar = false,
     this.hasPixelBadge = false,
+    this.iconUrl,
+    this.iconName,
   });
 
   final Color? nameColor;
+  final Color? nameDarkColor;
   final List<Color>? nameGradientLight;
   final List<Color>? nameGradientDark;
   final AvatarFrameType frame;
@@ -66,6 +70,8 @@ class AuthorStyleData {
   final bool hasTerminalBadge;
   final bool hasPartnerStar;
   final bool hasPixelBadge;
+  final String? iconUrl;
+  final String? iconName;
 }
 
 /// Immutable author identity model.

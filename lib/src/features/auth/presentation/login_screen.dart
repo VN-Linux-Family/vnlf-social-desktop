@@ -394,7 +394,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               key: const Key('login-id-field'),
                               controller: _loginIdController,
                               focusNode: _loginIdFocus,
-                              autofocus: true,
                               autofillHints: const [
                                 AutofillHints.username,
                                 AutofillHints.email,
@@ -408,7 +407,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               textInputAction: TextInputAction.next,
                               onSubmitted: (_) =>
-                                  _loginPasswordFocus.requestFocus(),
+                                  FocusScope.of(context)
+                                      .requestFocus(_loginPasswordFocus),
                             ),
                             const SizedBox(height: 14),
                             TextField(

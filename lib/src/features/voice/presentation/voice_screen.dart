@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../shared/presentation/community_samples.dart';
+import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import 'voice_participant.dart';
 
@@ -265,12 +266,24 @@ class _VoiceScreenState extends ConsumerState<VoiceScreen> {
                         vertical: 12,
                       ),
                     ),
-                    onPressed: _toggleJoin,
-                    icon: Icon(inRoom ? Icons.call_end : Icons.headphones),
-                    label: Text(
+                    onPressed: (session != null || offlineFeatures)
+                        ? _toggleJoin
+                        : () => context.push('/login'),
+                    icon: Icon(
                       inRoom
-                          ? (english ? 'Leave room' : 'Rời phòng')
-                          : (english ? 'Join room' : 'Tham gia phòng'),
+                          ? Icons.call_end
+                          : (session != null || offlineFeatures
+                                ? Icons.headphones
+                                : Icons.lock_outline),
+                    ),
+                    label: Text(
+                      (session != null || offlineFeatures)
+                          ? (inRoom
+                                ? (english ? 'Leave room' : 'Rời phòng')
+                                : (english ? 'Join room' : 'Tham gia phòng'))
+                          : (english
+                                ? 'Sign in to join'
+                                : 'Đăng nhập để tham gia'),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),

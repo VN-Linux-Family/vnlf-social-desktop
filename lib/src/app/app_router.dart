@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -150,6 +152,14 @@ GoRouter createMainRouter() {
                     context.push('/login');
                   }
                 },
+                showMobileHeader: const [
+                  '/',
+                  '/leaderboard',
+                  '/projects',
+                  '/discover',
+                  '/channels',
+                  '/voice',
+                ].contains(state.uri.path),
                 centerChildHandlesScroll:
                     const [
                       '/',
@@ -364,6 +374,8 @@ void _showHelpDialog(BuildContext context) {
 void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
   final english = Localizations.localeOf(context).languageCode == 'en';
   final colors = VnlfColors.of(context);
+  final session =
+      ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
   final contentController = TextEditingController();
   final contactController = TextEditingController();
   var tabIndex = 0; // 0 = feedback, 1 = bug
@@ -380,132 +392,395 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
               borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
               side: BorderSide(color: colors.line),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 12),
-                Icon(Icons.check_circle_rounded, size: 52, color: colors.brand),
-                const SizedBox(height: 14),
-                Text(
-                  english ? 'Feedback Received!' : 'Đã ghi nhận phản hồi!',
-                  style: VnlfTypography.h2(colors.ink),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  english
-                      ? 'Thank you for helping make Vietnam Linux Family better.'
-                      : 'Cảm ơn bạn đã đóng góp giúp VNLF ngày càng hoàn thiện hơn.',
-                  style: VnlfTypography.body(colors.muted),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.brand,
-                    foregroundColor: Colors.white,
+            content: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: colors.brandSoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      size: 40,
+                      color: colors.brand,
+                    ),
                   ),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(english ? 'Close' : 'Đóng'),
-                ),
-              ],
+                  const SizedBox(height: 18),
+                  Text(
+                    english ? 'Feedback Received!' : 'Đã ghi nhận phản hồi!',
+                    style: VnlfTypography.h2(colors.ink),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    english
+                        ? 'Thank you for helping make Vietnam Linux Family better.'
+                        : 'Cảm ơn bạn đã đóng góp giúp VNLF ngày càng hoàn thiện hơn.',
+                    style: VnlfTypography.body(colors.muted),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colors.brand,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusMd,
+                        ),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(english ? 'Done' : 'Hoàn tất'),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
-        return AlertDialog(
+        return Dialog(
           backgroundColor: colors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
             side: BorderSide(color: colors.line),
           ),
-          title: Text(
-            english ? 'Help Make VNLF Better' : 'Giúp VNLF tốt hơn',
-            style: VnlfTypography.h3(colors.ink),
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ChoiceChip(
-                          label: Text(english ? 'Feedback' : 'Góp ý'),
-                          selected: tabIndex == 0,
-                          selectedColor: colors.brandSoft,
-                          checkmarkColor: colors.brand,
-                          onSelected: (_) => setDialogState(() => tabIndex = 0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: colors.brandSoft,
+                            borderRadius: BorderRadius.circular(
+                              VnlfDimensions.radiusMd,
+                            ),
+                          ),
+                          child: Icon(
+                            tabIndex == 0
+                                ? Icons.favorite_border_rounded
+                                : Icons.bug_report_outlined,
+                            size: 22,
+                            color: colors.brand,
+                          ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                english
+                                    ? 'Help Make VNLF Better'
+                                    : 'Giúp VNLF tốt hơn',
+                                style: VnlfTypography.h3(colors.ink),
+                              ),
+                              Text(
+                                tabIndex == 0
+                                    ? (english
+                                          ? 'Community feedback & ideas'
+                                          : 'Đóng góp ý kiến & đề xuất')
+                                    : (english
+                                          ? 'Issue & bug report'
+                                          : 'Báo cáo lỗi & sự cố'),
+                                style: VnlfTypography.caption(colors.muted),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          tooltip: english ? 'Close' : 'Đóng',
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceSoft,
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusMd,
+                        ),
+                        border: Border.all(color: colors.line),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ChoiceChip(
-                          label: Text(english ? 'Bug Report' : 'Báo lỗi'),
-                          selected: tabIndex == 1,
-                          selectedColor: colors.brandSoft,
-                          checkmarkColor: colors.brand,
-                          onSelected: (_) => setDialogState(() => tabIndex = 1),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusSm,
+                              ),
+                              onTap: () => setDialogState(() => tabIndex = 0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: tabIndex == 0
+                                      ? colors.brand
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(
+                                    VnlfDimensions.radiusSm,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  english ? 'Feedback' : 'Góp ý',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: tabIndex == 0
+                                        ? Colors.white
+                                        : colors.muted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusSm,
+                              ),
+                              onTap: () => setDialogState(() => tabIndex = 1),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: tabIndex == 1
+                                      ? colors.brand
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(
+                                    VnlfDimensions.radiusSm,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  english ? 'Bug Report' : 'Báo lỗi',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: tabIndex == 1
+                                        ? Colors.white
+                                        : colors.muted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (session != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.brandSoft,
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusSm,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.verified_user_outlined,
+                              size: 14,
+                              color: colors.brand,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                english
+                                    ? 'Sending as @${session.username} · XP reward eligible'
+                                    : 'Gửi với tài khoản @${session.username} · Nhận thưởng điểm XP',
+                                style: VnlfTypography.caption(colors.brand),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: contentController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      labelText: tabIndex == 0
+                    const SizedBox(height: 14),
+                    Text(
+                      tabIndex == 0
                           ? (english
-                                ? 'Your feedback or suggestion'
-                                : 'Ý kiến đóng góp hoặc đề xuất của bạn')
+                                ? 'Description of feedback'
+                                : 'Mô tả ý kiến hoặc đề xuất')
                           : (english
-                                ? 'Describe the issue or bug'
+                                ? 'Issue description & reproduction steps'
                                 : 'Mô tả chi tiết lỗi gặp phải'),
-                      hintText: tabIndex == 0
-                          ? (english
-                                ? 'Tell us what could be improved...'
-                                : 'Hãy cho chúng mình biết điều gì cần cải thiện...')
-                          : (english
-                                ? 'Steps to reproduce the bug...'
-                                : 'Các bước để tái hiện lỗi...'),
-                      border: const OutlineInputBorder(),
+                      style: VnlfTypography.meta(colors.ink),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: contactController,
-                    decoration: InputDecoration(
-                      labelText: english
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 4,
+                      style: TextStyle(color: colors.ink, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: tabIndex == 0
+                            ? (english
+                                  ? 'Tell us what could be improved (minimum 10 characters)...'
+                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (tối thiểu 10 ký tự)...')
+                            : (english
+                                  ? 'Steps to reproduce the bug (minimum 10 characters)...'
+                                  : 'Các bước để tái hiện lỗi (tối thiểu 10 ký tự)...'),
+                        hintStyle: TextStyle(color: colors.muted, fontSize: 13),
+                        filled: true,
+                        fillColor: colors.surfaceSoft,
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(color: colors.line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(color: colors.line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(
+                            color: colors.brand,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      english
                           ? 'Email or contact (optional)'
                           : 'Email hoặc liên hệ (không bắt buộc)',
-                      border: const OutlineInputBorder(),
+                      style: VnlfTypography.meta(colors.ink),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: contactController,
+                      style: TextStyle(color: colors.ink, fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'example@domain.com',
+                        hintStyle: TextStyle(color: colors.muted, fontSize: 13),
+                        filled: true,
+                        fillColor: colors.surfaceSoft,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(color: colors.line),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(color: colors.line),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusMd,
+                          ),
+                          borderSide: BorderSide(
+                            color: colors.brand,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: TextButton.styleFrom(
+                            foregroundColor: colors.muted,
+                          ),
+                          child: Text(english ? 'Cancel' : 'Hủy'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colors.brand,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusMd,
+                              ),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final detail = contentController.text.trim();
+                            if (detail.length < 5) return;
+                            try {
+                              final client = ref.read(apiClientProvider);
+                              await client.request<Map<String, dynamic>>(
+                                'POST',
+                                '/api/v1/feedback',
+                                body: jsonEncode({
+                                  'clientSubmissionId': DateTime.now()
+                                      .millisecondsSinceEpoch
+                                      .toString(),
+                                  'detail': detail,
+                                  'pagePath': '/',
+                                  if (session == null &&
+                                      contactController.text.trim().isNotEmpty)
+                                    'contactEmail': contactController.text
+                                        .trim(),
+                                  'assetIds': const <String>[],
+                                }),
+                              );
+                            } catch (_) {}
+                            setDialogState(() => submitted = true);
+                          },
+                          icon: const Icon(Icons.send_rounded, size: 16),
+                          label: Text(
+                            english ? 'Send Feedback' : 'Gửi cho VNLF',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(english ? 'Cancel' : 'Hủy'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.brand,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                if (contentController.text.trim().isEmpty) return;
-                setDialogState(() => submitted = true);
-              },
-              child: Text(english ? 'Submit' : 'Gửi phản hồi'),
-            ),
-          ],
         );
       },
     ),

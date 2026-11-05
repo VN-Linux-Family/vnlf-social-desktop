@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../shared/presentation/feature_samples.dart';
 import 'channel_directory.dart';
 import 'channel_state.dart';
 
@@ -204,58 +205,109 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: colors.surface,
-                            borderRadius: BorderRadius.circular(
-                              VnlfDimensions.radiusMd,
+                        if (session == null && !offlineFeatures)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
                             ),
-                            border: Border.all(color: colors.line),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  key: const Key('chat-input'),
-                                  controller: _input,
-                                  minLines: 1,
-                                  maxLines: 4,
-                                  textInputAction: TextInputAction.send,
-                                  onSubmitted: (_) => _send(selected),
-                                  decoration: InputDecoration(
-                                    hintText: english
-                                        ? 'Message #${channel.id}'
-                                        : 'Gửi tin nhắn vào #${channel.id}...',
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
+                            decoration: BoxDecoration(
+                              color: colors.surface,
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusMd,
+                              ),
+                              border: Border.all(color: colors.line),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: 18,
+                                  color: colors.muted,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    english
+                                        ? 'Sign in to send messages in #${channel.id}'
+                                        : 'Đăng nhập để gửi tin nhắn vào #${channel.id}',
+                                    style: VnlfTypography.caption(colors.muted),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed: () => context.push('/login'),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: colors.brand,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 6,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  child: Text(
+                                    english ? 'Sign in' : 'Đăng nhập',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: colors.surface,
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusMd,
+                              ),
+                              border: Border.all(color: colors.line),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    key: const Key('chat-input'),
+                                    controller: _input,
+                                    minLines: 1,
+                                    maxLines: 4,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: (_) => _send(selected),
+                                    decoration: InputDecoration(
+                                      hintText: english
+                                          ? 'Message #${channel.id}'
+                                          : 'Gửi tin nhắn vào #${channel.id}...',
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              ValueListenableBuilder<TextEditingValue>(
-                                valueListenable: _input,
-                                builder: (context, value, child) => IconButton(
-                                  tooltip: english
-                                      ? 'Send message'
-                                      : 'Gửi tin nhắn',
-                                  onPressed: value.text.trim().isEmpty
-                                      ? null
-                                      : () => _send(selected),
-                                  icon: Icon(
-                                    Icons.send_rounded,
-                                    color: value.text.trim().isEmpty
-                                        ? colors.muted
-                                        : colors.brand,
-                                  ),
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _input,
+                                  builder: (context, value, child) =>
+                                      IconButton(
+                                        tooltip: english
+                                            ? 'Send message'
+                                            : 'Gửi tin nhắn',
+                                        onPressed: value.text.trim().isEmpty
+                                            ? null
+                                            : () => _send(selected),
+                                        icon: Icon(
+                                          Icons.send_rounded,
+                                          color: value.text.trim().isEmpty
+                                              ? colors.muted
+                                              : colors.brand,
+                                        ),
+                                      ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
