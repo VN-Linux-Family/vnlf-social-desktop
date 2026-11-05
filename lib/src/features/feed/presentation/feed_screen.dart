@@ -1,3 +1,5 @@
+import '../../moderation/presentation/report_dialog.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -187,6 +189,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                   '/profile/${Uri.encodeComponent(data.posts[index].author.username)}',
                                 ),
                                 onShareTap: () => copyPostLink(context, source),
+                                onReportTap: () =>
+                                    showArticleReport(context, ref, source.id),
                                 onCommentTap: () => context.push(
                                   '/thread/${Uri.encodeComponent(data.posts[index].id)}',
                                 ),

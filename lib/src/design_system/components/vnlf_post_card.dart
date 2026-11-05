@@ -128,6 +128,7 @@ class VnlfPostCard extends StatelessWidget {
     this.onBookmarkToggle,
     this.onAuthorTap,
     this.onMoreTap,
+    this.onReportTap,
     this.showBottomActions = true,
     this.semanticLabel,
     this.authorAvatarSemanticLabel,
@@ -172,6 +173,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
        codeCopyLabel = '',
@@ -212,6 +214,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -253,6 +256,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -291,6 +295,7 @@ class VnlfPostCard extends StatelessWidget {
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onMoreTap;
+  final VoidCallback? onReportTap;
   final bool showBottomActions;
   final String? semanticLabel;
   final String? authorAvatarSemanticLabel;
@@ -422,7 +427,7 @@ class VnlfPostCard extends StatelessWidget {
                                   case 'bookmark':
                                     onBookmarkToggle?.call();
                                   case 'report':
-                                    _showReportNotice(context);
+                                    onReportTap?.call();
                                 }
                               },
                               itemBuilder: (context) => [
@@ -472,6 +477,7 @@ class VnlfPostCard extends StatelessWidget {
                                 ),
                                 PopupMenuItem(
                                   value: 'report',
+                                  enabled: onReportTap != null,
                                   height: 38,
                                   child: Row(
                                     children: [
@@ -616,13 +622,5 @@ class VnlfPostCard extends StatelessWidget {
       return card;
     }
     return Semantics(label: semanticLabel, container: true, child: card);
-  }
-
-  void _showReportNotice(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('Đã ghi nhận yêu cầu báo cáo bài viết.')),
-      );
   }
 }

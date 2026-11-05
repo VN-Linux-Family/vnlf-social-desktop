@@ -1,3 +1,5 @@
+import '../../moderation/presentation/report_dialog.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,6 +90,7 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
           ),
           onCommentTap: _commentFocus.requestFocus,
           onShareTap: () => copyPostLink(context, source),
+          onReportTap: () => showArticleReport(context, ref, source.id),
           shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
           onVoteChanged: (value) => ref
               .read(postInteractionsProvider.notifier)
