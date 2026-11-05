@@ -8,8 +8,42 @@ import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/profile/domain/public_profile.dart';
 import 'package:vnlfsocialapp/src/features/profile/presentation/profile_data.dart';
+import 'package:vnlfsocialapp/src/features/profile/presentation/profile_header.dart';
 
 void main() {
+  for (final scale in [1.0, 1.6]) {
+    testWidgets(
+      'profile identity clears its overlapping avatar at scale $scale',
+      (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = scale;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _pump(tester, _Profiles());
+        final header = find.byType(ProfileHeader);
+        final avatar = find.descendant(
+          of: header,
+          matching: find.byType(VnlfAvatar),
+        );
+        final name = find.descendant(
+          of: header,
+          matching: find.text('Nguyễn An'),
+        );
+        expect(
+          tester.getTopLeft(name).dy,
+          greaterThanOrEqualTo(tester.getBottomRight(avatar).dy + 12),
+        );
+      },
+    );
+  }
+
+  testWidgets('opening a profile requests only its visible content section', (
+    tester,
+  ) async {
+    final repository = _Profiles();
+    await _pump(tester, repository);
+    expect(repository.requested, ['profile', 'posts']);
+    await _select(tester, 'Bình luận');
+    expect(repository.requested, ['profile', 'posts', 'comments']);
+  });
   testWidgets(
     'public tabs display scoped data and guestbook pages without wardrobe controls',
     (tester) async {
@@ -39,7 +73,7 @@ void main() {
       expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
       expect(find.text('Karma'), findsNothing);
       expect(find.text('Tủ đồ & Huy hiệu'), findsNothing);
-      expect(find.text('Bài viết 1'), findsOneWidget);
+      expect(find.text('Bài viết'), findsOneWidget);
       expect(find.text('Bài viết trong hồ sơ'), findsOneWidget);
       final share = find.byIcon(Icons.link_rounded);
       await tester.ensureVisible(share);
@@ -47,9 +81,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(copiedLink, 'https://vietnamlinuxfamily.net/a/profile-post');
       expect(find.text('Đã sao chép liên kết'), findsOneWidget);
-      await _select(tester, 'Bình luận 1');
+      await _select(tester, 'Bình luận');
       expect(find.text('Bình luận trong hồ sơ'), findsOneWidget);
-      await _select(tester, 'Dự án 1');
+      await _select(tester, 'Dự án');
       expect(find.text('Công cụ Linux'), findsOneWidget);
       await _select(tester, 'Sổ lưu bút');
       expect(find.text('Lời nhắn đầu'), findsOneWidget);
@@ -115,22 +149,27 @@ Future<void> _pump(WidgetTester tester, _Profiles repository) async {
 }
 
 class _Profiles implements PublicProfileRepository {
+  final requested = <String>[];
   bool postsUnavailable = false;
   String? cursor;
   static const author = Author(username: 'fixture', displayName: 'Nguyễn An');
   @override
-  Future<PublicProfile?> getProfile(String username) async =>
-      const PublicProfile(
-        author: author,
-        totalPoints: 271,
-        level: 4,
-        currentStreak: 7,
-        followingCount: 9,
-        followerCount: 12,
-        bio: 'Tiếng Việt: ặ ữ ờ ẫ ệ',
-      );
+  Future<PublicProfile?> getProfile(String username) async {
+    requested.add('profile');
+    return const PublicProfile(
+      author: author,
+      totalPoints: 271,
+      level: 4,
+      currentStreak: 7,
+      followingCount: 9,
+      followerCount: 12,
+      bio: 'Tiếng Việt: ặ ữ ờ ẫ ệ',
+    );
+  }
+
   @override
   Future<FeedPage> getPosts(String username) async {
+    requested.add('posts');
     if (postsUnavailable) throw const TransportFailure();
     return FeedPage(
       items: const [
@@ -147,21 +186,28 @@ class _Profiles implements PublicProfileRepository {
   }
 
   @override
-  Future<ProfileCommentsPage> getComments(String username) async =>
-      ProfileCommentsPage(
-        items: const [
-          ProfileComment(
-            id: 'comment-1',
-            articleId: 'profile-post',
-            articleSlug: 'profile-post',
-            content: 'Bình luận trong hồ sơ',
-          ),
-        ],
-      );
+  Future<ProfileCommentsPage> getComments(String username) async {
+    requested.add('comments');
+    return ProfileCommentsPage(
+      items: const [
+        ProfileComment(
+          id: 'comment-1',
+          articleId: 'profile-post',
+          articleSlug: 'profile-post',
+          content: 'Bình luận trong hồ sơ',
+        ),
+      ],
+    );
+  }
+
   @override
-  Future<ProjectsPage> getProjects(String username) async => ProjectsPage(
-    items: const [ProjectItem(id: 'project-1', name: 'Công cụ Linux')],
-  );
+  Future<ProjectsPage> getProjects(String username) async {
+    requested.add('projects');
+    return ProjectsPage(
+      items: const [ProjectItem(id: 'project-1', name: 'Công cụ Linux')],
+    );
+  }
+
   @override
   Future<GuestbookPage> getGuestbook(String username, {String? cursor}) async {
     this.cursor = cursor;

@@ -5,6 +5,11 @@ import '../../shared/presentation/author_mapper.dart';
 import '../domain/public_profile.dart';
 
 class ProfileHeader extends StatelessWidget {
+  static const _coverHeight = 160.0;
+  static const _avatarSize = 76.0;
+  static const _avatarPadding = 5.0;
+  static const _avatarTop = _coverHeight - 40;
+  static const _identityGap = 12.0;
   const ProfileHeader({super.key, required this.profile});
   final PublicProfile profile;
 
@@ -23,12 +28,13 @@ class ProfileHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: 195,
+            height:
+                _avatarTop + _avatarSize + 2 * _avatarPadding + _identityGap,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  height: 160,
+                  height: _coverHeight,
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: colors.brandStrong,
@@ -48,16 +54,16 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 Positioned(
                   left: 24,
-                  top: 120,
+                  top: _avatarTop,
                   child: Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(_avatarPadding),
                     decoration: BoxDecoration(
                       color: colors.surface,
                       shape: BoxShape.circle,
                     ),
                     child: VnlfAvatar(
                       author: author,
-                      size: 76,
+                      size: _avatarSize,
                       semanticLabel: author.displayName,
                     ),
                   ),

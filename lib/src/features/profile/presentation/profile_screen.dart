@@ -91,16 +91,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   List<String> _tabs(PublicProfile profile, bool english) {
-    final username = profile.author.username;
-    final posts = ref.watch(profilePostsProvider(username)).valueOrNull;
-    final comments = ref.watch(profileCommentsProvider(username)).valueOrNull;
-    final projects = ref.watch(profileProjectsProvider(username)).valueOrNull;
-    String label(String title, int? count) =>
-        count == null ? title : '$title $count';
     return [
-      label(english ? 'Posts' : 'Bài viết', posts?.items.length),
-      label(english ? 'Comments' : 'Bình luận', comments?.items.length),
-      label(english ? 'Projects' : 'Dự án', projects?.items.length),
+      english ? 'Posts' : 'Bài viết',
+      english ? 'Comments' : 'Bình luận',
+      english ? 'Projects' : 'Dự án',
       if (profile.guestbookEnabled) english ? 'Guestbook' : 'Sổ lưu bút',
     ];
   }
