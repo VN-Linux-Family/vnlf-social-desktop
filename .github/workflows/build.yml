@@ -137,14 +137,17 @@ jobs:
         run: flutter --version
       - name: Verify native SDK architecture
         run: |
+          mkdir -p .ci
+          dart --version > .ci/dart-version.txt 2>&1
+          flutter --version --machine > .ci/flutter-version.json
           python - <<'PY'
-          import json, os, subprocess
-          result = subprocess.run(['dart', '--version'], capture_output=True, text=True, check=True)
-          version = result.stdout + result.stderr
+          import json, os
+          from pathlib import Path
+          version = Path('.ci/dart-version.txt').read_text()
           expected = os.environ['BUILD_PLATFORM'] + '_' + os.environ['BUILD_ARCH']
           if expected not in version:
               raise SystemExit('Expected native Dart SDK ABI ' + expected + '; refusing a mislabeled build: ' + version)
-          info = json.loads(subprocess.check_output(['flutter', '--version', '--machine'], text=True))
+          info = json.loads(Path('.ci/flutter-version.json').read_text())
           if info['frameworkVersion'] != os.environ['FLUTTER_VERSION'] or info['frameworkRevision'] != 'c197ca5199e9ee5661e865596c9c07294dfab51c':
               raise SystemExit('The native SDK must retain its verified official release version and revision.')
           print(version.strip())
