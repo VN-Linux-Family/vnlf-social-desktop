@@ -1,0 +1,41 @@
+name: Preserve private build assets
+
+on:
+  workflow_run:
+    workflows: ['Build and publish']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Completed Build and publish run ID to recover'
+        required: true
+        type: string
+      run_attempt:
+        description: 'Exact completed build attempt'
+        required: true
+        type: number
+        default: 1
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: preserve-${{ github.event.workflow_run.id || inputs.run_id }}-${{ github.event.workflow_run.run_attempt || inputs.run_attempt }}
+  cancel-in-progress: false
+
+jobs:
+  preserve:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUILD_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || inputs.run_attempt }}
+      BUILD_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Preserve available binaries without executing artifact contents
+        run: python3 tool/publish_private_build.py --run-id "$BUILD_RUN_ID" --attempt "$BUILD_RUN_ATTEMPT"

@@ -40,7 +40,7 @@ def compute_metadata(pubspec_version, sha, run_number, attempt, ref_type, ref_na
         tag = f'ci-{run_id}-{int(attempt)}'
     return {
         'version': version, 'build_name': base, 'build_number': str(int(run_number)),
-        'release_tag': tag, 'is_stable': str(stable).lower(),
+        'release_tag': tag, 'private_release_tag': f'ci-{run_id}-{int(attempt)}', 'is_stable': str(stable).lower(),
         'artifact_prefix': f'vnlf-social-{version}', 'source_sha': sha.lower(),
     }
 

@@ -3,6 +3,8 @@
 The source repository is private: `VN-Linux-Family/vnlf-social-desktop`.
 Every build workflow stores its available binaries in a private GitHub release.
 Incomplete builds remain drafts with an explicit missing-target inventory.
+Private release tags include run ID and attempt, including stable builds, so reruns
+do not overwrite a previous build. Public stable tags retain their semantic version.
 Only complete stable tags can be promoted to the separate public, release-only
 `VN-Linux-Family/vnlf-social-app` repository. No source checkout is uploaded there.
 
@@ -108,3 +110,29 @@ checks, and manual unavailable-state UI have Flutter tests. These checks are not
 proof that all hosted platform builds or real-device behavior pass; record those
 actual results after the workflow runs. Do not call the app production-ready while
 the remaining feature-parity matrix and signing/distribution requirements are open.
+
+
+## Canceled build recovery
+
+The first matrix's Linux package-manager job timed out and GitHub canceled its
+publisher. Four completed binaries (three APKs and Windows x64) were recovered
+with `tool/publish_private_build.py` into private draft `ci-42053330982-1`, with
+checksums and an explicit five-target missing inventory.
+
+`preserve-builds.yml` is a separate completion workflow so the original run's
+cancellation cannot cancel asset recovery. It becomes automatic after this PR's
+workflow reaches the default branch. It accepts only this repository's own
+push/manual build workflow, downloads inert binary assets, and computes metadata
+from the original commit and exact attempt. Current build artifact names include
+the attempt; recovery never mixes attempts. It never publishes to the public repo.
+
+Until the workflow is on the default branch, recover a completed run explicitly:
+
+```sh
+tool/with_build_slot.sh python3 tool/publish_private_build.py --run-id RUN_ID --attempt ATTEMPT
+```
+
+ARM source SDK checkout must retain the verified official release tag; a detached
+SHA without a local tag reports Flutter 0.0.0-unknown and fails SDK constraints.
+CI now checks both the native Dart ABI and exact Flutter version/revision before
+resolving app dependencies.
