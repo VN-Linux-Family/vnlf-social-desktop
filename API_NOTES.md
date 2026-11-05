@@ -274,7 +274,7 @@ Connection uses HTTP upgrade with existing session cookies.
 - RTC Engine: LiveKit SFU running at `wss://voice.vietnamlinuxfamily.net`.
 - Dart integration: `livekit_client` official Flutter SDK for room connection and microphone streams.
 
-## 10. Public profile fidelity audit (2026-11-05)
+## 11. Public profile fidelity audit (2026-11-05)
 
 Evidence: anonymous public profile HTML at `/u/{username}`, its static client
 chunk `2_3bhcnky9v-5.js`, and CSS chunks `24q1nvecqxecf.css`,
