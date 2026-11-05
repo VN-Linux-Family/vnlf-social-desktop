@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../design_system/design_system.dart';
+import '../core/request_identity.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
 import '../features/channels/presentation/channel_directory.dart';
@@ -137,7 +138,7 @@ GoRouter createMainRouter() {
                     : () => logoutWithFeedback(context, ref),
                 logoutLabel: english ? 'Log out' : 'Đăng xuất',
                 onHelpTap: () => _showHelpDialog(context),
-                onFeedbackTap: () => _showFeedbackDialog(context, ref),
+                onFeedbackTap: () => showFeedbackDialog(context, ref),
                 onSupportTap: () =>
                     _launchWeb('https://vietnamlinuxfamily.net/caramos'),
                 onFacebookTap: () => _launchWeb(
@@ -388,7 +389,7 @@ void _showHelpDialog(BuildContext context) {
   );
 }
 
-void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
+void showFeedbackDialog(BuildContext context, WidgetRef ref) {
   final english = Localizations.localeOf(context).languageCode == 'en';
   final colors = VnlfColors.of(context);
   final session =
@@ -397,6 +398,10 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
   final contactController = TextEditingController();
   var tabIndex = 0; // 0 = feedback, 1 = bug
   var submitted = false;
+  var submitting = false;
+  String? error;
+  String? draftSignature;
+  String? submissionId;
 
   showDialog<void>(
     context: context,
@@ -656,15 +661,16 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     TextField(
                       controller: contentController,
                       maxLines: 4,
+                      maxLength: 4000,
                       style: TextStyle(color: colors.ink, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: tabIndex == 0
                             ? (english
-                                  ? 'Tell us what could be improved (minimum 10 characters)...'
-                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (tối thiểu 10 ký tự)...')
+                                  ? 'Tell us what could be improved (20–4000 characters)...'
+                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (20–4000 ký tự)...')
                             : (english
-                                  ? 'Steps to reproduce the bug (minimum 10 characters)...'
-                                  : 'Các bước để tái hiện lỗi (tối thiểu 10 ký tự)...'),
+                                  ? 'Steps to reproduce the bug (20–4000 characters)...'
+                                  : 'Các bước để tái hiện lỗi (20–4000 ký tự)...'),
                         hintStyle: TextStyle(color: colors.muted, fontSize: 13),
                         filled: true,
                         fillColor: colors.surfaceSoft,
@@ -735,6 +741,14 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                         ),
                       ),
                     ),
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          error!,
+                          style: VnlfTypography.meta(colors.red),
+                        ),
+                      ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -761,30 +775,68 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               ),
                             ),
                           ),
-                          onPressed: () async {
-                            final detail = contentController.text.trim();
-                            if (detail.length < 5) return;
-                            try {
-                              final client = ref.read(apiClientProvider);
-                              await client.request<Map<String, dynamic>>(
-                                'POST',
-                                '/api/v1/feedback',
-                                body: jsonEncode({
-                                  'clientSubmissionId': DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  'detail': detail,
-                                  'pagePath': '/',
-                                  if (session == null &&
-                                      contactController.text.trim().isNotEmpty)
-                                    'contactEmail': contactController.text
-                                        .trim(),
-                                  'assetIds': const <String>[],
-                                }),
-                              );
-                            } catch (_) {}
-                            setDialogState(() => submitted = true);
-                          },
+                          onPressed: submitting
+                              ? null
+                              : () async {
+                                  final detail = contentController.text.trim();
+                                  final contact = contactController.text.trim();
+                                  if (detail.length < 20 ||
+                                      detail.length > 4000) {
+                                    setDialogState(
+                                      () => error = english
+                                          ? 'Enter 20–4000 characters.'
+                                          : 'Vui lòng nhập 20–4000 ký tự.',
+                                    );
+                                    return;
+                                  }
+                                  final signature =
+                                      '$tabIndex\u0000$detail\u0000$contact';
+                                  if (draftSignature != signature) {
+                                    draftSignature = signature;
+                                    submissionId = newRequestIdentity();
+                                  }
+                                  setDialogState(() {
+                                    submitting = true;
+                                    error = null;
+                                  });
+                                  try {
+                                    final client = ref.read(apiClientProvider);
+                                    await client.request<Map<String, dynamic>>(
+                                      'POST',
+                                      '/api/v1/feedback',
+                                      body: jsonEncode({
+                                        'clientSubmissionId': submissionId,
+                                        'kind': tabIndex == 0
+                                            ? 'FEEDBACK'
+                                            : 'BUG',
+                                        'detail': detail,
+                                        'pagePath':
+                                            GoRouter.maybeOf(context)
+                                                ?.routeInformationProvider
+                                                .value
+                                                .uri
+                                                .path ??
+                                            '/',
+                                        if (session == null &&
+                                            contact.isNotEmpty)
+                                          'contactEmail': contact,
+                                        'assetIds': const <String>[],
+                                      }),
+                                    );
+                                    if (ctx.mounted)
+                                      setDialogState(() => submitted = true);
+                                  } catch (_) {
+                                    if (ctx.mounted)
+                                      setDialogState(
+                                        () => error = english
+                                            ? 'Could not send feedback. Your draft is kept; try again.'
+                                            : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.',
+                                      );
+                                  } finally {
+                                    if (ctx.mounted)
+                                      setDialogState(() => submitting = false);
+                                  }
+                                },
                           icon: const Icon(Icons.send_rounded, size: 16),
                           label: Text(
                             english ? 'Send Feedback' : 'Gửi cho VNLF',
@@ -801,7 +853,10 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
         );
       },
     ),
-  );
+  ).then((_) {
+    contentController.dispose();
+    contactController.dispose();
+  });
 }
 
 void _showNotificationsModal(BuildContext context, WidgetRef ref) {
