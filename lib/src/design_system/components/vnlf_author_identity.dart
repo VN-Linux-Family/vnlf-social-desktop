@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
-import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 
 /// Renders an author's stylized display name (`nameColor`, `nameGradient`,
@@ -123,14 +122,20 @@ class VnlfAuthorNameRow extends StatelessWidget {
             ],
           ],
         ),
-        if (style.iconUrl != null && style.iconUrl!.isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+        if (author.loadNetworkAvatar &&
+            style.iconUrl != null &&
+            style.iconUrl!.isNotEmpty)
+          Tooltip(
+            message: style.iconName ?? '',
             child: Image.network(
               style.iconUrl!,
               width: 16,
               height: 16,
               fit: BoxFit.contain,
+              filterQuality: style.hasPixelBadge
+                  ? FilterQuality.none
+                  : FilterQuality.medium,
+              semanticLabel: style.iconName,
               errorBuilder: (context, error, stackTrace) =>
                   const SizedBox.shrink(),
             ),
@@ -143,7 +148,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
           ),
         if (style.hasTerminalBadge)
           _TerminalMiniBadge(semanticLabel: terminalBadgeSemanticLabel),
-        if (style.hasPixelBadge)
+        if (style.hasPixelBadge && (style.iconUrl?.isEmpty ?? true))
           _PixelHelmBadge(semanticLabel: pixelBadgeSemanticLabel),
         if (style.hasPartnerStar)
           _GoldStarMiniBadge(semanticLabel: partnerStarSemanticLabel),
@@ -172,7 +177,7 @@ class VnlfInlineDistroIcon extends StatelessWidget {
   const VnlfInlineDistroIcon({
     super.key,
     required this.badge,
-    this.size = 15.0,
+    this.size = 16.0,
     this.tooltip,
     this.semanticLabel,
   });
@@ -249,7 +254,7 @@ class VnlfDistroBadgePill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: colors.surfaceSoft,
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: colors.line),
       ),
       child: Row(
