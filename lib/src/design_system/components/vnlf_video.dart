@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
@@ -7,6 +8,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../core/external_uri.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
+import 'vnlf_windows_video.dart';
 
 /// Video resources are allocated only after an explicit play action.
 class VnlfVideo extends StatefulWidget {
@@ -81,6 +83,7 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
         ),
       );
     }
+    if (Platform.isWindows) return VnlfWindowsVideo(media: widget.media);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: AspectRatio(

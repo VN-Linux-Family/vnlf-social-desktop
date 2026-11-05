@@ -22,8 +22,9 @@ The Linux/WSL guard holds a shared lock across worktrees, restricts the process
 and its children to two CPUs, and lowers CPU/I/O priority. A second job fails
 with exit 75 instead of running concurrently. Gradle is limited to a 1536 MB
 heap, two workers, and no persistent daemon. Do not launch autonomous agents
-that independently run full builds or tests. Gemini 4 Argon currently performs
-read-only source review; Codex owns the single build/test slot.
+that independently run full builds or tests. Gemini 4 Argon completed its
+read-only source reviews and its terminals are closed. Codex owns the single
+build/test slot.
 
 ## CI matrix
 
@@ -41,12 +42,12 @@ successful hosted validation.
 
 Both macOS runners select their installed Xcode 26.3: the first hosted attempt
 failed with Xcode 16.4 because connectivity_plus uses an SDK 26 NWPath property.
-Windows media libraries have a pinned packaging override from the small upstream
-media-kit PR #1381 (`3469f4a1e24262db76a8b4cca07116074e3f6eef`): published
-1.0.11 libraries only bundle x64. Only that Windows package is overridden; no
-unrelated media package is taken from the fork. The reviewed CMake change selects
-ARM64 libmpv and ANGLE archives. This is an unmerged dependency patch, and native
-ARM64 build and device playback still need validation before stable distribution.
+Windows uses the published `video_player_win` 3.3.1 standalone backend through
+Windows Media Foundation. Its native plugin compiles for the selected runner
+architecture without downloading a libmpv/ANGLE runtime archive. Linux, Android
+and Apple builds retain their published media_kit platform libraries. Native
+Windows compilation and real-device playback remain required checks; see
+[ADR-0001](decisions/0001-native-windows-video.md).
 
 Every Windows EXE/DLL, Linux ELF, and Android APK native library is checked for
 its actual machine architecture before packaging. Desktop SDK ABI and macOS
@@ -55,7 +56,9 @@ x64 binary cannot silently be labelled arm64. Ubuntu is pinned because the prior
 `ubuntu-latest` job migrated to Ubuntu 26 and rejected deprecated literal-operator
 syntax in an older dependency's JSON header. Do not disable all compiler warnings
 to mask that failure. Desktop matrix concurrency is capped at two hosted runners. Package-manager calls
-have bounded timeouts. Build runs finish before newer runs replace them so already
+have bounded timeouts. The Linux jobs use Ubuntu's primary HTTPS archive after
+two Azure mirror download stalls; package signatures remain required. Build runs
+finish before newer runs replace them so already
 produced binaries can reach the private release inventory; redundant branch/PR
 quality checks share a cancellation group.
 
