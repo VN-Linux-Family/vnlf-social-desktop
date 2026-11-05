@@ -2,6 +2,9 @@ import 'models.dart';
 
 abstract interface class AuthRepository {
   Future<Session?> currentSession();
+  Future<Session> login(String login, String password);
+  Future<Session> register(String email, String username, String password);
+  Future<void> logout();
 }
 
 abstract interface class FeedRepository {
@@ -24,6 +27,7 @@ abstract interface class PostRepository {
 
 abstract interface class DiscoverRepository {
   Future<DiscoverPage> getProjects();
+  Future<DiscoverData> getDiscoverData();
 }
 
 abstract interface class LeaderboardsRepository {

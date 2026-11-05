@@ -32,11 +32,15 @@ class ProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            profile.isSample
-                ? (english
-                      ? 'Linux enthusiast, sharing open source tools and desktop configurations.'
-                      : 'Yêu thích Linux, chia sẻ công cụ mã nguồn mở và cấu hình máy tính. Tiếng Việt: ặ ữ ờ ẫ ệ')
-                : (english ? 'Community member' : 'Thành viên cộng đồng'),
+            profile.bio != null && profile.bio!.isNotEmpty
+                ? profile.bio!
+                : (profile.isSample
+                      ? (english
+                            ? 'Linux enthusiast, sharing open source tools and desktop configurations.'
+                            : 'Yêu thích Linux, chia sẻ công cụ mã nguồn mở và cấu hình máy tính. Tiếng Việt: ặ ữ ờ ẫ ệ')
+                      : (english
+                            ? 'Community member'
+                            : 'Thành viên cộng đồng')),
             style: VnlfTypography.body(colors.ink),
           ),
           if (profile.isSample) ...[
@@ -58,7 +62,9 @@ class ProfileHeader extends StatelessWidget {
               ),
               _Stat(
                 label: english ? 'Followers' : 'Người theo dõi',
-                value: profile.isSample ? '184' : '—',
+                value:
+                    profile.followerCount?.toString() ??
+                    (profile.isSample ? '184' : '—'),
               ),
               _Stat(
                 label: english ? 'Projects' : 'Dự án',

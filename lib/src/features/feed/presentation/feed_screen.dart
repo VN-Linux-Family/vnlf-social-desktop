@@ -25,24 +25,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(
-          title: english ? 'Feed' : 'Bảng tin',
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: english ? 'Search' : 'Tìm kiếm',
-                icon: const Icon(Icons.search),
-                onPressed: () => context.push('/search'),
-              ),
-              IconButton(
-                tooltip: english ? 'Settings' : 'Cài đặt',
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () => context.push('/settings'),
-              ),
-            ],
+        if (MediaQuery.sizeOf(context).width > 840)
+          VnlfCenterPageHeader(
+            title: english ? 'Feed' : 'Bảng tin',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: english ? 'Search' : 'Tìm kiếm',
+                  icon: const Icon(Icons.search),
+                  onPressed: () => context.push('/search'),
+                ),
+                IconButton(
+                  tooltip: english ? 'Settings' : 'Cài đặt',
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => context.push('/settings'),
+                ),
+              ],
+            ),
           ),
-        ),
         VnlfFeedTabBar(
           tabs: english
               ? const ['Latest', 'Featured', 'Article']

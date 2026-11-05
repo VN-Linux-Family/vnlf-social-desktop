@@ -34,7 +34,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profile = ref.watch(profileProvider(widget.username));
     return ListView(
       children: [
-        FeatureHeader(title: english ? 'Profile' : 'Trang cá nhân'),
+        if (context.canPop())
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                tooltip: english ? 'Back' : 'Quay lại',
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => context.pop(),
+              ),
+            ),
+          ),
         const SizedBox(height: 12),
         ...profile.when(
           loading: () => const [Center(child: CircularProgressIndicator())],

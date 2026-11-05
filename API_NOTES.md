@@ -69,11 +69,13 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 
 | Method | Path | Status | Auth Required | Description / Payload |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/auth/session` | [CONFIRMED - observed unauthenticated (public)] | No | Current session status. Unauthenticated response returned only field names: `code`, `message`, `requestId`. Contained NO email, NO user ID, NO token. Authenticated session shape after login is **[UNKNOWN]**. |
-| `POST` | `/api/v1/auth/login` | [INFERRED] | No | Inferred from bundle: `{"login": "<email|username>", "password": "<pwd>"}`. Real auth flow contract **[UNKNOWN]** until user's Phase 3 export. |
-| `POST` | `/api/v1/auth/register` | [INFERRED] | No | Inferred from bundle: `{"email": "<email>", "username": "<user>", "password": "<pwd>"}`. Real response contract **[UNKNOWN]**. |
-| `POST` | `/api/v1/auth/refresh` | [INFERRED] | Cookie | Inferred from bundle. Cookie/token rotation behavior **[UNKNOWN]**. |
-| `POST` | `/api/v1/auth/logout` | [INFERRED] | Cookie | Inferred from bundle. Invalidation mechanics **[UNKNOWN]**. |
+| `GET` | `/api/v1/auth/session` | [CONFIRMED] | No | Current session status. Unauthenticated: `HTTP 401 AUTH_REQUIRED`. Authenticated: returns `{user: {id, username, displayName, email, avatarUrl, role, style}}`. |
+| `POST` | `/api/v1/auth/login` | [CONFIRMED] | No | Verified payload: `{"login": "<email|username>", "password": "<pwd>"}`. Success returns session JSON and emits `set-cookie: vnlf_session=...`. Invalid credentials returns `HTTP 401 INVALID_CREDENTIALS`. |
+| `POST` | `/api/v1/auth/register` | [CONFIRMED] | No | Verified payload: `{"email": "<email>", "username": "<user>", "password": "<pwd>"}`. Success returns session JSON and emits `set-cookie`. Duplicate returns `HTTP 409`. |
+| `POST` | `/api/v1/auth/refresh` | [INFERRED] | Cookie | Cookie/token rotation behavior. |
+| `POST` | `/api/v1/auth/logout` | [CONFIRMED] | Cookie | Clears server-side session and cookie. |
+| `GET` | `/api/v1/discover` | [CONFIRMED] | No | Returns `{articles: [...], users: [...], tags: [...], projects: [...], hasMore: bool}`. Powers the Discover screen with live community content. |
+| `GET` | `/api/v1/users/{username}` | [CONFIRMED] | No | User profile entity: `{id, role, status, username, displayName, bio, website, totalPoints, level, currentStreak, followerCount, followingCount, avatarUrl, style, ...}`. |
 
 > [!NOTE]
 > `/api/v1/auth/session` field audit: The unauthenticated response observed contained solely the keys `code`, `message`, and `requestId`. It contained NO email, NO user id, and NO token. Zero real credentials or user session tokens were received, printed to terminal, written to file, or recorded in logs. Everything regarding the authenticated session state is treated as **[UNKNOWN]** for Phases 1 and 2.

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../design_system/design_system.dart';
+import '../features/auth/presentation/login_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
 import '../features/channels/presentation/channel_directory.dart';
 import '../features/discover/presentation/discover_screen.dart';
@@ -113,66 +114,85 @@ GoRouter createMainRouter() {
                   .firstOrNull ??
               VnlfNavDestination.feed;
           return Consumer(
-            builder: (context, ref, _) => VnlfAdaptiveShell(
-              themeMode: ref.watch(themeModeProvider),
-              onThemeModeChanged: (mode) =>
-                  ref.read(themeModeProvider.notifier).state = mode,
-              activeDestination: active,
-              onDestinationSelected: (destination) =>
-                  context.go(destinations[destination]!),
-              onSearchTap: () => context.push('/search'),
-              centerChildHandlesScroll:
-                  const [
-                    '/',
-                    '/leaderboard',
-                    '/projects',
-                    '/settings',
-                    '/discover',
-                    '/channels',
-                    '/voice',
-                    '/search',
-                  ].contains(state.uri.path) ||
-                  state.uri.path.startsWith('/thread/') ||
-                  state.uri.path.startsWith('/profile/'),
-              rightSidebarChild: state.uri.path.startsWith('/thread/')
-                  ? ThreadSidebar(postId: state.pathParameters['id']!)
-                  : state.uri.path == '/'
-                  ? const LeaderboardPanel(sidebar: true)
-                  : state.uri.path == '/channels'
-                  ? const ActiveCommunityMembers()
-                  : null,
-              destinationLabels: labels,
-              brandTitlePrefix: 'VNLF ',
-              brandTitleAccent: 'Social',
-              brandLogoSemanticLabel: 'VNLF Social',
-              loginLabel: english ? 'Log in' : 'Đăng nhập',
-              loginSubtitleLabel: english
-                  ? 'Access all community features'
-                  : 'Để dùng đầy đủ tính năng',
-              supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
-              feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
-              socialSectionLabel: english
-                  ? 'VNLF on social networks'
-                  : 'VNLF trên các mạng xã hội khác',
-              settingsLabel: english ? 'Settings' : 'Cài đặt',
-              helpLabel: english ? 'Help' : 'Trợ giúp',
-              lightThemeTooltip: english ? 'Light' : 'Sáng',
-              darkThemeTooltip: english ? 'Dark' : 'Tối',
-              systemThemeTooltip: english ? 'System' : 'Tự động',
-              openDrawerTooltip: english
-                  ? 'Open navigation menu'
-                  : 'Mở menu điều hướng',
-              searchSemanticLabel: english ? 'Search' : 'Tìm kiếm',
-              notificationsSemanticLabel: english
-                  ? 'Notifications'
-                  : 'Thông báo',
-              profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
-              leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
-              mobileBottomNavSemanticLabel: english
-                  ? 'Navigation'
-                  : 'Điều hướng',
-              centerChild: child,
-            ),
+            builder: (context, ref, _) {
+              final session =
+                  ref.watch(sessionProvider).valueOrNull ??
+                  ref.watch(sessionStateProvider);
+              return VnlfAdaptiveShell(
+                themeMode: ref.watch(themeModeProvider),
+                onThemeModeChanged: (mode) =>
+                    ref.read(themeModeProvider.notifier).state = mode,
+                activeDestination: active,
+                onDestinationSelected: (destination) =>
+                    context.go(destinations[destination]!),
+                onSearchTap: () => context.push('/search'),
+                onProfileTap: () {
+                  final s =
+                      ref.read(sessionStateProvider) ??
+                      ref.read(sessionProvider).valueOrNull;
+                  if (s != null && s.username.isNotEmpty) {
+                    context.push('/profile/${Uri.encodeComponent(s.username)}');
+                  } else {
+                    context.push('/login');
+                  }
+                },
+                centerChildHandlesScroll:
+                    const [
+                      '/',
+                      '/leaderboard',
+                      '/projects',
+                      '/settings',
+                      '/discover',
+                      '/channels',
+                      '/voice',
+                      '/search',
+                    ].contains(state.uri.path) ||
+                    state.uri.path.startsWith('/thread/') ||
+                    state.uri.path.startsWith('/profile/'),
+                rightSidebarChild: state.uri.path.startsWith('/thread/')
+                    ? ThreadSidebar(postId: state.pathParameters['id']!)
+                    : state.uri.path == '/'
+                    ? const LeaderboardPanel(sidebar: true)
+                    : state.uri.path == '/channels'
+                    ? const ActiveCommunityMembers()
+                    : null,
+                destinationLabels: labels,
+                brandTitlePrefix: 'VNLF ',
+                brandTitleAccent: 'Social',
+                brandLogoSemanticLabel: 'VNLF Social',
+                loginLabel: session != null
+                    ? session.displayName
+                    : (english ? 'Log in' : 'Đăng nhập'),
+                loginSubtitleLabel: session != null
+                    ? '@${session.username}'
+                    : (english
+                          ? 'Access all community features'
+                          : 'Để dùng đầy đủ tính năng'),
+                supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
+                feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
+                socialSectionLabel: english
+                    ? 'VNLF on social networks'
+                    : 'VNLF trên các mạng xã hội khác',
+                settingsLabel: english ? 'Settings' : 'Cài đặt',
+                helpLabel: english ? 'Help' : 'Trợ giúp',
+                lightThemeTooltip: english ? 'Light' : 'Sáng',
+                darkThemeTooltip: english ? 'Dark' : 'Tối',
+                systemThemeTooltip: english ? 'System' : 'Tự động',
+                openDrawerTooltip: english
+                    ? 'Open navigation menu'
+                    : 'Mở menu điều hướng',
+                searchSemanticLabel: english ? 'Search' : 'Tìm kiếm',
+                notificationsSemanticLabel: english
+                    ? 'Notifications'
+                    : 'Thông báo',
+                profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
+                leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
+                mobileBottomNavSemanticLabel: english
+                    ? 'Navigation'
+                    : 'Điều hướng',
+                centerChild: child,
+              );
+            },
           );
         },
         routes: [
@@ -210,6 +230,10 @@ GoRouter createMainRouter() {
           GoRoute(
             path: '/channels',
             builder: (context, state) => const ChannelsScreen(),
+          ),
+          GoRoute(
+            path: '/login',
+            builder: (context, state) => const LoginScreen(),
           ),
           GoRoute(
             path: '/voice',

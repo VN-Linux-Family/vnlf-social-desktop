@@ -7,7 +7,7 @@ class FeatureHeader extends StatelessWidget {
   const FeatureHeader({
     super.key,
     required this.title,
-    this.showSettings = true,
+    this.showSettings = false,
   });
 
   final String title;
@@ -16,20 +16,26 @@ class FeatureHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
-    return VnlfCenterPageHeader(
-      title: title,
-      leading: IconButton(
-        tooltip: english ? 'Back' : 'Quay lại',
-        icon: const Icon(Icons.arrow_back_rounded),
-        onPressed: () => context.canPop() ? context.pop() : context.go('/'),
-      ),
-      trailing: showSettings
-          ? IconButton(
+    final colors = VnlfColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: english ? 'Back' : 'Quay lại',
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.canPop() ? context.pop() : context.go('/'),
+          ),
+          const SizedBox(width: 4),
+          Expanded(child: Text(title, style: VnlfTypography.h2(colors.ink))),
+          if (showSettings)
+            IconButton(
               tooltip: english ? 'Settings' : 'Cài đặt',
               icon: const Icon(Icons.settings_outlined),
               onPressed: () => context.push('/settings'),
-            )
-          : null,
+            ),
+        ],
+      ),
     );
   }
 }

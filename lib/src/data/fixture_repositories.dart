@@ -4,6 +4,7 @@ import '../core/api_client.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
 import 'feed_dto.dart';
+import 'field_reader.dart';
 import 'leaderboard_dto.dart';
 import 'projects_dto.dart';
 
@@ -20,6 +21,52 @@ Future<ApiResponse> fixtureTransport(ApiRequest request) async {
 }
 
 Map<String, dynamic>? _fixture(ApiRequest request) {
+  if (request.path == '/api/v1/discover') {
+    return {
+      'articles': [
+        {
+          'id': 'post-synth-1',
+          'authorId': 'user-synth-1',
+          'slug': 'trai-nghiem-arch-linux-va-wayland',
+          'title': 'Trải nghiệm Arch Linux và Wayland',
+          'excerpt': 'Chia sẻ kinh nghiệm cấu hình Arch Linux với Hyprland và Wayland mượt mà trên laptop. Tiếng Việt: ặ ữ ờ ẫ ệ',
+          'publishedAt': '2026-11-03T14:30:00.000Z',
+          'username': 'hoangnam',
+          'displayName': 'Hoàng Nam',
+          'avatarUrl':
+              'https://vietnamlinuxfamily.net/assets/avatars/user1.png',
+          'voteScore': 42,
+          'commentCount': 8,
+          'style': null,
+        },
+      ],
+      'users': [
+        {
+          'id': 'user-synth-1',
+          'username': 'hoangnam',
+          'displayName': 'Hoàng Nam',
+          'bio': 'Yêu thích Linux, chia sẻ công cụ mã nguồn mở.',
+          'role': 'MEMBER',
+          'followerCount': 15,
+          'avatarUrl':
+              'https://vietnamlinuxfamily.net/assets/avatars/user1.png',
+          'style': null,
+        },
+      ],
+      'tags': [
+        {'id': 't1', 'slug': 'arch-linux', 'name': 'Arch Linux'},
+        {'id': 't2', 'slug': 'wayland', 'name': 'Wayland'},
+        {'id': 't3', 'slug': 'cachyos', 'name': 'CachyOS'},
+        {'id': 't4', 'slug': 'debian', 'name': 'Debian'},
+        {'id': 't5', 'slug': 'ubuntu', 'name': 'Ubuntu'},
+        {'id': 't6', 'slug': 'hyprland', 'name': 'Hyprland'},
+      ],
+      'projects': [
+        {'id': 'proj-synth-1', 'name': 'vnlf-cli'},
+      ],
+      'hasMore': false,
+    };
+  }
   if (request.path == '/api/v1/projects') {
     return {
       'items': [
@@ -276,6 +323,32 @@ final class FixtureAuthRepository implements AuthRepository {
   const FixtureAuthRepository();
   @override
   Future<Session?> currentSession() async => null;
+
+  @override
+  Future<Session> login(String login, String password) async {
+    return Session(
+      userId: 'user-synth-1',
+      displayName: login.isNotEmpty ? login : 'Hoàng Nam',
+      username: login.isNotEmpty ? login : 'hoangnam',
+    );
+  }
+
+  @override
+  Future<Session> register(
+    String email,
+    String username,
+    String password,
+  ) async {
+    return Session(
+      userId: 'user-synth-1',
+      displayName: username,
+      username: username,
+      email: email,
+    );
+  }
+
+  @override
+  Future<void> logout() async {}
 }
 
 /// Community server payloads have not been captured.
@@ -312,6 +385,94 @@ final class FixtureDiscoverRepository implements DiscoverRepository {
             .map((item) => ProjectSummary(id: item.id, name: item.name))
             .toList(),
         nextCursor: page.nextCursor,
+      );
+    },
+  );
+
+  @override
+  Future<DiscoverData> getDiscoverData() => _client.get(
+    '/api/v1/discover',
+    decode: (json) {
+      final rawArticles = json['articles'] as List<dynamic>? ?? const [];
+      final rawUsers = json['users'] as List<dynamic>? ?? const [];
+      final rawTags = json['tags'] as List<dynamic>? ?? const [];
+      final rawProjects = json['projects'] as List<dynamic>? ?? const [];
+
+      final articles = rawArticles.whereType<Map<String, dynamic>>().map((
+        item,
+      ) {
+        final authorMap = item['author'] is Map<String, dynamic>
+            ? item['author'] as Map<String, dynamic>
+            : null;
+        return FeedPost(
+          id: item['id'] as String? ?? '',
+          excerpt: item['excerpt'] as String? ?? item['title'] as String? ?? '',
+          title: item['title'] as String?,
+          voteScore: item['voteScore'] as int? ?? 0,
+          commentCount: item['commentCount'] as int? ?? 0,
+          author: Author(
+            id:
+                authorMap?['id'] as String? ??
+                item['authorId'] as String? ??
+                '',
+            username:
+                authorMap?['username'] as String? ??
+                item['username'] as String? ??
+                '',
+            displayName:
+                authorMap?['displayName'] as String? ??
+                item['displayName'] as String? ??
+                item['username'] as String? ??
+                '',
+            avatarUrl:
+                authorMap?['avatarUrl'] as String? ??
+                item['avatarUrl'] as String? ??
+                '',
+            style: styleValue(
+              authorMap?['style'] ?? item['style'],
+              'article.style',
+            ),
+          ),
+        );
+      }).toList();
+
+      final users = rawUsers.whereType<Map<String, dynamic>>().map((item) {
+        return Author(
+          id: item['id'] as String? ?? '',
+          username: item['username'] as String? ?? '',
+          displayName:
+              item['displayName'] as String? ??
+              item['username'] as String? ??
+              '',
+          avatarUrl: item['avatarUrl'] as String? ?? '',
+          role: item['role'] as String? ?? '',
+          style: styleValue(item['style'], 'user.style'),
+        );
+      }).toList();
+
+      final tags = rawTags.whereType<Map<String, dynamic>>().map((item) {
+        return DiscoverTag(
+          id: item['id'] as String? ?? '',
+          slug: item['slug'] as String? ?? '',
+          name: item['name'] as String? ?? item['slug'] as String? ?? '',
+        );
+      }).toList();
+
+      final projects = rawProjects.whereType<Map<String, dynamic>>().map((
+        item,
+      ) {
+        return ProjectSummary(
+          id: item['id'] as String? ?? '',
+          name: item['name'] as String? ?? '',
+        );
+      }).toList();
+
+      return DiscoverData(
+        articles: articles,
+        users: users,
+        tags: tags,
+        projects: projects,
+        hasMore: json['hasMore'] as bool? ?? false,
       );
     },
   );

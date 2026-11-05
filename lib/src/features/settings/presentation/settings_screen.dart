@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../domain/models.dart';
+import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 
@@ -19,6 +22,9 @@ class SettingsScreen extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final language =
         locale?.languageCode ?? Localizations.localeOf(context).languageCode;
+    final session =
+        ref.watch(sessionProvider).valueOrNull ??
+        ref.watch(sessionStateProvider);
     return ListView(
       children: [
         FeatureHeader(
@@ -26,6 +32,98 @@ class SettingsScreen extends ConsumerWidget {
           showSettings: false,
         ),
         const SizedBox(height: 12),
+        FeatureSurface(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                english ? 'Account' : 'Tài khoản',
+                style: VnlfTypography.h2(colors.ink),
+              ),
+              const SizedBox(height: 12),
+              if (session != null) ...[
+                Row(
+                  children: [
+                    VnlfAvatar(
+                      author: presentAuthor(
+                        Author(
+                          id: session.userId,
+                          username: session.username,
+                          displayName: session.displayName,
+                          avatarUrl: session.avatarUrl,
+                          style: session.style,
+                        ),
+                      ),
+                      size: 48,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            session.displayName,
+                            style: VnlfTypography.control(
+                              colors.ink,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '@${session.username}',
+                            style: VnlfTypography.meta(colors.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .logout();
+                      },
+                      child: Text(english ? 'Log out' : 'Đăng xuất'),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    const VnlfGuestAvatarBox(size: 44),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            english ? 'Guest' : 'Khách',
+                            style: VnlfTypography.control(
+                              colors.ink,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            english
+                                ? 'Not logged in'
+                                : 'Chưa đăng nhập tài khoản',
+                            style: VnlfTypography.meta(colors.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.brand,
+                      ),
+                      onPressed: () => context.push('/login'),
+                      child: Text(english ? 'Log in' : 'Đăng nhập'),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         FeatureSurface(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

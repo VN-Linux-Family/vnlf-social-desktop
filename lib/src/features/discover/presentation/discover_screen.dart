@@ -14,15 +14,30 @@ final discoverProjectsProvider = FutureProvider.autoDispose<DiscoverPage>(
   (ref) => ref.watch(discoverRepositoryProvider).getProjects(),
 );
 
+final discoverDataProvider = FutureProvider.autoDispose<DiscoverData>((
+  ref,
+) async {
+  final data = await ref.watch(discoverRepositoryProvider).getDiscoverData();
+  final articles = [
+    ...data.articles,
+    if (offlineFeatures &&
+        !data.articles.any((post) => post.id == samplePost.id))
+      samplePost,
+  ];
+  return DiscoverData(
+    articles: articles,
+    users: data.users,
+    tags: data.tags,
+    projects: data.projects,
+    hasMore: data.hasMore,
+  );
+});
+
 final discoverArticlesProvider = FutureProvider.autoDispose<List<FeedPost>>((
   ref,
 ) async {
-  final page = await ref.watch(feedRepositoryProvider).getFeed(type: 'article');
-  return [
-    ...page.items,
-    if (offlineFeatures && !page.items.any((post) => post.id == samplePost.id))
-      samplePost,
-  ];
+  final data = await ref.watch(discoverDataProvider.future);
+  return data.articles;
 });
 
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -36,7 +51,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   String _query = '';
   String? _tag;
 
-  static const _tags = [
+  static const _defaultTags = [
     'Arch Linux',
     'Wayland',
     'CachyOS',
@@ -49,13 +64,20 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
+    final discoverData = ref.watch(discoverDataProvider);
     final articles = ref.watch(discoverArticlesProvider);
     final projects = ref.watch(discoverProjectsProvider);
     final contributors = ref.watch(leaderboardProvider);
+
+    final tags = discoverData.maybeWhen(
+      data: (data) => data.tags.isNotEmpty
+          ? data.tags.map((t) => t.name).toList()
+          : _defaultTags,
+      orElse: () => _defaultTags,
+    );
+
     return ListView(
       children: [
-        FeatureHeader(title: english ? 'Discover' : 'Khám phá'),
-        const SizedBox(height: 12),
         FeatureSurface(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -78,7 +100,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (final tag in _tags)
+                  for (final tag in tags)
                     FilterChip(
                       selectedColor: colors.brandSoft,
                       checkmarkColor: colors.brand,
@@ -106,7 +128,10 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ],
           error: (error, stack) => [
             FeatureLoadError(
-              onRetry: () => ref.invalidate(discoverArticlesProvider),
+              onRetry: () {
+                ref.invalidate(discoverDataProvider);
+                ref.invalidate(discoverArticlesProvider);
+              },
             ),
           ],
           data: (items) => [

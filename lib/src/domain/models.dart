@@ -27,9 +27,22 @@ final class StorageFailure extends AppFailure {
 }
 
 final class Session {
-  const Session({required this.userId, required this.displayName});
+  const Session({
+    required this.userId,
+    required this.displayName,
+    this.username = '',
+    this.email = '',
+    this.avatarUrl = '',
+    this.role = '',
+    this.style,
+  });
   final String userId;
   final String displayName;
+  final String username;
+  final String email;
+  final String avatarUrl;
+  final String role;
+  final AuthorStyle? style;
 }
 
 final class AuthorStyle {
@@ -225,6 +238,32 @@ final class DiscoverPage {
     : items = List.unmodifiable(items);
   final List<ProjectSummary> items;
   final String? nextCursor;
+}
+
+final class DiscoverTag {
+  const DiscoverTag({required this.id, required this.slug, required this.name});
+  final String id;
+  final String slug;
+  final String name;
+}
+
+final class DiscoverData {
+  DiscoverData({
+    List<FeedPost> articles = const [],
+    List<Author> users = const [],
+    List<DiscoverTag> tags = const [],
+    List<ProjectSummary> projects = const [],
+    this.hasMore = false,
+  }) : articles = List.unmodifiable(articles),
+       users = List.unmodifiable(users),
+       tags = List.unmodifiable(tags),
+       projects = List.unmodifiable(projects);
+
+  final List<FeedPost> articles;
+  final List<Author> users;
+  final List<DiscoverTag> tags;
+  final List<ProjectSummary> projects;
+  final bool hasMore;
 }
 
 final class LeaderboardEntry {
