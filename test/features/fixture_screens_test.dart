@@ -16,7 +16,9 @@ void main() {
     testWidgets('fixture feed renders at width $width', (tester) async {
       final router = await _pumpApp(tester, width: width);
       expect(
-        find.text('Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ'),
+        find.text(
+          'Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ.',
+        ),
         findsOneWidget,
       );
       expect(find.text('Thành viên'), findsOneWidget);
@@ -88,7 +90,12 @@ void main() {
     tester,
   ) async {
     await _pumpApp(tester, width: 1440, useFileFixtures: false);
-    expect(find.text('Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+    expect(
+      find.text(
+        'Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ.',
+      ),
+      findsOneWidget,
+    );
     expect(find.byType(VnlfPostCardSkeleton), findsNothing);
     expect(find.byType(VnlfLeaderboardCardSkeleton), findsNothing);
   });

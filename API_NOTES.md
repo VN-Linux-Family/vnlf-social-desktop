@@ -317,3 +317,39 @@ were made. The web client's profile visit POST is deliberately not reproduced.
   non-90-degree gradients, profile visit counter and full decor fidelity remain
   unverified/unimplemented. Existing tinted nameplate alpha is retained pending
   confirmation of the client's computed plate-color variables.
+
+
+## Article/comment verification (2026-11-05)
+
+- Owner explicitly authorized their named test account and requires deleting all
+  temporary posts/comments/reactions after verification. No credentials or
+  authenticated response values are retained here.
+- Current web chunks `03vhpiw_fgmse.js`, `0i3jl-zoc5vug.js`, and
+  `2k5v3l48k2d3c.js` confirm article detail, draft creation (POST without body),
+  versioned PATCH, publish POST with idempotency-key, DELETE, comment creation,
+  comment PATCH/DELETE, article/comment vote PUT, and bookmark POST.
+- Root comment payload MUST omit parentId. Live isolated test: null parent
+  returns 422 INPUT_INVALID; omitted parent returns 200 and a complete comment
+  record. A fresh comments GET confirms persistence. Reply parentId is a string.
+- Comment response is a flat `{items}` list with parentId, content, author,
+  createdAt, voteScore/viewerVote, canEdit/canDelete, attachments, gif, mentions,
+  and pin/edit metadata. Parent links define the native tree.
+- Detail uses the same article projection as feed, including structured
+  contentJson, attachments, assets, viewer interactions, and timestamps.
+- TipTap document nodes observed/supported by current web renderer: paragraph,
+  heading (h2/h3), blockquote, bulletList, orderedList, listItem, codeBlock,
+  horizontalRule, image, text, hardBreak. Marks: bold, italic, strike, code, link.
+  Article image nodes resolve attrs.assetId against assets[].id/url; POST rich
+  text filters inline images and renders attachments in a separate gallery.
+- Media attachments have id, mime, size, width, height, url, alt; videos can add
+  posterUrl and durationMs. Do not treat video URLs as image URLs.
+- Current menu uses social image paths /social/facebook.webp,
+  /social/telegram.webp, /social/discord.webp; Discord invite unchanged.
+
+- Native JSON request bodies must be UTF-8 bytes with the byte content length.
+  `HttpClientRequest.write` with the default encoding throws on Vietnamese before
+  any HTTP request is sent. Root and reply writes verified with the corrected
+  actual native transport and typed repository, followed by a fresh GET.
+- Vote PUT response: voteScore, viewerVote, likeCount, viewerLiked. Bookmark POST
+  returns `{ok: true}`; refreshed article projection supplies viewerBookmarked.
+  Successful writes invalidate cached GET responses; mutation requests never retry.

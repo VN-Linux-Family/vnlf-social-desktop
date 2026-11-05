@@ -191,12 +191,14 @@ class SocialCircleBadge extends StatelessWidget {
     super.key,
     this.label,
     this.icon,
+    this.assetPath,
     this.semanticLabel,
     this.onTap,
   });
 
   final String? label;
   final IconData? icon;
+  final String? assetPath;
   final String? semanticLabel;
   final VoidCallback? onTap;
 
@@ -212,7 +214,16 @@ class SocialCircleBadge extends StatelessWidget {
         color: colors.socialIconBg,
         shape: BoxShape.circle,
       ),
-      child: label != null
+      child: assetPath != null
+          ? ClipOval(
+              child: Image.asset(
+                assetPath!,
+                width: 24,
+                height: 24,
+                fit: BoxFit.cover,
+              ),
+            )
+          : label != null
           ? Text(
               label!,
               style: TextStyle(

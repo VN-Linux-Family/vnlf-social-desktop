@@ -160,7 +160,10 @@ final class ApiClient {
           );
           continue;
         }
-        final value = _decode(response.body);
+        if (!isGet) clearCache();
+        final value = (response.statusCode == 204 || response.statusCode == 205)
+            ? <String, dynamic>{}
+            : _decode(response.body);
         final result = decode != null ? decode(value) : value as T;
         if (isGet &&
             cacheDuration > Duration.zero &&

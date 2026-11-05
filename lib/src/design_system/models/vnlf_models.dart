@@ -133,6 +133,35 @@ final class ImagePlaceholderAttachment extends PostAttachment {
   final String? semanticLabel;
 }
 
+@immutable
+final class MediaGalleryAttachment extends PostAttachment {
+  const MediaGalleryAttachment(this.items);
+  final List<PostMediaData> items;
+}
+
+@immutable
+final class PostMediaData {
+  const PostMediaData({
+    required this.url,
+    this.mime = '',
+    this.alt = '',
+    this.width,
+    this.height,
+    this.posterUrl,
+  });
+  final String url;
+  final String mime;
+  final String alt;
+  final int? width;
+  final int? height;
+  final String? posterUrl;
+  bool get isVideo => mime.startsWith('video/');
+  double get aspectRatio =>
+      width != null && width! > 0 && height != null && height! > 0
+      ? (width! / height!).clamp(.5, 2.4)
+      : 16 / 9;
+}
+
 /// Renders a dark forest-green terminal code snippet with a copy action pill.
 @immutable
 final class CodeBlockAttachment extends PostAttachment {
@@ -179,8 +208,14 @@ class PostData {
     this.commentCount = 0,
     this.isBookmarked = false,
     this.isArticle = false,
+    this.richContent,
+    this.showInlineImages = false,
+    this.selectableContent = false,
   });
 
+  final Map<String, dynamic>? richContent;
+  final bool showInlineImages;
+  final bool selectableContent;
   final String id;
   final AuthorData author;
   final String relativeTime;
@@ -212,6 +247,9 @@ class PostData {
       commentCount: commentCount,
       isBookmarked: isBookmarked ?? this.isBookmarked,
       isArticle: isArticle,
+      richContent: richContent,
+      showInlineImages: showInlineImages,
+      selectableContent: selectableContent,
     );
   }
 }

@@ -335,7 +335,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           SocialCircleBadge(
-                            icon: Icons.sports_esports_rounded,
+                            assetPath: 'assets/images/social-discord.webp',
                             semanticLabel: discordSemanticLabel,
                             onTap: onDiscordTap,
                           ),

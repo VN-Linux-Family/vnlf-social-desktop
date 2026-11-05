@@ -81,7 +81,11 @@ final class IoApiTransport {
     }
     final uri = baseUri
         .resolveUri(path)
-        .replace(queryParameters: request.query.isEmpty ? null : request.query);
+        .replace(
+          queryParameters: {...path.queryParameters, ...request.query}.isEmpty
+              ? null
+              : {...path.queryParameters, ...request.query},
+        );
     final outgoing = await _client
         .openUrl(request.method, uri)
         .timeout(timeout);
@@ -98,7 +102,9 @@ final class IoApiTransport {
       if (!request.headers.containsKey('Content-Type')) {
         outgoing.headers.set('Content-Type', 'application/json');
       }
-      outgoing.write(request.body);
+      final bytes = utf8.encode(request.body!);
+      outgoing.contentLength = bytes.length;
+      outgoing.add(bytes);
     }
     final response = await outgoing.close().timeout(timeout);
 

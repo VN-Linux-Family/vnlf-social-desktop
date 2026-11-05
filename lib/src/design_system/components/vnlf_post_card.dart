@@ -8,6 +8,8 @@ import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
 import 'vnlf_code_block.dart';
 import 'vnlf_media_preview.dart';
+import 'vnlf_rich_content.dart';
+import 'vnlf_media_gallery.dart';
 import 'vnlf_skeleton.dart';
 import 'vnlf_state_cards.dart';
 import 'vnlf_vote_capsule.dart';
@@ -499,18 +501,27 @@ class VnlfPostCard extends StatelessWidget {
                   Text(loadedPost.title!, style: VnlfTypography.h2(colors.ink)),
                 ],
                 const SizedBox(height: 6),
-                // Paragraphs
-                for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 8),
-                  Text(
-                    loadedPost.paragraphs[i],
-                    style: VnlfTypography.body(colors.ink),
-                  ),
-                ],
+                if (loadedPost.richContent != null)
+                  VnlfRichContent(
+                    document: loadedPost.richContent!,
+                    showImages: loadedPost.showInlineImages,
+                    selectable: loadedPost.selectableContent,
+                  )
+                else
+                  for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    Text(
+                      loadedPost.paragraphs[i],
+                      style: VnlfTypography.body(colors.ink),
+                    ),
+                  ],
                 // Optional Attachment
                 if (loadedPost.attachment != null) ...[
                   const SizedBox(height: 12),
                   switch (loadedPost.attachment!) {
+                    final MediaGalleryAttachment gallery => VnlfMediaGallery(
+                      items: gallery.items,
+                    ),
                     final ImagePlaceholderAttachment imagePlaceholder =>
                       VnlfImagePlaceholder(
                         imageUrl: imagePlaceholder.imageUrl,

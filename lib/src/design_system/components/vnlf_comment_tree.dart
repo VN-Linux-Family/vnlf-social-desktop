@@ -20,8 +20,10 @@ class VnlfCommentTree extends StatelessWidget {
     this.voteSemanticLabel,
     this.upvoteSemanticLabel,
     this.downvoteSemanticLabel,
+    this.onReply,
   });
 
+  final void Function(String id)? onReply;
   final CommentNodeData comment;
   final int depth;
   final String replyLabel;
@@ -100,23 +102,28 @@ class VnlfCommentTree extends StatelessWidget {
                         Semantics(
                           button: true,
                           label: replySemanticLabel ?? replyLabel,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.reply_rounded,
-                                size: 14,
-                                color: colors.muted,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                replyLabel,
-                                style: VnlfTypography.meta(
-                                  colors.muted,
-                                  fontWeight: FontWeight.w500,
+                          child: InkWell(
+                            onTap: onReply == null
+                                ? null
+                                : () => onReply!(comment.id),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.reply_rounded,
+                                  size: 14,
+                                  color: colors.muted,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  replyLabel,
+                                  style: VnlfTypography.meta(
+                                    colors.muted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -129,14 +136,14 @@ class VnlfCommentTree extends StatelessWidget {
         ),
         if (comment.replies.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(left: 16, top: 12),
+            padding: EdgeInsets.only(left: depth < 3 ? 16 : 0, top: 12),
             child: Container(
               decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(color: colors.line, width: 1.5),
                 ),
               ),
-              padding: const EdgeInsets.only(left: 14),
+              padding: EdgeInsets.only(left: depth < 3 ? 14 : 4),
               child: Column(
                 children: [
                   for (var i = 0; i < comment.replies.length; i++) ...[
@@ -144,6 +151,7 @@ class VnlfCommentTree extends StatelessWidget {
                     VnlfCommentTree(
                       comment: comment.replies[i],
                       depth: depth + 1,
+                      onReply: onReply,
                       replyLabel: replyLabel,
                       replySemanticLabel: replySemanticLabel,
                       voteSemanticLabel: voteSemanticLabel,

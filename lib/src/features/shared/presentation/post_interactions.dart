@@ -30,7 +30,10 @@ class PostInteraction {
 
 class PostInteractions extends Notifier<Map<String, PostInteraction>> {
   @override
-  Map<String, PostInteraction> build() => const {};
+  Map<String, PostInteraction> build() {
+    ref.watch(sessionStateProvider.select((session) => session?.userId));
+    return const {};
+  }
 
   Future<void> vote(String postId, VoteState value) async {
     final previous = state[postId];

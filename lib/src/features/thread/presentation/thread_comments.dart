@@ -1,98 +1,33 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../domain/models.dart';
+import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../domain/article_comment.dart';
+import 'comments_providers.dart';
 
-final articleCommentsProvider = FutureProvider.autoDispose
-    .family<List<CommentNodeData>, String>((ref, articleId) async {
-      if (articleId.isEmpty) {
-        return offlineFeatures ? sampleComments : <CommentNodeData>[];
-      }
-      final client = ref.watch(apiClientProvider);
-      try {
-        final response = await client.get<Map<String, dynamic>>(
-          '/api/v1/articles/$articleId/comments',
-          decode: (json) => json,
-        );
-        final rawItems = response['items'] as List<dynamic>? ?? [];
-        final comments = <CommentNodeData>[];
-        for (final raw in rawItems) {
-          if (raw is! Map<String, dynamic>) continue;
-          final authorMap = raw['author'] is Map<String, dynamic>
-              ? raw['author'] as Map<String, dynamic>
-              : null;
-          final author = AuthorData(
-            id: authorMap?['id'] as String? ?? raw['authorId'] as String? ?? '',
-            username: authorMap?['username'] as String? ?? '',
-            displayName:
-                authorMap?['displayName'] as String? ??
-                authorMap?['username'] as String? ??
-                '',
-            avatarUrl: authorMap?['avatarUrl'] as String? ?? '',
-            style: AuthorStyleData(
-              distroBadge:
-                  DistroBadgeType.values
-                      .where(
-                        (b) =>
-                            b.name ==
-                            (authorMap?['style']?['distroBadge'] as String?)
-                                ?.toLowerCase(),
-                      )
-                      .firstOrNull ??
-                  DistroBadgeType.none,
-            ),
-          );
-          final content =
-              raw['content'] as String? ?? raw['contentText'] as String? ?? '';
-          final createdAt = raw['createdAt'] as String?;
-          String timeStr = '';
-          if (createdAt != null) {
-            final dt = DateTime.tryParse(createdAt);
-            if (dt != null) {
-              final age = DateTime.now().difference(dt);
-              if (age.inHours < 1) {
-                timeStr = '${age.inMinutes}m';
-              } else if (age.inDays < 1) {
-                timeStr = '${age.inHours}h';
-              } else {
-                timeStr = '${age.inDays}d';
-              }
-            }
-          }
-          comments.add(
-            CommentNodeData(
-              id: raw['id'] as String? ?? '',
-              author: author,
-              relativeTime: timeStr,
-              body: content,
-            ),
-          );
-        }
-        return comments;
-      } catch (_) {
-        return offlineFeatures ? sampleComments : <CommentNodeData>[];
-      }
-    });
+export 'comments_providers.dart' show articleCommentsProvider;
 
 class ThreadComments extends ConsumerStatefulWidget {
   const ThreadComments({super.key, required this.focusNode, this.postId = ''});
-
   final FocusNode focusNode;
   final String postId;
-
   @override
   ConsumerState<ThreadComments> createState() => _ThreadCommentsState();
 }
 
 class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   final _input = TextEditingController();
-  final _localComments = <CommentNodeData>[];
-  bool _isSubmitting = false;
+  final _confirmed = <String, ArticleComment>{};
+  bool _submitting = false;
+  AppFailure? _failure;
+  ArticleComment? _replyTo;
+  int _revision = 0;
 
   @override
   void dispose() {
@@ -100,40 +35,44 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     super.dispose();
   }
 
-  Future<void> _addComment() async {
-    final body = _input.text.trim();
-    if (body.isEmpty || _isSubmitting) return;
-
-    final newComment = CommentNodeData(
-      id: 'local-${DateTime.now().millisecondsSinceEpoch}',
-      author: localCommentAuthor,
-      relativeTime: 'Vừa xong',
-      body: body,
-    );
-
-    setState(() {
-      _localComments.add(newComment);
-      _input.clear();
-      _isSubmitting = true;
-    });
-
-    if (widget.postId.isNotEmpty) {
-      try {
-        final client = ref.read(apiClientProvider);
-        await client.request<Map<String, dynamic>>(
-          'POST',
-          '/api/v1/articles/${widget.postId}/comments',
-          body: jsonEncode({'content': body, 'parentId': null}),
-          decode: (json) => json,
-        );
-        ref.invalidate(articleCommentsProvider(widget.postId));
-      } catch (_) {
-        // Optimistic comment remains locally displayed
-      }
+  Future<void> _submit() async {
+    final content = _input.text.trim();
+    if (content.isEmpty || _submitting) return;
+    final sessionId = ref.read(sessionStateProvider)?.userId;
+    if (!offlineFeatures && sessionId == null) {
+      context.push('/login');
+      return;
     }
-
-    if (mounted) {
-      setState(() => _isSubmitting = false);
+    final revision = _revision;
+    final parentId = _replyTo?.id;
+    setState(() {
+      _submitting = true;
+      _failure = null;
+    });
+    try {
+      final comment = await ref
+          .read(commentsRepositoryProvider)
+          .create(widget.postId, content, parentId: parentId);
+      if (!mounted || revision != _revision) return;
+      if (!offlineFeatures &&
+          ref.read(sessionStateProvider)?.userId != sessionId) {
+        return;
+      }
+      setState(() {
+        _confirmed[comment.id] = comment;
+        if (_input.text.trim() == content) _input.clear();
+        _replyTo = null;
+      });
+      ref.invalidate(articleCommentsProvider(widget.postId));
+      ref.invalidate(feedNotifierProvider);
+    } on AppFailure catch (error) {
+      if (mounted && revision == _revision) setState(() => _failure = error);
+    } catch (_) {
+      if (mounted && revision == _revision) {
+        setState(() => _failure = const TransportFailure());
+      }
+    } finally {
+      if (mounted && revision == _revision) setState(() => _submitting = false);
     }
   }
 
@@ -141,19 +80,25 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
-    final remoteCommentsAsync = widget.postId.isNotEmpty
-        ? ref.watch(articleCommentsProvider(widget.postId))
-        : null;
-
-    final displayComments = [
-      if (remoteCommentsAsync != null)
-        ...(remoteCommentsAsync.valueOrNull ??
-            (offlineFeatures ? sampleComments : <CommentNodeData>[]))
-      else if (offlineFeatures)
-        ...sampleComments,
-      ..._localComments,
-    ];
-
+    ref.listen(sessionStateProvider, (before, after) {
+      if (before?.userId == after?.userId) return;
+      _revision++;
+      setState(() {
+        _confirmed.clear();
+        _replyTo = null;
+        _failure = null;
+        _submitting = false;
+        _input.clear();
+      });
+    });
+    final remote = ref.watch(articleCommentsProvider(widget.postId));
+    final items = {
+      for (final item in remote.valueOrNull ?? <ArticleComment>[])
+        item.id: item,
+      ..._confirmed,
+    };
+    final comments = presentComments(items.values.toList(), english: english);
+    final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
     return FeatureSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,50 +107,116 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             english ? 'Comments' : 'Bình luận',
             style: VnlfTypography.h2(colors.ink),
           ),
-          const SizedBox(height: 8),
-          Text(
-            english
-                ? 'Community discussion · Comments are active.'
-                : 'Thảo luận cộng đồng · Bình luận đang hoạt động.',
-            style: VnlfTypography.meta(colors.muted),
-          ),
           const SizedBox(height: 12),
-          TextField(
-            key: const ValueKey('comment-input'),
-            controller: _input,
-            focusNode: widget.focusNode,
-            minLines: 2,
-            maxLines: 5,
-            decoration: InputDecoration(
-              labelText: english ? 'Write a comment' : 'Viết bình luận',
-              border: const OutlineInputBorder(),
+          if (!signedIn)
+            TextButton(
+              onPressed: () => context.push('/login'),
+              child: Text(
+                english ? 'Sign in to comment' : 'Đăng nhập để bình luận',
+              ),
             ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton(
-              onPressed: _input.text.trim().isNotEmpty && !_isSubmitting
-                  ? _addComment
-                  : null,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(english ? 'Add comment' : 'Thêm bình luận'),
+          if (signedIn) ...[
+            if (_replyTo != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${english ? 'Reply to' : 'Trả lời'} @${_replyTo!.author.username}',
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: english ? 'Cancel reply' : 'Hủy trả lời',
+                    onPressed: () => setState(() => _replyTo = null),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            TextField(
+              key: const ValueKey('comment-input'),
+              controller: _input,
+              focusNode: widget.focusNode,
+              minLines: 2,
+              maxLines: 5,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: english ? 'Write a comment' : 'Viết bình luận',
+                border: const OutlineInputBorder(),
+              ),
             ),
-          ),
-          if (remoteCommentsAsync != null && remoteCommentsAsync.isLoading)
+            if (_failure != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _failure is HttpFailure &&
+                          [
+                            401,
+                            403,
+                          ].contains((_failure as HttpFailure).statusCode)
+                      ? (english
+                            ? 'Sign in again to send your comment. Your draft is kept.'
+                            : 'Đăng nhập lại để gửi bình luận. Bản nháp vẫn được giữ.')
+                      : (english
+                            ? 'Could not send comment. Your draft is kept; try again.'
+                            : 'Không gửi được bình luận. Bản nháp vẫn được giữ; vui lòng thử lại.'),
+                  style: VnlfTypography.meta(colors.red),
+                ),
+              ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: _input.text.trim().isEmpty || _submitting
+                    ? null
+                    : _submit,
+                child: _submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(english ? 'Add comment' : 'Thêm bình luận'),
+              ),
+            ),
+          ],
+          if (remote.isLoading)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),
             ),
-          for (final comment in displayComments) ...[
+          if (remote.hasError)
+            Column(
+              children: [
+                Text(
+                  english
+                      ? 'Could not load comments'
+                      : 'Không tải được bình luận',
+                  style: VnlfTypography.meta(colors.red),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      ref.invalidate(articleCommentsProvider(widget.postId)),
+                  child: Text(english ? 'Retry' : 'Thử lại'),
+                ),
+              ],
+            ),
+          if (!remote.isLoading && !remote.hasError && comments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                english ? 'No comments yet' : 'Chưa có bình luận',
+                style: VnlfTypography.meta(colors.muted),
+              ),
+            ),
+          for (final comment in comments) ...[
             const SizedBox(height: 16),
-            VnlfCommentTree(comment: comment),
+            VnlfCommentTree(
+              comment: comment,
+              replyLabel: english ? 'Reply' : 'Trả lời',
+              onReply: (id) {
+                setState(() => _replyTo = items[id]);
+                widget.focusNode.requestFocus();
+              },
+            ),
           ],
         ],
       ),

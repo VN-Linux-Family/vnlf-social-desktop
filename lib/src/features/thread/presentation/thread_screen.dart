@@ -80,25 +80,9 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final source = widget.post;
-    final summary = presentPost(source, english: english);
+    final summary = presentPost(source, english: english, fullContent: true);
     final interaction = ref.watch(postInteractionProvider(source.id));
-    final detail = interaction.apply(
-      PostData(
-        id: source.id,
-        author: summary.author,
-        relativeTime: summary.relativeTime,
-        title: source.title,
-        paragraphs:
-            (source.contentText.isEmpty ? source.excerpt : source.contentText)
-                .split('\n\n'),
-        tags: source.tags,
-        voteScore: source.voteScore,
-        viewerVote: summary.viewerVote,
-        isBookmarked: source.viewerBookmarked,
-        commentCount: source.commentCount,
-        attachment: summary.attachment,
-      ),
-    );
+    final detail = interaction.apply(summary);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

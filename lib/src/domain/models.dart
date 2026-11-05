@@ -150,6 +150,8 @@ final class ArticleAttachment {
     this.alt = '',
     this.width,
     this.height,
+    this.posterUrl,
+    this.durationMs,
   });
 
   final String id;
@@ -158,6 +160,8 @@ final class ArticleAttachment {
   final String alt;
   final int? width;
   final int? height;
+  final String? posterUrl;
+  final int? durationMs;
 }
 
 final class LeaderboardItem {

@@ -25,6 +25,8 @@ final class FeedPostDto {
             alt: stringValue(a['alt'], 'alt'),
             width: nullableInt(a['width'], 'width'),
             height: nullableInt(a['height'], 'height'),
+            posterUrl: nullableString(a['posterUrl'], 'posterUrl'),
+            durationMs: nullableInt(a['durationMs'], 'durationMs'),
           ),
         )
         .toList();
@@ -36,7 +38,7 @@ final class FeedPostDto {
       slug: stringValue(_json['slug'], 'slug'),
       contentText: stringValue(_json['contentText'], 'contentText'),
       contentHtml: stringValue(_json['contentHtml'], 'contentHtml'),
-      contentJson: objectValue(_json['contentJson'], 'contentJson'),
+      contentJson: _resolveContent(),
       coverUrl: nullableString(_json['coverUrl'], 'coverUrl'),
       coverAlt: stringValue(_json['coverAlt'], 'coverAlt'),
       format: stringValue(_json['format'], 'format'),
@@ -60,6 +62,37 @@ final class FeedPostDto {
       publishedAt: dateValue(_json['publishedAt'], 'publishedAt'),
       updatedAt: dateValue(_json['updatedAt'], 'updatedAt'),
     );
+  }
+
+  Map<String, dynamic>? _resolveContent() {
+    final doc = objectValue(_json['contentJson'], 'contentJson');
+    if (doc == null) return null;
+    final assets = {
+      for (final asset in objectList(_json['assets'], 'assets'))
+        stringValue(asset['id'], 'asset.id'): nullableString(
+          asset['url'],
+          'asset.url',
+        ),
+    };
+    Map<String, dynamic> resolve(Map<String, dynamic> node) {
+      final attrs = objectValue(node['attrs'], 'content.attrs');
+      return {
+        ...node,
+        if (node['type'] == 'image' && attrs != null)
+          'attrs': {
+            ...attrs,
+            if (attrs['assetId'] is String)
+              'src': assets[attrs['assetId']] ?? '',
+          },
+        if (node['content'] is List)
+          'content': objectList(
+            node['content'],
+            'content.nodes',
+          ).map(resolve).toList(),
+      };
+    }
+
+    return objectValue(resolve(doc), 'contentJson');
   }
 }
 
