@@ -50,7 +50,7 @@ final class LiveAuthRepository implements AuthRepository {
 
   @override
   Future<Session> login(String login, String password) async {
-    _client.clearCache();
+    _client.invalidateSession();
     final session = await _client.request<Session>(
       'POST',
       '/api/v1/auth/login',
@@ -83,7 +83,7 @@ final class LiveAuthRepository implements AuthRepository {
     String username,
     String password,
   ) async {
-    _client.clearCache();
+    _client.invalidateSession();
     final session = await _client.request<Session>(
       'POST',
       '/api/v1/auth/register',
@@ -116,11 +116,11 @@ final class LiveAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    _client.clearCache();
+    _client.invalidateSession();
     try {
       await _client.request<void>('POST', '/api/v1/auth/logout');
     } finally {
-      _client.clearCache();
+      _client.invalidateSession();
       try {
         await onLogout?.call();
       } finally {

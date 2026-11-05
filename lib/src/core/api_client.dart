@@ -74,6 +74,13 @@ final class ApiClient {
   final Duration cacheDuration;
   final _cache = <String, (DateTime, String)>{};
   int _cacheRevision = 0;
+  int _sessionRevision = 0;
+
+  /// Reject queued work from the previous account before it reaches transport.
+  void invalidateSession() {
+    _sessionRevision++;
+    clearCache();
+  }
 
   void clearCache() {
     _cacheRevision++;
@@ -97,6 +104,7 @@ final class ApiClient {
     T Function(Map<String, dynamic>)? decode,
   }) async {
     final cacheRevision = _cacheRevision;
+    final sessionRevision = _sessionRevision;
     final normalizedMethod = method.toUpperCase();
     var request = ApiRequest(
       path,
@@ -142,7 +150,13 @@ final class ApiClient {
         try {
           await _host.acquire(throttleInterval);
           try {
+            if (sessionRevision != _sessionRevision) {
+              throw const HttpFailure(401);
+            }
             response = await _transport(request);
+            if (sessionRevision != _sessionRevision) {
+              throw const HttpFailure(401);
+            }
             _host.record(response.statusCode);
           } finally {
             _host.release();

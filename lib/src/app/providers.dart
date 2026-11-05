@@ -118,15 +118,24 @@ final ioTransportProvider = Provider<IoApiTransport?>((ref) {
 /// Live requests to vietnamlinuxfamily.net are enabled by default for app execution.
 final apiClientProvider = Provider<ApiClient>((ref) {
   final transport = ref.watch(ioTransportProvider);
+  final ApiClient client;
   if (transport == null) {
-    return ApiClient(
+    client = ApiClient(
       transport: fixtureTransport,
       throttleInterval: Duration.zero,
       // A fixture client owns its queue, including the widget test clock.
       hostKey: Object(),
     );
+  } else {
+    client = ApiClient(transport: transport.call);
   }
-  return ApiClient(transport: transport.call);
+  ref.listen(sessionStateProvider.select((session) => session?.userId), (
+    before,
+    after,
+  ) {
+    if (before != after) client.invalidateSession();
+  });
+  return client;
 });
 
 final sessionStateProvider = StateProvider<Session?>((ref) => null);

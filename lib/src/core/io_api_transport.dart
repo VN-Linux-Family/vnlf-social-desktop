@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,7 +6,7 @@ import '../domain/models.dart' show StorageFailure;
 import 'api_client.dart';
 import 'session_storage.dart';
 
-/// Opt-in native transport. The application defaults to local fixtures.
+/// Native HTTP transport with persistent, revision-guarded session cookies.
 final class IoApiTransport {
   IoApiTransport(
     this.baseUri, {
@@ -75,6 +76,8 @@ final class IoApiTransport {
   Future<ApiResponse> call(ApiRequest request) async {
     final cookieRevision = _cookieRevision;
     await _initCookie();
+    if (cookieRevision != _cookieRevision) throw const HttpFailure(401);
+    final cookie = _sessionCookie;
     final path = Uri.parse(request.path);
     if (path.hasScheme || path.hasAuthority || !path.path.startsWith('/')) {
       throw const TransportFailure();
@@ -89,13 +92,18 @@ final class IoApiTransport {
     final outgoing = await _client
         .openUrl(request.method, uri)
         .timeout(timeout);
+    if (cookieRevision != _cookieRevision) {
+      unawaited(outgoing.done.then<void>((_) {}, onError: (Object _) {}));
+      outgoing.abort();
+      throw const HttpFailure(401);
+    }
     outgoing.followRedirects = false;
     request.headers.forEach(outgoing.headers.set);
 
-    if (_sessionCookie != null &&
-        _sessionCookie!.isNotEmpty &&
+    if (cookie != null &&
+        cookie.isNotEmpty &&
         !request.headers.containsKey('Cookie')) {
-      outgoing.headers.set('Cookie', _sessionCookie!);
+      outgoing.headers.set('Cookie', cookie);
     }
 
     if (request.body != null) {
