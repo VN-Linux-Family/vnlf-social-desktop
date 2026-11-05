@@ -7,6 +7,7 @@ import '../tokens/vnlf_typography.dart';
 import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
 import 'vnlf_vote_capsule.dart';
+import 'vnlf_media_gallery.dart';
 
 /// Hierarchical comment node with nested replies and vertical thread guide lines.
 class VnlfCommentTree extends StatelessWidget {
@@ -21,9 +22,17 @@ class VnlfCommentTree extends StatelessWidget {
     this.upvoteSemanticLabel,
     this.downvoteSemanticLabel,
     this.onReply,
+    this.onVote,
+    this.onEdit,
+    this.onDelete,
+    this.onPin,
+    this.onAuthor,
   });
 
   final void Function(String id)? onReply;
+  final void Function(String id, VoteState vote)? onVote;
+  final void Function(String id)? onEdit, onDelete, onPin;
+  final void Function(String username)? onAuthor;
   final CommentNodeData comment;
   final int depth;
   final String replyLabel;
@@ -36,6 +45,7 @@ class VnlfCommentTree extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final en = Localizations.localeOf(context).languageCode == 'en';
 
     final tree = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +53,15 @@ class VnlfCommentTree extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            VnlfAvatar(author: comment.author, size: depth == 0 ? 34 : 28),
+            InkWell(
+              onTap: onAuthor == null
+                  ? null
+                  : () => onAuthor!(comment.author.username),
+              child: VnlfAvatar(
+                author: comment.author,
+                size: depth == 0 ? 34 : 28,
+              ),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -52,19 +70,57 @@ class VnlfCommentTree extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: VnlfAuthorNameRow(
-                          author: comment.author,
-                          fontSize: 12.5,
+                        child: InkWell(
+                          onTap: onAuthor == null
+                              ? null
+                              : () => onAuthor!(comment.author.username),
+                          child: VnlfAuthorNameRow(
+                            author: comment.author,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       Text(
-                        comment.relativeTime,
+                        '${comment.relativeTime}${comment.edited ? (en ? ' · Edited' : ' · Đã sửa') : ''}',
                         style: VnlfTypography.meta(colors.textSubtle),
                       ),
                     ],
                   ),
+                  if (comment.pinned)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        en ? 'Pinned' : 'Đã ghim',
+                        style: VnlfTypography.meta(colors.brand),
+                      ),
+                    ),
                   const SizedBox(height: 5),
-                  Text(comment.body, style: VnlfTypography.body(colors.ink)),
+                  if (comment.body.isNotEmpty)
+                    SelectableText(
+                      comment.body,
+                      style: VnlfTypography.body(colors.ink),
+                    ),
+                  if (comment.hiddenSticker)
+                    Text(
+                      en ? 'Sticker hidden' : 'Sticker đã bị ẩn',
+                      style: VnlfTypography.meta(colors.muted),
+                    ),
+                  if (comment.gif != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          child: VnlfMediaGallery(items: [comment.gif!]),
+                        ),
+                      ),
+                    ),
+                  if (comment.media.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: VnlfMediaGallery(items: comment.media),
+                    ),
                   if (comment.inlineCode != null) ...[
                     const SizedBox(height: 8),
                     Container(
@@ -87,18 +143,26 @@ class VnlfCommentTree extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       VnlfVoteCapsule(
                         score: comment.voteScore,
                         voteState: comment.viewerVote,
                         compact: true,
                         semanticLabel: voteSemanticLabel,
-                        upvoteSemanticLabel: upvoteSemanticLabel,
-                        downvoteSemanticLabel: downvoteSemanticLabel,
+                        upvoteSemanticLabel:
+                            upvoteSemanticLabel ?? (en ? 'Upvote' : 'Ủng hộ'),
+                        downvoteSemanticLabel:
+                            downvoteSemanticLabel ??
+                            (en ? 'Downvote' : 'Phản đối'),
+                        onVoteChanged: comment.pending || onVote == null
+                            ? null
+                            : (value) => onVote!(comment.id, value),
                       ),
                       if (replyLabel.isNotEmpty) ...[
-                        const SizedBox(width: 12),
                         Semantics(
                           button: true,
                           label: replySemanticLabel ?? replyLabel,
@@ -127,8 +191,41 @@ class VnlfCommentTree extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (comment.canEdit && onEdit != null)
+                        TextButton(
+                          onPressed: comment.pending
+                              ? null
+                              : () => onEdit!(comment.id),
+                          child: Text(en ? 'Edit' : 'Sửa'),
+                        ),
+                      if (comment.canDelete && onDelete != null)
+                        TextButton(
+                          onPressed: comment.pending
+                              ? null
+                              : () => onDelete!(comment.id),
+                          child: Text(en ? 'Delete' : 'Xóa'),
+                        ),
+                      if (comment.canPin && onPin != null)
+                        TextButton(
+                          onPressed: comment.pending
+                              ? null
+                              : () => onPin!(comment.id),
+                          child: Text(
+                            comment.pinned
+                                ? (en ? 'Unpin' : 'Bỏ ghim')
+                                : (en ? 'Pin' : 'Ghim'),
+                          ),
+                        ),
                     ],
                   ),
+                  if (comment.actionError != null)
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        comment.actionError!,
+                        style: VnlfTypography.meta(colors.red),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -152,6 +249,11 @@ class VnlfCommentTree extends StatelessWidget {
                       comment: comment.replies[i],
                       depth: depth + 1,
                       onReply: onReply,
+                      onVote: onVote,
+                      onEdit: onEdit,
+                      onDelete: onDelete,
+                      onPin: onPin,
+                      onAuthor: onAuthor,
                       replyLabel: replyLabel,
                       replySemanticLabel: replySemanticLabel,
                       voteSemanticLabel: voteSemanticLabel,

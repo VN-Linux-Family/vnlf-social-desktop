@@ -11,6 +11,8 @@ import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/article_comment.dart';
 import 'comments_providers.dart';
+import 'comment_edit_dialog.dart';
+import 'thread_post_provider.dart';
 
 export 'comments_providers.dart' show articleCommentsProvider;
 
@@ -40,14 +42,29 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
 
   Future<void> _submit() async {
     final content = _input.text.trim();
-    if (content.isEmpty || _submitting) return;
+    if (content.isEmpty || content.length > 4000 || _submitting) return;
     final sessionId = ref.read(sessionStateProvider)?.userId;
     if (!offlineFeatures && sessionId == null) {
       context.push('/login');
       return;
     }
     final revision = _revision;
-    final parentId = _replyTo?.parentId ?? _replyTo?.id;
+    final visible = ref
+        .read(commentActionsProvider(widget.postId))
+        .apply(
+          {
+            for (final c
+                in ref
+                        .read(articleCommentsProvider(widget.postId))
+                        .valueOrNull ??
+                    <ArticleComment>[])
+              c.id: c,
+            ..._confirmed,
+          }.values,
+        );
+    final parentId = _replyTo == null
+        ? null
+        : commentReplyParent(_replyTo!, visible);
     final signature = '${parentId ?? ''}\u0000$content';
     if (_draftSignature != signature) {
       _draftSignature = signature;
@@ -91,6 +108,53 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     }
   }
 
+  bool _authorized() {
+    if (offlineFeatures || ref.read(sessionStateProvider) != null) return true;
+    context.push('/login');
+    return false;
+  }
+
+  Future<void> _action(Future<bool> Function() write) async {
+    if (!_authorized()) return;
+    final revision = _revision;
+    if (await write() && mounted && revision == _revision) {
+      ref.invalidate(articleCommentsProvider(widget.postId));
+      ref.invalidate(feedNotifierProvider);
+      ref.invalidate(threadPostProvider(widget.postId));
+    }
+  }
+
+  Future<void> _edit(ArticleComment comment) async {
+    if (!_authorized()) return;
+    final revision = _revision;
+    final changed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          CommentEditDialog(articleId: widget.postId, comment: comment),
+    );
+    if (changed == true && mounted && revision == _revision) {
+      _confirmed.remove(comment.id);
+      ref.invalidate(articleCommentsProvider(widget.postId));
+      ref.invalidate(feedNotifierProvider);
+      ref.invalidate(threadPostProvider(widget.postId));
+    }
+  }
+
+  Future<void> _delete(ArticleComment comment) async {
+    if (!_authorized()) return;
+    final revision = _revision;
+    if (await confirmCommentDeletion(context) &&
+        mounted &&
+        revision == _revision) {
+      await _action(
+        () => ref
+            .read(commentActionsProvider(widget.postId).notifier)
+            .delete(comment),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
@@ -108,13 +172,30 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _draftIdentity = null;
       });
     });
+    ref.listen(articleCommentsProvider(widget.postId), (before, after) {
+      if (after.hasValue && !after.isLoading && !after.hasError) {
+        final confirmedIds = {for (final c in after.requireValue) c.id};
+        _confirmed.removeWhere((id, _) => confirmedIds.contains(id));
+      }
+    });
     final remote = ref.watch(articleCommentsProvider(widget.postId));
+    final actions = ref.watch(commentActionsProvider(widget.postId));
     final items = {
-      for (final item in remote.valueOrNull ?? <ArticleComment>[])
+      for (final item in actions.apply(
+        {
+          for (final item in remote.valueOrNull ?? <ArticleComment>[])
+            item.id: item,
+          ..._confirmed,
+        }.values,
+      ))
         item.id: item,
-      ..._confirmed,
     };
-    final comments = presentComments(items.values.toList(), english: english);
+    final comments = presentComments(
+      items.values.toList(),
+      english: english,
+      pending: actions.pending,
+      errors: actions.errors,
+    );
     final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
     return FeatureSurface(
       child: Column(
@@ -154,6 +235,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               focusNode: widget.focusNode,
               minLines: 2,
               maxLines: 5,
+              maxLength: 4000,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: english ? 'Write a comment' : 'Viết bình luận',
@@ -182,7 +264,10 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                onPressed: _input.text.trim().isEmpty || _submitting
+                onPressed:
+                    _input.text.trim().isEmpty ||
+                        _input.text.length > 4000 ||
+                        _submitting
                     ? null
                     : _submit,
                 child: _submitting
@@ -229,7 +314,26 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             VnlfCommentTree(
               comment: comment,
               replyLabel: english ? 'Reply' : 'Trả lời',
+              onAuthor: (username) =>
+                  context.push('/profile/${Uri.encodeComponent(username)}'),
+              onVote: (id, value) => _action(
+                () => ref
+                    .read(commentActionsProvider(widget.postId).notifier)
+                    .vote(items[id]!, switch (value) {
+                      VoteState.upvoted => 1,
+                      VoteState.downvoted => -1,
+                      _ => 0,
+                    }),
+              ),
+              onEdit: (id) => _edit(items[id]!),
+              onDelete: (id) => _delete(items[id]!),
+              onPin: (id) => _action(
+                () => ref
+                    .read(commentActionsProvider(widget.postId).notifier)
+                    .pin(items[id]!),
+              ),
               onReply: (id) {
+                if (!_authorized()) return;
                 setState(() {
                   _replyTo = items[id];
                   if (_replyTo != null) {

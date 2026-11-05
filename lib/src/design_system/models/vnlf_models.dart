@@ -292,6 +292,16 @@ class CommentNodeData {
     this.voteScore = 0,
     this.viewerVote = VoteState.neutral,
     this.replies = const [],
+    this.canEdit = false,
+    this.canDelete = false,
+    this.canPin = false,
+    this.pinned = false,
+    this.edited = false,
+    this.pending = false,
+    this.hiddenSticker = false,
+    this.actionError,
+    this.media = const [],
+    this.gif,
   });
 
   final String id;
@@ -302,6 +312,10 @@ class CommentNodeData {
   final int voteScore;
   final VoteState viewerVote;
   final List<CommentNodeData> replies;
+  final bool canEdit, canDelete, canPin, pinned, edited, pending, hiddenSticker;
+  final String? actionError;
+  final List<PostMediaData> media;
+  final PostMediaData? gif;
 }
 
 /// Community project showcase item (`Dự án`).

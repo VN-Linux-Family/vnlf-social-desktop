@@ -140,25 +140,29 @@ void main() {
     final router = await _pump(tester, '/');
     PostData post() =>
         tester.widget<VnlfPostCard>(find.byType(VnlfPostCard)).post!;
+    Finder postAction(String label) => find.descendant(
+      of: find.byType(VnlfPostCard),
+      matching: find.bySemanticsLabel(label),
+    );
     expect(post().voteScore, 3);
-    await tester.tap(find.bySemanticsLabel('Ủng hộ'));
+    await tester.tap(postAction('Ủng hộ'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 2);
     expect(post().viewerVote, VoteState.neutral);
-    await tester.tap(find.bySemanticsLabel('Phản đối'));
+    await tester.tap(postAction('Phản đối'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 1);
-    await tester.tap(find.bySemanticsLabel('Ủng hộ'));
+    await tester.tap(postAction('Ủng hộ'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 3);
-    await tester.tap(find.bySemanticsLabel('Lưu bài viết'));
+    await tester.tap(postAction('Lưu bài viết'));
     await tester.pumpAndSettle();
     expect(post().isBookmarked, isTrue);
     router.go('/thread/fixture-post-1');
     await tester.pumpAndSettle();
     expect(post().voteScore, 3);
     expect(post().isBookmarked, isTrue);
-    await tester.tap(find.bySemanticsLabel('Phản đối'));
+    await tester.tap(postAction('Phản đối'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 1);
     router.go('/');
