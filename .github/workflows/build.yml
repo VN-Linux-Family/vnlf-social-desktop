@@ -132,9 +132,7 @@ jobs:
         shell: bash
         run: |
           ARCHIVE_NAME="vnlfsocialapp-windows-${SEMVER_VERSION}.zip"
-          cd build/windows/x64/runner/Release
-          tar -a -c -f "../../../../${ARCHIVE_NAME}" *
-          cd ../../../..
+          tar -a -c -f "${ARCHIVE_NAME}" -C build/windows/x64/runner/Release .
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
 
       - name: Upload Windows Artifact
@@ -180,7 +178,7 @@ jobs:
 
       - name: Build macOS Release Application
         run: |
-          flutter build macos --release --no-codesign \
+          flutter build macos --release \
             --build-name="${BASE_VERSION}" \
             --build-number="${SHORT_SHA}" \
             --dart-define="APP_VERSION=${SEMVER_VERSION}" \
