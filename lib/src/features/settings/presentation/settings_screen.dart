@@ -101,8 +101,8 @@ class SettingsScreen extends ConsumerWidget {
                 offlineFeatures
                     ? 'Offline fixture'
                     : (english
-                          ? 'Live server (read only)'
-                          : 'Máy chủ trực tiếp (chỉ đọc)'),
+                          ? 'Live server (https://vietnamlinuxfamily.net)'
+                          : 'Máy chủ trực tuyến (https://vietnamlinuxfamily.net)'),
               ),
               const SizedBox(height: 8),
               Text(

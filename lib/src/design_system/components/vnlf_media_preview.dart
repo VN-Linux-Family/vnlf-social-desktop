@@ -13,12 +13,14 @@ import '../tokens/vnlf_typography.dart';
 class VnlfImagePlaceholder extends StatelessWidget {
   const VnlfImagePlaceholder({
     super.key,
+    this.imageUrl,
     this.aspectRatio = 16 / 9,
     this.label = '',
     this.icon = Icons.image_outlined,
     this.semanticLabel,
   });
 
+  final String? imageUrl;
   final double aspectRatio;
   final String label;
   final IconData icon;
@@ -30,31 +32,48 @@ class VnlfImagePlaceholder extends StatelessWidget {
     final effectiveSemantics =
         semanticLabel ?? (label.isNotEmpty ? label : null);
 
-    return Semantics(
-      label: effectiveSemantics,
-      image: true,
-      child: AspectRatio(
-        aspectRatio: aspectRatio,
-        child: Container(
-          decoration: BoxDecoration(
-            color: colors.surfaceSoft,
-            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-            border: Border.all(color: colors.line),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 36, color: colors.muted),
-                if (label.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(label, style: VnlfTypography.caption(colors.muted)),
-                ],
-              ],
+    Widget fallback() => Container(
+      decoration: BoxDecoration(
+        color: colors.surfaceSoft,
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+        border: Border.all(color: colors.line),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 36, color: colors.muted),
+            if (label.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(label, style: VnlfTypography.caption(colors.muted)),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Semantics(
+        label: effectiveSemantics,
+        image: true,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          child: AspectRatio(
+            aspectRatio: aspectRatio,
+            child: Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => fallback(),
             ),
           ),
         ),
-      ),
+      );
+    }
+
+    return Semantics(
+      label: effectiveSemantics,
+      image: true,
+      child: AspectRatio(aspectRatio: aspectRatio, child: fallback()),
     );
   }
 }

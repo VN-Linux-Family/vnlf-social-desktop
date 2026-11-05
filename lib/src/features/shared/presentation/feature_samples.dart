@@ -1,8 +1,22 @@
+import 'dart:io';
+
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 
-/// Synthetic offline examples, never projected as a signed-in server session.
-const offlineFeatures = !bool.fromEnvironment('VNLF_LIVE');
+bool _isOfflineDefault() {
+  if (const bool.hasEnvironment('VNLF_LIVE')) {
+    return !const bool.fromEnvironment('VNLF_LIVE');
+  }
+  try {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/// Offline fixture flag: false in production (live server), true during unit/widget tests.
+final bool offlineFeatures = _isOfflineDefault();
 
 const sampleAuthor = Author(
   id: 'user-sample-hoangnam',

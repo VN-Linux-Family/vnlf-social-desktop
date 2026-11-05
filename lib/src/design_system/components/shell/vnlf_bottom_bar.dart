@@ -39,78 +39,93 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final insets = MediaQuery.paddingOf(context);
 
     final header = Container(
-      height: VnlfDimensions.mobileHeaderHeight,
-      padding: const EdgeInsets.symmetric(
-        horizontal: VnlfDimensions.mobileHeaderPaddingH,
-      ),
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(bottom: BorderSide(color: colors.line)),
       ),
-      child: Row(
-        children: [
-          Semantics(
-            button: true,
-            label:
-                openDrawerSemanticLabel ??
-                (openDrawerTooltip.isNotEmpty ? openDrawerTooltip : null),
-            child: IconButton(
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              icon: Icon(Icons.menu_rounded, size: 22, color: colors.ink),
-              tooltip: openDrawerTooltip.isNotEmpty ? openDrawerTooltip : null,
-              onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
-            ),
+      padding: EdgeInsets.only(
+        top: insets.top,
+        left: insets.left,
+        right: insets.right,
+      ),
+      child: SizedBox(
+        height: VnlfDimensions.mobileHeaderHeight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: VnlfDimensions.mobileHeaderPaddingH,
           ),
-          const SizedBox(width: 8),
-          BrandAssets.logo(size: 26, semanticLabel: brandLogoSemanticLabel),
-          const SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: VnlfTypography.h3(colors.ink)
-                    .copyWith(fontWeight: FontWeight.w800),
-                children: [
-                  TextSpan(text: brandTitlePrefix),
-                  TextSpan(
-                    text: brandTitleAccent,
-                    style: TextStyle(
-                      color: colors.brand,
-                      fontWeight: FontWeight.w600,
-                    ),
+          child: Row(
+            children: [
+              Semantics(
+                button: true,
+                label:
+                    openDrawerSemanticLabel ??
+                    (openDrawerTooltip.isNotEmpty ? openDrawerTooltip : null),
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
                   ),
-                ],
+                  icon: Icon(Icons.menu_rounded, size: 22, color: colors.ink),
+                  tooltip: openDrawerTooltip.isNotEmpty
+                      ? openDrawerTooltip
+                      : null,
+                  onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
+                ),
               ),
-            ),
-          ),
-          _HeaderSquareIconButton(
-            icon: Icons.search_rounded,
-            semanticLabel: searchSemanticLabel,
-            onTap: onSearchTap,
-          ),
-          const SizedBox(width: 8),
-          _HeaderSquareIconButton(
-            icon: Icons.notifications_none_rounded,
-            semanticLabel: notificationsSemanticLabel,
-            onTap: () {},
-          ),
-          const SizedBox(width: 8),
-          Semantics(
-            button: true,
-            label: profileSemanticLabel,
-            child: GestureDetector(
-              onTap: onProfileTap,
-              child: VnlfGuestAvatarBox(
-                size: 36,
-                semanticLabel: profileSemanticLabel,
+              const SizedBox(width: 8),
+              BrandAssets.logo(size: 26, semanticLabel: brandLogoSemanticLabel),
+              const SizedBox(width: 8),
+              Expanded(
+                child: RichText(
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    style: VnlfTypography.h3(colors.ink)
+                        .copyWith(fontWeight: FontWeight.w800),
+                    children: [
+                      TextSpan(text: brandTitlePrefix),
+                      TextSpan(
+                        text: brandTitleAccent,
+                        style: TextStyle(
+                          color: colors.brand,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              _HeaderSquareIconButton(
+                icon: Icons.search_rounded,
+                semanticLabel: searchSemanticLabel,
+                onTap: onSearchTap,
+              ),
+              const SizedBox(width: 8),
+              _HeaderSquareIconButton(
+                icon: Icons.notifications_none_rounded,
+                semanticLabel: notificationsSemanticLabel,
+                onTap: () {},
+              ),
+              const SizedBox(width: 8),
+              Semantics(
+                button: true,
+                label: profileSemanticLabel,
+                child: GestureDetector(
+                  onTap: onProfileTap,
+                  child: VnlfGuestAvatarBox(
+                    size: 36,
+                    semanticLabel: profileSemanticLabel,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -182,56 +197,65 @@ class VnlfMobileBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final insets = MediaQuery.paddingOf(context);
 
     final nav = Container(
-      height: VnlfDimensions.mobileBottomNavHeight,
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(top: BorderSide(color: colors.line)),
       ),
-      child: Row(
-        children: [
-          for (final dest in VnlfNavDestination.values)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: dest == activeDestination,
-                label:
-                    destinationSemanticLabels[dest] ?? destinationLabels[dest],
-                child: InkWell(
-                  onTap: () => onDestinationSelected?.call(dest),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        dest.icon,
-                        size: 20,
-                        color: dest == activeDestination
-                            ? colors.brand
-                            : colors.muted,
-                      ),
-                      if ((destinationLabels[dest] ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          destinationLabels[dest]!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: VnlfTypography.caption(
-                            dest == activeDestination
-                                ? colors.brand
-                                : colors.muted,
-                            fontWeight: dest == activeDestination
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                          ),
+      padding: EdgeInsets.only(
+        bottom: insets.bottom,
+        left: insets.left,
+        right: insets.right,
+      ),
+      child: SizedBox(
+        height: VnlfDimensions.mobileBottomNavHeight,
+        child: Row(
+          children: [
+            for (final dest in VnlfNavDestination.values)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: dest == activeDestination,
+                  label:
+                      destinationSemanticLabels[dest] ??
+                      destinationLabels[dest],
+                  child: InkWell(
+                    onTap: () => onDestinationSelected?.call(dest),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          dest.icon,
+                          size: 20,
+                          color: dest == activeDestination
+                              ? colors.brand
+                              : colors.muted,
                         ),
+                        if ((destinationLabels[dest] ?? '').isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            destinationLabels[dest]!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: VnlfTypography.caption(
+                              dest == activeDestination
+                                  ? colors.brand
+                                  : colors.muted,
+                              fontWeight: dest == activeDestination
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
 

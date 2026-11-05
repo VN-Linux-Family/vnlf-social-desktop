@@ -67,7 +67,8 @@ jobs:
           flutter build linux --release \
             --build-name="${BASE_VERSION}" \
             --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}"
+            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
+            --dart-define="VNLF_LIVE=true"
 
       - name: Package Linux Archive
         shell: bash
@@ -124,7 +125,8 @@ jobs:
           flutter build windows --release \
             --build-name="${BASE_VERSION}" \
             --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}"
+            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
+            --dart-define="VNLF_LIVE=true"
 
       - name: Package Windows Archive
         shell: bash
@@ -181,7 +183,8 @@ jobs:
           flutter build macos --release --no-codesign \
             --build-name="${BASE_VERSION}" \
             --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}"
+            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
+            --dart-define="VNLF_LIVE=true"
 
       - name: Package macOS Archive
         shell: bash
@@ -244,7 +247,8 @@ jobs:
           flutter build apk --release \
             --build-name="${SEMVER_VERSION}" \
             --build-number="${BUILD_NUMBER}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}"
+            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
+            --dart-define="VNLF_LIVE=true"
 
       - name: Package Android Artifact
         shell: bash

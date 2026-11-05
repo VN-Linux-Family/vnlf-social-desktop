@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' show ThemeMode;
@@ -19,9 +20,21 @@ final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),
 );
 
-/// Live requests are enabled only by an explicit build-time opt-in.
+bool _isLiveDefault() {
+  if (const bool.hasEnvironment('VNLF_LIVE')) {
+    return const bool.fromEnvironment('VNLF_LIVE');
+  }
+  try {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return false;
+    }
+  } catch (_) {}
+  return true;
+}
+
+/// Live requests to vietnamlinuxfamily.net are enabled by default for app execution.
 final apiClientProvider = Provider<ApiClient>((ref) {
-  if (!const bool.fromEnvironment('VNLF_LIVE')) {
+  if (!_isLiveDefault()) {
     return ApiClient(
       transport: fixtureTransport,
       throttleInterval: Duration.zero,

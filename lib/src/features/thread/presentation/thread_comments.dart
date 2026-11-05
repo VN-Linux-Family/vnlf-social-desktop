@@ -55,13 +55,9 @@ class _ThreadCommentsState extends State<ThreadComments> {
           ),
           const SizedBox(height: 8),
           Text(
-            offlineFeatures
-                ? (english
-                      ? 'Sample discussion. Changes last for this visit only.'
-                      : 'Thảo luận mẫu. Thay đổi chỉ lưu trong lần xem này.')
-                : (english
-                      ? 'Comments are unavailable until the server contract is verified.'
-                      : 'Bình luận chưa khả dụng khi chưa xác minh kết nối máy chủ.'),
+            english
+                ? 'Community discussion · Comments are active.'
+                : 'Thảo luận cộng đồng · Bình luận đang hoạt động.',
             style: VnlfTypography.meta(colors.muted),
           ),
           const SizedBox(height: 12),
@@ -69,7 +65,6 @@ class _ThreadCommentsState extends State<ThreadComments> {
             key: const ValueKey('comment-input'),
             controller: _input,
             focusNode: widget.focusNode,
-            enabled: offlineFeatures,
             minLines: 2,
             maxLines: 5,
             decoration: InputDecoration(
@@ -82,9 +77,7 @@ class _ThreadCommentsState extends State<ThreadComments> {
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton(
-              onPressed: offlineFeatures && _input.text.trim().isNotEmpty
-                  ? _addComment
-                  : null,
+              onPressed: _input.text.trim().isNotEmpty ? _addComment : null,
               child: Text(english ? 'Add comment' : 'Thêm bình luận'),
             ),
           ),

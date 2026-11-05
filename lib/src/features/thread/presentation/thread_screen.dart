@@ -113,19 +113,12 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
             '/profile/${Uri.encodeComponent(source.author.username)}',
           ),
           onCommentTap: _commentFocus.requestFocus,
-          onVoteChanged: offlineFeatures
-              ? (value) => ref
-                    .read(postInteractionsProvider.notifier)
-                    .vote(source.id, value)
-              : null,
-          onBookmarkToggle: offlineFeatures
-              ? () => ref
-                    .read(postInteractionsProvider.notifier)
-                    .toggleBookmark(
-                      source.id,
-                      initialValue: source.viewerBookmarked,
-                    )
-              : null,
+          onVoteChanged: (value) => ref
+              .read(postInteractionsProvider.notifier)
+              .vote(source.id, value),
+          onBookmarkToggle: () => ref
+              .read(postInteractionsProvider.notifier)
+              .toggleBookmark(source.id, initialValue: source.viewerBookmarked),
           upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
           downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
           commentSemanticLabel: english ? 'Comments' : 'Bình luận',

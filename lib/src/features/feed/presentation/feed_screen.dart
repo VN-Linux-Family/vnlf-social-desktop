@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
-import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
 import 'post_mapper.dart';
@@ -126,24 +125,15 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                 post: interaction.apply(
                                   presentPost(source, english: english),
                                 ),
-                                onVoteChanged: offlineFeatures
-                                    ? (vote) => ref
-                                          .read(
-                                            postInteractionsProvider.notifier,
-                                          )
-                                          .vote(source.id, vote)
-                                    : null,
-                                onBookmarkToggle: offlineFeatures
-                                    ? () => ref
-                                          .read(
-                                            postInteractionsProvider.notifier,
-                                          )
-                                          .toggleBookmark(
-                                            source.id,
-                                            initialValue:
-                                                source.viewerBookmarked,
-                                          )
-                                    : null,
+                                onVoteChanged: (vote) => ref
+                                    .read(postInteractionsProvider.notifier)
+                                    .vote(source.id, vote),
+                                onBookmarkToggle: () => ref
+                                    .read(postInteractionsProvider.notifier)
+                                    .toggleBookmark(
+                                      source.id,
+                                      initialValue: source.viewerBookmarked,
+                                    ),
                                 authorAvatarSemanticLabel:
                                     data.posts[index].author.displayName,
                                 onAuthorTap: () => context.push(

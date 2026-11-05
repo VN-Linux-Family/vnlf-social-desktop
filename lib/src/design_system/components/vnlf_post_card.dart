@@ -399,6 +399,7 @@ class VnlfPostCard extends StatelessWidget {
                   switch (loadedPost.attachment!) {
                     final ImagePlaceholderAttachment imagePlaceholder =>
                       VnlfImagePlaceholder(
+                        imageUrl: imagePlaceholder.imageUrl,
                         aspectRatio: imagePlaceholder.aspectRatio,
                         label: imagePlaceholder.label,
                         semanticLabel: imagePlaceholder.semanticLabel,

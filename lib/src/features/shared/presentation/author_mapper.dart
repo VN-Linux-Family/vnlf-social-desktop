@@ -1,7 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+
+bool _loadNetworkAvatarDefault() {
+  if (const bool.hasEnvironment('VNLF_LIVE')) {
+    return const bool.fromEnvironment('VNLF_LIVE');
+  }
+  try {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      return false;
+    }
+  } catch (_) {}
+  return true;
+}
 
 AuthorData presentAuthor(Author author) {
   final style = author.style;
@@ -16,7 +30,7 @@ AuthorData presentAuthor(Author author) {
     displayName: author.displayName,
     role: author.role,
     avatarUrl: author.avatarUrl,
-    loadNetworkAvatar: const bool.fromEnvironment('VNLF_LIVE'),
+    loadNetworkAvatar: _loadNetworkAvatarDefault(),
     style: AuthorStyleData(
       frame: style?.frame == null ? AvatarFrameType.none : AvatarFrameType.ring,
       frameColor: _color(style?.frame?['color']),

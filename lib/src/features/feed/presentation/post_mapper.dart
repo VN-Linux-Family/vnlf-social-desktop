@@ -18,6 +18,14 @@ PostData presentPost(FeedPost post, {required bool english}) => PostData(
   commentCount: post.commentCount,
   isBookmarked: post.viewerBookmarked,
   isArticle: post.format.toLowerCase() == 'article',
+  attachment: (post.coverUrl != null && post.coverUrl!.isNotEmpty)
+      ? ImagePlaceholderAttachment(
+          imageUrl: post.coverUrl,
+          semanticLabel: post.coverAlt.isNotEmpty
+              ? post.coverAlt
+              : (post.title ?? ''),
+        )
+      : null,
 );
 
 String _timestamp(DateTime? date, bool english) {

@@ -151,124 +151,128 @@ class VnlfAdaptiveShell extends StatelessWidget {
         return switch (viewport) {
           VnlfViewportSize.desktop => Scaffold(
             backgroundColor: colors.bg,
-            body: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                VnlfDesktopSidebar(
-                  activeDestination: activeDestination,
-                  onDestinationSelected: onDestinationSelected,
-                  themeMode: themeMode,
-                  onThemeModeChanged: onThemeModeChanged,
-                  onProfileTap: onProfileTap,
-                  destinationLabels: destinationLabels,
-                  destinationSemanticLabels: destinationSemanticLabels,
-                  brandTitlePrefix: brandTitlePrefix,
-                  brandTitleAccent: brandTitleAccent,
-                  brandLogoSemanticLabel: brandLogoSemanticLabel,
-                  loginLabel: loginLabel,
-                  loginSubtitleLabel: loginSubtitleLabel,
-                  supportLabel: supportLabel,
-                  supportBadgeText: supportBadgeText,
-                  supportSemanticLabel: supportSemanticLabel,
-                  feedbackLabel: feedbackLabel,
-                  feedbackSemanticLabel: feedbackSemanticLabel,
-                  socialSectionLabel: socialSectionLabel,
-                  facebookBadgeLabel: facebookBadgeLabel,
-                  facebookSemanticLabel: facebookSemanticLabel,
-                  telegramSemanticLabel: telegramSemanticLabel,
-                  discordSemanticLabel: discordSemanticLabel,
-                  settingsLabel: settingsLabel,
-                  settingsSemanticLabel: settingsSemanticLabel,
-                  helpLabel: helpLabel,
-                  helpSemanticLabel: helpSemanticLabel,
-                  loginUtilitySemanticLabel: loginUtilitySemanticLabel,
-                  lightThemeTooltip: lightThemeTooltip,
-                  darkThemeTooltip: darkThemeTooltip,
-                  systemThemeTooltip: systemThemeTooltip,
-                  themePickerSemanticLabel: themePickerSemanticLabel,
-                  profileSemanticLabel: profileSemanticLabel,
-                  collapseSidebarSemanticLabel: collapseSidebarSemanticLabel,
-                  semanticLabel: leftSidebarSemanticLabel,
-                ),
-                Expanded(
-                  child: _scrollArea(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 20,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1053),
-                        child: Row(
-                          crossAxisAlignment: centerChildHandlesScroll
-                              ? CrossAxisAlignment.stretch
-                              : CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: VnlfDimensions.centerFeedMaxWidth,
+            body: SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  VnlfDesktopSidebar(
+                    activeDestination: activeDestination,
+                    onDestinationSelected: onDestinationSelected,
+                    themeMode: themeMode,
+                    onThemeModeChanged: onThemeModeChanged,
+                    onProfileTap: onProfileTap,
+                    destinationLabels: destinationLabels,
+                    destinationSemanticLabels: destinationSemanticLabels,
+                    brandTitlePrefix: brandTitlePrefix,
+                    brandTitleAccent: brandTitleAccent,
+                    brandLogoSemanticLabel: brandLogoSemanticLabel,
+                    loginLabel: loginLabel,
+                    loginSubtitleLabel: loginSubtitleLabel,
+                    supportLabel: supportLabel,
+                    supportBadgeText: supportBadgeText,
+                    supportSemanticLabel: supportSemanticLabel,
+                    feedbackLabel: feedbackLabel,
+                    feedbackSemanticLabel: feedbackSemanticLabel,
+                    socialSectionLabel: socialSectionLabel,
+                    facebookBadgeLabel: facebookBadgeLabel,
+                    facebookSemanticLabel: facebookSemanticLabel,
+                    telegramSemanticLabel: telegramSemanticLabel,
+                    discordSemanticLabel: discordSemanticLabel,
+                    settingsLabel: settingsLabel,
+                    settingsSemanticLabel: settingsSemanticLabel,
+                    helpLabel: helpLabel,
+                    helpSemanticLabel: helpSemanticLabel,
+                    loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+                    lightThemeTooltip: lightThemeTooltip,
+                    darkThemeTooltip: darkThemeTooltip,
+                    systemThemeTooltip: systemThemeTooltip,
+                    themePickerSemanticLabel: themePickerSemanticLabel,
+                    profileSemanticLabel: profileSemanticLabel,
+                    collapseSidebarSemanticLabel: collapseSidebarSemanticLabel,
+                    semanticLabel: leftSidebarSemanticLabel,
+                  ),
+                  Expanded(
+                    child: _scrollArea(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 1053),
+                          child: Row(
+                            crossAxisAlignment: centerChildHandlesScroll
+                                ? CrossAxisAlignment.stretch
+                                : CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: VnlfDimensions.centerFeedMaxWidth,
+                                  ),
+                                  child: centerChild,
                                 ),
-                                child: centerChild,
                               ),
-                            ),
-                            if (rightSidebarChild != null) ...[
-                              const SizedBox(width: 28),
-                              VnlfDesktopRightSidebar(
-                                width: VnlfDimensions.rightSidebarWidth,
-                                semanticLabel: rightSidebarSemanticLabel,
-                                child: centerChildHandlesScroll
-                                    ? SingleChildScrollView(
-                                        child: rightSidebarChild!,
-                                      )
-                                    : rightSidebarChild!,
-                              ),
+                              if (rightSidebarChild != null) ...[
+                                const SizedBox(width: 28),
+                                VnlfDesktopRightSidebar(
+                                  width: VnlfDimensions.rightSidebarWidth,
+                                  semanticLabel: rightSidebarSemanticLabel,
+                                  child: centerChildHandlesScroll
+                                      ? SingleChildScrollView(
+                                          child: rightSidebarChild!,
+                                        )
+                                      : rightSidebarChild!,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           VnlfViewportSize.tablet => Scaffold(
             backgroundColor: colors.bg,
-            body: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                VnlfTabletRail(
-                  activeDestination: activeDestination,
-                  onDestinationSelected: onDestinationSelected,
-                  themeMode: themeMode,
-                  onThemeModeChanged: onThemeModeChanged,
-                  onProfileTap: onProfileTap,
-                  destinationLabels: destinationLabels,
-                  destinationSemanticLabels: destinationSemanticLabels,
-                  brandLogoSemanticLabel: brandLogoSemanticLabel,
-                  themeToggleTooltip: railThemeToggleTooltip,
-                  themeToggleSemanticLabel: railThemeToggleSemanticLabel,
-                  profileSemanticLabel: profileSemanticLabel,
-                  semanticLabel: tabletRailSemanticLabel,
-                ),
-                Expanded(
-                  child: _scrollArea(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: VnlfDimensions.centerFeedMaxWidth,
+            body: SafeArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  VnlfTabletRail(
+                    activeDestination: activeDestination,
+                    onDestinationSelected: onDestinationSelected,
+                    themeMode: themeMode,
+                    onThemeModeChanged: onThemeModeChanged,
+                    onProfileTap: onProfileTap,
+                    destinationLabels: destinationLabels,
+                    destinationSemanticLabels: destinationSemanticLabels,
+                    brandLogoSemanticLabel: brandLogoSemanticLabel,
+                    themeToggleTooltip: railThemeToggleTooltip,
+                    themeToggleSemanticLabel: railThemeToggleSemanticLabel,
+                    profileSemanticLabel: profileSemanticLabel,
+                    semanticLabel: tabletRailSemanticLabel,
+                  ),
+                  Expanded(
+                    child: _scrollArea(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: VnlfDimensions.centerFeedMaxWidth,
+                          ),
+                          child: centerChild,
                         ),
-                        child: centerChild,
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           VnlfViewportSize.mobile => Scaffold(
@@ -340,9 +344,13 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   semanticLabel: mobileHeaderSemanticLabel,
                 ),
                 Expanded(
-                  child: _scrollArea(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
-                    child: centerChild,
+                  child: SafeArea(
+                    top: false,
+                    bottom: false,
+                    child: _scrollArea(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                      child: centerChild,
+                    ),
                   ),
                 ),
               ],

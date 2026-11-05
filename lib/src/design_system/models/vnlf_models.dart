@@ -97,15 +97,17 @@ sealed class PostAttachment {
   const PostAttachment();
 }
 
-/// Renders a neutral image placeholder attachment for offline previews.
+/// Renders an image attachment with optional network loading or neutral fallback.
 @immutable
 final class ImagePlaceholderAttachment extends PostAttachment {
   const ImagePlaceholderAttachment({
+    this.imageUrl,
     this.aspectRatio = 16 / 9,
     this.label = '',
     this.semanticLabel,
   });
 
+  final String? imageUrl;
   final double aspectRatio;
   final String label;
   final String? semanticLabel;
