@@ -113,6 +113,7 @@ void main() {
         find.byKey(const Key('search-input')),
         '  VNLF-CLI  ',
       );
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(find.text('vnlf-cli'), findsOneWidget);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Bài viết'));
@@ -126,6 +127,7 @@ void main() {
       expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Thành viên'));
       await tester.enterText(find.byKey(const Key('search-input')), 'hoangnam');
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(find.text('Hoàng Nam'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -204,39 +206,26 @@ void main() {
     },
   );
 
-  testWidgets('leaderboard periods change points and ranking order', (
+  testWidgets('leaderboard weekly archive can return to current rankings', (
     tester,
   ) async {
     await _pump(tester, '/leaderboard');
     expect(find.text('450'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tháng này'));
+    await tester.tap(find.byTooltip('Tuần trước'));
     await tester.pumpAndSettle();
-    expect(find.text('1280'), findsOneWidget);
     expect(find.text('450'), findsNothing);
-    expect(
-      tester
-          .widget<VnlfLeaderboardCard>(find.byType(VnlfLeaderboardCard))
-          .entries
-          .first
-          .author
-          .username,
-      'minhtri',
-    );
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tất cả'));
-    await tester.pumpAndSettle();
-    expect(find.text('8640'), findsOneWidget);
-    expect(
-      tester
-          .widget<VnlfLeaderboardCard>(find.byType(VnlfLeaderboardCard))
-          .entries
-          .first
-          .author
-          .username,
-      'hoangnam',
-    );
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tuần này'));
+    expect(find.text('Chưa có xếp hạng'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Tuần này'));
     await tester.pumpAndSettle();
     expect(find.text('450'), findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.chevron_right),
+          )
+          .onPressed,
+      isNull,
+    );
   });
 
   for (final width in [390.0, 900.0, 1440.0]) {

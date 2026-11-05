@@ -1,14 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
-import '../../leaderboard/presentation/leaderboard_screen.dart';
-import '../../projects/presentation/projects_screen.dart';
-import '../../shared/presentation/author_mapper.dart';
+import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
-import 'search_index.dart';
+import '../domain/search_results.dart';
+import 'search_providers.dart';
+import 'search_results_list.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -19,10 +20,50 @@ class SearchScreen extends ConsumerStatefulWidget {
 
 class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _query = TextEditingController();
-  int _scope = 0;
+  SearchScope _scope = SearchScope.all;
+  Timer? _debounce;
+  String? _activeQuery;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    final uri = GoRouterState.of(context).uri;
+    final query = uri.queryParameters['q'] ?? '';
+    _query.text = query.length > 100 ? query.substring(0, 100) : query;
+    _scope = switch (uri.queryParameters['type']) {
+      'user' => SearchScope.users,
+      'article' => SearchScope.posts,
+      'project' => SearchScope.projects,
+      'tag' => SearchScope.topics,
+      _ => SearchScope.all,
+    };
+    if (_query.text.trim().length >= 2) _activeQuery = _query.text.trim();
+  }
+
+  void _changed(String value) {
+    _debounce?.cancel();
+    setState(() => _activeQuery = null);
+    if (value.trim().length < 2) return;
+    _debounce = Timer(const Duration(milliseconds: 300), _searchNow);
+  }
+
+  void _searchNow() {
+    _debounce?.cancel();
+    final keyword = _query.text.trim();
+    setState(() => _activeQuery = keyword.length >= 2 ? keyword : null);
+  }
+
+  void _useTopic(SearchTopic topic) {
+    _query.text = topic.name;
+    _searchNow();
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _query.dispose();
     super.dispose();
   }
@@ -31,10 +72,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
-    final index = ref.watch(searchIndexProvider);
-    final scopes = english
-        ? ['All', 'Posts', 'Projects', 'Users']
-        : ['Tất cả', 'Bài viết', 'Dự án', 'Thành viên'];
+    final labels = english
+        ? ['All', 'Posts', 'Projects', 'Users', 'Topics']
+        : ['Tất cả', 'Bài viết', 'Dự án', 'Thành viên', 'Chủ đề'];
+    final query = _activeQuery;
+    final results = query == null
+        ? null
+        : ref.watch(searchResultsProvider(query));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -52,17 +96,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         TextField(
           key: const Key('search-input'),
           controller: _query,
+          maxLength: 100,
           textInputAction: TextInputAction.search,
-          onChanged: (_) => setState(() {}),
+          onChanged: _changed,
+          onSubmitted: (_) => _searchNow(),
           decoration: InputDecoration(
             labelText: english ? 'Search the community' : 'Tìm trong cộng đồng',
+            counterText: '',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _query.text.isEmpty
                 ? null
                 : IconButton(
                     tooltip: english ? 'Clear search' : 'Xóa tìm kiếm',
                     icon: const Icon(Icons.close),
-                    onPressed: () => setState(_query.clear),
+                    onPressed: () {
+                      _query.clear();
+                      _changed('');
+                    },
                   ),
             border: const OutlineInputBorder(),
           ),
@@ -72,162 +122,93 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (var scope = 0; scope < scopes.length; scope++)
+            for (final scope in SearchScope.values)
               ChoiceChip(
                 selectedColor: colors.brandSoft,
                 backgroundColor: colors.surface,
                 checkmarkColor: colors.brand,
                 side: BorderSide(color: colors.line),
                 labelStyle: VnlfTypography.control(colors.ink),
-                label: Text(scopes[scope]),
+                label: Text(labels[scope.index]),
                 selected: _scope == scope,
                 onSelected: (_) => setState(() => _scope = scope),
               ),
           ],
         ),
         const SizedBox(height: 12),
+        if (offlineFeatures)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              english ? 'Sample community search' : 'Tìm kiếm cộng đồng mẫu',
+            ),
+          ),
         Expanded(
-          child: _query.text.trim().isEmpty
-              ? ListView(
-                  children: [
-                    Text(
-                      english ? 'Popular tags' : 'Chủ đề phổ biến',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final tag in [
-                          'Arch Linux',
-                          'Wayland',
-                          'CachyOS',
-                          'Hyprland',
-                          'Kernel',
-                          'Rust',
-                        ])
-                          ActionChip(
-                            backgroundColor: colors.surface,
-                            side: BorderSide(color: colors.line),
-                            labelStyle: VnlfTypography.control(colors.ink),
-                            label: Text(tag),
-                            onPressed: () => setState(() => _query.text = tag),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      english
-                          ? 'Find posts, projects and members in the loaded community content.'
-                          : 'Tìm bài viết, dự án và thành viên trong nội dung cộng đồng đã tải.',
-                    ),
-                  ],
-                )
-              : index.when(
+          child: results == null
+              ? _query.text.trim().length >= 2
+                    ? const Center(child: CircularProgressIndicator())
+                    : _suggestions(english)
+              : results.when(
+                  skipLoadingOnReload: false,
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => ListView(
+                  error: (_, _) => ListView(
                     children: [
                       FeatureLoadError(
-                        onRetry: () {
-                          ref.invalidate(feedProvider(null));
-                          ref.invalidate(projectsProvider);
-                          ref.invalidate(leaderboardProvider);
-                          ref.invalidate(searchIndexProvider);
-                        },
+                        onRetry: () =>
+                            ref.invalidate(searchResultsProvider(query!)),
                       ),
                     ],
                   ),
-                  data: (data) =>
-                      _results(context, data.matching(_query.text), english),
+                  data: (data) => SearchResultsList(
+                    results: data,
+                    scope: _scope,
+                    onTopic: _useTopic,
+                  ),
                 ),
         ),
       ],
     );
   }
 
-  Widget _results(BuildContext context, SearchIndex matches, bool english) {
-    final posts = _scope == 0 || _scope == 1
-        ? matches.posts
-        : matches.posts.take(0);
-    final projects = _scope == 0 || _scope == 2
-        ? matches.projects
-        : matches.projects.take(0);
-    final users = _scope == 0 || _scope == 3
-        ? matches.users
-        : matches.users.take(0);
-    final count = posts.length + projects.length + users.length;
-    if (count == 0) {
-      return ListView(
-        children: [
-          VnlfStateCard(
-            icon: Icons.search_off,
-            title: english ? 'No results found' : 'Không tìm thấy kết quả',
-            message: english
-                ? 'Try another keyword or search scope.'
-                : 'Thử từ khóa khác hoặc đổi phạm vi tìm kiếm.',
-          ),
-        ],
-      );
-    }
+  Widget _suggestions(bool english) {
+    final topics = ref.watch(popularTopicsProvider);
     return ListView(
       children: [
         Text(
-          english ? '$count results' : '$count kết quả',
-          style: Theme.of(context).textTheme.bodySmall,
+          _query.text.trim().isEmpty
+              ? english
+                    ? 'Find posts, projects, members and topics.'
+                    : 'Tìm bài viết, dự án, thành viên và chủ đề.'
+              : english
+              ? 'Enter at least 2 characters.'
+              : 'Nhập ít nhất 2 ký tự.',
         ),
-        if (posts.isNotEmpty) ...[
-          _heading(context, english ? 'Posts' : 'Bài viết'),
-          for (final post in posts)
-            ListTile(
-              leading: const Icon(Icons.article_outlined),
-              title: Text(
-                post.title?.isNotEmpty == true ? post.title! : post.excerpt,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                post.excerpt,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onTap: () =>
-                  context.push('/thread/${Uri.encodeComponent(post.id)}'),
-            ),
-        ],
-        if (projects.isNotEmpty) ...[
-          _heading(context, english ? 'Projects' : 'Dự án'),
-          for (final project in projects)
-            ListTile(
-              leading: const Icon(Icons.workspaces_outline),
-              title: Text(project.name),
-              subtitle: Text(
-                project.tagline,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onTap: () => context.push('/projects'),
-            ),
-        ],
-        if (users.isNotEmpty) ...[
-          _heading(context, english ? 'Users' : 'Thành viên'),
-          for (final user in users)
-            ListTile(
-              leading: VnlfAvatar(author: presentAuthor(user)),
-              title: Text(user.displayName),
-              subtitle: Text('@${user.username}'),
-              onTap: () => context.push(
-                '/profile/${Uri.encodeComponent(user.username)}',
-              ),
-            ),
-        ],
+        const SizedBox(height: 16),
+        Text(
+          english ? 'Popular tags' : 'Chủ đề phổ biến',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        topics.when(
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => TextButton(
+            onPressed: () => ref.invalidate(popularTopicsProvider),
+            child: Text(english ? 'Retry topics' : 'Tải lại chủ đề'),
+          ),
+          data: (items) => Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final topic in items)
+                ActionChip(
+                  label: Text(topic.name),
+                  onPressed: () => _useTopic(topic),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
-
-  Widget _heading(BuildContext context, String text) => Padding(
-    padding: const EdgeInsets.only(top: 16, bottom: 4),
-    child: Text(text, style: Theme.of(context).textTheme.titleMedium),
-  );
 }
