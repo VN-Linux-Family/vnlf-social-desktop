@@ -1,3 +1,5 @@
+import '../features/notifications/presentation/notifications_sheet.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -863,148 +865,9 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
 }
 
 void _showNotificationsModal(BuildContext context, WidgetRef ref) {
-  final english = Localizations.localeOf(context).languageCode == 'en';
-  final colors = VnlfColors.of(context);
-  final session =
-      ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
-
   showModalBottomSheet<void>(
     context: context,
-    backgroundColor: colors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(VnlfDimensions.radiusLg),
-      ),
-    ),
-    builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.notifications_active_rounded,
-                      color: colors.brand,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      english ? 'Notifications' : 'Thông báo',
-                      style: VnlfTypography.h2(colors.ink)
-                          .copyWith(fontSize: 18),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ],
-            ),
-            const Divider(height: 20),
-            if (session != null) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: colors.brandSoft,
-                  child: Icon(
-                    Icons.forum_rounded,
-                    color: colors.brand,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  english
-                      ? 'Welcome to VNLF Social!'
-                      : 'Chào mừng bạn đến với VNLF Social!',
-                  style: VnlfTypography.control(
-                    colors.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                subtitle: Text(
-                  english
-                      ? 'You are signed in as @${session.username}. Community alerts and replies will be listed here.'
-                      : 'Bạn đã đăng nhập với tài khoản @${session.username}. Bạn sẽ nhận thông báo khi có người tương tác với bài viết của bạn.',
-                  style: VnlfTypography.meta(colors.muted),
-                ),
-                trailing: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: colors.brand,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  english
-                      ? 'You have caught up with all notifications.'
-                      : 'Bạn đã xem hết các thông báo mới.',
-                  style: VnlfTypography.caption(colors.muted),
-                ),
-              ),
-            ] else ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.bg,
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                  border: Border.all(color: colors.line),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.mark_email_unread_outlined,
-                      size: 40,
-                      color: colors.brand,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      english
-                          ? 'Sign in to see notifications'
-                          : 'Đăng nhập để xem thông báo',
-                      style: VnlfTypography.control(
-                        colors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      english
-                          ? 'Get real-time updates when someone replies, likes your posts, or mentions you.'
-                          : 'Nhận thông báo tức thì khi có người bình luận, thích bài viết hoặc nhắc tên bạn.',
-                      textAlign: TextAlign.center,
-                      style: VnlfTypography.body(colors.muted),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colors.brand,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        context.push('/login');
-                      },
-                      child: Text(english ? 'Sign In Now' : 'Đăng nhập ngay'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    ),
+    isScrollControlled: true,
+    builder: (_) => const NotificationsSheet(),
   );
 }
