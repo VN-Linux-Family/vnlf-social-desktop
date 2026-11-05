@@ -15,6 +15,19 @@ final class FeedPostDto {
     if (id.isEmpty) throw const ParseFailure('id');
     final author =
         objectValue(_json['author'], 'author') ?? const <String, dynamic>{};
+    final attachmentsRaw = objectList(_json['attachments'], 'attachments');
+    final attachments = attachmentsRaw
+        .map(
+          (a) => ArticleAttachment(
+            id: stringValue(a['id'], 'id'),
+            url: stringValue(a['url'], 'url'),
+            mime: stringValue(a['mime'], 'mime'),
+            alt: stringValue(a['alt'], 'alt'),
+            width: nullableInt(a['width'], 'width'),
+            height: nullableInt(a['height'], 'height'),
+          ),
+        )
+        .toList();
     return FeedPost(
       id: id,
       author: ProfileDto.fromJson(author).toDomain(),
@@ -43,6 +56,7 @@ final class FeedPostDto {
       canEdit: boolValue(_json['canEdit'], 'canEdit'),
       tagSlugs: stringList(_json['tagSlugs'], 'tagSlugs'),
       tags: stringList(_json['tags'], 'tags'),
+      attachments: attachments,
       publishedAt: dateValue(_json['publishedAt'], 'publishedAt'),
       updatedAt: dateValue(_json['updatedAt'], 'updatedAt'),
     );

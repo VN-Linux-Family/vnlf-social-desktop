@@ -7,9 +7,12 @@ import 'project_accent.dart';
 import 'project_stats.dart';
 
 Future<void> showProjectDetailSheet(BuildContext context, ProjectItem project) {
+  final colors = VnlfColors.of(context);
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: VnlfColors.of(context).paper,
+    useRootNavigator: true,
+    backgroundColor: colors.paper,
+    barrierColor: Colors.black.withValues(alpha: 0.54),
     elevation: 0,
     isScrollControlled: true,
     useSafeArea: true,

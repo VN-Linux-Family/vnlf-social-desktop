@@ -172,6 +172,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
 
         return switch (viewport) {
           VnlfViewportSize.desktop => Scaffold(
+            key: const ValueKey('vnlf-shell-scaffold-desktop'),
             backgroundColor: colors.bg,
             body: SafeArea(
               child: Row(
@@ -267,6 +268,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
             ),
           ),
           VnlfViewportSize.tablet => Scaffold(
+            key: const ValueKey('vnlf-shell-scaffold-tablet'),
             backgroundColor: colors.bg,
             body: SafeArea(
               child: Row(
@@ -309,6 +311,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
             ),
           ),
           VnlfViewportSize.mobile => Scaffold(
+            key: const ValueKey('vnlf-shell-scaffold-mobile'),
             backgroundColor: colors.bg,
             drawer: SizedBox(
               width: math.min(

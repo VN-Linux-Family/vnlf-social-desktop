@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- Artix Linux logo, from Simple Icons 16.33.0 (https://simpleicons.org, icon "artixlinux"). The logo belongs to its owner and is
+     shown only to name the distro. Licence of this icon: CC0 1.0 (Simple Icons). VNLF puts it on a rounded tile in the brand colour. -->
+<rect width="24" height="24" rx="6" fill="#10a0cc"/>
+<path transform="translate(3.5 3.5) scale(0.7083)" fill="#ffffff" d="M12 0L7.873 8.462l11.358 6.363zM6.626 11.018L.295 24l18.788-7.762zm13.846 6.352l-5.926 3.402L23.706 24Z"/>
+</svg>

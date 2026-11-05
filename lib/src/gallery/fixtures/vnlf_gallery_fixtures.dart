@@ -93,6 +93,12 @@ abstract final class VnlfGalleryFixtures {
     DistroBadgeType.caramos => 'caramos',
     DistroBadgeType.nixos => 'nixos',
     DistroBadgeType.fedora => 'fedora',
+    DistroBadgeType.ubuntu => 'ubuntu',
+    DistroBadgeType.kali => 'kali',
+    DistroBadgeType.gentoo => 'gentoo',
+    DistroBadgeType.mint => 'mint',
+    DistroBadgeType.linux => 'linux',
+    DistroBadgeType.opensuse => 'opensuse',
   };
 
   static const AuthorData authorNam = AuthorData(

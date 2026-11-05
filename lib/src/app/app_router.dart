@@ -224,44 +224,57 @@ GoRouter createMainRouter() {
           );
         },
         routes: [
-          GoRoute(path: '/', builder: (context, state) => const FeedScreen()),
+          GoRoute(
+            path: '/',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: FeedScreen()),
+          ),
           GoRoute(
             path: '/leaderboard',
-            builder: (context, state) => const LeaderboardScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: LeaderboardScreen()),
           ),
           GoRoute(
             path: '/projects',
-            builder: (context, state) => const ProjectsScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProjectsScreen()),
           ),
           GoRoute(
             path: '/thread/:id',
-            builder: (context, state) =>
-                ThreadScreen(postId: state.pathParameters['id']!),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ThreadScreen(postId: state.pathParameters['id']!),
+            ),
           ),
           GoRoute(
             path: '/profile/:id',
-            builder: (context, state) =>
-                ProfileScreen(username: state.pathParameters['id']!),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProfileScreen(username: state.pathParameters['id']!),
+            ),
           ),
           GoRoute(
             path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SettingsScreen()),
           ),
           GoRoute(
             path: '/discover',
-            builder: (context, state) => const DiscoverScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DiscoverScreen()),
           ),
           GoRoute(
             path: '/search',
-            builder: (context, state) => const SearchScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SearchScreen()),
           ),
           GoRoute(
             path: '/channels',
-            builder: (context, state) => const ChannelsScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ChannelsScreen()),
           ),
           GoRoute(
             path: '/voice',
-            builder: (context, state) => const VoiceScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: VoiceScreen()),
           ),
         ],
       ),

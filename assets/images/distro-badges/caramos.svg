@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="-150 -150 300 300" xmlns="http://www.w3.org/2000/svg">
+  <circle r="147" fill="#f9a825"/>
+  <g fill="#fff" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" transform="scale(1.1)">
+    <path transform="rotate(0)" d="M0 0Q50-35 0-100-50-35 0 0"/>
+    <path transform="rotate(72)" d="M0 0Q50-35 0-100-50-35 0 0"/>
+    <path transform="rotate(144)" d="M0 0Q50-35 0-100-50-35 0 0"/>
+    <path transform="rotate(216)" d="M0 0Q50-35 0-100-50-35 0 0"/>
+    <path transform="rotate(288)" d="M0 0Q50-35 0-100-50-35 0 0"/>
+  </g>
+  <g fill="#f9a825">
+    <path transform="rotate(0)" d="m0-50q10 20 0 40-10-20 0-40"/>
+    <path transform="rotate(72)" d="m0-50q10 20 0 40-10-20 0-40"/>
+    <path transform="rotate(144)" d="m0-50q10 20 0 40-10-20 0-40"/>
+    <path transform="rotate(216)" d="m0-50q10 20 0 40-10-20 0-40"/>
+    <path transform="rotate(288)" d="m0-50q10 20 0 40-10-20 0-40"/>
+  </g>
+</svg>

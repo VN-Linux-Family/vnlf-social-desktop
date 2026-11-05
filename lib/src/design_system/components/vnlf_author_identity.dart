@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
@@ -140,9 +141,12 @@ class VnlfAuthorNameRow extends StatelessWidget {
                   const SizedBox.shrink(),
             ),
           ),
-        if (style.distroBadge != DistroBadgeType.none)
+        if (style.distroBadge != DistroBadgeType.none ||
+            (style.distroBadgeLabel != null &&
+                style.distroBadgeLabel!.isNotEmpty))
           VnlfInlineDistroIcon(
             badge: style.distroBadge,
+            badgeName: style.distroBadgeLabel,
             tooltip: distroBadgeTooltip ?? style.distroBadgeLabel,
             semanticLabel: distroBadgeSemanticLabel ?? style.distroBadgeLabel,
           ),
@@ -176,19 +180,29 @@ class VnlfAuthorNameRow extends StatelessWidget {
 class VnlfInlineDistroIcon extends StatelessWidget {
   const VnlfInlineDistroIcon({
     super.key,
-    required this.badge,
+    this.badge = DistroBadgeType.none,
+    this.badgeName,
     this.size = 16.0,
     this.tooltip,
     this.semanticLabel,
   });
 
   final DistroBadgeType badge;
+  final String? badgeName;
   final double size;
   final String? tooltip;
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveName =
+        (badgeName != null && badgeName!.isNotEmpty
+                ? badgeName!
+                : (badge != DistroBadgeType.none ? badge.name : ''))
+            .toLowerCase();
+
+    if (effectiveName.isEmpty) return const SizedBox.shrink();
+
     final colors = VnlfColors.of(context);
     final (Color bg, Color fg, String glyph) = switch (badge) {
       DistroBadgeType.cachyos => (colors.cyan, colors.surface, 'C'),
@@ -197,12 +211,20 @@ class VnlfInlineDistroIcon extends StatelessWidget {
       DistroBadgeType.debian => (colors.red, colors.surface, 'D'),
       DistroBadgeType.nixos => (colors.cyan, colors.surface, 'N'),
       DistroBadgeType.fedora => (colors.blue, colors.surface, 'f'),
-      DistroBadgeType.none => (Colors.transparent, Colors.transparent, ''),
+      DistroBadgeType.ubuntu => (colors.orange, colors.surface, 'U'),
+      DistroBadgeType.kali => (colors.blue, colors.surface, 'K'),
+      DistroBadgeType.gentoo => (colors.purple, colors.surface, 'G'),
+      DistroBadgeType.mint => (colors.green, colors.surface, 'M'),
+      DistroBadgeType.linux => (colors.brand, colors.surface, 'L'),
+      DistroBadgeType.opensuse => (colors.green, colors.surface, 'S'),
+      DistroBadgeType.none => (
+        colors.brand,
+        colors.surface,
+        effectiveName[0].toUpperCase(),
+      ),
     };
 
-    if (badge == DistroBadgeType.none) return const SizedBox.shrink();
-
-    Widget badgeWidget = Container(
+    Widget fallback = Container(
       width: size,
       height: size,
       alignment: Alignment.center,
@@ -216,6 +238,19 @@ class VnlfInlineDistroIcon extends StatelessWidget {
           fontWeight: FontWeight.w800,
           color: fg,
         ),
+      ),
+    );
+
+    Widget badgeWidget = ClipRRect(
+      borderRadius: BorderRadius.circular(
+        effectiveName == 'caramos' ? size / 2 : 4,
+      ),
+      child: SvgPicture.asset(
+        'assets/images/distro-badges/$effectiveName.svg',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        placeholderBuilder: (_) => fallback,
       ),
     );
 
@@ -234,20 +269,25 @@ class VnlfInlineDistroIcon extends StatelessWidget {
 class VnlfDistroBadgePill extends StatelessWidget {
   const VnlfDistroBadgePill({
     super.key,
-    required this.badge,
+    this.badge = DistroBadgeType.none,
+    this.badgeName,
     this.label = '',
     this.iconTooltip,
     this.semanticLabel,
   });
 
   final DistroBadgeType badge;
+  final String? badgeName;
   final String label;
   final String? iconTooltip;
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    if (badge == DistroBadgeType.none) return const SizedBox.shrink();
+    if (badge == DistroBadgeType.none &&
+        (badgeName == null || badgeName!.isEmpty)) {
+      return const SizedBox.shrink();
+    }
     final colors = VnlfColors.of(context);
 
     final pill = Container(
@@ -260,7 +300,12 @@ class VnlfDistroBadgePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          VnlfInlineDistroIcon(badge: badge, size: 13, tooltip: iconTooltip),
+          VnlfInlineDistroIcon(
+            badge: badge,
+            badgeName: badgeName,
+            size: 13,
+            tooltip: iconTooltip,
+          ),
           if (label.isNotEmpty) ...[
             const SizedBox(width: 4),
             Flexible(

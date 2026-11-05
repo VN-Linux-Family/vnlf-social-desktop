@@ -96,6 +96,7 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
         viewerVote: summary.viewerVote,
         isBookmarked: source.viewerBookmarked,
         commentCount: source.commentCount,
+        attachment: summary.attachment,
       ),
     );
     return Column(
@@ -121,7 +122,7 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
           bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
         ),
         const SizedBox(height: 12),
-        ThreadComments(focusNode: _commentFocus),
+        ThreadComments(postId: source.id, focusNode: _commentFocus),
       ],
     );
   }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- CRUX (feedback #1081). Not the distro's logo: Simple Icons has none, so the Southern Cross the distro is named after (Crux)
+     stands for it, drawn here as four stars and the small fifth one on a rounded tile in deep blue. Licence of this icon: drawn
+     for VNLF, no third-party artwork. -->
+<rect width="24" height="24" rx="6" fill="#23395d"/>
+<g fill="#ffffff">
+<path d="M12 3.2l.9 1.9 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/>
+<path d="M12 15.4l1 2.1 2.2.3-1.6 1.55.4 2.2-2-1.05-2 1.05.4-2.2-1.6-1.55 2.2-.3z"/>
+<path d="M5.6 9.4l.75 1.55 1.7.25-1.22 1.2.29 1.7-1.52-.8-1.52.8.29-1.7-1.22-1.2 1.7-.25z"/>
+<path d="M18.4 8.4l.7 1.4 1.55.23-1.12 1.1.27 1.55-1.4-.73-1.4.73.27-1.55-1.12-1.1 1.55-.23z"/>
+<circle cx="15.3" cy="13.4" r="0.95"/>
+</g>
+</svg>

@@ -109,6 +109,7 @@ final class FeedPost {
     this.canEdit = false,
     this.tagSlugs = const [],
     this.tags = const [],
+    this.attachments = const [],
     this.publishedAt,
     this.updatedAt,
   });
@@ -136,8 +137,27 @@ final class FeedPost {
   final bool canEdit;
   final List<String> tagSlugs;
   final List<String> tags;
+  final List<ArticleAttachment> attachments;
   final DateTime? publishedAt;
   final DateTime? updatedAt;
+}
+
+final class ArticleAttachment {
+  const ArticleAttachment({
+    required this.id,
+    required this.url,
+    this.mime = '',
+    this.alt = '',
+    this.width,
+    this.height,
+  });
+
+  final String id;
+  final String url;
+  final String mime;
+  final String alt;
+  final int? width;
+  final int? height;
 }
 
 final class LeaderboardItem {

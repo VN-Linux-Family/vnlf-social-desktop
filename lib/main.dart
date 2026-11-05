@@ -43,6 +43,7 @@ class _AppState extends ConsumerState<_App> {
       theme: VnlfTheme.light(),
       darkTheme: VnlfTheme.dark(),
       themeMode: ref.watch(themeModeProvider),
+      themeAnimationDuration: Duration.zero,
       locale: ref.watch(localeProvider),
       localizationsDelegates: const [
         AppLocalizations.delegate,

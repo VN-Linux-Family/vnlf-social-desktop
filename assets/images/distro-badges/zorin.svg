@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+<!-- Zorin logo, from Simple Icons 16.33.0 (https://simpleicons.org, icon "zorin"). The logo belongs to its owner and is
+     shown only to name the distro. Licence of this icon: CC0 1.0 (Simple Icons). VNLF puts it on a rounded tile in the brand colour. -->
+<rect width="24" height="24" rx="6" fill="#009ce4"/>
+<path transform="translate(3.5 3.5) scale(0.7083)" fill="#ffffff" d="M4 18.944L5.995 22.4h12.01L20 18.944H4zM24 12l-2.013 3.488H9.216l12.771-6.976L24 12zM0 12l2.013-3.488h12.771L2.013 15.488 0 12zm4-6.944L5.995 1.6h12.01L20 5.056H4z"/>
+</svg>

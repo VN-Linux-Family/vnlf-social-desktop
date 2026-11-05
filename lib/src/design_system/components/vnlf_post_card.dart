@@ -125,6 +125,7 @@ class VnlfPostCard extends StatelessWidget {
     this.onShareTap,
     this.onBookmarkToggle,
     this.onAuthorTap,
+    this.onMoreTap,
     this.showBottomActions = true,
     this.semanticLabel,
     this.authorAvatarSemanticLabel,
@@ -168,6 +169,7 @@ class VnlfPostCard extends StatelessWidget {
        onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
+       onMoreTap = null,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
        codeCopyLabel = '',
@@ -207,6 +209,7 @@ class VnlfPostCard extends StatelessWidget {
        onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
+       onMoreTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -247,6 +250,7 @@ class VnlfPostCard extends StatelessWidget {
        onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
+       onMoreTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -284,6 +288,7 @@ class VnlfPostCard extends StatelessWidget {
   final VoidCallback? onShareTap;
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
+  final VoidCallback? onMoreTap;
   final bool showBottomActions;
   final String? semanticLabel;
   final String? authorAvatarSemanticLabel;
@@ -376,11 +381,115 @@ class VnlfPostCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Semantics(
                       label: moreOptionsSemanticLabel,
-                      child: Icon(
-                        Icons.more_horiz_rounded,
-                        size: 16,
-                        color: colors.muted,
-                      ),
+                      child: onMoreTap != null
+                          ? InkWell(
+                              borderRadius: BorderRadius.circular(999),
+                              onTap: onMoreTap,
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.more_horiz_rounded,
+                                  size: 16,
+                                  color: colors.muted,
+                                ),
+                              ),
+                            )
+                          : PopupMenuButton<String>(
+                              tooltip: moreOptionsSemanticLabel ?? 'Tùy chọn',
+                              icon: Icon(
+                                Icons.more_horiz_rounded,
+                                size: 16,
+                                color: colors.muted,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 24,
+                                minHeight: 24,
+                              ),
+                              color: colors.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  VnlfDimensions.radiusMd,
+                                ),
+                                side: BorderSide(color: colors.line),
+                              ),
+                              onSelected: (value) {
+                                switch (value) {
+                                  case 'copy':
+                                    onShareTap?.call();
+                                  case 'bookmark':
+                                    onBookmarkToggle?.call();
+                                  case 'report':
+                                    _showReportNotice(context);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'copy',
+                                  height: 38,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.link_rounded,
+                                        size: 18,
+                                        color: colors.ink,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Sao chép liên kết',
+                                        style: VnlfTypography.caption(
+                                          colors.ink,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'bookmark',
+                                  height: 38,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        loadedPost.isBookmarked
+                                            ? Icons.bookmark_remove_rounded
+                                            : Icons.bookmark_add_rounded,
+                                        size: 18,
+                                        color: colors.ink,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        loadedPost.isBookmarked
+                                            ? 'Bỏ lưu bài viết'
+                                            : 'Lưu bài viết',
+                                        style: VnlfTypography.caption(
+                                          colors.ink,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'report',
+                                  height: 38,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.flag_outlined,
+                                        size: 18,
+                                        color: colors.red,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Báo cáo bài viết',
+                                        style: VnlfTypography.caption(
+                                          colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ],
                 ),
@@ -486,5 +595,13 @@ class VnlfPostCard extends StatelessWidget {
       return card;
     }
     return Semantics(label: semanticLabel, container: true, child: card);
+  }
+
+  void _showReportNotice(BuildContext context) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(content: Text('Đã ghi nhận yêu cầu báo cáo bài viết.')),
+      );
   }
 }

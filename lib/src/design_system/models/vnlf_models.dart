@@ -8,7 +8,21 @@ enum AvatarFrameType { none, ring }
 enum NameEffectType { none, rainbow, glitch, cursor }
 
 /// Linux distribution badges displayed next to author names.
-enum DistroBadgeType { none, arch, debian, cachyos, caramos, nixos, fedora }
+enum DistroBadgeType {
+  none,
+  arch,
+  debian,
+  cachyos,
+  caramos,
+  nixos,
+  fedora,
+  ubuntu,
+  kali,
+  gentoo,
+  mint,
+  linux,
+  opensuse,
+}
 
 /// Offline vector illustration preset for user avatars (zero network calls).
 enum AvatarVisualPreset {
