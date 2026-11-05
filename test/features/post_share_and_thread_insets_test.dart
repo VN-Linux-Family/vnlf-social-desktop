@@ -11,6 +11,19 @@ import 'package:vnlfsocialapp/src/features/shared/presentation/feature_widgets.d
 import 'package:vnlfsocialapp/src/features/shared/presentation/post_share.dart';
 
 void main() {
+  test('discover articles retain the canonical share slug', () async {
+    final client = ApiClient(
+      transport: fixtureTransport,
+      throttleInterval: Duration.zero,
+      hostKey: Object(),
+    );
+    final discover = await FixtureDiscoverRepository(client).getDiscoverData();
+    expect(
+      canonicalPostUri(discover.articles.first).toString(),
+      'https://vietnamlinuxfamily.net/a/trai-nghiem-arch-linux-va-wayland',
+    );
+  });
+
   test('article detail retains the canonical share slug', () async {
     final client = ApiClient(
       transport: (_) async => ApiResponse(

@@ -408,6 +408,7 @@ final class FixtureDiscoverRepository implements DiscoverRepository {
             : null;
         return FeedPost(
           id: item['id'] as String? ?? '',
+          slug: stringValue(item['slug'], 'article.slug'),
           excerpt: item['excerpt'] as String? ?? item['title'] as String? ?? '',
           title: item['title'] as String?,
           voteScore: item['voteScore'] as int? ?? 0,
