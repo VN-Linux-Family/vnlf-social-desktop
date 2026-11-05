@@ -20,6 +20,8 @@ PostData presentPost(
             width: item.width,
             height: item.height,
             posterUrl: item.posterUrl,
+            durationMs: item.durationMs,
+            state: item.state,
           ),
         ),
       ),

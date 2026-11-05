@@ -12,53 +12,63 @@ class VnlfMediaGallery extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = items.length > 1 ? 2 : 1;
-        final width = (constraints.maxWidth - (columns - 1) * 6) / columns;
-        return Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (var i = 0; i < items.length; i++)
-              SizedBox(
-                width: width,
-                child: items[i].isVideo
-                    ? VnlfVideo(media: items[i])
-                    : InkWell(
-                        onTap: externalWebUri(items[i].url) == null
+    final images = items.where((item) => !item.isVideo).toList();
+    final videos = items.where((item) => item.isVideo).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final video in videos)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: VnlfVideo(media: video),
+          ),
+        if (images.isNotEmpty)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = images.length > 1 ? 2 : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 6) / columns;
+              return Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (var i = 0; i < images.length; i++)
+                    SizedBox(
+                      width: width,
+                      child: InkWell(
+                        onTap: externalWebUri(images[i].url) == null
                             ? null
                             : () => Navigator.of(context).push<void>(
                                 MaterialPageRoute(
-                                  builder: (_) => _ImageViewer(
-                                    items: items
-                                        .where((item) => !item.isVideo)
-                                        .toList(),
-                                    initial: items
-                                        .take(i)
-                                        .where((item) => !item.isVideo)
-                                        .length,
-                                  ),
+                                  builder: (_) =>
+                                      _ImageViewer(items: images, initial: i),
                                 ),
                               ),
                         borderRadius: BorderRadius.circular(10),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: AspectRatio(
-                            aspectRatio: columns == 1
-                                ? items[i].aspectRatio
-                                : 1,
-                            child: _RemoteImage(
-                              media: items[i],
-                              fit: BoxFit.cover,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 650),
+                            child: AspectRatio(
+                              aspectRatio: columns == 1
+                                  ? images[i].aspectRatio
+                                  : 1,
+                              child: _RemoteImage(
+                                media: images[i],
+                                fit: columns == 1
+                                    ? BoxFit.contain
+                                    : BoxFit.cover,
+                              ),
                             ),
                           ),
                         ),
                       ),
-              ),
-          ],
-        );
-      },
+                    ),
+                ],
+              );
+            },
+          ),
+      ],
     );
   }
 }

@@ -66,6 +66,21 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
+    final unavailable =
+        widget.media.state == 'FAILED' ||
+        externalWebUri(widget.media.url) == null;
+    if (widget.media.state == 'PROCESSING' || unavailable) {
+      return Container(
+        constraints: const BoxConstraints(minHeight: 120),
+        alignment: Alignment.center,
+        color: VnlfColors.of(context).surfaceSoft,
+        child: Text(
+          widget.media.state == 'PROCESSING'
+              ? (english ? 'Video is processing' : 'Video đang được xử lý')
+              : (english ? 'Video unavailable' : 'Video không khả dụng'),
+        ),
+      );
+    }
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: AspectRatio(

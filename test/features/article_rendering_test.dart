@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/data/feed_dto.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
+import 'package:vnlfsocialapp/src/design_system/components/vnlf_media_gallery.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/feed/presentation/post_mapper.dart';
 
@@ -86,6 +87,89 @@ void main() {
       (nodes.single as Map)['attrs']['src'],
       'https://example.invalid/inline.webp',
     );
+  });
+
+  test('empty asset id preserves image URL and catalog dimensions survive', () {
+    final post = FeedPostDto.fromJson({
+      'id': 'assets',
+      'contentJson': {
+        'type': 'doc',
+        'content': [
+          {
+            'type': 'image',
+            'attrs': {
+              'assetId': '',
+              'src': 'https://example.invalid/kept.webp',
+            },
+          },
+          {
+            'type': 'image',
+            'attrs': {'assetId': 'portrait'},
+          },
+        ],
+      },
+      'assets': [
+        {
+          'id': 'portrait',
+          'url': 'https://example.invalid/portrait.webp',
+          'width': 600,
+          'height': 1200,
+        },
+      ],
+    }).toDomain();
+    final nodes = post.contentJson!['content'] as List;
+    expect(nodes[0]['attrs']['src'], 'https://example.invalid/kept.webp');
+    expect(nodes[1]['attrs']['width'], 600);
+    expect(nodes[1]['attrs']['height'], 1200);
+  });
+
+  testWidgets(
+    'processing video has a state message without a dead play action',
+    (tester) async {
+      final post = FeedPostDto.fromJson({
+        'id': 'processing',
+        'attachments': [
+          {
+            'id': 'video',
+            'mime': 'video/mp4',
+            'url': null,
+            'state': 'PROCESSING',
+          },
+        ],
+      }).toDomain();
+      await pumpPost(tester, post);
+      expect(find.text('Video is processing'), findsOneWidget);
+      expect(find.byIcon(Icons.play_circle_fill_rounded), findsNothing);
+    },
+  );
+
+  testWidgets('videos span the card above image thumbnails', (tester) async {
+    await pumpPost(
+      tester,
+      postWith(
+        media: const [
+          ArticleAttachment(
+            id: 'one',
+            url: 'https://example.invalid/one.webp',
+            mime: 'image/webp',
+          ),
+          ArticleAttachment(
+            id: 'video',
+            url: 'https://example.invalid/video.mp4',
+            mime: 'video/mp4',
+          ),
+        ],
+      ),
+    );
+    final video = find.byIcon(Icons.play_circle_fill_rounded);
+    final image = find.byType(Image).first;
+    expect(tester.getCenter(video).dy, lessThan(tester.getCenter(image).dy));
+    final gallery = find.byType(VnlfMediaGallery);
+    final ratios = find.descendant(
+      of: gallery,
+      matching: find.byType(AspectRatio),
+    );
+    expect(tester.getSize(ratios.first).width, tester.getSize(gallery).width);
   });
 
   testWidgets('post renders structured headings lists line breaks and code', (

@@ -152,6 +152,7 @@ final class ArticleAttachment {
     this.height,
     this.posterUrl,
     this.durationMs,
+    this.state,
   });
 
   final String id;
@@ -162,6 +163,7 @@ final class ArticleAttachment {
   final int? height;
   final String? posterUrl;
   final int? durationMs;
+  final String? state;
 }
 
 final class LeaderboardItem {

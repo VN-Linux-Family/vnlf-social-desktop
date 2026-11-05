@@ -27,6 +27,7 @@ final class FeedPostDto {
             height: nullableInt(a['height'], 'height'),
             posterUrl: nullableString(a['posterUrl'], 'posterUrl'),
             durationMs: nullableInt(a['durationMs'], 'durationMs'),
+            state: nullableString(a['state'], 'state'),
           ),
         )
         .toList();
@@ -69,20 +70,24 @@ final class FeedPostDto {
     if (doc == null) return null;
     final assets = {
       for (final asset in objectList(_json['assets'], 'assets'))
-        stringValue(asset['id'], 'asset.id'): nullableString(
-          asset['url'],
-          'asset.url',
-        ),
+        stringValue(asset['id'], 'asset.id'): asset,
     };
     Map<String, dynamic> resolve(Map<String, dynamic> node) {
       final attrs = objectValue(node['attrs'], 'content.attrs');
+      final assetId = attrs?['assetId'];
+      final asset = assetId is String && assetId.isNotEmpty
+          ? assets[assetId]
+          : null;
       return {
         ...node,
         if (node['type'] == 'image' && attrs != null)
           'attrs': {
             ...attrs,
-            if (attrs['assetId'] is String)
-              'src': assets[attrs['assetId']] ?? '',
+            if (asset != null) ...{
+              'src': nullableString(asset['url'], 'asset.url') ?? attrs['src'],
+              'width': nullableInt(asset['width'], 'asset.width'),
+              'height': nullableInt(asset['height'], 'asset.height'),
+            },
           },
         if (node['content'] is List)
           'content': objectList(

@@ -148,6 +148,8 @@ final class PostMediaData {
     this.width,
     this.height,
     this.posterUrl,
+    this.durationMs,
+    this.state,
   });
   final String url;
   final String mime;
@@ -155,10 +157,12 @@ final class PostMediaData {
   final int? width;
   final int? height;
   final String? posterUrl;
+  final int? durationMs;
+  final String? state;
   bool get isVideo => mime.startsWith('video/');
   double get aspectRatio =>
       width != null && width! > 0 && height != null && height! > 0
-      ? (width! / height!).clamp(.5, 2.4)
+      ? width! / height!
       : 16 / 9;
 }
 

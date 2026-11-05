@@ -203,6 +203,8 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
                     PostMediaData(
                       url: url!,
                       alt: attrs['alt'] as String? ?? '',
+                      width: attrs['width'] as int?,
+                      height: attrs['height'] as int?,
                     ),
                   ],
                 )
