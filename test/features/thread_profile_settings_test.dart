@@ -114,7 +114,7 @@ void main() {
     expect(find.text('@thanhvien'), findsWidgets);
   });
 
-  testWidgets('profile shows identity and switches projects and wardrobe', (
+  testWidgets('profile shows identity and switches public content tabs', (
     tester,
   ) async {
     final router = await _pumpApp(tester);
@@ -122,21 +122,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Hoàng Nam'), findsWidgets);
     expect(find.text('@hoangnam'), findsWidgets);
-    expect(find.text('Người theo dõi'), findsOneWidget);
-    expect(find.text('Karma'), findsOneWidget);
-    expect(find.text('Bài viết'), findsWidgets);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(VnlfFeedTabBar),
-        matching: find.text('Dự án'),
-      ),
+    expect(find.text('người theo dõi'), findsOneWidget);
+    expect(find.text('Tổng XP'), findsOneWidget);
+    expect(find.textContaining('Bài viết'), findsWidgets);
+    final projects = find.descendant(
+      of: find.byType(VnlfFeedTabBar),
+      matching: find.textContaining('Dự án'),
     );
+    await tester.ensureVisible(projects);
+    await tester.tap(projects);
     await tester.pumpAndSettle();
     expect(find.text('vnlf-cli'), findsOneWidget);
-    await tester.tap(find.text('Tủ đồ & Huy hiệu'));
+    final guestbook = find.text('Sổ lưu bút');
+    await tester.ensureVisible(guestbook);
+    await tester.tap(guestbook);
     await tester.pumpAndSettle();
-    expect(find.text('Khung ảnh đại diện'), findsOneWidget);
-    expect(find.text('Huy hiệu bản phân phối'), findsOneWidget);
+    expect(find.text('Chưa có lời nhắn'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -273,3 +273,47 @@ Connection uses HTTP upgrade with existing session cookies.
 - Control API: `GET /api/v1/voice/rooms`, `POST /api/v1/voice/rooms/{id}/join-token`.
 - RTC Engine: LiveKit SFU running at `wss://voice.vietnamlinuxfamily.net`.
 - Dart integration: `livekit_client` official Flutter SDK for room connection and microphone streams.
+
+## 10. Public profile fidelity audit (2026-11-05)
+
+Evidence: anonymous public profile HTML at `/u/{username}`, its static client
+chunk `2_3bhcnky9v-5.js`, and CSS chunks `24q1nvecqxecf.css`,
+`1ni-9zdh0kfr0.css`, `0bu6vbbz82oz_.css`. A single anonymous GET of each
+confirmed public read below checked response keys/types; no response body or
+user content was saved in this repository. No authenticated requests or writes
+were made. The web client's profile visit POST is deliberately not reproduced.
+
+- `GET /api/v1/users/{username}`: confirmed `totalPoints`, `level`,
+  `currentStreak`, `followerCount`, `followingCount`, `bio`, `style`, and `decor`.
+  The web header shows total XP + level, streak, following and followers;
+  loaded post/project counts and weekly leaderboard points are not these stats.
+  Cover images use `decor.cover.imageUrl`; guestbook visibility uses
+  `decor.guestbookEnabled` (static client evidence).
+- `GET /api/v1/users/{username}/articles?limit=50`: confirmed public profile
+  posts, `{items, nextCursor}`, using the existing article projection.
+- `GET /api/v1/users/{username}/comments?limit=50`: confirmed `{items,
+  nextCursor}` and comment keys `id`, `articleId`, `articleSlug`, `content`,
+  `createdAt`, plus the existing public author/interaction fields. Native profile
+  rows render text/date and open the article. Rich comment attachments are not
+  implemented. Profile post/comment pagination beyond the client's first 50
+  remains unverified; the app explicitly indicates a truncated result.
+- `GET /api/v1/users/{username}/projects`: confirmed `{items}`; the public
+  client uses this instead of filtering the general project directory.
+- `GET /api/v1/profiles/{username}/guestbook`: confirmed `enabled`, `items`,
+  `total`, `nextCursor`, `blockedReason`. Static client evidence confirms
+  `?cursor={cursor}` pagination and entry `id`, `author`, `content`, `createdAt`,
+  `status`. The inspected anonymous response had no entries, so entry fields are
+  static-client confirmed, not observed populated live. Native reads display
+  `VISIBLE` entries only and expose no guestbook write controls.
+- Public tabs are posts, comments, projects and (when enabled) guestbook. The
+  wardrobe is not a public profile content tab. Owner-only saved posts, profile
+  editing/follow/block actions and custom music/machine-card/wallpaper effects
+  are outside this read-only implementation.
+- Static CSS confirms nameplate capsule radius `999px`, text-clipped gradients
+  with light/dark colors, and 16×16 inline flair (`object-fit: contain`), with
+  `pixelArt` controlling nearest-neighbor rendering rather than adding a second
+  badge. H1/H2 web flair scales to 20px; native retains the requested 16px inline
+  size. Exact distro artwork, frame/nameplate textures, animated name effects,
+  non-90-degree gradients, profile visit counter and full decor fidelity remain
+  unverified/unimplemented. Existing tinted nameplate alpha is retained pending
+  confirmation of the client's computed plate-color variables.

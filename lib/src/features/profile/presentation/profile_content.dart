@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../../../design_system/design_system.dart';
+import '../../../domain/models.dart';
+import '../../feed/presentation/post_mapper.dart';
+import '../../shared/presentation/feature_widgets.dart';
+import '../../shared/presentation/post_share.dart';
+import '../domain/public_profile.dart';
+import 'profile_data.dart';
+
+class ProfileContent extends ConsumerWidget {
+  const ProfileContent({super.key, required this.username, required this.tab});
+  final String username;
+  final int tab;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final english = Localizations.localeOf(context).languageCode == 'en';
+    return switch (tab) {
+      0 => _section<FeedPage>(
+        ref.watch(profilePostsProvider(username)),
+        () => ref.invalidate(profilePostsProvider(username)),
+        (page) => [
+          if (page.items.isEmpty)
+            _empty(
+              english ? 'No public posts yet' : 'Chưa có bài viết công khai',
+            ),
+          for (final post in page.items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                onTap: () =>
+                    context.push('/thread/${Uri.encodeComponent(post.id)}'),
+                child: VnlfPostCard(
+                  post: presentPost(post, english: english),
+                  onCommentTap: () =>
+                      context.push('/thread/${Uri.encodeComponent(post.id)}'),
+                  onShareTap: () => copyPostLink(context, post),
+                  shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
+                ),
+              ),
+            ),
+          if (page.nextCursor != null)
+            _empty(
+              english
+                  ? 'Showing the first 50 public posts.'
+                  : 'Đang hiển thị 50 bài viết công khai đầu tiên.',
+            ),
+        ],
+      ),
+      1 => _section<ProfileCommentsPage>(
+        ref.watch(profileCommentsProvider(username)),
+        () => ref.invalidate(profileCommentsProvider(username)),
+        (page) => [
+          if (page.items.isEmpty)
+            _empty(
+              english
+                  ? 'No public comments yet'
+                  : 'Chưa có bình luận công khai',
+            ),
+          for (final comment in page.items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: FeatureSurface(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.mode_comment_outlined, size: 16),
+                  title: Text(comment.content),
+                  subtitle: comment.createdAt == null
+                      ? null
+                      : Text(
+                          DateFormat.yMd(english ? 'en' : 'vi')
+                              .format(comment.createdAt!.toLocal()),
+                        ),
+                  trailing: const Icon(Icons.arrow_outward, size: 16),
+                  onTap: comment.articleId.isEmpty
+                      ? null
+                      : () => context.push(
+                          '/thread/${Uri.encodeComponent(comment.articleId)}',
+                        ),
+                ),
+              ),
+            ),
+          if (page.nextCursor != null)
+            _empty(
+              english
+                  ? 'Showing the first 50 public comments.'
+                  : 'Đang hiển thị 50 bình luận công khai đầu tiên.',
+            ),
+        ],
+      ),
+      _ => _section<ProjectsPage>(
+        ref.watch(profileProjectsProvider(username)),
+        () => ref.invalidate(profileProjectsProvider(username)),
+        (page) => [
+          if (page.items.isEmpty)
+            _empty(english ? 'No projects yet' : 'Chưa có dự án'),
+          for (final item in page.items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: VnlfProjectPreviewCard(
+                project: ProjectShowcaseData(
+                  id: item.id,
+                  name: item.name,
+                  description: item.tagline,
+                  primaryLanguage: item.repo?['language'] as String? ?? '',
+                  tag: item.type,
+                  stars: (item.repo?['stars'] as num?)?.toInt() ?? 0,
+                  forks: (item.repo?['forks'] as num?)?.toInt() ?? 0,
+                  rating: (item.rating?['average'] as num?)?.toDouble() ?? 0,
+                ),
+              ),
+            ),
+        ],
+      ),
+    };
+  }
+
+  Widget _empty(String text) => FeatureSurface(child: Text(text));
+
+  Widget _section<T>(
+    AsyncValue<T> value,
+    VoidCallback retry,
+    List<Widget> Function(T) content,
+  ) => value.when(
+    loading: () => const Center(child: CircularProgressIndicator()),
+    error: (error, stack) => FeatureLoadError(onRetry: retry),
+    data: (data) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: content(data),
+    ),
+  );
+}
