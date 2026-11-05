@@ -20,6 +20,13 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.themeMode = ThemeMode.light,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.onSettingsTap,
+    this.onHelpTap,
+    this.onFeedbackTap,
+    this.onSupportTap,
+    this.onFacebookTap,
+    this.onTelegramTap,
+    this.onDiscordTap,
     this.isDrawer = false,
     this.width = VnlfDimensions.leftSidebarWidth,
     this.destinationLabels = const {},
@@ -61,6 +68,13 @@ class VnlfDesktopSidebar extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onSettingsTap;
+  final VoidCallback? onHelpTap;
+  final VoidCallback? onFeedbackTap;
+  final VoidCallback? onSupportTap;
+  final VoidCallback? onFacebookTap;
+  final VoidCallback? onTelegramTap;
+  final VoidCallback? onDiscordTap;
   final bool isDrawer;
   final double width;
   final Map<VnlfNavDestination, String> destinationLabels;
@@ -228,7 +242,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
                     label: supportLabel,
                     badgeText: supportBadgeText,
                     semanticLabel: supportSemanticLabel,
-                    onTap: () {},
+                    onTap: onSupportTap ?? () {},
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -238,35 +252,44 @@ class VnlfDesktopSidebar extends StatelessWidget {
                   Semantics(
                     button: true,
                     label: feedbackSemanticLabel ?? feedbackLabel,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colors.brandSoft,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
                         borderRadius: BorderRadius.circular(
                           VnlfDimensions.radiusMd,
                         ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.rate_review_outlined,
-                            size: 17,
-                            color: colors.brand,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              feedbackLabel,
-                              style: VnlfTypography.control(
-                                colors.brand,
-                                fontWeight: FontWeight.w700,
-                              ),
+                        onTap: onFeedbackTap,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colors.brandSoft,
+                            borderRadius: BorderRadius.circular(
+                              VnlfDimensions.radiusMd,
                             ),
                           ),
-                        ],
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.rate_review_outlined,
+                                size: 17,
+                                color: colors.brand,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  feedbackLabel,
+                                  style: VnlfTypography.control(
+                                    colors.brand,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -298,16 +321,19 @@ class VnlfDesktopSidebar extends StatelessWidget {
                                 ? Icons.public_rounded
                                 : null,
                             semanticLabel: facebookSemanticLabel,
+                            onTap: onFacebookTap,
                           ),
                           const SizedBox(width: 8),
                           SocialCircleBadge(
                             icon: Icons.send_rounded,
                             semanticLabel: telegramSemanticLabel,
+                            onTap: onTelegramTap,
                           ),
                           const SizedBox(width: 8),
                           SocialCircleBadge(
                             icon: Icons.sports_esports_rounded,
                             semanticLabel: discordSemanticLabel,
+                            onTap: onDiscordTap,
                           ),
                         ],
                       ),
@@ -323,12 +349,14 @@ class VnlfDesktopSidebar extends StatelessWidget {
                     icon: Icons.settings_outlined,
                     label: settingsLabel,
                     semanticLabel: settingsSemanticLabel,
+                    onTap: onSettingsTap,
                   ),
                 if (helpLabel.isNotEmpty)
                   SidebarUtilityTile(
                     icon: Icons.help_outline_rounded,
                     label: helpLabel,
                     semanticLabel: helpSemanticLabel,
+                    onTap: onHelpTap,
                   ),
                 if (loginLabel.isNotEmpty)
                   SidebarUtilityTile(

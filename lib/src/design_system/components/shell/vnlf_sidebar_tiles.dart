@@ -192,17 +192,19 @@ class SocialCircleBadge extends StatelessWidget {
     this.label,
     this.icon,
     this.semanticLabel,
+    this.onTap,
   });
 
   final String? label;
   final IconData? icon;
   final String? semanticLabel;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
 
-    final badge = Container(
+    Widget badge = Container(
       width: 24,
       height: 24,
       alignment: Alignment.center,
@@ -223,6 +225,14 @@ class SocialCircleBadge extends StatelessWidget {
             )
           : Icon(icon, size: 13, color: colors.surface),
     );
+
+    if (onTap != null) {
+      badge = InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: badge,
+      );
+    }
 
     if (semanticLabel == null) {
       return badge;

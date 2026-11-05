@@ -76,8 +76,15 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       orElse: () => _defaultTags,
     );
 
+    final isDesktop = MediaQuery.sizeOf(context).width > 840;
+
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
+        if (isDesktop) ...[
+          VnlfCenterPageHeader(title: english ? 'Discover' : 'Khám phá'),
+          const SizedBox(height: 12),
+        ],
         FeatureSurface(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

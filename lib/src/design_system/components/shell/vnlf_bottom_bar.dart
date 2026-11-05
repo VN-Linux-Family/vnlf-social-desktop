@@ -13,6 +13,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
     super.key,
     this.onProfileTap,
     this.onSearchTap,
+    this.onNotificationsTap,
     this.openDrawerTooltip = '',
     this.openDrawerSemanticLabel,
     this.brandTitlePrefix = '',
@@ -26,6 +27,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
 
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
+  final VoidCallback? onNotificationsTap;
   final String openDrawerTooltip;
   final String? openDrawerSemanticLabel;
   final String brandTitlePrefix;
@@ -109,7 +111,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
               _HeaderSquareIconButton(
                 icon: Icons.notifications_none_rounded,
                 semanticLabel: notificationsSemanticLabel,
-                onTap: () {},
+                onTap: onNotificationsTap,
               ),
               const SizedBox(width: 8),
               Semantics(

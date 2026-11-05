@@ -33,20 +33,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final profile = ref.watch(profileProvider(widget.username));
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
-        if (context.canPop())
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                tooltip: english ? 'Back' : 'Quay lại',
-                icon: const Icon(Icons.arrow_back_rounded),
-                onPressed: () => context.pop(),
-              ),
+        if (context.canPop()) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              tooltip: english ? 'Back' : 'Quay lại',
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: () => context.pop(),
             ),
           ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 8),
+        ],
         ...profile.when(
           loading: () => const [Center(child: CircularProgressIndicator())],
           error: (error, stack) => [

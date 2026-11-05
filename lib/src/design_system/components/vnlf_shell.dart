@@ -43,6 +43,14 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onThemeModeChanged,
     this.onProfileTap,
     this.onSearchTap,
+    this.onNotificationsTap,
+    this.onSettingsTap,
+    this.onHelpTap,
+    this.onFeedbackTap,
+    this.onSupportTap,
+    this.onFacebookTap,
+    this.onTelegramTap,
+    this.onDiscordTap,
     this.destinationLabels = const {},
     this.destinationSemanticLabels = const {},
     this.brandTitlePrefix = '',
@@ -94,6 +102,14 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
+  final VoidCallback? onNotificationsTap;
+  final VoidCallback? onSettingsTap;
+  final VoidCallback? onHelpTap;
+  final VoidCallback? onFeedbackTap;
+  final VoidCallback? onSupportTap;
+  final VoidCallback? onFacebookTap;
+  final VoidCallback? onTelegramTap;
+  final VoidCallback? onDiscordTap;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;
   final String brandTitlePrefix;
@@ -161,6 +177,13 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     themeMode: themeMode,
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
+                    onSettingsTap: onSettingsTap,
+                    onHelpTap: onHelpTap,
+                    onFeedbackTap: onFeedbackTap,
+                    onSupportTap: onSupportTap,
+                    onFacebookTap: onFacebookTap,
+                    onTelegramTap: onTelegramTap,
+                    onDiscordTap: onDiscordTap,
                     destinationLabels: destinationLabels,
                     destinationSemanticLabels: destinationSemanticLabels,
                     brandTitlePrefix: brandTitlePrefix,
@@ -294,7 +317,38 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     },
                     themeMode: themeMode,
                     onThemeModeChanged: onThemeModeChanged,
-                    onProfileTap: onProfileTap,
+                    onProfileTap: () {
+                      Navigator.of(context).maybePop();
+                      onProfileTap?.call();
+                    },
+                    onSettingsTap: () {
+                      Navigator.of(context).maybePop();
+                      onSettingsTap?.call();
+                    },
+                    onHelpTap: () {
+                      Navigator.of(context).maybePop();
+                      onHelpTap?.call();
+                    },
+                    onFeedbackTap: () {
+                      Navigator.of(context).maybePop();
+                      onFeedbackTap?.call();
+                    },
+                    onSupportTap: () {
+                      Navigator.of(context).maybePop();
+                      onSupportTap?.call();
+                    },
+                    onFacebookTap: () {
+                      Navigator.of(context).maybePop();
+                      onFacebookTap?.call();
+                    },
+                    onTelegramTap: () {
+                      Navigator.of(context).maybePop();
+                      onTelegramTap?.call();
+                    },
+                    onDiscordTap: () {
+                      Navigator.of(context).maybePop();
+                      onDiscordTap?.call();
+                    },
                     isDrawer: true,
                     destinationLabels: destinationLabels,
                     destinationSemanticLabels: destinationSemanticLabels,
@@ -339,6 +393,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   brandLogoSemanticLabel: brandLogoSemanticLabel,
                   searchSemanticLabel: searchSemanticLabel,
                   onSearchTap: onSearchTap,
+                  onNotificationsTap: onNotificationsTap,
                   notificationsSemanticLabel: notificationsSemanticLabel,
                   profileSemanticLabel: profileSemanticLabel,
                   semanticLabel: mobileHeaderSemanticLabel,

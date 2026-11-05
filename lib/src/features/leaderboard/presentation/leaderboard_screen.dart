@@ -29,10 +29,16 @@ class LeaderboardScreen extends ConsumerWidget {
     final labels = english
         ? ['This week', 'This month', 'All time']
         : ['Tuần này', 'Tháng này', 'Tất cả'];
+    final isDesktop = MediaQuery.sizeOf(context).width > 840;
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
-        VnlfCenterPageHeader(title: english ? 'Leaderboard' : 'Bảng xếp hạng'),
-        const SizedBox(height: 12),
+        if (isDesktop) ...[
+          VnlfCenterPageHeader(
+            title: english ? 'Leaderboard' : 'Bảng xếp hạng',
+          ),
+          const SizedBox(height: 12),
+        ],
         Wrap(
           spacing: 8,
           runSpacing: 8,

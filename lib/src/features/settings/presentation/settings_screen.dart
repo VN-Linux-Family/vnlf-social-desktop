@@ -26,6 +26,7 @@ class SettingsScreen extends ConsumerWidget {
         ref.watch(sessionProvider).valueOrNull ??
         ref.watch(sessionStateProvider);
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
         FeatureHeader(
           title: english ? 'Settings' : 'Cài đặt',

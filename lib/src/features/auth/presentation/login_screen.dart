@@ -16,16 +16,22 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   int _tabIndex = 0; // 0 = login, 1 = register
 
-  // Login controllers
+  // Login controllers & focus
   final _loginIdController = TextEditingController();
   final _loginPasswordController = TextEditingController();
+  final _loginIdFocus = FocusNode();
+  final _loginPasswordFocus = FocusNode();
   bool _loginObscure = true;
 
-  // Register controllers
+  // Register controllers & focus
   final _regEmailController = TextEditingController();
   final _regUsernameController = TextEditingController();
   final _regPasswordController = TextEditingController();
   final _regConfirmPasswordController = TextEditingController();
+  final _regEmailFocus = FocusNode();
+  final _regUsernameFocus = FocusNode();
+  final _regPasswordFocus = FocusNode();
+  final _regConfirmFocus = FocusNode();
   bool _regObscure = true;
 
   bool _loading = false;
@@ -35,10 +41,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _loginIdController.dispose();
     _loginPasswordController.dispose();
+    _loginIdFocus.dispose();
+    _loginPasswordFocus.dispose();
     _regEmailController.dispose();
     _regUsernameController.dispose();
     _regPasswordController.dispose();
     _regConfirmPasswordController.dispose();
+    _regEmailFocus.dispose();
+    _regUsernameFocus.dispose();
+    _regPasswordFocus.dispose();
+    _regConfirmFocus.dispose();
     super.dispose();
   }
 
@@ -167,16 +179,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: colors.bg,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: colors.surface,
         elevation: 0,
-        leading: canPop
-            ? IconButton(
-                tooltip: english ? 'Back' : 'Quay lại',
-                icon: Icon(Icons.arrow_back_rounded, color: colors.ink),
-                onPressed: () => context.pop(),
-              )
-            : null,
+        leading: IconButton(
+          tooltip: english ? 'Back' : 'Quay lại',
+          icon: Icon(Icons.arrow_back_rounded, color: colors.ink),
+          onPressed: () {
+            if (canPop) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
         title: Text(
           _tabIndex == 0
               ? (english ? 'Log In' : 'Đăng nhập')
@@ -187,6 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
@@ -368,163 +386,210 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Tab Form Body
                     if (_tabIndex == 0) ...[
                       // LOGIN FORM
-                      TextField(
-                        key: const Key('login-id-field'),
-                        controller: _loginIdController,
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          labelText: english
-                              ? 'Email or Username'
-                              : 'Email hoặc Tên người dùng',
-                          prefixIcon: const Icon(Icons.person_outline),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      TextField(
-                        key: const Key('login-password-field'),
-                        controller: _loginPasswordController,
-                        obscureText: _loginObscure,
-                        decoration: InputDecoration(
-                          labelText: english ? 'Password' : 'Mật khẩu',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _loginObscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                      AutofillGroup(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextField(
+                              key: const Key('login-id-field'),
+                              controller: _loginIdController,
+                              focusNode: _loginIdFocus,
+                              autofocus: true,
+                              autofillHints: const [
+                                AutofillHints.username,
+                                AutofillHints.email,
+                              ],
+                              decoration: InputDecoration(
+                                labelText: english
+                                    ? 'Email or Username'
+                                    : 'Email hoặc Tên người dùng',
+                                prefixIcon: const Icon(Icons.person_outline),
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) =>
+                                  _loginPasswordFocus.requestFocus(),
                             ),
-                            onPressed: () =>
-                                setState(() => _loginObscure = !_loginObscure),
-                          ),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _handleLogin(),
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton(
-                        onPressed: _loading ? null : _handleLogin,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.brand,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              VnlfDimensions.radiusMd,
-                            ),
-                          ),
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
+                            const SizedBox(height: 14),
+                            TextField(
+                              key: const Key('login-password-field'),
+                              controller: _loginPasswordController,
+                              focusNode: _loginPasswordFocus,
+                              obscureText: _loginObscure,
+                              autofillHints: const [AutofillHints.password],
+                              decoration: InputDecoration(
+                                labelText: english ? 'Password' : 'Mật khẩu',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _loginObscure
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _loginObscure = !_loginObscure,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                english
-                                    ? 'Enter VNLF Social'
-                                    : 'Vào VNLF Social',
-                                style: VnlfTypography.control(
-                                  Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) => _handleLogin(),
+                            ),
+                            const SizedBox(height: 20),
+                            FilledButton(
+                              onPressed: _loading ? null : _handleLogin,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colors.brand,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    VnlfDimensions.radiusMd,
+                                  ),
                                 ),
                               ),
+                              child: _loading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      english
+                                          ? 'Enter VNLF Social'
+                                          : 'Vào VNLF Social',
+                                      style: VnlfTypography.control(
+                                        Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
                       ),
                     ] else ...[
                       // REGISTER FORM
-                      TextField(
-                        key: const Key('reg-email-field'),
-                        controller: _regEmailController,
-                        autofocus: true,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      TextField(
-                        key: const Key('reg-username-field'),
-                        controller: _regUsernameController,
-                        decoration: InputDecoration(
-                          labelText: english ? 'Username' : 'Tên người dùng',
-                          prefixIcon: const Icon(Icons.alternate_email),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      TextField(
-                        key: const Key('reg-password-field'),
-                        controller: _regPasswordController,
-                        obscureText: _regObscure,
-                        decoration: InputDecoration(
-                          labelText: english ? 'Password' : 'Mật khẩu',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _regObscure
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
+                      AutofillGroup(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextField(
+                              key: const Key('reg-email-field'),
+                              controller: _regEmailController,
+                              focusNode: _regEmailFocus,
+                              autofocus: true,
+                              keyboardType: TextInputType.emailAddress,
+                              autofillHints: const [AutofillHints.email],
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: const Icon(Icons.email_outlined),
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) =>
+                                  _regUsernameFocus.requestFocus(),
                             ),
-                            onPressed: () =>
-                                setState(() => _regObscure = !_regObscure),
-                          ),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.next,
-                      ),
-                      const SizedBox(height: 14),
-                      TextField(
-                        key: const Key('reg-confirm-field'),
-                        controller: _regConfirmPasswordController,
-                        obscureText: _regObscure,
-                        decoration: InputDecoration(
-                          labelText: english
-                              ? 'Confirm Password'
-                              : 'Nhập lại mật khẩu',
-                          prefixIcon: const Icon(Icons.lock_reset),
-                          border: const OutlineInputBorder(),
-                        ),
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) => _handleRegister(),
-                      ),
-                      const SizedBox(height: 20),
-                      FilledButton(
-                        onPressed: _loading ? null : _handleRegister,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.brand,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              VnlfDimensions.radiusMd,
+                            const SizedBox(height: 14),
+                            TextField(
+                              key: const Key('reg-username-field'),
+                              controller: _regUsernameController,
+                              focusNode: _regUsernameFocus,
+                              autofillHints: const [AutofillHints.newUsername],
+                              decoration: InputDecoration(
+                                labelText: english
+                                    ? 'Username'
+                                    : 'Tên người dùng',
+                                prefixIcon: const Icon(Icons.alternate_email),
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) =>
+                                  _regPasswordFocus.requestFocus(),
                             ),
-                          ),
-                        ),
-                        child: _loading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
+                            const SizedBox(height: 14),
+                            TextField(
+                              key: const Key('reg-password-field'),
+                              controller: _regPasswordController,
+                              focusNode: _regPasswordFocus,
+                              obscureText: _regObscure,
+                              autofillHints: const [AutofillHints.newPassword],
+                              decoration: InputDecoration(
+                                labelText: english ? 'Password' : 'Mật khẩu',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _regObscure
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => _regObscure = !_regObscure,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                english ? 'Create Account' : 'Tạo tài khoản',
-                                style: VnlfTypography.control(
-                                  Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) =>
+                                  _regConfirmFocus.requestFocus(),
+                            ),
+                            const SizedBox(height: 14),
+                            TextField(
+                              key: const Key('reg-confirm-field'),
+                              controller: _regConfirmPasswordController,
+                              focusNode: _regConfirmFocus,
+                              obscureText: _regObscure,
+                              autofillHints: const [AutofillHints.newPassword],
+                              decoration: InputDecoration(
+                                labelText: english
+                                    ? 'Confirm Password'
+                                    : 'Nhập lại mật khẩu',
+                                prefixIcon: const Icon(Icons.lock_reset),
+                                border: const OutlineInputBorder(),
+                              ),
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) => _handleRegister(),
+                            ),
+                            const SizedBox(height: 20),
+                            FilledButton(
+                              onPressed: _loading ? null : _handleRegister,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colors.brand,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    VnlfDimensions.radiusMd,
+                                  ),
                                 ),
                               ),
+                              child: _loading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      english
+                                          ? 'Create Account'
+                                          : 'Tạo tài khoản',
+                                      style: VnlfTypography.control(
+                                        Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],

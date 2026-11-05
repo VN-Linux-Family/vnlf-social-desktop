@@ -84,7 +84,7 @@ class ChannelMessages extends Notifier<Map<String, List<ChatMessageData>>> {
       ],
   };
 
-  void send(String channelId, String text) {
+  void send(String channelId, String text, [AuthorData? author]) {
     final trimmed = text.trim();
     if (trimmed.isEmpty || !state.containsKey(channelId)) return;
     final now = DateTime.now();
@@ -94,7 +94,7 @@ class ChannelMessages extends Notifier<Map<String, List<ChatMessageData>>> {
         ...state[channelId]!,
         ChatMessageData(
           id: 'local-${_nextId++}',
-          author: communityGuest,
+          author: author ?? communityGuest,
           timestamp:
               '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
           text: trimmed,
