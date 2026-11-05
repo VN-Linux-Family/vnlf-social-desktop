@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_client.dart';
 import '../core/io_api_transport.dart';
+import '../core/preferences_storage.dart';
 import '../core/session_storage.dart';
 import '../data/fixture_repositories.dart';
 import '../data/live_auth_repository.dart';
@@ -16,11 +18,74 @@ import '../domain/repositories.dart';
 /// Null follows the system locale; set a locale to override it for this session.
 final localeProvider = StateProvider<Locale?>((ref) => null);
 
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
-
 final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),
 );
+
+final sessionStorageFailureProvider = StateProvider<StorageFailure?>(
+  (ref) => null,
+);
+
+final preferencesStorageProvider = Provider<PreferencesStorage>(
+  (ref) => SharedPreferencesStorage(),
+);
+
+final themeStorageFailureProvider = StateProvider<StorageFailure?>(
+  (ref) => null,
+);
+
+final themeModeProvider = StateNotifierProvider<ThemeModeController, ThemeMode>(
+  (ref) =>
+      ThemeModeController(ref.watch(preferencesStorageProvider), (failure) {
+        ref.read(themeStorageFailureProvider.notifier).state = failure;
+      }),
+);
+
+class ThemeModeController extends StateNotifier<ThemeMode> {
+  ThemeModeController(this._storage, this._onStorageFailure)
+    : super(ThemeMode.system) {
+    restored = _restore();
+  }
+
+  static const _storageKey = 'vnlf_theme_mode';
+  final PreferencesStorage _storage;
+  final void Function(StorageFailure?) _onStorageFailure;
+  late final Future<void> restored;
+  Future<void> _writes = Future.value();
+  int _revision = 0;
+
+  Future<void> _restore() async {
+    final revision = _revision;
+    try {
+      final value = await _storage.read(_storageKey);
+      if (!mounted || revision != _revision) return;
+      state = switch (value) {
+        'light' => ThemeMode.light,
+        'dark' => ThemeMode.dark,
+        _ => ThemeMode.system,
+      };
+    } catch (_) {
+      if (mounted && revision == _revision) {
+        _onStorageFailure(const StorageFailure());
+      }
+    }
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) {
+    final revision = ++_revision;
+    state = mode;
+    return _writes = _writes.then((_) async {
+      try {
+        await _storage.write(_storageKey, mode.name);
+        if (mounted && revision == _revision) _onStorageFailure(null);
+      } catch (_) {
+        if (mounted && revision == _revision) {
+          _onStorageFailure(const StorageFailure());
+        }
+      }
+    });
+  }
+}
 
 bool _isLiveDefault() {
   if (const bool.hasEnvironment('VNLF_LIVE')) {
@@ -39,7 +104,13 @@ final ioTransportProvider = Provider<IoApiTransport?>((ref) {
   if (!_isLiveDefault()) return null;
   final uri = Uri.parse('https://vietnamlinuxfamily.net');
   final storage = ref.watch(sessionStorageProvider);
-  final transport = IoApiTransport(uri, storage: storage);
+  final transport = IoApiTransport(
+    uri,
+    storage: storage,
+    onStorageFailure: (failure) {
+      ref.read(sessionStorageFailureProvider.notifier).state = failure;
+    },
+  );
   ref.onDispose(transport.close);
   return transport;
 });
@@ -67,13 +138,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final transport = ref.watch(ioTransportProvider);
   return LiveAuthRepository(
     ref.watch(apiClientProvider),
-    onSessionChanged: (session) {
-      ref.read(sessionStateProvider.notifier).state = session;
-    },
-    onLogout: () {
-      transport?.clearCookies();
-      ref.read(sessionStateProvider.notifier).state = null;
-    },
+    onLogout: transport?.clearCookies,
   );
 });
 
@@ -108,32 +173,38 @@ final projectsRepositoryProvider = Provider<ProjectsRepository>(
 class AuthController extends StateNotifier<AsyncValue<Session?>> {
   AuthController(this._repository, this._ref)
     : super(const AsyncValue.loading()) {
-    refreshSession();
+    unawaited(refreshSession());
   }
 
   final AuthRepository _repository;
   final Ref _ref;
+  int _revision = 0;
+
+  void _setSession(Session? session) {
+    _ref.read(sessionStateProvider.notifier).state = session;
+    state = AsyncValue.data(session);
+  }
 
   Future<void> refreshSession() async {
+    final revision = ++_revision;
     state = const AsyncValue.loading();
     try {
       final session = await _repository.currentSession();
-      _ref.read(sessionStateProvider.notifier).state = session;
-      state = AsyncValue.data(session);
+      if (mounted && revision == _revision) _setSession(session);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted && revision == _revision) state = AsyncValue.error(e, st);
     }
   }
 
   Future<Session> login(String login, String password) async {
+    final revision = ++_revision;
     state = const AsyncValue.loading();
     try {
       final session = await _repository.login(login, password);
-      _ref.read(sessionStateProvider.notifier).state = session;
-      state = AsyncValue.data(session);
+      if (mounted && revision == _revision) _setSession(session);
       return session;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted && revision == _revision) state = AsyncValue.error(e, st);
       rethrow;
     }
   }
@@ -143,22 +214,26 @@ class AuthController extends StateNotifier<AsyncValue<Session?>> {
     String username,
     String password,
   ) async {
+    final revision = ++_revision;
     state = const AsyncValue.loading();
     try {
       final session = await _repository.register(email, username, password);
-      _ref.read(sessionStateProvider.notifier).state = session;
-      state = AsyncValue.data(session);
+      if (mounted && revision == _revision) _setSession(session);
       return session;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted && revision == _revision) state = AsyncValue.error(e, st);
       rethrow;
     }
   }
 
   Future<void> logout() async {
-    await _repository.logout();
-    _ref.read(sessionStateProvider.notifier).state = null;
-    state = const AsyncValue.data(null);
+    final revision = ++_revision;
+    state = const AsyncValue.loading();
+    try {
+      await _repository.logout();
+    } finally {
+      if (mounted && revision == _revision) _setSession(null);
+    }
   }
 }
 
@@ -167,13 +242,9 @@ final authControllerProvider =
       return AuthController(ref.watch(authRepositoryProvider), ref);
     });
 
-final sessionProvider = FutureProvider<Session?>((ref) async {
-  final cached = ref.watch(sessionStateProvider);
-  if (cached != null) return cached;
-  final session = await ref.watch(authRepositoryProvider).currentSession();
-  ref.read(sessionStateProvider.notifier).state = session;
-  return session;
-});
+final sessionProvider = Provider<AsyncValue<Session?>>(
+  (ref) => ref.watch(authControllerProvider),
+);
 final feedProvider = FutureProvider.family<FeedPage, String?>(
   (ref, cursor) => ref.watch(feedRepositoryProvider).getFeed(cursor: cursor),
 );

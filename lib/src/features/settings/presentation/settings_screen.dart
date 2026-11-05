@@ -20,6 +20,9 @@ class SettingsScreen extends ConsumerWidget {
     final colors = VnlfColors.of(context);
     final theme = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
+    final themeStorageFailure = ref.watch(themeStorageFailureProvider);
+    final sessionStorageFailure = ref.watch(sessionStorageFailureProvider);
+    final signingOut = ref.watch(authControllerProvider).isLoading;
     final language =
         locale?.languageCode ?? Localizations.localeOf(context).languageCode;
     final session =
@@ -76,15 +79,20 @@ class SettingsScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        await ref
-                            .read(authControllerProvider.notifier)
-                            .logout();
-                      },
-                      child: Text(english ? 'Log out' : 'Đăng xuất'),
-                    ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.red,
+                    side: BorderSide(color: colors.red),
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: signingOut
+                      ? null
+                      : () => logoutWithFeedback(context, ref),
+                  icon: const Icon(Icons.logout_rounded, size: 18),
+                  label: Text(english ? 'Log out' : 'Đăng xuất'),
                 ),
               ] else ...[
                 Row(
@@ -121,6 +129,15 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
               ],
+              if (sessionStorageFailure != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  english
+                      ? 'Secure session storage is unavailable on this device.'
+                      : 'Không thể truy cập bộ nhớ phiên đăng nhập an toàn trên thiết bị này.',
+                  style: VnlfTypography.meta(colors.red),
+                ),
+              ],
             ],
           ),
         ),
@@ -150,11 +167,21 @@ class SettingsScreen extends ConsumerWidget {
                         ThemeMode.system => english ? 'System' : 'Tự động',
                       }),
                       selected: theme == mode,
-                      onSelected: (_) =>
-                          ref.read(themeModeProvider.notifier).state = mode,
+                      onSelected: (_) => ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(mode),
                     ),
                 ],
               ),
+              if (themeStorageFailure != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  english
+                      ? 'Could not save appearance. Please select it again to retry.'
+                      : 'Không thể lưu giao diện. Vui lòng chọn lại để thử lại.',
+                  style: VnlfTypography.meta(colors.red),
+                ),
+              ],
               const SizedBox(height: 24),
               Text(
                 english ? 'Language' : 'Ngôn ngữ',
@@ -206,14 +233,43 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 english
-                    ? 'Appearance and language apply for this app session.'
-                    : 'Giao diện và ngôn ngữ áp dụng trong phiên ứng dụng này.',
+                    ? 'Appearance is saved on this device. Language applies for this app session.'
+                    : 'Giao diện được lưu trên thiết bị. Ngôn ngữ áp dụng trong phiên ứng dụng này.',
                 style: VnlfTypography.meta(colors.muted),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+Future<void> logoutWithFeedback(BuildContext context, WidgetRef ref) async {
+  if (!context.mounted) return;
+  final english = Localizations.localeOf(context).languageCode == 'en';
+  try {
+    await ref.read(authControllerProvider.notifier).logout();
+  } catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error is StorageFailure
+              ? (english
+                    ? 'Signed out here, but stored session cleanup failed. Please try again before closing the app.'
+                    : 'Đã đăng xuất tại đây nhưng không thể xóa phiên đã lưu. Vui lòng thử lại trước khi đóng ứng dụng.')
+              : (english
+                    ? 'Signed out on this device. Could not confirm logout with the server.'
+                    : 'Đã đăng xuất trên thiết bị. Không thể xác nhận đăng xuất với máy chủ.'),
+        ),
+        action: error is StorageFailure
+            ? SnackBarAction(
+                label: english ? 'Retry' : 'Thử lại',
+                onPressed: () => logoutWithFeedback(context, ref),
+              )
+            : null,
+      ),
     );
   }
 }

@@ -15,6 +15,8 @@ class VnlfTabletRail extends StatelessWidget {
     required this.themeMode,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.onLogoutTap,
+    this.logoutLabel = '',
     this.destinationLabels = const {},
     this.destinationSemanticLabels = const {},
     this.brandLogoSemanticLabel,
@@ -29,6 +31,8 @@ class VnlfTabletRail extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onLogoutTap;
+  final String logoutLabel;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;
   final String? brandLogoSemanticLabel;
@@ -64,6 +68,12 @@ class VnlfTabletRail extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           const Spacer(),
+          if (onLogoutTap != null)
+            IconButton(
+              tooltip: logoutLabel,
+              onPressed: onLogoutTap,
+              icon: Icon(Icons.logout_rounded, size: 19, color: colors.muted),
+            ),
           Semantics(
             button: true,
             label:

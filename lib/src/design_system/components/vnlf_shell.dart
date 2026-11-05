@@ -46,6 +46,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onSearchTap,
     this.onNotificationsTap,
     this.onSettingsTap,
+    this.onLogoutTap,
+    this.logoutLabel = '',
     this.onHelpTap,
     this.onFeedbackTap,
     this.onSupportTap,
@@ -106,6 +108,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onLogoutTap;
+  final String logoutLabel;
   final VoidCallback? onHelpTap;
   final VoidCallback? onFeedbackTap;
   final VoidCallback? onSupportTap;
@@ -180,6 +184,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
                     onSettingsTap: onSettingsTap,
+                    onLogoutTap: onLogoutTap,
+                    logoutLabel: logoutLabel,
                     onHelpTap: onHelpTap,
                     onFeedbackTap: onFeedbackTap,
                     onSupportTap: onSupportTap,
@@ -272,6 +278,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     themeMode: themeMode,
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
+                    onLogoutTap: onLogoutTap,
+                    logoutLabel: logoutLabel,
                     destinationLabels: destinationLabels,
                     destinationSemanticLabels: destinationSemanticLabels,
                     brandLogoSemanticLabel: brandLogoSemanticLabel,
@@ -327,6 +335,13 @@ class VnlfAdaptiveShell extends StatelessWidget {
                       Navigator.of(context).maybePop();
                       onSettingsTap?.call();
                     },
+                    onLogoutTap: onLogoutTap == null
+                        ? null
+                        : () {
+                            Navigator.of(context).maybePop();
+                            onLogoutTap?.call();
+                          },
+                    logoutLabel: logoutLabel,
                     onHelpTap: () {
                       Navigator.of(context).maybePop();
                       onHelpTap?.call();

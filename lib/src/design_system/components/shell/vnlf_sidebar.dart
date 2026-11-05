@@ -21,6 +21,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.onThemeModeChanged,
     this.onProfileTap,
     this.onSettingsTap,
+    this.onLogoutTap,
     this.onHelpTap,
     this.onFeedbackTap,
     this.onSupportTap,
@@ -47,6 +48,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.telegramSemanticLabel,
     this.discordSemanticLabel,
     this.settingsLabel = '',
+    this.logoutLabel = '',
     this.settingsSemanticLabel,
     this.helpLabel = '',
     this.helpSemanticLabel,
@@ -69,6 +71,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onLogoutTap;
   final VoidCallback? onHelpTap;
   final VoidCallback? onFeedbackTap;
   final VoidCallback? onSupportTap;
@@ -95,6 +98,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
   final String? telegramSemanticLabel;
   final String? discordSemanticLabel;
   final String settingsLabel;
+  final String logoutLabel;
   final String? settingsSemanticLabel;
   final String helpLabel;
   final String? helpSemanticLabel;
@@ -358,7 +362,14 @@ class VnlfDesktopSidebar extends StatelessWidget {
                     semanticLabel: helpSemanticLabel,
                     onTap: onHelpTap,
                   ),
-                if (loginLabel.isNotEmpty)
+                if (onLogoutTap != null)
+                  SidebarUtilityTile(
+                    icon: Icons.logout_rounded,
+                    label: logoutLabel,
+                    semanticLabel: logoutLabel,
+                    onTap: onLogoutTap,
+                  )
+                else if (loginLabel.isNotEmpty)
                   SidebarUtilityTile(
                     icon: Icons.login_rounded,
                     label: loginLabel,

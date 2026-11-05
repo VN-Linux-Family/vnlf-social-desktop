@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../domain/models.dart' show StorageFailure;
 import 'api_client.dart';
 import 'session_storage.dart';
 
@@ -10,33 +11,69 @@ final class IoApiTransport {
     this.baseUri, {
     this.timeout = const Duration(seconds: 10),
     this.storage,
+    this.onStorageFailure,
   }) : _client = HttpClient();
 
   final Uri baseUri;
   final Duration timeout;
   final HttpClient _client;
   final SessionStorage? storage;
+  final void Function(StorageFailure?)? onStorageFailure;
   String? _sessionCookie;
-  bool _initialized = false;
+  Future<void>? _cookieInitialization;
+  Future<void> _cookieOperations = Future.value();
+  int _cookieRevision = 0;
+  bool _cookiePersistenceFailed = false;
 
-  Future<void> _initCookie() async {
-    if (_initialized) return;
-    _initialized = true;
+  Future<void> _initCookie() => _cookieInitialization ??= _readCookie();
+
+  Future<void> _readCookie() async {
+    final revision = _cookieRevision;
     if (storage != null) {
       try {
-        _sessionCookie = await storage!.read('vnlf_session_cookie');
-      } catch (_) {}
+        final cookie = await storage!.read('vnlf_session_cookie');
+        if (revision == _cookieRevision) _sessionCookie = cookie;
+      } catch (_) {
+        if (revision == _cookieRevision) {
+          onStorageFailure?.call(const StorageFailure());
+        }
+      }
     }
   }
 
-  void clearCookies() {
+  Future<void> clearCookies() {
+    final revision = ++_cookieRevision;
     _sessionCookie = null;
-    try {
-      storage?.delete('vnlf_session_cookie');
-    } catch (_) {}
+    _cookieInitialization = Future.value();
+    return _persistCookie(null, revision);
+  }
+
+  Future<void> _persistCookie(String? cookie, int revision) {
+    final operation = _cookieOperations.then((_) async {
+      if (revision != _cookieRevision) return;
+      try {
+        if (cookie == null) {
+          await storage?.delete('vnlf_session_cookie');
+        } else {
+          await storage?.write('vnlf_session_cookie', cookie);
+        }
+        if (revision == _cookieRevision) {
+          _cookiePersistenceFailed = false;
+          onStorageFailure?.call(null);
+        }
+      } catch (_) {
+        _cookiePersistenceFailed = true;
+        onStorageFailure?.call(const StorageFailure());
+        throw const StorageFailure();
+      }
+    });
+    // Keep the queue usable after surfacing a failure to the operation's caller.
+    _cookieOperations = operation.catchError((Object _) {});
+    return operation;
   }
 
   Future<ApiResponse> call(ApiRequest request) async {
+    final cookieRevision = _cookieRevision;
     await _initCookie();
     final path = Uri.parse(request.path);
     if (path.hasScheme || path.hasAuthority || !path.path.startsWith('/')) {
@@ -92,13 +129,16 @@ final class IoApiTransport {
         }
       }
     }
-    if (cookieMap.isNotEmpty) {
-      _sessionCookie = cookieMap.entries
+    if (cookieMap.isNotEmpty &&
+        (cookies.isNotEmpty || setCookies != null) &&
+        cookieRevision == _cookieRevision) {
+      final updatedCookie = cookieMap.entries
           .map((e) => '${e.key}=${e.value}')
           .join('; ');
-      try {
-        storage?.write('vnlf_session_cookie', _sessionCookie!);
-      } catch (_) {}
+      if (updatedCookie != _sessionCookie || _cookiePersistenceFailed) {
+        _sessionCookie = updatedCookie;
+        await _persistCookie(_sessionCookie, cookieRevision);
+      }
     }
 
     final headers = <String, String>{};

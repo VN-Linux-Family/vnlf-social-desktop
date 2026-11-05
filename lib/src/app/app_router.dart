@@ -125,13 +125,17 @@ GoRouter createMainRouter() {
               return VnlfAdaptiveShell(
                 themeMode: ref.watch(themeModeProvider),
                 onThemeModeChanged: (mode) =>
-                    ref.read(themeModeProvider.notifier).state = mode,
+                    ref.read(themeModeProvider.notifier).setThemeMode(mode),
                 activeDestination: active,
                 onDestinationSelected: (destination) =>
                     context.go(destinations[destination]!),
                 onSearchTap: () => context.push('/search'),
                 onNotificationsTap: () => _showNotificationsModal(context, ref),
                 onSettingsTap: () => context.push('/settings'),
+                onLogoutTap: session == null
+                    ? null
+                    : () => logoutWithFeedback(context, ref),
+                logoutLabel: english ? 'Log out' : 'Đăng xuất',
                 onHelpTap: () => _showHelpDialog(context),
                 onFeedbackTap: () => _showFeedbackDialog(context, ref),
                 onSupportTap: () =>

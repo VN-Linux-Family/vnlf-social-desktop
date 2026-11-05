@@ -10,7 +10,7 @@ final class LiveAuthRepository implements AuthRepository {
 
   final ApiClient _client;
   final void Function(Session?)? onSessionChanged;
-  final void Function()? onLogout;
+  final Future<void> Function()? onLogout;
 
   @override
   Future<Session?> currentSession() async {
@@ -44,12 +44,13 @@ final class LiveAuthRepository implements AuthRepository {
         onSessionChanged?.call(null);
         return null;
       }
-      return null;
+      rethrow;
     }
   }
 
   @override
   Future<Session> login(String login, String password) async {
+    _client.clearCache();
     final session = await _client.request<Session>(
       'POST',
       '/api/v1/auth/login',
@@ -82,6 +83,7 @@ final class LiveAuthRepository implements AuthRepository {
     String username,
     String password,
   ) async {
+    _client.clearCache();
     final session = await _client.request<Session>(
       'POST',
       '/api/v1/auth/register',
@@ -114,10 +116,16 @@ final class LiveAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    _client.clearCache();
     try {
       await _client.request<void>('POST', '/api/v1/auth/logout');
-    } catch (_) {}
-    onLogout?.call();
-    onSessionChanged?.call(null);
+    } finally {
+      _client.clearCache();
+      try {
+        await onLogout?.call();
+      } finally {
+        onSessionChanged?.call(null);
+      }
+    }
   }
 }
