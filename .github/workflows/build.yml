@@ -1,306 +1,306 @@
-name: Build Multiplatform
+name: Build and publish
 
 on:
   push:
-    branches: [ main, 'release/**', 'v*' ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main ]
+    branches: [main, 'release/**']
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: builds-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  FLUTTER_VERSION: '3.47.9'
+  PRIVATE_RELEASE_REPOSITORY: VN-Linux-Family/vnlf-social-desktop
+  PUBLIC_RELEASE_REPOSITORY: VN-Linux-Family/vnlf-social-app
 
 jobs:
-  # -------------------------------------------------------------
-  # Linux Desktop (x64 / arm64 runner bundle)
-  # -------------------------------------------------------------
-  build-linux:
-    name: Build Linux (${{ matrix.target }})
-    runs-on: ubuntu-latest
+  metadata:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build_name: ${{ steps.version.outputs.build_name }}
+      build_number: ${{ steps.version.outputs.build_number }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
+      is_stable: ${{ steps.version.outputs.is_stable }}
+      artifact_prefix: ${{ steps.version.outputs.artifact_prefix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: version
+        run: python3 tool/release_metadata.py
+
+  quality:
+    runs-on: ubuntu-24.04
+    needs: metadata
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: git diff --exit-code
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test --concurrency=2
+      - run: python3 -m unittest discover -s test/tool -p '*_test.py'
+
+  desktop:
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    needs: [metadata, quality]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
-        target: [x64]
+        include:
+          - {platform: linux, arch: x64, runner: ubuntu-24.04}
+          - {platform: linux, arch: arm64, runner: ubuntu-24.04-arm}
+          - {platform: windows, arch: x64, runner: windows-2025}
+          - {platform: windows, arch: arm64, runner: windows-11-arm}
+          - {platform: macos, arch: x64, runner: macos-15-intel}
+          - {platform: macos, arch: arm64, runner: macos-15}
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUILD_ARCH: ${{ matrix.arch }}
+      BUILD_PLATFORM: ${{ matrix.platform }}
+      BUILD_NAME: ${{ needs.metadata.outputs.build_name }}
+      BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
+      APP_VERSION: ${{ needs.metadata.outputs.version }}
+      ARTIFACT_PREFIX: ${{ needs.metadata.outputs.artifact_prefix }}
+      CMAKE_BUILD_PARALLEL_LEVEL: '2'
+      CARGO_BUILD_JOBS: '2'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Linux build dependencies
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            clang \
-            cmake \
-            ninja-build \
-            pkg-config \
-            libgtk-3-dev \
-            liblzma-dev \
-            libsecret-1-dev
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libmpv-dev
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: '3.47.9'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
+          architecture: ${{ matrix.arch }}
           cache: true
-
-      - name: Compute SemVer + Commit Hash Version
-        id: version
-        shell: bash
+      - name: Verify native SDK architecture
         run: |
-          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          SEMVER_VERSION="${BASE_VERSION}+${SHORT_SHA}"
-          echo "SEMVER_VERSION=${SEMVER_VERSION}" >> $GITHUB_ENV
-          echo "BASE_VERSION=${BASE_VERSION}" >> $GITHUB_ENV
-          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
-          echo "Version: ${SEMVER_VERSION}"
-
-      - name: Install dependencies & generate localizations
+          python - <<'PY'
+          import os, subprocess
+          result = subprocess.run(['dart', '--version'], capture_output=True, text=True, check=True)
+          version = result.stdout + result.stderr
+          expected = os.environ['BUILD_PLATFORM'] + '_' + os.environ['BUILD_ARCH']
+          if expected not in version:
+              raise SystemExit('Expected native Dart SDK ABI ' + expected + '; refusing a mislabeled build: ' + version)
+          print(version.strip())
+          PY
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Build Linux
+        if: matrix.platform == 'linux'
+        run: >-
+          flutter build linux --release --target-platform="linux-${BUILD_ARCH}"
+          --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
+          --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+      - name: Build Windows
+        if: matrix.platform == 'windows'
+        run: >-
+          flutter build windows --release
+          --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
+          --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+      - name: Build macOS for the selected architecture
+        if: matrix.platform == 'macos'
         run: |
-          flutter pub get
-          flutter gen-l10n
-
-      - name: Build Linux Release Bundle
+          flutter build macos --release --config-only \
+            --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER" \
+            --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+          APPLE_ARCH=arm64
+          if [[ "$BUILD_ARCH" == x64 ]]; then APPLE_ARCH=x86_64; fi
+          xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release \
+            -derivedDataPath build/macos -arch "$APPLE_ARCH" ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO -jobs 2
+      - name: Package Linux
+        if: matrix.platform == 'linux'
         run: |
-          flutter build linux --release \
-            --build-name="${BASE_VERSION}" \
-            --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
-            --dart-define="VNLF_LIVE=true"
-
-      - name: Package Linux Archive
-        shell: bash
+          mkdir -p dist
+          tar -czf "dist/${ARTIFACT_PREFIX}-linux-${BUILD_ARCH}.tar.gz" -C "build/linux/${BUILD_ARCH}/release/bundle" .
+      - name: Package Windows
+        if: matrix.platform == 'windows'
         run: |
-          ARCHIVE_NAME="vnlfsocialapp-linux-${SEMVER_VERSION}.tar.gz"
-          tar -czvf "${ARCHIVE_NAME}" -C build/linux/x64/release/bundle .
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
-
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v4
+          python - <<'PY'
+          import os, pathlib, shutil
+          root = pathlib.Path('build/windows') / os.environ['BUILD_ARCH'] / 'runner/Release'
+          if not root.is_dir():
+              raise SystemExit('Missing native Windows output: ' + str(root))
+          pathlib.Path('dist').mkdir(exist_ok=True)
+          shutil.make_archive('dist/' + os.environ['ARTIFACT_PREFIX'] + '-windows-' + os.environ['BUILD_ARCH'], 'zip', root)
+          PY
+      - name: Package macOS
+        if: matrix.platform == 'macos'
+        run: |
+          mkdir -p dist
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name '*.app' -print -quit)
+          test -n "$APP_PATH"
+          APPLE_ARCH=arm64
+          if [[ "$BUILD_ARCH" == x64 ]]; then APPLE_ARCH=x86_64; fi
+          EXECUTABLE=$(/usr/libexec/PlistBuddy -c 'Print CFBundleExecutable' "$APP_PATH/Contents/Info.plist")
+          test "$(lipo -archs "$APP_PATH/Contents/MacOS/$EXECUTABLE")" = "$APPLE_ARCH"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "dist/${ARTIFACT_PREFIX}-macos-${BUILD_ARCH}.zip"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: vnlfsocialapp-linux-${{ env.SEMVER_VERSION }}
-          path: ${{ env.ARCHIVE_NAME }}
+          name: binary-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/*
           if-no-files-found: error
+          retention-days: 14
 
-  # -------------------------------------------------------------
-  # Windows Desktop (x64)
-  # -------------------------------------------------------------
-  build-windows:
-    name: Build Windows (x64)
-    runs-on: windows-latest
+  android:
+    name: Android armv7, arm64 and x64
+    needs: [metadata, quality]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      BUILD_NAME: ${{ needs.metadata.outputs.build_name }}
+      BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
+      APP_VERSION: ${{ needs.metadata.outputs.version }}
+      ARTIFACT_PREFIX: ${{ needs.metadata.outputs.artifact_prefix }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
-          flutter-version: '3.47.9'
-          channel: stable
-          cache: true
-
-      - name: Compute SemVer + Commit Hash Version
-        id: version
-        shell: bash
-        run: |
-          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          SEMVER_VERSION="${BASE_VERSION}+${SHORT_SHA}"
-          echo "SEMVER_VERSION=${SEMVER_VERSION}" >> $GITHUB_ENV
-          echo "BASE_VERSION=${BASE_VERSION}" >> $GITHUB_ENV
-          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
-          echo "Version: ${SEMVER_VERSION}"
-
-      - name: Install dependencies & generate localizations
-        shell: bash
-        run: |
-          flutter pub get
-          flutter gen-l10n
-
-      - name: Build Windows Release Executable
-        shell: bash
-        run: |
-          flutter build windows --release \
-            --build-name="${BASE_VERSION}" \
-            --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
-            --dart-define="VNLF_LIVE=true"
-
-      - name: Package Windows Archive
-        shell: bash
-        run: |
-          ARCHIVE_NAME="vnlfsocialapp-windows-${SEMVER_VERSION}.zip"
-          tar -a -c -f "${ARCHIVE_NAME}" -C build/windows/x64/runner/Release .
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
-
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vnlfsocialapp-windows-${{ env.SEMVER_VERSION }}
-          path: ${{ env.ARCHIVE_NAME }}
-          if-no-files-found: error
-
-  # -------------------------------------------------------------
-  # macOS Desktop (.app bundle / zip)
-  # -------------------------------------------------------------
-  build-macos:
-    name: Build macOS (Universal)
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.47.9'
-          channel: stable
-          cache: true
-
-      - name: Compute SemVer + Commit Hash Version
-        id: version
-        shell: bash
-        run: |
-          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          SEMVER_VERSION="${BASE_VERSION}+${SHORT_SHA}"
-          echo "SEMVER_VERSION=${SEMVER_VERSION}" >> $GITHUB_ENV
-          echo "BASE_VERSION=${BASE_VERSION}" >> $GITHUB_ENV
-          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
-          echo "Version: ${SEMVER_VERSION}"
-
-      - name: Install dependencies & generate localizations
-        run: |
-          flutter pub get
-          flutter gen-l10n
-
-      - name: Build macOS Release Application
-        run: |
-          flutter build macos --release \
-            --build-name="${BASE_VERSION}" \
-            --build-number="${SHORT_SHA}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
-            --dart-define="VNLF_LIVE=true"
-
-      - name: Package macOS Archive
-        shell: bash
-        run: |
-          ARCHIVE_NAME="vnlfsocialapp-macos-${SEMVER_VERSION}.zip"
-          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
-          echo "Packaging macOS bundle: ${APP_PATH}"
-          ditto -c -k --sequesterRsrc --keepParent "${APP_PATH}" "${ARCHIVE_NAME}"
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
-
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vnlfsocialapp-macos-${{ env.SEMVER_VERSION }}
-          path: ${{ env.ARCHIVE_NAME }}
-          if-no-files-found: error
-
-  # -------------------------------------------------------------
-  # Android (APK / App Bundle)
-  # -------------------------------------------------------------
-  build-android:
-    name: Build Android (APK)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
-          flutter-version: '3.47.9'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-
-      - name: Compute SemVer + Commit Hash Version
-        id: version
-        shell: bash
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Prepare explicit release or development signing
+        env:
+          IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
+        run: python3 tool/prepare_android_signing.py --stable "$IS_STABLE"
+      - name: Build one APK for each ABI
+        run: >-
+          flutter build apk --release --split-per-abi --target-platform=android-arm,android-arm64,android-x64
+          --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
+          --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+      - name: Package Android APKs
         run: |
-          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          SEMVER_VERSION="${BASE_VERSION}+${SHORT_SHA}"
-          BUILD_NUMBER="${{ github.run_number }}"
-          echo "SEMVER_VERSION=${SEMVER_VERSION}" >> $GITHUB_ENV
-          echo "BASE_VERSION=${BASE_VERSION}" >> $GITHUB_ENV
-          echo "SHORT_SHA=${SHORT_SHA}" >> $GITHUB_ENV
-          echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
-          echo "Version: ${SEMVER_VERSION} (code: ${BUILD_NUMBER})"
-
-      - name: Install dependencies & generate localizations
-        run: |
-          flutter pub get
-          flutter gen-l10n
-
-      - name: Build Android Release APK
-        run: |
-          flutter build apk --release \
-            --build-name="${SEMVER_VERSION}" \
-            --build-number="${BUILD_NUMBER}" \
-            --dart-define="APP_VERSION=${SEMVER_VERSION}" \
-            --dart-define="VNLF_LIVE=true"
-
-      - name: Package Android Artifact
-        shell: bash
-        run: |
-          APK_NAME="vnlfsocialapp-android-${SEMVER_VERSION}.apk"
-          cp build/app/outputs/flutter-apk/app-release.apk "${APK_NAME}"
-          echo "APK_NAME=${APK_NAME}" >> $GITHUB_ENV
-
-      - name: Upload Android Artifact
-        uses: actions/upload-artifact@v4
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "dist/${ARTIFACT_PREFIX}-android-armv7.apk"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "dist/${ARTIFACT_PREFIX}-android-arm64.apk"
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk "dist/${ARTIFACT_PREFIX}-android-x64.apk"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: vnlfsocialapp-android-${{ env.SEMVER_VERSION }}
-          path: ${{ env.APK_NAME }}
+          name: binary-android
+          path: dist/*.apk
           if-no-files-found: error
+          retention-days: 14
 
-  # -------------------------------------------------------------
-  # GitHub Release (Triggered on Tags: v*)
-  # -------------------------------------------------------------
-  publish-release:
-    name: Publish GitHub Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-linux, build-windows, build-macos, build-android]
-    runs-on: ubuntu-latest
+  publish-private:
+    name: Store every build in private releases
+    if: ${{ always() && !cancelled() && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
+    needs: [metadata, quality, desktop, android]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      complete: ${{ steps.manifest.outputs.complete }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      APP_VERSION: ${{ needs.metadata.outputs.version }}
+      BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
+      SOURCE_SHA: ${{ github.sha }}
+      RELEASE_TAG: ${{ needs.metadata.outputs.release_tag }}
+      IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          path: release-artifacts
+          pattern: binary-*
+          path: dist
           merge-multiple: true
-
-      - name: Compute Release Title and Tag
-        id: release_meta
-        shell: bash
+      - id: manifest
+        name: Inventory binaries and write checksums
         run: |
-          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          SEMVER_VERSION="${BASE_VERSION}+${SHORT_SHA}"
-          echo "SEMVER_VERSION=${SEMVER_VERSION}" >> $GITHUB_ENV
-          ls -la release-artifacts/
+          python3 tool/release_metadata.py --manifest-dir dist --allow-incomplete
+          python3 - <<'PY'
+          import json, os, pathlib
+          manifest = json.loads(pathlib.Path('dist/release.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('complete=' + str(manifest['complete']).lower() + '\n')
+          pathlib.Path('release-notes.md').write_text('VNLF Social ' + os.environ['APP_VERSION'] + '\n\n' +
+              ('Complete platform build.' if manifest['complete'] else 'Incomplete build; missing: ' + ', '.join(manifest['missingTargets'])) +
+              '\n\nSee release.json and SHA256SUMS for architecture and integrity information.\n' +
+              ('\nDevelopment APK signing is for internal testing only.\n' if os.environ['IS_STABLE'] != 'true' else ''))
+          PY
+      - name: Upload all available binaries to the private repository
+        env:
+          BUILD_COMPLETE: ${{ steps.manifest.outputs.complete }}
+        run: |
+          test "$GITHUB_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY"
+          if ! gh release view "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
+              --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
+          fi
+          gh release upload "$RELEASE_TAG" dist/* --repo "$PRIVATE_RELEASE_REPOSITORY" --clobber
+          if [[ "$BUILD_COMPLETE" == true ]]; then
+            if [[ "$IS_STABLE" == true ]]; then
+              gh release edit "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --draft=false --prerelease=false --latest
+            else
+              gh release edit "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --draft=false --prerelease --latest=false
+            fi
+          fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+  publish-public:
+    name: Publish complete stable binaries for app updates
+    needs: [metadata, publish-private]
+    if: ${{ needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
+      APP_VERSION: ${{ needs.metadata.outputs.version }}
+      RELEASE_TAG: ${{ needs.metadata.outputs.release_tag }}
+    steps:
+      - name: Check public publishing prerequisites
+        run: |
+          test -n "$GH_TOKEN" || { echo 'PUBLIC_RELEASE_TOKEN must grant Contents write access to the release-only public repository.' >&2; exit 1; }
+          gh repo view "$PUBLIC_RELEASE_REPOSITORY" --json visibility --jq '.visibility' | grep -qx PUBLIC
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: "VNLF Flutter v${{ env.SEMVER_VERSION }}"
-          tag_name: ${{ github.ref_name }}
-          files: |
-            release-artifacts/*.tar.gz
-            release-artifacts/*.zip
-            release-artifacts/*.apk
-          draft: false
-          prerelease: false
-          generate_release_notes: true
+          pattern: binary-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: source-tools
+          sparse-checkout: tool/release_metadata.py
+          sparse-checkout-cone-mode: false
+      - name: Require all nine binaries and publish release assets only
+        env:
+          BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          python3 source-tools/tool/release_metadata.py --manifest-dir dist
+          printf 'VNLF Social %s\n\nStable release binaries. Verify downloads with SHA256SUMS.\n' "$APP_VERSION" > release-notes.md
+          if ! gh release view "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" --target main \
+              --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
+          fi
+          gh release upload "$RELEASE_TAG" dist/* --repo "$PUBLIC_RELEASE_REPOSITORY" --clobber
+          gh release edit "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" --draft=false --prerelease=false --latest
