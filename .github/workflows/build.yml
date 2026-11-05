@@ -188,7 +188,9 @@ jobs:
         shell: bash
         run: |
           ARCHIVE_NAME="vnlfsocialapp-macos-${SEMVER_VERSION}.zip"
-          ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/vnlfsocialapp.app "${ARCHIVE_NAME}"
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
+          echo "Packaging macOS bundle: ${APP_PATH}"
+          ditto -c -k --sequesterRsrc --keepParent "${APP_PATH}" "${ARCHIVE_NAME}"
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
 
       - name: Upload macOS Artifact

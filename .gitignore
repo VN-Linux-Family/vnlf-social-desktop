@@ -12,6 +12,9 @@ assets/reference/
 # Track application branding and icon assets
 !assets/images/**
 !linux/runner/assets/**
+!android/app/src/main/res/**
+!ios/Runner/Assets.xcassets/**
+!macos/Runner/Assets.xcassets/**
 !web/favicon.png
 !web/icons/**
 
