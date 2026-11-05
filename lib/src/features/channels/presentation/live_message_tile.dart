@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../design_system/components/vnlf_media_gallery.dart';
+import 'channel_media.dart';
 import '../../../design_system/design_system.dart';
 import '../domain/channel_models.dart';
 import '../../shared/presentation/author_mapper.dart';
@@ -40,7 +40,7 @@ class LiveMessageTile extends StatelessWidget {
     final media = message.attachments
         .where(
           (a) =>
-              a.url.isNotEmpty &&
+              (a.url.isNotEmpty || a.downloadPath.isNotEmpty) &&
               (a.mime.startsWith('image/') || a.mime.startsWith('video/')),
         )
         .toList();
@@ -173,18 +173,7 @@ class LiveMessageTile extends StatelessWidget {
                   if (media.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
-                      child: VnlfMediaGallery(
-                        items: [
-                          for (final item in media)
-                            PostMediaData(
-                              url: item.url,
-                              mime: item.mime,
-                              width: item.width,
-                              height: item.height,
-                              posterUrl: item.posterUrl,
-                            ),
-                        ],
-                      ),
+                      child: ChannelMedia(items: media),
                     ),
                   for (final attachment in message.attachments.where(
                     (a) => !media.contains(a),

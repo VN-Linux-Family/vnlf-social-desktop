@@ -25,6 +25,7 @@ final class LiveChannelRepository implements ChannelRepository {
   Future<ChannelMessagePage> getMessages(String channelId, {String? cursor}) =>
       _client.get(
         '/api/v1/channels/${Uri.encodeComponent(channelId)}/messages',
+        refresh: true,
         query: {'limit': '50', 'cursor': ?cursor},
         decode: (json) => ChannelMessagePage(
           items: objectList(

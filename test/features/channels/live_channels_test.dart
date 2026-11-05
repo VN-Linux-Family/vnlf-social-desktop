@@ -126,6 +126,33 @@ void main() {
     },
   );
 
+  test('private attachments retain the authenticated download path', () async {
+    final repository = LiveChannelRepository(
+      client(
+        (_) async => response({
+          'items': [
+            {
+              ...messageJson,
+              'attachments': [
+                {
+                  'id': 'private-image',
+                  'url': null,
+                  'mime': 'image/png',
+                  'downloadPath': '/api/v1/assets/private-image/download',
+                },
+              ],
+            },
+          ],
+        }),
+      ),
+    );
+    final page = await repository.getMessages('channel');
+    expect(
+      page.items.single.attachments.single.downloadPath,
+      '/api/v1/assets/private-image/download',
+    );
+  });
+
   test('failed send is not retried by the transport', () async {
     var calls = 0;
     final repo = LiveChannelRepository(

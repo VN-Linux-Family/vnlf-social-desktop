@@ -43,6 +43,34 @@ void main() {
       expect(await client.get('/article', decode: (j) => j['count']), 1);
     },
   );
+  test('explicit refresh bypasses cached GET data without affecting other cached paths', () async {
+    final counts = <String, int>{};
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (request) async {
+        counts.update(request.path, (value) => value + 1, ifAbsent: () => 1);
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode({'count': counts[request.path]}),
+        );
+      },
+    );
+    await client.get<Map<String, dynamic>>('/other');
+    expect(await client.get('/messages', decode: (json) => json['count']), 1);
+    expect(await client.get('/messages', decode: (json) => json['count']), 1);
+    expect(
+      await client.get(
+        '/messages',
+        refresh: true,
+        decode: (json) => json['count'],
+      ),
+      2,
+    );
+    await client.get<Map<String, dynamic>>('/other');
+    expect(counts['/other'], 1);
+  });
+
   test(
     '204 acknowledgments succeed without attempting to decode empty JSON',
     () async {

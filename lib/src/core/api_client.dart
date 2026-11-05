@@ -83,8 +83,9 @@ final class ApiClient {
   Future<T> get<T>(
     String path, {
     Map<String, String> query = const {},
+    bool refresh = false,
     T Function(Map<String, dynamic>)? decode,
-  }) => request<T>('GET', path, query: query, decode: decode);
+  }) => request<T>('GET', path, query: query, refresh: refresh, decode: decode);
 
   Future<T> request<T>(
     String method,
@@ -92,6 +93,7 @@ final class ApiClient {
     Map<String, String> query = const {},
     String? body,
     Map<String, String> headers = const {},
+    bool refresh = false,
     T Function(Map<String, dynamic>)? decode,
   }) async {
     final cacheRevision = _cacheRevision;
@@ -124,7 +126,7 @@ final class ApiClient {
             ..sort((a, b) => a.key.compareTo(b.key)),
         ),
       ]);
-      final cached = isGet ? _cache[key] : null;
+      final cached = isGet && !refresh ? _cache[key] : null;
       if (cached != null &&
           DateTime.now().difference(cached.$1) < cacheDuration) {
         final value = _decode(cached.$2);

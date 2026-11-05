@@ -33,6 +33,7 @@ final class LiveCommentsRepository implements CommentsRepository {
   @override
   Future<List<ArticleComment>> load(String articleId) => _client.get(
     _path(articleId),
+    refresh: true,
     decode: (json) => List.unmodifiable(
       objectList(json['items'], 'comments.items').map(commentFromJson),
     ),

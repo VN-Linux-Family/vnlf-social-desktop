@@ -102,6 +102,7 @@ final class ChannelAttachment {
   const ChannelAttachment({
     required this.id,
     this.url = '',
+    this.downloadPath = '',
     this.mime = '',
     this.state = '',
     this.width,
@@ -110,6 +111,7 @@ final class ChannelAttachment {
   });
   final String id;
   final String url;
+  final String downloadPath;
   final String mime;
   final String state;
   final int? width;

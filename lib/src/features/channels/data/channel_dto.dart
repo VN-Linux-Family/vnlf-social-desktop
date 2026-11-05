@@ -60,6 +60,7 @@ final class ChannelMessageDto {
             (a) => ChannelAttachment(
               id: _identity(a['id']),
               url: stringValue(a['url'], 'url'),
+              downloadPath: stringValue(a['downloadPath'], 'downloadPath'),
               mime: stringValue(a['mime'], 'mime'),
               state: stringValue(a['state'], 'state'),
               width: nullableInt(a['width'], 'width'),
