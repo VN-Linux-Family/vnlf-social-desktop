@@ -390,8 +390,9 @@ write is considered successful only after a successful server response.
 
 Recovered channels use confirmed REST directory/history/send/edit/delete and
 reaction POST/DELETE. Pinned `chat-message.ts` returns attachment `url: null`
-with an authenticated `downloadPath`; authenticated media loading is still a
-remaining gate and must not be treated as a public CDN URL. Realtime contracts
+with an authenticated `downloadPath`; the native adapter now requests this scoped JSON envelope and reads its signed
+`downloadUrl`. It never forwards the session cookie to the media host. Private
+media rendering and device playback still require runtime verification. Realtime contracts
 use JSON envelopes over the community WebSocket, not an assumed Socket.IO stack.
 
 Recovered voice uses LiveKit only after a confirmed join grant, starts muted,

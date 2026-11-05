@@ -53,3 +53,12 @@ flutter:
           weight: 600
         - asset: assets/fonts/BeVietnamPro-Bold.ttf
           weight: 700
+
+# Published Windows native media libraries only bundle x64 binaries. Pin the
+# small ARM64 packaging fix reviewed in upstream media-kit/media-kit#1381.
+dependency_overrides:
+  media_kit_libs_windows_video:
+    git:
+      url: https://github.com/talynone/media-kit.git
+      ref: 3469f4a1e24262db76a8b4cca07116074e3f6eef
+      path: libs/windows/media_kit_libs_windows_video

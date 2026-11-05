@@ -30,11 +30,32 @@ read-only source review; Codex owns the single build/test slot.
 - macOS x64: `macos-15-intel`; macOS arm64: `macos-15`.
 - Android armv7, arm64, and x64: split APKs from one Linux build.
 
-Desktop SDK ABI and macOS executable architecture are checked, so an emulated
+The initial hosted matrix confirmed that flutter-action cannot find a stable
+Linux ARM64 SDK archive for 3.47.9. Linux/Windows ARM64 therefore bootstrap from
+the pinned official Flutter tag revision (`c197ca5199e9ee5661e865596c9c07294dfab51c`),
+on native ARM64 runners; the official SDK bootstrap downloads native Dart. No
+third-party fork or emulated x64 SDK is substituted. This path still requires
+successful hosted validation.
+
+Both macOS runners select their installed Xcode 26.3: the first hosted attempt
+failed with Xcode 16.4 because connectivity_plus uses an SDK 26 NWPath property.
+Windows media libraries have a pinned packaging override from the small upstream
+media-kit PR #1381 (`3469f4a1e24262db76a8b4cca07116074e3f6eef`): published
+1.0.11 libraries only bundle x64. Only that Windows package is overridden; no
+unrelated media package is taken from the fork. The reviewed CMake change selects
+ARM64 libmpv and ANGLE archives. This is an unmerged dependency patch, and native
+ARM64 build and device playback still need validation before stable distribution.
+
+Every Windows EXE/DLL, Linux ELF, and Android APK native library is checked for
+its actual machine architecture before packaging. Desktop SDK ABI and macOS
+executable architecture are checked, so an emulated
 x64 binary cannot silently be labelled arm64. Ubuntu is pinned because the prior
 `ubuntu-latest` job migrated to Ubuntu 26 and rejected deprecated literal-operator
 syntax in an older dependency's JSON header. Do not disable all compiler warnings
-to mask that failure. Desktop matrix concurrency is capped at two hosted runners.
+to mask that failure. Desktop matrix concurrency is capped at two hosted runners. Package-manager calls
+have bounded timeouts. Build runs finish before newer runs replace them so already
+produced binaries can reach the private release inventory; redundant branch/PR
+quality checks share a cancellation group.
 
 Quality checks run before packaging. Each build uses a numeric platform build
 number and a separate semantic application version. Stable tags must match

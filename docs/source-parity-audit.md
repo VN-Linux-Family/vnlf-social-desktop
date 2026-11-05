@@ -33,7 +33,7 @@ server with the authorized account, followed by cleanup.
 | Auth/session | Login/logout/session storage implemented; device and expiry checks remain. |
 | Feed and article detail | Live loading and structured native rendering; media states, link previews, polls, and visual comparison remain. |
 | Comments | Persistence verified and test content cleaned; nested replies and retry identity under repair. Votes, edit/delete/pin, media and mentions need complete coverage. |
-| Post actions | Vote/bookmark confirmed, rollback and session guards tested; reporting still a fake toast and must be replaced. |
+| Post actions | Vote/bookmark confirmed, rollback and session guards tested; reporting now uses a validated, server-confirmed dialog with retry/error coverage. |
 | Publishing | Typed draft/save/publish/upload foundation added; composer UI and full publish lifecycle remain incomplete. |
 | Channels | Recovered REST implementation awaits integration and contract checks; realtime/read sync, uploads/search/context remain incomplete. |
 | Direct messages | Inbox/requests and conversation lifecycle missing; channel navigation is not DM support. |
@@ -41,7 +41,7 @@ server with the authorized account, followed by cleanup.
 | Search/discover | Recovered live search awaits integration; verify scope filtering and live discovery. |
 | Rankings/check-in | Recovered live weekly archive awaits integration; verify website navigation, check-in and personal activity. Do not invent an all-time endpoint. |
 | Profile/social graph | Public reads implemented; follow/block, guestbook writes and full account customization need implementation. |
-| Notifications | Static modal must be replaced with live list/read/seen and routing. |
+| Notifications | Live list/read/seen, unread filtering, pagination and routing implemented; real-account and visual checks remain. |
 | Feedback/support | Submission defect under repair; history, attachments and ticket conversation remain incomplete. |
 | Projects | Live listing; server filters/pagination, detail, media, ratings and submission lifecycle remain incomplete. |
 | Settings | Local preferences and updater implemented; server account/profile/preferences/blocked-user management remain incomplete. |

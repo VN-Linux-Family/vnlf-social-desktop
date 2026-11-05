@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: builds-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: false
 
 env:
   FLUTTER_VERSION: '3.47.9'
@@ -85,14 +85,42 @@ jobs:
       - name: Install Linux dependencies
         if: matrix.platform == 'linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libmpv-dev
+          sudo timeout 600 apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30
+          sudo timeout 900 apt-get install -y --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev libmpv-dev
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        if: matrix.arch != 'arm64' || matrix.platform == 'macos'
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           architecture: ${{ matrix.arch }}
           cache: true
+      - name: Checkout the official Flutter revision for native ARM64 bootstrap
+        if: matrix.arch == 'arm64' && matrix.platform != 'macos'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: flutter/flutter
+          ref: c197ca5199e9ee5661e865596c9c07294dfab51c # official 3.47.9 tag
+          path: .ci/flutter-sdk
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Register the native ARM64 SDK
+        if: matrix.arch == 'arm64' && matrix.platform != 'macos'
+        run: |
+          python - <<'PYBOOT'
+          import os, pathlib, subprocess
+          sdk = pathlib.Path('.ci/flutter-sdk').resolve()
+          revision = subprocess.check_output(['git', '-C', str(sdk), 'rev-parse', 'HEAD'], text=True).strip()
+          if revision != 'c197ca5199e9ee5661e865596c9c07294dfab51c' or os.environ['RUNNER_ARCH'] != 'ARM64':
+              raise SystemExit('The pinned official SDK and native ARM64 runner are required.')
+          with open(os.environ['GITHUB_PATH'], 'a') as stream:
+              stream.write(str(sdk / 'bin') + '\n' + str(sdk / 'bin/cache/dart-sdk/bin') + '\n')
+          if os.name == 'nt':
+              with open(os.environ['GITHUB_ENV'], 'a') as stream:
+                  stream.write('PROCESSOR_ARCHITECTURE=ARM64\n')
+          PYBOOT
+      - name: Bootstrap the native Dart and Flutter tools
+        if: matrix.arch == 'arm64' && matrix.platform != 'macos'
+        run: flutter --version
       - name: Verify native SDK architecture
         run: |
           python - <<'PY'
@@ -118,6 +146,12 @@ jobs:
           flutter build windows --release
           --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
           --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+      - name: Select Xcode 26 SDK required by native dependencies
+        if: matrix.platform == 'macos'
+        run: |
+          test -d /Applications/Xcode_26.3.app
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
       - name: Build macOS for the selected architecture
         if: matrix.platform == 'macos'
         run: |
@@ -133,7 +167,11 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           mkdir -p dist
+          python3 tool/verify_binary_arch.py --platform linux --arch "$BUILD_ARCH" "build/linux/${BUILD_ARCH}/release/bundle"
           tar -czf "dist/${ARTIFACT_PREFIX}-linux-${BUILD_ARCH}.tar.gz" -C "build/linux/${BUILD_ARCH}/release/bundle" .
+      - name: Verify every Windows executable and runtime DLL
+        if: matrix.platform == 'windows'
+        run: python tool/verify_binary_arch.py --platform windows --arch "$BUILD_ARCH" "build/windows/${BUILD_ARCH}/runner/Release"
       - name: Package Windows
         if: matrix.platform == 'windows'
         run: |
@@ -199,6 +237,11 @@ jobs:
           flutter build apk --release --split-per-abi --target-platform=android-arm,android-arm64,android-x64
           --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
           --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+      - name: Verify native libraries inside each Android APK
+        run: |
+          python3 tool/verify_binary_arch.py --platform android --arch armv7 build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          python3 tool/verify_binary_arch.py --platform android --arch arm64 build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          python3 tool/verify_binary_arch.py --platform android --arch x64 build/app/outputs/flutter-apk/app-x86_64-release.apk
       - name: Package Android APKs
         run: |
           mkdir -p dist

@@ -31,7 +31,7 @@ signing secrets. User explicitly approved public stable/private CI distribution.
 
 Remaining work is tracked in `docs/source-parity-audit.md` and
 `docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
-UI, notifications/reporting, DM, fuller profile/settings/projects/chat support,
+UI, notification/report runtime checks, DM, fuller profile/settings/projects/chat support,
 real-device media/voice, visual parity/performance, platform builds and signing
 remain release gates. Do not replace these with simulated success states.
 
