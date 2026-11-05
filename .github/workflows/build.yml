@@ -285,7 +285,7 @@ jobs:
     outputs:
       complete: ${{ steps.manifest.outputs.complete }}
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.PRIVATE_RELEASE_TOKEN || github.token }}
       APP_VERSION: ${{ needs.metadata.outputs.version }}
       BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
       SOURCE_SHA: ${{ github.sha }}
@@ -321,7 +321,9 @@ jobs:
             gh release create "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
               --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
           fi
-          gh release upload "$RELEASE_TAG" dist/* --repo "$PRIVATE_RELEASE_REPOSITORY" --clobber
+          for asset in dist/*; do
+            gh release upload "$RELEASE_TAG" "$asset" --repo "$PRIVATE_RELEASE_REPOSITORY" --clobber
+          done
           if [[ "$BUILD_COMPLETE" == true ]]; then
             if [[ "$IS_STABLE" == true ]]; then
               gh release edit "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --draft=false --prerelease=false --latest

@@ -2,6 +2,7 @@
 """Preserve completed build assets even when the original workflow was canceled."""
 import argparse
 import base64
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -12,6 +13,13 @@ import tempfile
 from release_metadata import TARGETS, asset_manifest, compute_metadata
 
 REPOSITORY = 'VN-Linux-Family/vnlf-social-desktop'
+
+def pending_uploads(local, remote):
+    uploaded = {asset['name']: asset for asset in remote}
+    return [asset['name'] for asset in local
+            if not (uploaded.get(asset['name'], {}).get('state') == 'uploaded'
+                    and uploaded[asset['name']].get('size') == asset['size']
+                    and uploaded[asset['name']].get('digest') == 'sha256:' + asset['sha256'])]
 
 def metadata_for_run(run, pubspec_version):
     if (run.get('head_repository') or {}).get('full_name') != REPOSITORY:
@@ -106,8 +114,20 @@ def main():
             run_command('gh', 'release', 'create', tag, '--repo', REPOSITORY,
                         '--target', metadata['source_sha'], '--title', f"VNLF Social {metadata['version']}",
                         '--notes-file', str(notes), '--draft')
-        run_command('gh', 'release', 'upload', tag, *map(str, sorted(dist.iterdir())),
-                    '--repo', REPOSITORY, '--clobber')
+        # Avoid concurrent large uploads saturating a slow connection. On a
+        # manual rerun, skip only assets whose GitHub digest matches exactly.
+        release_url = subprocess.check_output(['gh', 'release', 'view', tag, '--repo', REPOSITORY,
+                                               '--json', 'apiUrl', '--jq', '.apiUrl'], text=True).strip()
+        if not re.fullmatch(r'https://api.github.com/repos/' + re.escape(REPOSITORY) + r'/releases/\d+', release_url):
+            raise ValueError('Unexpected release API destination')
+        remote = api(release_url)['assets']
+        local = list(manifest['assets'])
+        for name in ('release.json', 'SHA256SUMS'):
+            path = dist / name
+            local.append({'name': name, 'size': path.stat().st_size, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
+        for name in pending_uploads(local, remote):
+            print('Uploading ' + name, flush=True)
+            run_command('gh', 'release', 'upload', tag, str(dist / name), '--repo', REPOSITORY, '--clobber')
         if manifest['complete']:
             run_command('gh', 'release', 'edit', tag, '--repo', REPOSITORY, '--draft=false',
                         '--prerelease=' + str(metadata['is_stable'] != 'true').lower(), '--latest=false')

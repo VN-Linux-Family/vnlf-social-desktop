@@ -77,6 +77,13 @@ a README. The application source remains private.
 
 Configure the private source repository's Actions secrets:
 
+- `PRIVATE_RELEASE_TOKEN`: needed when building a branch whose workflow changes
+  are not on the default branch. Use a fine-grained token scoped only to this
+  private repository, with Contents and Workflows write permissions. GitHub's
+  release API applies the workflow-file permission guard when creating a tag at
+  such a commit; the built-in token cannot request Workflows write. Builds on the
+  default branch can use the normal `GITHUB_TOKEN`. Never store a broad local CLI
+  token in Actions. See the [release API permission requirements](https://docs.github.com/en/rest/releases/releases#create-a-release).
 - `PUBLIC_RELEASE_TOKEN`: a fine-grained token or equivalent app token with
   Contents write permission **only** for the public release repository. The
   private repository's normal `GITHUB_TOKEN` cannot publish to a different repo.

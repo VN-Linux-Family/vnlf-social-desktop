@@ -9,6 +9,12 @@ import publish_private_build as publish
 RUN = {'id': 123, 'run_number': 9, 'run_attempt': 2, 'head_sha': 'a' * 40, 'head_branch': 'main', 'event': 'push', 'path': '.github/workflows/build.yml', 'head_repository': {'full_name': publish.REPOSITORY}}
 
 class PrivateBuildPublishTest(unittest.TestCase):
+    def test_resuming_upload_skips_only_verified_complete_assets(self):
+        local = [{'name': 'binary.zip', 'size': 10, 'sha256': 'a' * 64}, {'name': 'other.zip', 'size': 20, 'sha256': 'b' * 64}]
+        remote = [{'name': 'binary.zip', 'size': 10, 'digest': 'sha256:' + 'a' * 64, 'state': 'uploaded'}]
+        self.assertEqual(publish.pending_uploads(local, remote), ['other.zip'])
+        for changes in [{'digest': 'sha256:' + 'c' * 64}, {'state': 'starter'}, {'size': 9}, {'digest': None}]:
+            self.assertEqual(publish.pending_uploads(local, [{**remote[0], **changes}]), ['binary.zip', 'other.zip'])
     def test_development_metadata_is_bound_to_original_run(self):
         data = publish.metadata_for_run(RUN, '0.1.0+1')
         self.assertEqual(data['release_tag'], 'ci-123-2')
