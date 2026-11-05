@@ -29,5 +29,6 @@ abstract interface class CommentsRepository {
     String articleId,
     String content, {
     String? parentId,
+    String? clientCommentId,
   });
 }

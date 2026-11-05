@@ -43,11 +43,16 @@ final class LiveCommentsRepository implements CommentsRepository {
     String articleId,
     String content, {
     String? parentId,
+    String? clientCommentId,
   }) async {
     final result = await _client.request<ArticleComment>(
       'POST',
       _path(articleId),
-      body: jsonEncode({'content': content, 'parentId': ?parentId}),
+      body: jsonEncode({
+        'content': content,
+        'parentId': ?parentId,
+        'clientCommentId': ?clientCommentId,
+      }),
       decode: commentFromJson,
     );
     _client.clearCache();
@@ -80,6 +85,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
     String articleId,
     String content, {
     String? parentId,
+    String? clientCommentId,
   }) async {
     await load(articleId);
     final result = ArticleComment(

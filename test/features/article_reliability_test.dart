@@ -115,11 +115,97 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Thêm bình luận'));
       await tester.pumpAndSettle();
-      expect(submitted, {'content': 'Bình luận bền vững'});
+      expect(submitted!['content'], 'Bình luận bền vững');
+      expect(submitted, isNot(contains('parentId')));
+      expect(
+        submitted!['clientCommentId'],
+        matches(RegExp(r'^[a-f0-9-]{36}$')),
+      );
       expect(find.text('Bình luận bền vững'), findsOneWidget);
       expect(find.text('Thành viên thử'), findsOneWidget);
     },
   );
+
+  testWidgets('reply to a reply targets the root and mentions the recipient', (
+    tester,
+  ) async {
+    Map<String, dynamic>? submitted;
+    final client = clientFor((request) async {
+      if (request.method == 'POST') {
+        submitted = jsonDecode(request.body!) as Map<String, dynamic>;
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode({
+            'id': 'confirmed',
+            ...submitted!,
+            'author': {'username': 'me'},
+          }),
+        );
+      }
+      return ApiResponse(
+        statusCode: 200,
+        body: jsonEncode({
+          'items': [
+            {
+              'id': 'root',
+              'content': 'Root',
+              'author': {'username': 'rootuser'},
+            },
+            {
+              'id': 'child',
+              'parentId': 'root',
+              'content': 'Child',
+              'author': {'username': 'childuser'},
+            },
+          ],
+        }),
+      );
+    });
+    await pumpComments(tester, client);
+    await tester.ensureVisible(find.text('Trả lời').last);
+    await tester.tap(find.text('Trả lời').last);
+    await tester.pump();
+    final input = find.byKey(const ValueKey('comment-input'));
+    expect(tester.widget<TextField>(input).controller!.text, '@childuser ');
+    await tester.enterText(input, '@childuser Trả lời bằng tiếng Việt');
+    await tester.pump();
+    await tester.ensureVisible(find.text('Thêm bình luận'));
+    await tester.tap(find.text('Thêm bình luận'));
+    await tester.pumpAndSettle();
+    expect(submitted!['parentId'], 'root');
+  });
+
+  testWidgets('manual retry reuses comment id until the draft changes', (
+    tester,
+  ) async {
+    final bodies = <Map<String, dynamic>>[];
+    final client = clientFor((request) async {
+      if (request.method == 'POST') {
+        bodies.add(jsonDecode(request.body!) as Map<String, dynamic>);
+        return ApiResponse(statusCode: 503, body: '{}');
+      }
+      return ApiResponse(statusCode: 200, body: '{"items":[]}');
+    });
+    await pumpComments(tester, client);
+    final input = find.byKey(const ValueKey('comment-input'));
+    await tester.enterText(input, 'Bản nháp không đổi');
+    await tester.pump();
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.text('Thêm bình luận'));
+      await tester.pumpAndSettle();
+    }
+    expect(bodies, hasLength(2));
+    expect(bodies.first['clientCommentId'], isNotNull);
+    expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
+    await tester.enterText(input, 'Bản nháp đã thay đổi');
+    await tester.pump();
+    await tester.tap(find.text('Thêm bình luận'));
+    await tester.pumpAndSettle();
+    expect(
+      bodies.last['clientCommentId'],
+      isNot(bodies.first['clientCommentId']),
+    );
+  });
 
   testWidgets('failed submission retains the draft and shows a failure', (
     tester,

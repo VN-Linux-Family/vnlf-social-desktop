@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/request_identity.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/feed_notifier.dart';
@@ -28,6 +29,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   AppFailure? _failure;
   ArticleComment? _replyTo;
   int _revision = 0;
+  String? _draftSignature;
+  String? _draftIdentity;
 
   @override
   void dispose() {
@@ -44,7 +47,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       return;
     }
     final revision = _revision;
-    final parentId = _replyTo?.id;
+    final parentId = _replyTo?.parentId ?? _replyTo?.id;
+    final signature = '${parentId ?? ''}\u0000$content';
+    if (_draftSignature != signature) {
+      _draftSignature = signature;
+      _draftIdentity = newRequestIdentity();
+    }
     setState(() {
       _submitting = true;
       _failure = null;
@@ -52,7 +60,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     try {
       final comment = await ref
           .read(commentsRepositoryProvider)
-          .create(widget.postId, content, parentId: parentId);
+          .create(
+            widget.postId,
+            content,
+            parentId: parentId,
+            clientCommentId: _draftIdentity,
+          );
       if (!mounted || revision != _revision) return;
       if (!offlineFeatures &&
           ref.read(sessionStateProvider)?.userId != sessionId) {
@@ -62,6 +75,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _confirmed[comment.id] = comment;
         if (_input.text.trim() == content) _input.clear();
         _replyTo = null;
+        _draftSignature = null;
+        _draftIdentity = null;
       });
       ref.invalidate(articleCommentsProvider(widget.postId));
       ref.invalidate(feedNotifierProvider);
@@ -89,6 +104,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _failure = null;
         _submitting = false;
         _input.clear();
+        _draftSignature = null;
+        _draftIdentity = null;
       });
     });
     final remote = ref.watch(articleCommentsProvider(widget.postId));
@@ -213,7 +230,18 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               comment: comment,
               replyLabel: english ? 'Reply' : 'Trả lời',
               onReply: (id) {
-                setState(() => _replyTo = items[id]);
+                setState(() {
+                  _replyTo = items[id];
+                  if (_replyTo != null) {
+                    final mention = '@${_replyTo!.author.username} ';
+                    if (!_input.text.startsWith(mention)) {
+                      _input.text = '$mention${_input.text}';
+                      _input.selection = TextSelection.collapsed(
+                        offset: _input.text.length,
+                      );
+                    }
+                  }
+                });
                 widget.focusNode.requestFocus();
               },
             ),
