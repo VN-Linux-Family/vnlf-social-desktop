@@ -19,6 +19,8 @@ dependencies:
   # Platform-backed storage for session data.
   flutter_secure_storage: ^9.2.4
   url_launcher: ^6.3.3
+  # Persist non-secret appearance preferences without a platform keyring.
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
