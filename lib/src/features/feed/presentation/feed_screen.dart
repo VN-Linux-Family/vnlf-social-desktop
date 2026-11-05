@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/providers.dart';
+import '../../../core/api_client.dart';
 import '../../../design_system/design_system.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
@@ -46,8 +48,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
         VnlfFeedTabBar(
           tabs: english
-              ? const ['Latest', 'Featured', 'Article']
-              : const ['Mới nhất', 'Được chú ý', 'Article'],
+              ? const ['Latest', 'Featured', 'Articles', 'Following']
+              : const ['Mới nhất', 'Được chú ý', 'Article', 'Đang theo dõi'],
           selectedIndex: _tab.index,
           onTabSelected: (index) =>
               setState(() => _tab = FeedTab.values[index]),
@@ -79,20 +81,43 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       ),
                     ),
                   ],
-                  error: (error, stack) => [
-                    SliverToBoxAdapter(
-                      child: VnlfPostCard.error(
-                        errorTitle: english
-                            ? 'Unable to load feed'
-                            : 'Không tải được bảng tin',
-                        errorMessage: english
-                            ? 'Please try again.'
-                            : 'Vui lòng thử lại.',
-                        retryLabel: english ? 'Retry' : 'Thử lại',
-                        onRetry: notifier.refresh,
+                  error: (error, stack) {
+                    final isAuthRequired =
+                        error is HttpFailure &&
+                        (error.statusCode == 401 || error.statusCode == 403);
+                    if (_tab == FeedTab.following &&
+                        (isAuthRequired ||
+                            ref.watch(sessionStateProvider) == null)) {
+                      return [
+                        SliverToBoxAdapter(
+                          child: VnlfPostCard.empty(
+                            emptyTitle: english
+                                ? 'Sign in required'
+                                : 'Yêu cầu đăng nhập',
+                            emptyMessage: english
+                                ? 'Sign in to see posts from members you follow.'
+                                : 'Đăng nhập để xem bảng tin từ những người bạn theo dõi.',
+                            emptyActionLabel: english ? 'Sign in' : 'Đăng nhập',
+                            onEmptyAction: () => context.push('/login'),
+                          ),
+                        ),
+                      ];
+                    }
+                    return [
+                      SliverToBoxAdapter(
+                        child: VnlfPostCard.error(
+                          errorTitle: english
+                              ? 'Unable to load feed'
+                              : 'Không tải được bảng tin',
+                          errorMessage: english
+                              ? 'Please try again.'
+                              : 'Vui lòng thử lại.',
+                          retryLabel: english ? 'Retry' : 'Thử lại',
+                          onRetry: notifier.refresh,
+                        ),
                       ),
-                    ),
-                  ],
+                    ];
+                  },
                   data: (data) => [
                     if (data.posts.isEmpty)
                       SliverToBoxAdapter(
@@ -100,9 +125,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           emptyTitle: english
                               ? 'No posts yet'
                               : 'Chưa có bài viết',
-                          emptyMessage: english
-                              ? 'Pull down to refresh.'
-                              : 'Kéo xuống để làm mới bảng tin.',
+                          emptyMessage: _tab == FeedTab.following
+                              ? (english
+                                    ? 'Follow members to see their posts here.'
+                                    : 'Hãy theo dõi thành viên để xem bài viết ở đây.')
+                              : (english
+                                    ? 'Pull down to refresh.'
+                                    : 'Kéo xuống để làm mới bảng tin.'),
                           emptyActionLabel: english ? 'Refresh' : 'Làm mới',
                           onEmptyAction: notifier.refresh,
                         ),

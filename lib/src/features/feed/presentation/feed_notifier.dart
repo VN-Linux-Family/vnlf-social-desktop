@@ -8,8 +8,9 @@ final feedNotifierProvider = AsyncNotifierProvider.autoDispose
 
 enum FeedTab {
   latest('latest'),
-  featured('trending'),
-  article('article');
+  featured('top'),
+  article('articles'),
+  following('following');
 
   const FeedTab(this.apiType);
   final String apiType;
@@ -37,6 +38,9 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
   Future<FeedState> build(FeedTab arg) async {
     _active = true;
     ref.onDispose(() => _active = false);
+    if (arg == FeedTab.following && ref.watch(sessionStateProvider) == null) {
+      throw const HttpFailure(401);
+    }
     final page = await ref
         .watch(feedRepositoryProvider)
         .getFeed(type: arg.apiType);
@@ -47,6 +51,9 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
     final generation = ++_generation;
     state = const AsyncLoading();
     final result = await AsyncValue.guard(() async {
+      if (arg == FeedTab.following && ref.read(sessionStateProvider) == null) {
+        throw const HttpFailure(401);
+      }
       final page = await ref
           .read(feedRepositoryProvider)
           .getFeed(type: arg.apiType, refresh: true);

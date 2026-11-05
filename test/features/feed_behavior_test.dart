@@ -67,9 +67,10 @@ void main() {
     await _pumpFeed(tester, (request) async {
       return switch (request.query['type']) {
         'latest' => latest.future,
-        'trending' => _page('Được chú ý từ máy chủ'),
-        'article' => _page('Article từ máy chủ'),
-        _ => throw StateError('Missing feed type'),
+        'top' || 'trending' => _page('Được chú ý từ máy chủ'),
+        'articles' || 'article' => _page('Article từ máy chủ'),
+        'following' => _page('Đang theo dõi từ máy chủ'),
+        _ => throw StateError('Missing feed type: ${request.query['type']}'),
       };
     }, settle: false);
     await tester.tap(find.text('Được chú ý'));
@@ -81,6 +82,9 @@ void main() {
     await tester.tap(find.text('Article'));
     await tester.pumpAndSettle();
     expect(find.text('Article từ máy chủ'), findsOneWidget);
+    await tester.tap(find.text('Đang theo dõi'));
+    await tester.pumpAndSettle();
+    expect(find.text('Yêu cầu đăng nhập'), findsOneWidget);
   });
 
   testWidgets('scroll appends the next cursor page and stops at the end', (

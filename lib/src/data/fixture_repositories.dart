@@ -211,6 +211,8 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
     };
   }
   if (request.path != '/api/v1/feed') return null;
+  final type = request.query['type'];
+  final isArticles = type == 'article' || type == 'articles';
   return {
     'items': request.query.containsKey('cursor')
         ? <Object>[]
@@ -219,7 +221,7 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
               'id': 'fixture-post-1',
               'authorId': 'user-synth-1',
               'slug': 'chao-mung-cong-dong-linux-viet-nam',
-              'title': request.query['type'] == 'article'
+              'title': isArticles
                   ? 'Hướng dẫn Linux từ cộng đồng'
                   : 'Chào mừng đến với Vietnam Linux Family!',
               'excerpt': 'Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ',
@@ -242,7 +244,7 @@ Map<String, dynamic>? _fixture(ApiRequest request) {
               'coverUrl': null,
               'coverAssetId': null,
               'coverAlt': '',
-              'format': request.query['type'] == 'article' ? 'article' : 'post',
+              'format': isArticles ? 'article' : 'post',
               'status': 'published',
               'version': 1,
               'likeCount': 12,

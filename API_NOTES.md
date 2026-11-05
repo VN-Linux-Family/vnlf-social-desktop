@@ -8,6 +8,13 @@ All fixture values are synthetic. Confidence applies to field names only; no
 fixture demonstrates a live value or authenticated behavior.
 
 - `test/fixtures/feed.json` and the matching inline `fixtureTransport` feed model `GET /api/v1/feed` (per-field audit: field names read from real unauthenticated response vs inferred; all values synthetic):
+  - Query parameters [CONFIRMED from web client chunk `2k5v3l48k2d3c.js`]:
+    - `type=latest`: Mới nhất (default feed)
+    - `type=top`: Được chú ý (featured/top posts; server returns 422 if `trending` is used)
+    - `type=articles`: Article (plural; server returns 422 if singular `article` is used)
+    - `type=following`: Đang theo dõi (requires session; returns 401 `AUTH_REQUIRED` unauthenticated)
+    - `limit`: page size (e.g., 20)
+    - `cursor`: pagination cursor from `nextCursor`
   - `items`: [CONFIRMED] read from real unauthenticated response.
   - `nextCursor`: [CONFIRMED] read from real unauthenticated response.
   - `items[].id`: [CONFIRMED] read from real unauthenticated response.

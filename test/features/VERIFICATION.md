@@ -3,7 +3,7 @@
 Implemented on `luank3/vnlf-design-argon` for task `task_0eea5de7c278`.
 
 - `/` uses a Riverpod `FeedNotifier` consuming `feedRepositoryProvider`.
-- Feed tabs send `latest`, `trending` (Được chú ý), and `article` through the repository.
+- Feed tabs send `latest` (Mới nhất), `top` (Được chú ý), `articles` (Article), and `following` (Đang theo dõi) through the repository.
 - Pull-to-refresh bypasses cached responses; cursor pagination appends posts, removes duplicate IDs, stops on a missing/repeated cursor, and preserves posts after pagination failures.
 - Loading, empty, and error states use the existing post card variants. A shared shimmer animation respects reduced motion.
 - `/leaderboard` and the desktop feed sidebar share `leaderboardRepositoryProvider` data and `VnlfLeaderboardCard`; “Xem tất cả” opens the full route.
