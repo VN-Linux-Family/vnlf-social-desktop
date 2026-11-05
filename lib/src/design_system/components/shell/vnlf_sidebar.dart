@@ -304,7 +304,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
 
                 // Community Social Links
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -318,23 +318,26 @@ class VnlfDesktopSidebar extends StatelessWidget {
                       Row(
                         children: [
                           SocialCircleBadge(
+                            compact: !isDrawer,
                             label: facebookBadgeLabel.isNotEmpty
                                 ? facebookBadgeLabel
                                 : null,
-                            icon: facebookBadgeLabel.isEmpty
-                                ? Icons.public_rounded
+                            assetPath: facebookBadgeLabel.isEmpty
+                                ? 'assets/images/social-facebook.webp'
                                 : null,
                             semanticLabel: facebookSemanticLabel,
                             onTap: onFacebookTap,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 16),
                           SocialCircleBadge(
-                            icon: Icons.send_rounded,
+                            compact: !isDrawer,
+                            assetPath: 'assets/images/social-telegram.webp',
                             semanticLabel: telegramSemanticLabel,
                             onTap: onTelegramTap,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 16),
                           SocialCircleBadge(
+                            compact: !isDrawer,
                             assetPath: 'assets/images/social-discord.webp',
                             semanticLabel: discordSemanticLabel,
                             onTap: onDiscordTap,

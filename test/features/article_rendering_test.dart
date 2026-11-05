@@ -172,6 +172,14 @@ void main() {
     expect(tester.getSize(ratios.first).width, tester.getSize(gallery).width);
   });
 
+  testWidgets('POST headings inherit the website body size', (tester) async {
+    await pumpPost(tester, postWith());
+    final richText = tester.widget<RichText>(
+      find.text('Tiếng Việt: ặ ữ ờ ẫ ệ', findRichText: true),
+    );
+    expect(richText.text.style!.fontSize, 13);
+  });
+
   testWidgets('post renders structured headings lists line breaks and code', (
     tester,
   ) async {

@@ -16,10 +16,12 @@ class VnlfRichContent extends StatefulWidget {
     required this.document,
     this.showImages = false,
     this.selectable = false,
+    this.postStyle = false,
   });
   final Map<String, dynamic> document;
   final bool showImages;
   final bool selectable;
+  final bool postStyle;
   @override
   State<VnlfRichContent> createState() => _VnlfRichContentState();
 }
@@ -122,13 +124,18 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
       case 'paragraph':
       case 'heading':
         final heading = node['type'] == 'heading';
-        final style = heading
+        final style = heading && !widget.postStyle
             ? (_attrs(node)['level'] == 3
                   ? VnlfTypography.h3(colors.ink)
                   : VnlfTypography.h2(colors.ink))
-            : VnlfTypography.body(colors.ink);
+            : VnlfTypography.body(colors.ink).copyWith(
+                fontWeight: heading ? FontWeight.w700 : FontWeight.w400,
+              );
         return Padding(
-          padding: EdgeInsets.only(top: heading ? 10 : 0, bottom: 8),
+          padding: EdgeInsets.only(
+            top: heading && !widget.postStyle ? 10 : 0,
+            bottom: widget.postStyle ? 0 : 8,
+          ),
           child: Semantics(
             header: heading,
             child: Text.rich(

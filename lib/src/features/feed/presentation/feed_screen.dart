@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
 import '../../../design_system/design_system.dart';
-import '../../shared/presentation/feature_samples.dart';
+import '../../notifications/presentation/notifications_sheet.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
 import 'post_mapper.dart';
@@ -31,18 +31,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final session =
         ref.watch(sessionStateProvider) ??
         ref.watch(sessionProvider).valueOrNull;
-    final isLoggedIn = session != null || offlineFeatures;
     final tabs = english
-        ? (isLoggedIn
-              ? const ['Latest', 'Featured', 'Articles', 'Following']
-              : const ['Latest', 'Featured', 'Articles'])
-        : (isLoggedIn
-              ? const ['Mới nhất', 'Được chú ý', 'Article', 'Đang theo dõi']
-              : const ['Mới nhất', 'Được chú ý', 'Article']);
-
-    if (!isLoggedIn && _tab == FeedTab.following) {
-      _tab = FeedTab.latest;
-    }
+        ? const ['Latest', 'Featured', 'Articles', 'Following']
+        : const ['Mới nhất', 'Được chú ý', 'Article', 'Đang theo dõi'];
 
     final selectedIndex = _tab.index < tabs.length ? _tab.index : 0;
     return Column(
@@ -60,9 +51,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   onPressed: () => context.push('/search'),
                 ),
                 IconButton(
-                  tooltip: english ? 'Settings' : 'Cài đặt',
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => context.push('/settings'),
+                  tooltip: english ? 'Notifications' : 'Thông báo',
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => const NotificationsSheet(),
+                  ),
+                ),
+                IconButton(
+                  tooltip: english ? 'Profile' : 'Tài khoản cá nhân',
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => context.push(
+                    session == null
+                        ? '/login'
+                        : '/profile/${Uri.encodeComponent(session.username)}',
+                  ),
                 ),
               ],
             ),

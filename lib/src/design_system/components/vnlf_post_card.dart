@@ -512,6 +512,7 @@ class VnlfPostCard extends StatelessWidget {
                     document: loadedPost.richContent!,
                     showImages: loadedPost.showInlineImages,
                     selectable: loadedPost.selectableContent,
+                    postStyle: !loadedPost.isArticle,
                   )
                 else
                   for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[

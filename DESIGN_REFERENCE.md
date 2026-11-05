@@ -160,3 +160,30 @@ Production media queries establish 3 core viewports:
 
 Reference screenshot captured from production session (stored outside repo per policy):
 - Path: `/home/dat/vlf-reference/reference_feed_desktop.png` (Local host reference, read-only)
+
+
+## Native/source parity capture — 2026-11-05
+
+Guest captures used the native Linux ARM64 release build and an isolated website
+browser profile at 1440×1000. They are kept outside Git under
+`/tmp/vnlf-ui-review/` (`native-feed.png`, `web-feed.png`) because the public feed
+contains real community content rather than synthetic fixtures. The website
+capture has an Orca compositor artifact over its far-right edge; DOM measurements
+were used to check geometry instead of treating that artifact as website UI.
+
+Measured web social icons are the official `/social/facebook.webp`,
+`telegram.webp`, and `discord.webp`, 22 px, grayscale with opacity 0.6 at rest.
+The native sidebar now uses those assets and restores color on hover/focus.
+These official brand assets remain flagged for an owner/license check before
+redistribution, alongside the previously identified logo and Discord asset.
+
+The website displays Following to guests and prompts for sign-in when needed.
+It also renders POST heading nodes at the inherited 13 px body size and retains
+empty paragraphs as line breaks without article paragraph margins. Native
+regression checks now cover those observed differences in live configuration.
+
+Open visual/feature differences: the feed composer prompt awaits the complete
+native editor; the desktop header frame/placement and grouping between feed
+cards still differ; full wardrobe effects, article layouts/captions, responsive
+references, and actual video playback require further side-by-side verification.
+The current captures are review evidence, not a claim of 1:1 parity.
