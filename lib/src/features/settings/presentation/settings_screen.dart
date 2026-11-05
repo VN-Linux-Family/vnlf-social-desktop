@@ -6,6 +6,8 @@ import '../../../design_system/design_system.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 
+const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -88,7 +90,7 @@ class SettingsScreen extends ConsumerWidget {
                 style: VnlfTypography.h2(colors.ink),
               ),
               const SizedBox(height: 12),
-              const Text('VNLF Flutter v0.1.0 (Bản thử nghiệm cộng đồng)'),
+              Text('VNLF Flutter v$appVersion (Bản thử nghiệm cộng đồng)'),
               const SizedBox(height: 16),
               Text(
                 english ? 'Server mode' : 'Chế độ máy chủ',
