@@ -823,18 +823,21 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                         'assetIds': const <String>[],
                                       }),
                                     );
-                                    if (ctx.mounted)
+                                    if (ctx.mounted) {
                                       setDialogState(() => submitted = true);
+                                    }
                                   } catch (_) {
-                                    if (ctx.mounted)
+                                    if (ctx.mounted) {
                                       setDialogState(
                                         () => error = english
                                             ? 'Could not send feedback. Your draft is kept; try again.'
                                             : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.',
                                       );
+                                    }
                                   } finally {
-                                    if (ctx.mounted)
+                                    if (ctx.mounted) {
                                       setDialogState(() => submitting = false);
+                                    }
                                   }
                                 },
                           icon: const Icon(Icons.send_rounded, size: 16),

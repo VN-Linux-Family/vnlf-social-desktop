@@ -371,3 +371,31 @@ with version/format/title/excerpt/tags/cover/contentJson/attachments, then POST
 headers without changing write retry policy. Native Markdown input is converted
 to structured document nodes, never inserted as raw HTML. Draft and upload UI
 wiring remains incomplete and must not be represented as a finished editor.
+
+
+## Source review corrections — 2026-11-05
+
+Pinned source: `ab23799bf66ecec2176b89fa0c7e1151bf5782d3`.
+`apps/api/src/modules/articles.ts` permits only root-parent comment replies.
+The native UI now flattens reply-to-reply to that root and prefills the recipient
+mention. `clientCommentId` is 1–100 characters in the pinned contract and is
+preserved for a manual retry of an unchanged draft. Native writes are never
+automatically retried. Root `parentId` remains omitted because deployed testing
+rejected explicit null, although the pinned source schema permits null.
+
+`packages/contracts/src/feedback.ts` requires a UUID `clientSubmissionId`, detail
+20–4000 characters, and pagePath. Kind is optional (FEEDBACK default); the native
+form sends its selected kind and retains the draft/error on failure. The feedback
+write is considered successful only after a successful server response.
+
+Recovered channels use confirmed REST directory/history/send/edit/delete and
+reaction POST/DELETE. Pinned `chat-message.ts` returns attachment `url: null`
+with an authenticated `downloadPath`; authenticated media loading is still a
+remaining gate and must not be treated as a public CDN URL. Realtime contracts
+use JSON envelopes over the community WebSocket, not an assumed Socket.IO stack.
+
+Recovered voice uses LiveKit only after a confirmed join grant, starts muted,
+and releases audio on leave/account change. Tests use injected room/audio
+boundaries; no production audio call or real-device microphone check has yet
+been performed. Weekly rankings use the observed Vietnam-time Monday anchor;
+do not invent an all-time endpoint from old fixture labels.

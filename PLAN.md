@@ -1,3 +1,42 @@
+# Current production audit — 2026-11-05
+
+This update supersedes the historical phase assignments and unknown-contract
+assumptions below. Codex owns `luank3/vnlf-production-audit` in its isolated
+worktree. Gemini 4 Argon completed a read-only source audit; its terminal is
+closed. Recovered channel/search/voice worker worktrees are preserved and their
+changes are being integrated serially; no local worker builds are running.
+
+Authorized: use the owner's account for necessary write checks, remove all test
+content afterward, read the private GitLab source through glab, store CI binaries
+privately, and publish stable binaries in a public release-only repository.
+Source is a contract/design reference only and must not be copied into the app.
+Previously created test posts/comments were removed and fresh reads confirmed
+cleanup before reboot. Credentials and session tokens are never recorded here.
+
+Completed and checked so far: UTF-8 transport and query preservation; confirmed
+comment persistence with flattened replies and stable retry identity; post
+vote/bookmark failure handling; native article/media rendering and processing
+states; feedback validation and honest error handling; visible public-release
+update checks; bounded local build resources and removal of signing material from
+tracked files. The recovered live channel/voice/search/weekly-ranking slices have
+passed targeted tests and are undergoing full integration validation.
+
+Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
+`--concurrency=1`. Gradle heap 1536 MB, two workers, no daemon. Full hosted build
+matrix uses native x64/arm64 runners and three Android ABIs, with an artifact
+inventory and checksums. Static workflow checks pass; hosted matrix results must
+be recorded after execution. Public repository creation failed with organization
+HTTP 403; an owner must create it and configure scoped publishing and stable
+signing secrets. User explicitly approved public stable/private CI distribution.
+
+Remaining work is tracked in `docs/source-parity-audit.md` and
+`docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
+UI, notifications/reporting, DM, fuller profile/settings/projects/chat support,
+real-device media/voice, visual parity/performance, platform builds and signing
+remain release gates. Do not replace these with simulated success states.
+
+---
+
 # VNLF Flutter Client: Architectural Master Plan & Execution Graph
 
 ---
