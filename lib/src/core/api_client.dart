@@ -73,8 +73,12 @@ final class ApiClient {
   final Duration throttleInterval;
   final Duration cacheDuration;
   final _cache = <String, (DateTime, String)>{};
+  int _cacheRevision = 0;
 
-  void clearCache() => _cache.clear();
+  void clearCache() {
+    _cacheRevision++;
+    _cache.clear();
+  }
 
   Future<T> get<T>(
     String path, {
@@ -89,6 +93,7 @@ final class ApiClient {
     String? body,
     T Function(Map<String, dynamic>)? decode,
   }) async {
+    final cacheRevision = _cacheRevision;
     final normalizedMethod = method.toUpperCase();
     var request = ApiRequest(
       path,
@@ -157,7 +162,9 @@ final class ApiClient {
         }
         final value = _decode(response.body);
         final result = decode != null ? decode(value) : value as T;
-        if (isGet && cacheDuration > Duration.zero) {
+        if (isGet &&
+            cacheDuration > Duration.zero &&
+            cacheRevision == _cacheRevision) {
           if (_cache.length >= 100) _cache.remove(_cache.keys.first);
           _cache[key] = (DateTime.now(), response.body);
         }
