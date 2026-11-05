@@ -32,3 +32,12 @@ scratch/
 .idea/
 *.iml
 android/local.properties
+
+# Local signing material must never be committed
+**/key.properties
+*.keystore
+*.jks
+
+# Python verification helpers
+__pycache__/
+*.pyc
