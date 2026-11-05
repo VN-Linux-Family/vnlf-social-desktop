@@ -9,6 +9,7 @@ import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/post_interactions.dart';
 import 'feed_notifier.dart';
 import 'post_mapper.dart';
+import '../../shared/presentation/post_share.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -185,6 +186,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                 onAuthorTap: () => context.push(
                                   '/profile/${Uri.encodeComponent(data.posts[index].author.username)}',
                                 ),
+                                onShareTap: () => copyPostLink(context, source),
                                 onCommentTap: () => context.push(
                                   '/thread/${Uri.encodeComponent(data.posts[index].id)}',
                                 ),

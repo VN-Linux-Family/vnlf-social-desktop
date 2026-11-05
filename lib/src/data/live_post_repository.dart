@@ -25,6 +25,7 @@ final class LivePostRepository implements PostRepository {
               '';
           return FeedPost(
             id: json['id'] as String? ?? id,
+            slug: stringValue(json['slug'], 'slug'),
             excerpt: excerpt,
             title: json['title'] as String?,
             voteScore: json['voteScore'] as int? ?? 0,

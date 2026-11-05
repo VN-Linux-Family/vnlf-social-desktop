@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
+import '../../shared/presentation/post_share.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../shared/presentation/post_interactions.dart';
@@ -27,6 +28,7 @@ class ThreadScreen extends ConsumerWidget {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final post = ref.watch(threadPostProvider(postId));
     return ListView(
+      padding: const EdgeInsets.only(bottom: 20),
       children: [
         FeatureHeader(title: english ? 'Thread' : 'Bài viết'),
         const SizedBox(height: 12),
@@ -105,6 +107,8 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
             '/profile/${Uri.encodeComponent(source.author.username)}',
           ),
           onCommentTap: _commentFocus.requestFocus,
+          onShareTap: () => copyPostLink(context, source),
+          shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
           onVoteChanged: (value) => ref
               .read(postInteractionsProvider.notifier)
               .vote(source.id, value),

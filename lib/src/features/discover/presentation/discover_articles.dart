@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
+import '../../shared/presentation/post_share.dart';
 
 class DiscoverArticles extends StatelessWidget {
   const DiscoverArticles({
@@ -46,6 +47,8 @@ class DiscoverArticles extends StatelessWidget {
                   context.push('/thread/${Uri.encodeComponent(post.id)}'),
               child: VnlfPostCard(
                 post: presentPost(post, english: english),
+                onShareTap: () => copyPostLink(context, post),
+                shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
                 onCommentTap: () =>
                     context.push('/thread/${Uri.encodeComponent(post.id)}'),
                 onAuthorTap: () => context.push(

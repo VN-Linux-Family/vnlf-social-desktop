@@ -2,6 +2,16 @@
 
 All endpoints, payload schemas, and realtime events documented here are derived directly from `vietnamlinuxfamily.net` production client bundles and live network inspection. Never invent endpoints.
 
+## Public article sharing (2026-11-05)
+
+- [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection
+  of the feed HTML and current `2k5v3l48k2d3c.js` chunk confirmed
+  `e.href ?? \`/a/${e.slug}\``. The native `/thread/:id` route is internal and
+  must not be copied as a website URL.
+- Sharing copies `https://vietnamlinuxfamily.net/a/{slug}` to the local
+  clipboard. A missing server slug shows an unavailable message rather than
+  inventing a route. No server write or authenticated request is involved.
+
 ## Phase 2 fixture inventory
 
 All fixture values are synthetic. Confidence applies to field names only; no

@@ -122,6 +122,7 @@ class VnlfPostCard extends StatelessWidget {
     this.actionSemanticLabel,
     this.onVoteChanged,
     this.onCommentTap,
+    this.onShareTap,
     this.onBookmarkToggle,
     this.onAuthorTap,
     this.showBottomActions = true,
@@ -164,6 +165,7 @@ class VnlfPostCard extends StatelessWidget {
        actionSemanticLabel = null,
        onVoteChanged = null,
        onCommentTap = null,
+       onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
        authorAvatarSemanticLabel = null,
@@ -202,6 +204,7 @@ class VnlfPostCard extends StatelessWidget {
        errorSemanticLabel = null,
        onVoteChanged = null,
        onCommentTap = null,
+       onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
        showBottomActions = true,
@@ -241,6 +244,7 @@ class VnlfPostCard extends StatelessWidget {
        emptySemanticLabel = null,
        onVoteChanged = null,
        onCommentTap = null,
+       onShareTap = null,
        onBookmarkToggle = null,
        onAuthorTap = null,
        showBottomActions = true,
@@ -277,6 +281,7 @@ class VnlfPostCard extends StatelessWidget {
   final String? actionSemanticLabel;
   final ValueChanged<VoteState>? onVoteChanged;
   final VoidCallback? onCommentTap;
+  final VoidCallback? onShareTap;
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
   final bool showBottomActions;
@@ -460,6 +465,7 @@ class VnlfPostCard extends StatelessWidget {
                     isBookmarked: loadedPost.isBookmarked,
                     onVoteChanged: onVoteChanged,
                     onCommentTap: onCommentTap,
+                    onShareTap: onShareTap,
                     onBookmarkToggle: onBookmarkToggle,
                     voteSemanticLabel: voteSemanticLabel,
                     upvoteSemanticLabel: upvoteSemanticLabel,
