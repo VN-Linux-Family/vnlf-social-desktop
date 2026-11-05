@@ -30,5 +30,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>VNLF dùng micrô khi bạn bật mic trong phòng thoại.</string>
 </dict>
 </plist>
