@@ -91,6 +91,7 @@ final class ApiClient {
     String path, {
     Map<String, String> query = const {},
     String? body,
+    Map<String, String> headers = const {},
     T Function(Map<String, dynamic>)? decode,
   }) async {
     final cacheRevision = _cacheRevision;
@@ -104,6 +105,7 @@ final class ApiClient {
         'User-Agent': 'vlf-flutter-dev/0.1 (unofficial community client)',
         'Accept': 'application/json',
         if (body != null) 'Content-Type': 'application/json',
+        ...headers,
       },
     );
     try {

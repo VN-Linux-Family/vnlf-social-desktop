@@ -353,3 +353,21 @@ were made. The web client's profile visit POST is deliberately not reproduced.
 - Vote PUT response: voteScore, viewerVote, likeCount, viewerLiked. Bookmark POST
   returns `{ok: true}`; refreshed article projection supplies viewerBookmarked.
   Successful writes invalidate cached GET responses; mutation requests never retry.
+
+## Authoritative source access (2026-11-05)
+
+The owner granted read-only GitLab access through `glab` to
+`realfox99/vnlf-social`, project 86991275. Source review is pinned to commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3`. Relevant files are fetched selectively
+outside this repository; no upstream source is copied into the native client.
+Source HEAD and the deployed web bundle may differ: observed live behavior takes
+precedence when documenting a production-server discrepancy. Contract changes
+must be verified against both where practical.
+
+Native draft foundation now follows the observed versioned article lifecycle:
+create with POST `/api/v1/articles` (no body), PATCH `/api/v1/articles/:id`
+with version/format/title/excerpt/tags/cover/contentJson/attachments, then POST
+`/publish` with an idempotency-key header. The API client accepts per-request
+headers without changing write retry policy. Native Markdown input is converted
+to structured document nodes, never inserted as raw HTML. Draft and upload UI
+wiring remains incomplete and must not be represented as a finished editor.
