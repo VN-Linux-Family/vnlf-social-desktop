@@ -7,6 +7,7 @@ import '../../../design_system/design_system.dart';
 import '../../shared/presentation/feature_samples.dart';
 import 'channel_directory.dart';
 import 'channel_state.dart';
+import 'live_channels_screen.dart';
 
 class ChannelsScreen extends ConsumerStatefulWidget {
   const ChannelsScreen({super.key});
@@ -60,6 +61,7 @@ class _ChannelsScreenState extends ConsumerState<ChannelsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!offlineFeatures) return const LiveChannelsScreen();
     final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final session =

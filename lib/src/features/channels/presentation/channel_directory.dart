@@ -5,6 +5,8 @@ import '../../../design_system/design_system.dart';
 import '../../shared/presentation/community_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import 'channel_state.dart';
+import '../../shared/presentation/feature_samples.dart';
+import 'live_channel_directory.dart';
 
 class ChannelDirectory extends ConsumerWidget {
   const ChannelDirectory({super.key, this.onSelected});
@@ -13,6 +15,7 @@ class ChannelDirectory extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!offlineFeatures) return LiveChannelDirectory(onSelected: onSelected);
     final english = Localizations.localeOf(context).languageCode == 'en';
     final selected = ref.watch(selectedChannelProvider);
     return ListView(
@@ -45,6 +48,7 @@ class ActiveCommunityMembers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!offlineFeatures) return const SizedBox.shrink();
     final english = Localizations.localeOf(context).languageCode == 'en';
     return FeatureSurface(
       child: Column(
