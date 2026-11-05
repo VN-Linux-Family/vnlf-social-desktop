@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// The application title.
   ///
   /// In vi, this message translates to:
-  /// **'VNLF Social'**
+  /// **'Vietnam Linux Family'**
   String get appTitle;
 }
 

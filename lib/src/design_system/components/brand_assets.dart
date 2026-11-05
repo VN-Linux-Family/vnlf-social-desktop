@@ -8,14 +8,21 @@ import '../tokens/vnlf_colors.dart';
 /// a neutral community placeholder. The local custom-painted emblem is isolated
 /// here for local development and testing only.
 abstract final class BrandAssets {
-  /// Whether to render the unconfirmed local development emblem.
+  /// Whether to render the official Vietnam Linux Family emblem.
   /// Set to false to replace with a neutral community badge across the entire app.
-  static bool useLocalDevEmblem = true;
+  static bool useOfficialLogo = true;
 
   /// Returns the brand logo widget with the specified [size] and optional [semanticLabel].
   static Widget logo({double size = 30.0, String? semanticLabel}) {
-    final Widget badge = useLocalDevEmblem
-        ? _VnlfDevLogoEmblem(size: size)
+    final Widget badge = useOfficialLogo
+        ? Image.asset(
+            'assets/images/vnlf-logo.png',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                _VnlfDevLogoEmblem(size: size),
+          )
         : _NeutralLogoPlaceholder(size: size);
     if (semanticLabel == null) {
       return badge;

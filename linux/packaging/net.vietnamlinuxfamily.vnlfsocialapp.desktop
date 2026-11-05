@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Vietnam Linux Family
+GenericName=VNLF Social
+Comment=Native client for the Vietnam Linux Family community
+Icon=vnlfsocialapp
+Exec=vnlfsocialapp %u
+Terminal=false
+Categories=Network;Chat;Social;
+StartupWMClass=net.vietnamlinuxfamily.vnlfsocialapp
+Keywords=Linux;Vietnam;VNLF;Community;Social;

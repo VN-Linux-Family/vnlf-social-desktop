@@ -10,5 +10,5 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get appTitle => 'VNLF Social';
+  String get appTitle => 'Vietnam Linux Family';
 }

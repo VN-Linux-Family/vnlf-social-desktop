@@ -9,6 +9,12 @@ assets/reference/
 .env
 .env.*
 
+# Track application branding and icon assets
+!assets/images/**
+!linux/runner/assets/**
+!web/favicon.png
+!web/icons/**
+
 # Dart / Flutter build artifacts
 .dart_tool/
 .packages
