@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.PRIVATE_RELEASE_TOKEN || github.token }}
       BUILD_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt || inputs.run_attempt }}
       BUILD_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
     steps:
