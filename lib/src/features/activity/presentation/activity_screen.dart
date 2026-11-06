@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
@@ -7,9 +9,10 @@ import '../domain/activity_service.dart';
 /// Native personal activity view. The parent supplies the session-bound
 /// service so route and account lifecycle wiring remain app-owned.
 class ActivityScreen extends StatefulWidget {
-  const ActivityScreen({super.key, required this.service});
+  const ActivityScreen({super.key, required this.service, this.clock});
 
   final ActivityService service;
+  final DateTime Function()? clock;
 
   @override
   State<ActivityScreen> createState() => _ActivityScreenState();
@@ -89,8 +92,9 @@ class ActivityCheckInCelebration extends StatelessWidget {
   }
 }
 
-class _ActivityScreenState extends State<ActivityScreen> {
-  late final DateTime _today;
+class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObserver {
+  late DateTime _today;
+  Timer? _dayTimer;
   late int _year;
   late int _month;
   String? _selectedDate;
@@ -109,11 +113,54 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now().toUtc().add(const Duration(hours: 7));
+    WidgetsBinding.instance.addObserver(this);
+    final now = _vietnamNow();
     _today = DateTime.utc(now.year, now.month, now.day);
     _year = now.year;
     _month = now.month;
     _calendar = widget.service.loadMonth(_year, _month);
+    _scheduleDayChange();
+  }
+
+  DateTime _vietnamNow() =>
+      (widget.clock?.call() ?? DateTime.now()).toUtc().add(const Duration(hours: 7));
+
+  void _scheduleDayChange() {
+    _dayTimer?.cancel();
+    final now = _vietnamNow();
+    final nextDay = DateTime.utc(now.year, now.month, now.day + 1);
+    _dayTimer = Timer(nextDay.difference(now), _refreshDay);
+  }
+
+  void _refreshDay() {
+    final now = _vietnamNow();
+    final today = DateTime.utc(now.year, now.month, now.day);
+    if (today != _today) {
+      setState(() {
+        final wasCurrentMonth = _year == _today.year && _month == _today.month;
+        _today = today;
+        if (wasCurrentMonth) {
+          _year = today.year;
+          _month = today.month;
+          _selectedDate = null;
+        }
+        _loadRevision++;
+        _calendar = widget.service.loadMonth(_year, _month);
+      });
+    }
+    _scheduleDayChange();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshDay();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _dayTimer?.cancel();
+    super.dispose();
   }
 
   void _moveMonth(int delta) {
@@ -155,13 +202,15 @@ class _ActivityScreenState extends State<ActivityScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _StreakHero(
-                  streak: data?.currentStreak ?? 0,
-                  longest: data?.longestStreak ?? 0,
-                  english: english,
-                  colors: colors,
-                ),
-                const SizedBox(height: 12),
+                if (data != null && !snapshot.hasError) ...[
+                  _StreakHero(
+                    streak: data.currentStreak,
+                    longest: data.longestStreak,
+                    english: english,
+                    colors: colors,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 _ActivityPanel(
                   colors: colors,
                   english: english,
@@ -172,8 +221,10 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   onNext: () => _moveMonth(1),
                   child: _calendarContent(snapshot, english, colors),
                 ),
-                const SizedBox(height: 12),
-                _TotalsPanel(data: data, english: english, colors: colors),
+                if (data != null && !snapshot.hasError) ...[
+                  const SizedBox(height: 12),
+                  _TotalsPanel(data: data, english: english, colors: colors),
+                ],
               ],
             );
           },
@@ -230,7 +281,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       children: [
         _CalendarGrid(
           days: data.days,
-          today: data.today,
+          today: '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
           selectedDate: _selectedDate,
           english: english,
           colors: colors,
@@ -239,7 +290,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         if (_selectedDate != null)
           _SelectedDay(
             day: data.days.firstWhere((day) => day.date == _selectedDate),
-            today: data.today,
+            today: '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
             english: english,
             colors: colors,
           ),

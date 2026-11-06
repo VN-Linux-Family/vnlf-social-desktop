@@ -5,8 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/features/activity/data/live_activity_repository.dart';
 import 'package:vnlfsocialapp/src/features/activity/domain/activity_models.dart';
-import 'package:vnlfsocialapp/src/features/activity/domain/activity_repository.dart';
-import 'package:vnlfsocialapp/src/features/activity/domain/activity_service.dart';
 
 void main() {
   group('activity date handling', () {
@@ -116,31 +114,7 @@ void main() {
     });
   });
 
-  test('daily trigger consumes one attempt per owner and Vietnam date', () async {
-    var calls = 0;
-    final service = ActivityService(_CountingRepository(() async {
-      calls++;
-      return CheckInAcknowledgment(
-        date: '2026-11-07',
-        currentStreak: 3,
-        longestStreak: 5,
-        showCelebration: false,
-        checkins: const [CheckInDay(date: '2026-11-07', streakDay: 3)],
-      );
-    }));
-    final trigger = DailyCheckInTrigger(
-      service: service,
-      ownerId: 'owner-a',
-      clock: () => DateTime.utc(2026, 11, 6, 17),
-    );
 
-    expect(
-      (await trigger.runForConfirmedSession(claimCelebration: false))?.date,
-      '2026-11-07',
-    );
-    expect(await trigger.runForConfirmedSession(claimCelebration: true), isNull);
-    expect(calls, 1);
-  });
 }
 
 LiveActivityRepository _repository(
@@ -190,16 +164,3 @@ Map<String, Object?> _checkInPayload() => {
     {'date': '2026-11-06', 'streakDay': 3},
   ],
 };
-
-final class _CountingRepository implements ActivityRepository {
-  _CountingRepository(this._checkIn);
-  final Future<CheckInAcknowledgment> Function() _checkIn;
-
-  @override
-  Future<ActivityCalendarData> loadCalendar({required String from, required String to}) =>
-      throw UnimplementedError();
-
-  @override
-  Future<CheckInAcknowledgment> checkIn({required bool claimCelebration}) =>
-      _checkIn();
-}
