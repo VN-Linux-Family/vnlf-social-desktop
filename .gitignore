@@ -17,6 +17,8 @@ assets/reference/
 !macos/Runner/Assets.xcassets/**
 !web/favicon.png
 !web/icons/**
+# Deliberate, sanitized review screenshots linked from audit reports
+!docs/visual-audit/**/*.png
 
 # Dart / Flutter build artifacts
 .dart_tool/
