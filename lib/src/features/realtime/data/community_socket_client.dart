@@ -33,6 +33,8 @@ final class CommunitySocketClient {
   final _topics = <CommunityTopic, int>{};
   final _joining = <CommunityTopic, Future<void>>{};
   final _joined = <CommunityTopic>{};
+  // Topics whose join was sent on the current connection, even if never acked.
+  final _attempted = <CommunityTopic>{};
   final _recent = <String>{};
   CommunitySocketStatus _status = CommunitySocketStatus(
     CommunityConnectionPhase.idle,
@@ -181,6 +183,7 @@ final class CommunitySocketClient {
       final frame = CommunityFrame.decode(raw);
       if (frame is CommunityAck) {
         _requests.complete(frame);
+        if (!frame.ok && _authCodes.contains(frame.errorCode)) _revoke();
         return;
       }
       final event = frame as CommunityEvent;
@@ -192,6 +195,11 @@ final class CommunitySocketClient {
       if (event.type == 'session:revoked' ||
           event.type == 'moderation:session-revoked') {
         _revoke();
+      } else if (event.type == 'conversation:access-revoked') {
+        // The server drops every subscription of this socket, not only the
+        // affected conversation. Reconnect so each leased topic is authorized
+        // again by its own guarded join.
+        _lost(connection, generation, const TransportFailure());
       }
     } catch (error) {
       _issues.add(CommunitySocketIssue(_failure(error)));
@@ -236,6 +244,7 @@ final class CommunitySocketClient {
     late final Future<void> future;
     future = () async {
       try {
+        _attempted.add(topic);
         await request(topic.joinType, topic.data);
         if (_current(generation)) {
           _joined.add(topic);
@@ -253,6 +262,7 @@ final class CommunitySocketClient {
       }
     }();
     _joining[topic] = future;
+    future.ignore();
     return future;
   }
 
@@ -266,6 +276,7 @@ final class CommunitySocketClient {
     _topics.remove(topic);
     final generation = _generation;
     final joining = _joining[topic];
+    final attempted = _attempted.contains(topic);
     if (joining != null) {
       try {
         await joining;
@@ -276,7 +287,8 @@ final class CommunitySocketClient {
     if (!_current(generation) || _topics.containsKey(topic)) return;
     final wasJoined = _joined.remove(topic);
     _set(_status.phase);
-    if (_connection != null && (wasJoined || joining != null)) {
+    _attempted.remove(topic);
+    if (_connection != null && (wasJoined || joining != null || attempted)) {
       await request(topic.leaveType, topic.data);
     }
   }
@@ -326,6 +338,7 @@ final class CommunitySocketClient {
     _requests.failAll(failure);
     _joined.clear();
     _joining.clear();
+    _attempted.clear();
     final incoming = _incoming;
     _incoming = null;
     final connection = _connection;
@@ -359,7 +372,10 @@ final class CommunitySocketClient {
     if (_sessionRevoked) throw const HttpFailure(401);
     _release(const TransportFailure());
     _failures = 0;
-    if (_started && _foreground) await _connect();
+    if (_started && _foreground) {
+      _set(CommunityConnectionPhase.reconnecting);
+      await _connect();
+    }
   }
 
   void _set(CommunityConnectionPhase phase, {AppFailure? failure}) {
@@ -392,6 +408,7 @@ Duration _defaultDelay(int failures) => Duration(
       min(15000, 1000 * (1 << min(max(failures - 1, 0), 4))) +
       Random().nextInt(350),
 );
+const _authCodes = {'AUTH_REQUIRED', 'SESSION_REVOKED'};
 const _commands = {
   'presence:heartbeat',
   'channel:join',

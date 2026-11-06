@@ -360,6 +360,144 @@ void main() {
   });
 
   testWidgets(
+    'access revocation reconnects, keeps leases and rejects the old join ack',
+    (tester) async {
+      final first = _Connection()..holdType = 'conversation:join';
+      final second = _Connection()..holdType = 'conversation:join';
+      var connects = 0;
+      final client = CommunitySocketClient(
+        connector: () async => connects++ == 0 ? first : second,
+        reconnectDelay: (_) => const Duration(milliseconds: 10),
+      );
+      final seen = <String>[];
+      final listener = client.events.listen((e) => seen.add(e.type));
+      await client.start();
+      final oldJoin = expectLater(
+        client.join(_topic),
+        throwsA(isA<TransportFailure>()),
+      );
+      final oldId = first.sent.last['requestId'] as String;
+      first.event('revoked', type: 'conversation:access-revoked');
+      await oldJoin;
+      expect(seen, ['conversation:access-revoked']);
+      expect(first.closeCount, 1);
+      expect(client.status.phase, CommunityConnectionPhase.reconnecting);
+      first.ack(oldId);
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.pump();
+      expect(connects, 2);
+      expect(second.types, ['presence:heartbeat', 'conversation:join']);
+      expect(client.status.joinedTopics, isEmpty);
+      second.holdType = null;
+      second.ack(second.sent.last['requestId'] as String);
+      await tester.pump();
+      expect(client.status.joinedTopics, {_topic});
+      await listener.cancel();
+      await client.dispose();
+    },
+  );
+
+  testWidgets('last leave after a timed-out join still sends a leave', (
+    tester,
+  ) async {
+    final socket = _Connection()..holdType = 'conversation:join';
+    final client = CommunitySocketClient(connector: () async => socket);
+    await client.start();
+    final join = expectLater(
+      client.join(_topic),
+      throwsA(isA<TransportFailure>()),
+    );
+    await tester.pump(const Duration(seconds: 8));
+    await join;
+    await client.leave(_topic);
+    expect(socket.types, [
+      'presence:heartbeat',
+      'conversation:join',
+      'conversation:leave',
+    ]);
+    await client.dispose();
+  });
+
+  test('last leave after a rejected join sends exactly one leave', () async {
+    final socket = _Connection()..failType = 'conversation:join';
+    final client = CommunitySocketClient(connector: () async => socket);
+    await client.start();
+    await expectLater(client.join(_topic), throwsA(isA<HttpFailure>()));
+    await client.leave(_topic);
+    await client.leave(_topic);
+    expect(socket.types, [
+      'presence:heartbeat',
+      'conversation:join',
+      'conversation:leave',
+    ]);
+    await client.dispose();
+  });
+
+  testWidgets('retry reports reconnecting while it drops a joining connection', (
+    tester,
+  ) async {
+    final first = _Connection(), second = _Connection(), third = _Connection();
+    final sockets = [first, second, third];
+    var connects = 0;
+    final client = CommunitySocketClient(
+      connector: () async => sockets[connects++],
+      reconnectDelay: (_) => const Duration(milliseconds: 10),
+    );
+    await client.start();
+    await client.join(_topic);
+    second.holdType = 'conversation:join';
+    await first.remoteClose(1006);
+    await tester.pump(const Duration(milliseconds: 10));
+    await tester.pump();
+    expect(client.status.phase, CommunityConnectionPhase.connected);
+    expect(second.types, ['presence:heartbeat', 'conversation:join']);
+    final retry = client.retry();
+    expect(client.status.phase, CommunityConnectionPhase.reconnecting);
+    await retry;
+    await tester.pump();
+    expect(connects, 3);
+    expect(second.closeCount, 1);
+    expect(third.types, ['presence:heartbeat', 'conversation:join']);
+    expect(client.status.phase, CommunityConnectionPhase.connected);
+    await client.dispose();
+  });
+
+  testWidgets('any authentication ack revokes terminally', (tester) async {
+    final socket = _Connection();
+    var connects = 0;
+    final client = CommunitySocketClient(
+      connector: () async {
+        connects++;
+        return socket;
+      },
+    );
+    await client.start();
+    socket.failType = 'message:typing';
+    socket.failCode = 'SESSION_REVOKED';
+    final unrelated = expectLater(
+      (() {
+        socket.autoAck = false;
+        return client.request('dm:typing', {});
+      })(),
+      throwsA(isA<HttpFailure>()),
+    );
+    socket.autoAck = true;
+    await expectLater(
+      client.request('message:typing', {}),
+      throwsA(
+        isA<HttpFailure>().having((f) => f.statusCode, 'status', 401),
+      ),
+    );
+    await unrelated;
+    expect(client.status.phase, CommunityConnectionPhase.revoked);
+    await expectLater(client.join(_topic), throwsA(isA<HttpFailure>()));
+    await tester.pump(const Duration(minutes: 1));
+    expect(connects, 1);
+    expect(socket.closeCount, 1);
+    await client.dispose();
+  });
+
+  testWidgets(
     'outgoing content writes are never accepted by the realtime client',
     (tester) async {
       final socket = _Connection();
@@ -382,7 +520,7 @@ class _Connection implements CommunityConnection {
   final _incoming = StreamController<Object?>.broadcast(sync: true);
   final sent = <Map<String, dynamic>>[];
   bool autoAck = true;
-  String? failType;
+  String? failType, failCode, holdType;
   int closeCount = 0;
   @override
   int? closeCode;
@@ -393,17 +531,24 @@ class _Connection implements CommunityConnection {
   void send(String frame) {
     final data = jsonDecode(frame) as Map<String, dynamic>;
     sent.add(data);
-    if (autoAck) ack(data['requestId'] as String, ok: data['type'] != failType);
+    if (autoAck && data['type'] != holdType) {
+      ack(data['requestId'] as String, ok: data['type'] != failType);
+    }
   }
 
-  void ack(String id, {bool ok = true, Map<String, Object?>? data}) => raw(
+  void ack(
+    String id, {
+    bool ok = true,
+    Map<String, Object?>? data,
+    String? code,
+  }) => raw(
     jsonEncode({
       'ok': ok,
       'requestId': id,
       'data': data,
       if (!ok)
         'error': {
-          'code': 'CONVERSATION_FORBIDDEN',
+          'code': code ?? failCode ?? 'CONVERSATION_FORBIDDEN',
           'message': 'Synthetic permission error',
         },
     }),
@@ -412,9 +557,9 @@ class _Connection implements CommunityConnection {
     if (!_incoming.isClosed) _incoming.add(frame);
   }
 
-  void event(String id) => raw(
+  void event(String id, {String type = 'future:event'}) => raw(
     jsonEncode({
-      'type': 'future:event',
+      'type': type,
       'eventId': id,
       'occurredAt': '2026-11-06T00:00:00Z',
       'data': <String, Object?>{},
