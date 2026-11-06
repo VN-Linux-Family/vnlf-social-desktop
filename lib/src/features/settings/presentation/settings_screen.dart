@@ -9,6 +9,7 @@ import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../updates/presentation/update_panel.dart';
+import 'account_profile_screen.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
 
@@ -84,6 +85,23 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (!offlineFeatures) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AccountProfileScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(
+                      english ? 'Edit profile' : 'Chỉnh sửa hồ sơ',
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
