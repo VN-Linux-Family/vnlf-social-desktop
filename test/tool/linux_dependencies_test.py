@@ -12,6 +12,22 @@ spec.loader.exec_module(module)
 
 
 class LinuxDependenciesTest(unittest.TestCase):
+    def test_runner_mirror_lists_are_rewritten_with_the_source_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'sources.list.d').mkdir()
+            source = root / 'sources.list.d/ubuntu.sources'
+            source.write_text('URIs: mirror+file:/etc/apt/apt-mirrors.txt\nSigned-By: /key.gpg\n')
+            mirror_list = root / 'apt-mirrors.txt'
+            mirror_list.write_text('http://azure.archive.ubuntu.com/ubuntu\n')
+            unrelated = root / 'apt-mirrors-extra.txt'
+            unrelated.write_text('https://packages.microsoft.com/repos/code\n')
+            for mirror in module.X64_MIRRORS:
+                module.set_archive(root, 'x64', mirror)
+                self.assertEqual(mirror_list.read_text(), mirror + '\n')
+                self.assertIn('Signed-By: /key.gpg', source.read_text())
+                self.assertEqual(unrelated.read_text(), 'https://packages.microsoft.com/repos/code\n')
+
     def test_deb822_mirror_change_preserves_signature_fields_and_other_repositories(self):
         text = 'Types: deb\nURIs: http://azure.archive.ubuntu.com/ubuntu/\nSuites: noble noble-updates\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nURIs: https://packages.microsoft.com/repos/code\n'
         changed = module.rewrite_archive(text, 'x64', 'https://mirrors.edge.kernel.org/ubuntu')

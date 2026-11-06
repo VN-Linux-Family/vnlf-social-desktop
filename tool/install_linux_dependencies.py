@@ -32,6 +32,9 @@ def rewrite_archive(text, architecture, mirror):
 
 def set_archive(source_root, architecture, mirror):
     paths = [source_root / 'sources.list']
+    # GitHub's Ubuntu images use mirror+file:/etc/apt/apt-mirrors.txt.
+    # Updating only the .sources URI leaves every failover on the old host.
+    paths.extend(source_root.glob('apt-mirrors*.txt'))
     for extension in ('*.sources', '*.list'):
         paths.extend((source_root / 'sources.list.d').glob(extension))
     for path in paths:
