@@ -37,8 +37,12 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
   @override
   Future<FeedState> build(FeedTab arg) async {
     _active = true;
+    ++_generation;
     ref.onDispose(() => _active = false);
-    if (arg == FeedTab.following && ref.watch(sessionStateProvider) == null) {
+    final owner = ref.watch(
+      sessionStateProvider.select((session) => session?.userId),
+    );
+    if (arg == FeedTab.following && owner == null) {
       throw const HttpFailure(401);
     }
     final page = await ref

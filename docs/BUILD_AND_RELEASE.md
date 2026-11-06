@@ -169,8 +169,10 @@ and SHA256SUMS. Each uploaded binary's server-reported SHA-256 digest and size
 was independently compared with release.json; complete=true, no missing targets.
 No manual recovery was needed for that run. Run `42134094762` at `d6c24db` subsequently passed all nine binary targets,
 quality checks and automatic private publication in `ci-42134094762-1`; every
-uploaded SHA-256 digest and size matches its complete manifest. The newer
-messaging checkpoint `be5e59e` is running in `42163419636`; do not report its
-unfinished targets as passed. Native video fallback fix `e0ab3e5` passes 403 local
+uploaded SHA-256 digest and size matches its complete manifest. The messaging checkpoint `be5e59e` then passed every binary target and automatic
+private publication in run `42163419636`. Private prerelease `ci-42163419636-1`
+contains nine binaries, release.json and SHA256SUMS; all uploaded binary sizes
+and SHA-256 digests match its complete manifest (version
+`0.1.0-dev.8.1+be5e59e`). Native video fallback fix `e0ab3e5` passes 403 local
 Flutter tests and a Linux release/runtime check; its hosted builds remain pending.
 Device checks and stable signing remain required.
