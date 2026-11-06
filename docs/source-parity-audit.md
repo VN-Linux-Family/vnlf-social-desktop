@@ -36,7 +36,7 @@ server with the authorized account, followed by cleanup.
 | Post actions | Vote/bookmark confirmed, rollback and session guards tested; reporting now uses a validated, server-confirmed dialog with retry/error coverage. |
 | Publishing | Native rich composer, versioned autosave, owner-partitioned secure recovery, conflict handling, stable publish identity, images/cover/video processing and format conversion implemented and tested. Live UI write/cleanup checks, polls and advanced editor features remain. |
 | Channels | REST implementation integrated with tests, including fresh signed media URLs and safe mutation handling; realtime/read sync, uploads/search/context remain incomplete. |
-| Direct messages | Inbox/requests and conversation lifecycle missing; channel navigation is not DM support. |
+| Direct messages | Source-derived inbox/requests, lifecycle, history/search/context/media and message actions are integrated into the codebase, with strict acknowledgments and synthetic checks. Main navigation, file picking, realtime and live controlled-peer verification remain pending. |
 | Voice | LiveKit room/join/leave implementation integrated with session/lifecycle tests; real-device audio and room text chat remain. |
 | Search/discover | Live search integrated with debounce/stale-response tests; verify website scope filtering and live discovery. |
 | Rankings/check-in | Weekly archive integrated and tested; check-in and personal activity remain. Do not invent an all-time endpoint. |
@@ -60,6 +60,6 @@ legal determination.
 
 ## Resource policy
 
-The source-review Argon worker was released. One separate Argon worker implements direct messages in an isolated worktree, with no builds, installs, test jobs, live calls or child agents.
+The source-review Argon worker was released. The DM implementation was delivered and independently hardened by Codex. The same Argon worker now reviews coordinator changes; it runs no builds, installs, test jobs, live calls or child agents.
 Recovered worker worktrees remain intact. Codex integrates and verifies serially
 through `tool/with_build_slot.sh`; do not restart parallel local build workers.

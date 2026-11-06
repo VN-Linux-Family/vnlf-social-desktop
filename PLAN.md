@@ -2,7 +2,7 @@
 
 This update supersedes the historical phase assignments and unknown-contract
 assumptions below. Codex owns `luank3/vnlf-production-audit` in its isolated
-worktree. Gemini 4 Argon completed a read-only source audit; that terminal is closed. One new Argon worker owns the isolated direct-messages slice and runs no local builds or live requests. Recovered channel/search/voice worker worktrees are preserved and their
+worktree. Gemini 4 Argon completed a read-only source audit; that terminal is closed. Argon delivered the direct-messages slice, which Codex independently hardened and verified; the same worker now reviews coordinator fixes without local builds or live requests. Recovered channel/search/voice worker worktrees are preserved and their
 changes are being integrated serially; no local worker builds are running.
 
 Authorized: use the owner's account for necessary write checks, remove all test
@@ -21,7 +21,7 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-362 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
+382 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
 Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks.
 
 Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
@@ -35,7 +35,7 @@ signing secrets. User explicitly approved public stable/private CI distribution.
 
 Remaining work is tracked in `docs/source-parity-audit.md` and
 `docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
-live-account checks, polls, notification/report runtime checks, DM, fuller profile/settings/projects/chat support,
+live-account checks, polls, notification/report runtime checks, DM navigation/media/realtime wiring, fuller profile/settings/projects/chat support,
 real-device media/voice, visual parity/performance and signing
 remain release gates. Do not replace these with simulated success states.
 
