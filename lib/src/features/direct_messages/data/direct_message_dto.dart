@@ -189,14 +189,8 @@ final class DmMessageDto {
     );
   }
 
-  static DmMessage? tryParseMutationResponse(Map<String, dynamic> json) {
-    if (json.isEmpty) return null;
-    if (!json.containsKey('id')) {
-      if (json.containsKey('ok')) return null;
-      throw const ParseFailure('message.id');
-    }
-    return DmMessageDto(json).toDomain();
-  }
+  static DmMessage parseMutationResponse(Map<String, dynamic> json) =>
+      DmMessageDto(json).toDomain();
 }
 
 final class DmSearchPageDto {
@@ -232,13 +226,20 @@ final class DmReadReceiptDto {
 
   final Map<String, dynamic> json;
 
-  DmReadReceipt toDomain() => DmReadReceipt(
-    changed: boolValue(json['changed'], 'read.changed'),
-    lastReadMessageId: nullableString(
-      json['lastReadMessageId'],
-      'read.lastReadMessageId',
-    ),
-  );
+  DmReadReceipt toDomain() {
+    if (json['ok'] != true ||
+        json['changed'] is! bool ||
+        !json.containsKey('lastReadMessageId')) {
+      throw const ParseFailure('read.ack');
+    }
+    return DmReadReceipt(
+      changed: json['changed'] as bool,
+      lastReadMessageId: nullableString(
+        json['lastReadMessageId'],
+        'read.lastReadMessageId',
+      ),
+    );
+  }
 }
 
 DmPeer _parsePeer(Map<String, dynamic> json) {

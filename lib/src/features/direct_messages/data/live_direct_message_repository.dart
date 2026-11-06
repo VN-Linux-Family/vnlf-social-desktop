@@ -57,29 +57,32 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
   @override
   Future<void> acceptRequest(String conversationId) async {
     final encoded = _encodeId(conversationId, 'conversationId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'POST',
       '/api/v1/dm/conversations/$encoded/accept',
       body: jsonEncode(const <String, Object?>{}),
+      decode: _acknowledged,
     );
   }
 
   @override
   Future<void> declineRequest(String conversationId) async {
     final encoded = _encodeId(conversationId, 'conversationId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'POST',
       '/api/v1/dm/conversations/$encoded/decline',
       body: jsonEncode(const <String, Object?>{}),
+      decode: _acknowledged,
     );
   }
 
   @override
   Future<void> deleteConversation(String conversationId) async {
     final encoded = _encodeId(conversationId, 'conversationId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'DELETE',
       '/api/v1/dm/conversations/$encoded',
+      decode: _acknowledged,
     );
   }
 
@@ -90,7 +93,7 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
     int limit = 50,
   }) {
     final encoded = _encodeId(conversationId, 'conversationId');
-    final clampedLimit = limit.clamp(1, 100);
+    final clampedLimit = limit.clamp(1, 50);
     final trimmedCursor = cursor?.trim();
     return _client.get<DmMessagePage>(
       '/api/v1/dm/conversations/$encoded/messages',
@@ -161,7 +164,7 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
   }
 
   @override
-  Future<DmMessage?> sendMessage(
+  Future<DmMessage> sendMessage(
     String conversationId, {
     required String clientMessageId,
     required String content,
@@ -188,7 +191,7 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
       throw const ParseFailure('message.content');
     }
     final trimmedReplyTo = replyToId?.trim();
-    return _client.request<DmMessage?>(
+    return _client.request<DmMessage>(
       'POST',
       '/api/v1/dm/conversations/$encoded/messages',
       body: jsonEncode(<String, Object?>{
@@ -198,7 +201,14 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
           'replyToId': trimmedReplyTo,
         if (cleanAttachments.isNotEmpty) 'attachmentIds': cleanAttachments,
       }),
-      decode: DmMessageDto.tryParseMutationResponse,
+      decode: (json) {
+        final message = DmMessageDto.parseMutationResponse(json);
+        if (message.conversationId != conversationId.trim() ||
+            message.clientMessageId != trimmedClientId) {
+          throw const ParseFailure('message.sendAck');
+        }
+        return message;
+      },
     );
   }
 
@@ -221,31 +231,32 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
   }
 
   @override
-  Future<DmMessage?> editMessage(String messageId, String content) {
+  Future<DmMessage> editMessage(String messageId, String content) {
     final encoded = _encodeId(messageId, 'messageId');
     final tidied = tidyDmMessageText(content);
     if (tidied.isEmpty || tidied.length > 4000) {
       throw const ParseFailure('message.content');
     }
-    return _client.request<DmMessage?>(
+    return _client.request<DmMessage>(
       'PATCH',
       '/api/v1/messages/$encoded',
       body: jsonEncode(<String, Object?>{'content': tidied}),
-      decode: DmMessageDto.tryParseMutationResponse,
+      decode: (json) => _messageAck(messageId, json),
     );
   }
 
   @override
   Future<void> deleteMessage(String messageId) async {
     final encoded = _encodeId(messageId, 'messageId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'DELETE',
       '/api/v1/messages/$encoded',
+      decode: _acknowledged,
     );
   }
 
   @override
-  Future<DmMessage?> reactToMessage(
+  Future<DmMessage> reactToMessage(
     String messageId,
     String emoji, {
     bool remove = false,
@@ -257,17 +268,17 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
     }
     if (remove) {
       final encodedEmoji = Uri.encodeComponent(trimmedEmoji);
-      return _client.request<DmMessage?>(
+      return _client.request<DmMessage>(
         'DELETE',
         '/api/v1/messages/$encodedId/reactions/$encodedEmoji',
-        decode: DmMessageDto.tryParseMutationResponse,
+        decode: (json) => _messageAck(messageId, json),
       );
     }
-    return _client.request<DmMessage?>(
+    return _client.request<DmMessage>(
       'POST',
       '/api/v1/messages/$encodedId/reactions',
       body: jsonEncode(<String, Object?>{'emoji': trimmedEmoji}),
-      decode: DmMessageDto.tryParseMutationResponse,
+      decode: (json) => _messageAck(messageId, json),
     );
   }
 
@@ -310,20 +321,33 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
   @override
   Future<void> blockUser(String userId) async {
     final encoded = _encodeId(userId, 'userId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'POST',
       '/api/v1/users/$encoded/block',
       body: jsonEncode(const <String, Object?>{}),
+      decode: _acknowledged,
     );
   }
 
   @override
   Future<void> unblockUser(String userId) async {
     final encoded = _encodeId(userId, 'userId');
-    await _client.request<Map<String, dynamic>>(
+    await _client.request<bool>(
       'DELETE',
       '/api/v1/users/$encoded/block',
+      decode: _acknowledged,
     );
+  }
+
+  DmMessage _messageAck(String id, Map<String, dynamic> json) {
+    final message = DmMessageDto.parseMutationResponse(json);
+    if (message.id != id.trim()) throw const ParseFailure('message.ack');
+    return message;
+  }
+
+  bool _acknowledged(Map<String, dynamic> json) {
+    if (json['ok'] != true) throw const ParseFailure('dm.ack');
+    return true;
   }
 
   String _encodeId(String raw, String field) {

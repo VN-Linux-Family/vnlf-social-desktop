@@ -302,10 +302,7 @@ final class DmMessage {
       reactions: reactions,
       attachments: attachments,
       gif: gif,
-      poll: <String, dynamic>{
-        ...currentPoll,
-        'viewerOptionId': prevChoice,
-      },
+      poll: <String, dynamic>{...currentPoll, 'viewerOptionId': prevChoice},
       createdAt: createdAt,
       editedAt: editedAt,
       deletedAt: deletedAt,

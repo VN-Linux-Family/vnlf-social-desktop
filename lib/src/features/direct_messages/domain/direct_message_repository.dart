@@ -40,7 +40,7 @@ abstract interface class DirectMessageRepository {
     String? cursor,
   });
 
-  Future<DmMessage?> sendMessage(
+  Future<DmMessage> sendMessage(
     String conversationId, {
     required String clientMessageId,
     required String content,
@@ -53,11 +53,11 @@ abstract interface class DirectMessageRepository {
     String? lastReadMessageId,
   });
 
-  Future<DmMessage?> editMessage(String messageId, String content);
+  Future<DmMessage> editMessage(String messageId, String content);
 
   Future<void> deleteMessage(String messageId);
 
-  Future<DmMessage?> reactToMessage(
+  Future<DmMessage> reactToMessage(
     String messageId,
     String emoji, {
     bool remove = false,

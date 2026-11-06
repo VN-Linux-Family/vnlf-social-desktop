@@ -6,53 +6,13 @@ import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_media.dart';
 import 'direct_message_state.dart';
+import 'new_dm_recipient_dialog.dart';
 
 Future<void> showNewDmDialog(BuildContext context, WidgetRef ref) async {
-  final controller = TextEditingController();
-  final recipientId = await showDialog<String>(
+  await showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(
-        dmText(
-          dialogContext,
-          'Bắt đầu cuộc trò chuyện mới',
-          'Start a new conversation',
-        ),
-      ),
-      content: TextField(
-        key: const Key('dm-new-recipient-input'),
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: dmText(
-            dialogContext,
-            'ID người nhận',
-            'Recipient user ID',
-          ),
-          hintText: dmText(
-            dialogContext,
-            'Nhập ID thành viên để gửi yêu cầu',
-            'Enter member ID to open or request a DM',
-          ),
-        ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: Text(dmText(dialogContext, 'Hủy', 'Cancel')),
-        ),
-        FilledButton(
-          key: const Key('dm-new-submit-button'),
-          onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
-          child: Text(dmText(dialogContext, 'Mở trò chuyện', 'Open chat')),
-        ),
-      ],
-    ),
-  );
-  controller.dispose();
-  if (recipientId == null || recipientId.isEmpty) return;
-  await ref.read(dmInboxProvider.notifier).openOrRequestConversation(
-    recipientId,
+    barrierDismissible: false,
+    builder: (_) => const NewDmRecipientDialog(),
   );
 }
 
@@ -117,10 +77,10 @@ Future<void> showDmReportDialog(
           ),
           FilledButton(
             key: const Key('dm-report-submit-button'),
-            onPressed: () => Navigator.pop(
-              dialogContext,
-              (selectedReason, detailController.text.trim()),
-            ),
+            onPressed: () => Navigator.pop(dialogContext, (
+              selectedReason,
+              detailController.text.trim(),
+            )),
             child: Text(dmText(dialogContext, 'Gửi báo cáo', 'Submit report')),
           ),
         ],
@@ -158,9 +118,7 @@ Future<void> showDmSearchSheet(
   isScrollControlled: true,
   builder: (sheetContext) => FractionallySizedBox(
     heightFactor: 0.75,
-    child: SafeArea(
-      child: _DmSearchSheet(conversationId: conversationId),
-    ),
+    child: SafeArea(child: _DmSearchSheet(conversationId: conversationId)),
   ),
 );
 
@@ -321,9 +279,7 @@ Future<void> showDmMediaSheet(
   isScrollControlled: true,
   builder: (sheetContext) => FractionallySizedBox(
     heightFactor: 0.75,
-    child: SafeArea(
-      child: _DmMediaSheet(conversationId: conversationId),
-    ),
+    child: SafeArea(child: _DmMediaSheet(conversationId: conversationId)),
   ),
 );
 
@@ -344,7 +300,9 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
       if (!mounted) return;
       final state = ref.read(dmTimelineProvider(widget.conversationId));
       if (!state.mediaLoaded && !state.loadingMedia) {
-        ref.read(dmTimelineProvider(widget.conversationId).notifier).loadMedia();
+        ref
+            .read(dmTimelineProvider(widget.conversationId).notifier)
+            .loadMedia();
       }
     });
   }
@@ -389,9 +347,7 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
           ),
           const SizedBox(height: 8),
           if (state.loadingMedia && !state.mediaLoaded)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (state.mediaFailure != null && state.mediaItems.isEmpty)
             Expanded(
               child: Center(

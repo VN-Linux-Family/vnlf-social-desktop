@@ -7,12 +7,11 @@ import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_media.dart';
 
-typedef DmPollWidgetBuilder =
-    Widget Function(
-      BuildContext context,
-      DmMessage message,
-      Map<String, dynamic> poll,
-    );
+typedef DmPollWidgetBuilder = Widget Function(
+  BuildContext context,
+  DmMessage message,
+  Map<String, dynamic> poll,
+);
 
 class DirectMessageTile extends StatelessWidget {
   const DirectMessageTile({
@@ -156,9 +155,7 @@ class DirectMessageTile extends StatelessWidget {
                               if (own && canAct)
                                 PopupMenuItem<String>(
                                   value: 'delete',
-                                  child: Text(
-                                    dmText(context, 'Xóa', 'Delete'),
-                                  ),
+                                  child: Text(dmText(context, 'Xóa', 'Delete')),
                                 ),
                             ],
                           ),

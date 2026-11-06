@@ -10,6 +10,7 @@ import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/direct_messages/presentation/direct_messages_screen.dart';
+import 'package:vnlfsocialapp/src/features/direct_messages/presentation/direct_message_tile.dart';
 
 import 'direct_message_repository_test.dart'
     show sampleConversationJson, sampleMessageJson;
@@ -28,10 +29,7 @@ void main() {
         },
       );
 
-      expect(
-        find.text('Đăng nhập để xem tin nhắn trực tiếp'),
-        findsOneWidget,
-      );
+      expect(find.text('Đăng nhập để xem tin nhắn trực tiếp'), findsOneWidget);
       expect(find.byKey(const Key('dm-chat-input')), findsNothing);
       expect(calls, 0);
     },
@@ -79,7 +77,10 @@ void main() {
         },
       );
 
-      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(
+        find.widgetWithText(DirectMessageTile, 'Tiếng Việt: ặ ữ ờ ẫ ệ'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byTooltip('Trả lời'));
       await tester.pumpAndSettle();
@@ -95,7 +96,9 @@ void main() {
 
       expect(sendCalls, 1);
       expect(
-        tester.widget<TextField>(find.byKey(const Key('dm-chat-input'))).enabled,
+        tester
+            .widget<TextField>(find.byKey(const Key('dm-chat-input')))
+            .enabled,
         isFalse,
       );
 
@@ -184,11 +187,7 @@ Future<void> _pumpDmScreen(
         ),
         sessionStateProvider.overrideWith(
           (ref) => signedIn
-              ? const Session(
-                  userId: 'me',
-                  displayName: 'Tôi',
-                  role: 'MEMBER',
-                )
+              ? const Session(userId: 'me', displayName: 'Tôi', role: 'MEMBER')
               : null,
         ),
       ],

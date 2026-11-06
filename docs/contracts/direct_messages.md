@@ -170,7 +170,7 @@ Because this worker owns only `lib/src/features/direct_messages/**`, `test/featu
   - Adaptive Vietnamese-first / English-secondary native UI (`DirectMessagesScreen`, `DirectMessageInbox`, `DirectMessageTile`, `DirectMessageComposer`, `DirectMessageMedia`, search/media/report/block dialogs).
 - **Coordinator Integration Points & Deferred Scope**:
   - **Router / Navigation Shell**: Wire `DirectMessagesScreen` into `lib/src/app/app_router.dart` (e.g. `/messages` or alongside `/channels` in the communication workspace).
-  - **File Picker Wiring for DM Image Uploads**: `DirectMessageRepository.uploadAttachment(DmUploadFile)` and `DmTimelineController.uploadAndAttach(DmUploadFile)` implement the full 3-step `/api/v1/dm/assets/presign` -> unauthenticated `PUT` -> `/api/v1/dm/assets/:assetId/complete` contract (validated for `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/avif` up to 10 MiB, max 4 attachments per message). No fake upload button is shown in the UI until a global file picker is wired to `controller.uploadAndAttach(...)`.
+  - **File Picker Wiring for DM Image Uploads**: `DirectMessageRepository.uploadAttachment(DmUploadFile)` and `DmTimelineController.uploadAndAttach(DmUploadFile)` implement the full 3-step `/api/v1/dm/assets/presign` -> unauthenticated `PUT` -> `/api/v1/dm/assets/:assetId/complete` contract (validated for `image/jpeg`, `image/png`, `image/webp`, `image/gif` up to 10 MiB, max 4 attachments per message). No fake upload button is shown in the UI until a global file picker is wired to `controller.uploadAndAttach(...)`.
   - **Shared Poll Integration Hook & Realtime `viewerOptionId` Preservation**: `DmMessage.poll` preserves the raw immutable `Map<String, dynamic>?` poll projection from `MessageDto`, and `DirectMessagesScreen` / `DirectMessageTile` expose `DmPollWidgetBuilder? pollBuilder` so the coordinator's shared native poll card can be injected directly without duplicating poll logic. For realtime message/poll updates (`apps/web/lib/chat-timeline.ts`), `DmMessage.withPreservedPollViewerChoice` and `DmTimelineController.applyRealtimeMessage(incoming, preservePollViewerOptionId: true)` preserve each recipient's existing `viewerOptionId` rather than adopting the sender's choice.
   - **Realtime WebSocket Push (`/ws/community`)**: REST history, pagination, context jump, search, media listing, read receipts, and mutations work standalone without fake optimistic acknowledgments. Live `/ws/community` subscription (`dm.join`, `dm.leave`, `typing.update`, `dm:message-created`, `dm:message-updated`, `dm:message-deleted`, `dm:request-created`, `dm:request-updated`, `dm:peer-read`, `conversation:access-revoked`) is gated on shared WebSocket session integration and can drive `DmTimelineController.applyRealtimeMessage(...)`, `DmTimelineController.refresh()`, and `DmInboxController.load(refresh: true)`.
   - **Unsupported / Deferred Gates**:
@@ -178,3 +178,32 @@ Because this worker owns only `lib/src/features/direct_messages/**`, `test/featu
     - DM video/audio/document uploads (server `POST /api/v1/dm/assets/presign` only permits image MIME types `<= 10 MiB`).
     - Interactive GIF/sticker/poll creation pickers in the DM composer (incoming `gif` and `poll` projections are parsed and rendered).
     - Detailed reactor list modal (`GET /api/v1/messages/:id/reactions` is documented in §2.3; inline reaction counts and toggle mutations are active).
+
+## Coordinator integration review — 2026-11-06
+
+The first independent review rejected empty/204 acknowledgments: send, edit and
+reaction routes return a complete MessageDto; lifecycle/delete/block writes
+return ok=true; read receipts require ok=true, changed and lastReadMessageId.
+Repository interfaces now require a non-null message result. Prior tests that
+accepted empty confirmations were corrected to use the source contract, and
+missing/negative-ack checks reproduce the former false success.
+
+Both simultaneous history/conversation reads now use Future.wait so a failure
+on one cannot leave the other future's error unhandled. Controllers require an
+explicit account identity. The history limit is clamped to 50, matching the
+actual route schema. Native media rejects AVIF, which presignImage does not
+allow. Member search now replaces the internal-ID field, hides stale results
+while debouncing, and opens a request only after member selection.
+
+Dependency resolution, formatting, analysis and all 382 Flutter tests pass after
+these changes. Inbox and timeline state/controllers are now separate files with
+a compatible provider/export facade. Router/file-picker/realtime integration,
+runtime screenshots and live controlled-account checks remain pending. No live DM account data or writes were used.
+
+Send acknowledgments must match the requested conversation and stable client
+message identity; edit/reaction acknowledgments must match the target message;
+private image completion must match the presigned asset. Reproduced malformed
+or mismatched response cases now fail visibly without confirming the write.
+The pinned website communication list explicitly combines channels and DMs in
+one searchable list, with collapsible channels; adding separate tabs would
+contradict that reference. This is the coordinator's navigation integration target.

@@ -7,10 +7,7 @@ import 'direct_message_feedback.dart';
 import 'direct_message_state.dart';
 
 class DirectMessageComposer extends ConsumerStatefulWidget {
-  const DirectMessageComposer({
-    super.key,
-    required this.conversationId,
-  });
+  const DirectMessageComposer({super.key, required this.conversationId});
 
   final String conversationId;
 
@@ -316,20 +313,13 @@ class _LockedComposerCard extends StatelessWidget {
               Icon(icon, size: 18, color: colors.muted),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  message,
-                  style: VnlfTypography.body(colors.ink),
-                ),
+                child: Text(message, style: VnlfTypography.body(colors.ink)),
               ),
             ],
           ),
           if (actions.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: actions,
-            ),
+            Wrap(spacing: 8, runSpacing: 8, children: actions),
           ],
         ],
       ),

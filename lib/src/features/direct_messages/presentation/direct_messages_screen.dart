@@ -177,9 +177,7 @@ class _EmptyConversationPlaceholder extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onOpenInboxSheet,
                 icon: const Icon(Icons.inbox_outlined),
-                label: Text(
-                  dmText(context, 'Mở hộp thư đến', 'Open inbox'),
-                ),
+                label: Text(dmText(context, 'Mở hộp thư đến', 'Open inbox')),
               ),
             ],
           ],
@@ -278,19 +276,15 @@ class _DmConversationPane extends ConsumerWidget {
                   'Tìm trong cuộc trò chuyện',
                   'Search in conversation',
                 ),
-                onPressed: () => showDmSearchSheet(
-                  context,
-                  conversationId: conversation.id,
-                ),
+                onPressed: () =>
+                    showDmSearchSheet(context, conversationId: conversation.id),
                 icon: const Icon(Icons.search, size: 20),
               ),
               IconButton(
                 key: const Key('dm-media-button'),
                 tooltip: dmText(context, 'Ảnh đã chia sẻ', 'Shared media'),
-                onPressed: () => showDmMediaSheet(
-                  context,
-                  conversationId: conversation.id,
-                ),
+                onPressed: () =>
+                    showDmMediaSheet(context, conversationId: conversation.id),
                 icon: const Icon(Icons.photo_library_outlined, size: 20),
               ),
               IconButton(
@@ -326,11 +320,7 @@ class _DmConversationPane extends ConsumerWidget {
                   PopupMenuItem<String>(
                     value: 'mark_read',
                     child: Text(
-                      dmText(
-                        menuContext,
-                        'Đánh dấu đã đọc',
-                        'Mark as read',
-                      ),
+                      dmText(menuContext, 'Đánh dấu đã đọc', 'Mark as read'),
                     ),
                   ),
                   PopupMenuItem<String>(
@@ -398,11 +388,7 @@ class _DmConversationPane extends ConsumerWidget {
                 TextButton(
                   onPressed: controller.returnToLatestMessages,
                   child: Text(
-                    dmText(
-                      context,
-                      'Về tin nhắn mới nhất',
-                      'Return to latest',
-                    ),
+                    dmText(context, 'Về tin nhắn mới nhất', 'Return to latest'),
                   ),
                 ),
               ],
@@ -572,11 +558,7 @@ class _DmConversationPane extends ConsumerWidget {
       case 'unblock':
         await controller.unblockPeer();
       case 'report':
-        await showDmReportDialog(
-          context,
-          ref,
-          conversationId: conversation.id,
-        );
+        await showDmReportDialog(context, ref, conversationId: conversation.id);
       case 'delete_conversation':
         final confirmed = await _confirmAction(
           context,

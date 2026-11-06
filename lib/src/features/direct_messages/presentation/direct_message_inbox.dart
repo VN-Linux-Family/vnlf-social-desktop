@@ -62,11 +62,7 @@ class _DirectMessageInboxState extends ConsumerState<DirectMessageInbox> {
             children: <Widget>[
               IconButton(
                 key: const Key('dm-new-conversation-button'),
-                tooltip: dmText(
-                  context,
-                  'Trò chuyện mới',
-                  'New conversation',
-                ),
+                tooltip: dmText(context, 'Trò chuyện mới', 'New conversation'),
                 onPressed: inbox.openingConversation
                     ? null
                     : () => showNewDmDialog(context, ref),

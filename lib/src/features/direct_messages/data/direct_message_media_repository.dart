@@ -13,15 +13,13 @@ const Set<String> allowedDmImageMimes = <String>{
   'image/png',
   'image/webp',
   'image/gif',
-  'image/avif',
 };
 
-typedef DmAssetUpload =
-    Future<void> Function(
-      Uri url,
-      DmUploadFile file,
-      Map<String, String> headers,
-    );
+typedef DmAssetUpload = Future<void> Function(
+  Uri url,
+  DmUploadFile file,
+  Map<String, String> headers,
+);
 
 final class DirectMessageMediaRepository {
   DirectMessageMediaRepository(this._client, {DmAssetUpload? upload})
@@ -50,7 +48,7 @@ final class DirectMessageMediaRepository {
       refresh: true,
       decode: (json) {
         final rawUrl = stringValue(
-          json['downloadUrl'] ?? json['url'],
+          json['downloadUrl'],
           'attachment.downloadUrl',
         );
         final uri = Uri.tryParse(rawUrl);
@@ -131,12 +129,9 @@ final class DirectMessageMediaRepository {
       '/api/v1/dm/assets/$encodedAssetId/complete',
       body: jsonEncode(const <String, Object?>{}),
     );
-    final completedId = stringValue(
-      completed['assetId'] ?? assetId,
-      'upload.assetId',
-    );
+    final completedId = stringValue(completed['assetId'], 'upload.assetId');
     final status = stringValue(completed['status'], 'upload.status');
-    if (completedId.isEmpty || status != 'READY') {
+    if (completedId != assetId || status != 'READY') {
       throw const ParseFailure('upload.complete');
     }
 

@@ -127,11 +127,7 @@ class DirectMessageMediaTilePreview extends ConsumerWidget {
                 style: VnlfTypography.meta(colors.muted),
               ),
               IconButton(
-                tooltip: dmText(
-                  context,
-                  'Đi tới tin nhắn',
-                  'Jump to message',
-                ),
+                tooltip: dmText(context, 'Đi tới tin nhắn', 'Jump to message'),
                 onPressed: onJumpToMessage,
                 icon: const Icon(Icons.open_in_new, size: 18),
               ),
