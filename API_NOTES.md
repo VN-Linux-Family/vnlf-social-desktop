@@ -41,6 +41,35 @@ HTTP 403 from Cloudflare for the WebSocket upgrade in this environment. No test
 message was sent; the connection closed, logout succeeded, and cleanup was clear.
 Whether this response is specific to this network or configuration remains unknown.
 
+## Projects, account profile and member feedback (pinned source)
+
+The following contracts were checked against upstream commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3` and implemented with synthetic tests;
+no live account or feedback writes were made in this pass. An owner-authenticated
+read-only probe successfully loaded the matching owner profile, feedback history,
+and the public projects listing with facets, then logged out successfully.
+
+- `GET /api/v1/projects` supports `type`, `language`, `seeking`, `q`, `sort`,
+  and an opaque `cursor`. The first response includes global type/language
+  facets and `nextCursor`; subsequent pages are deduplicated by project ID.
+  `GET /api/v1/projects/:slug` returns the detail, media and viewer rating
+  projection. A real project detail was read successfully from the deployed API;
+  no rating, project edit or other project write was performed. The native rating
+  control uses the source-confirmed `PUT /api/v1/projects/:id/rating` with a
+  1–5 `score` and `DELETE` to remove a rating. It requires the returned viewer
+  score and summary, handles uncertain outcomes with a fresh read, and never
+  automatically retries a write. Concurrent server queries can return a rating
+  distribution that temporarily differs from the aggregate count.
+- `GET /api/v1/users/:username` supplies profile fields.
+  `PATCH /api/v1/me/profile` accepts optional username, displayName, bio and
+  website and acknowledges with `ok: true`. For uncertain writes, the app
+  verifies through a read rather than automatically resending. It checks that
+  the returned profile ID matches the authenticated owner.
+- `GET /api/v1/feedback/mine` lists the signed-in member's tickets,
+  `GET /api/v1/feedback/:id/messages` reads an owned ticket and its messages,
+  and `POST` to the same messages route submits a message with a stable
+  `clientMessageId`. The source enforces ticket ownership.
+
 ## Public article sharing (2026-11-05)
 
 - [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection

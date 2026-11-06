@@ -21,8 +21,8 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-503 Flutter tests passed before the final direct-link guard, whose focused
-realtime suite passed separately; 37 release-tool tests pass. Analysis, formatting, all three
+553 Flutter tests and 37 release-tool tests pass for the current integrated
+projects, profile and feedback changes. Analysis, formatting, all three
 workflow definitions, and the plain Dart HTTP/auth fixture smoke check pass.
 Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Channels and DMs now share the source-defined searchable directory and explicit routes; the fixture-only channel screen is removed. Phone detail views hide global navigation, direct links never fall back to another conversation, and image selection streams through the owner-bound upload pipeline. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks. Fresh Linux guest captures verify an inline-image article and moving video frames; a recoverable hardware-decoder fallback had incorrectly hidden video and is now fixed with bounded first-frame startup and lifecycle tests.
 
@@ -58,6 +58,15 @@ edit and reaction persisted through fresh history reads, then the reaction and
 message were deleted and absence confirmed. Both sessions were logged out and
 cleanup registries cleared. These are HTTP/repository checks; persistent keyring
 storage, physical-device UI and realtime delivery are separate checks.
+
+Project listing filters, sorting, facets and pagination now use the source-defined
+server query. Account profile editing and member feedback history/conversation
+have native screens and synthetic coverage, including account changes and uncertain
+writes. Owner-authenticated read-only checks confirmed the profile, feedback
+history, project listing/facets and one project detail, then logged out. The
+native detail route renders the project's introduction, media and a rating
+control with synthetic tests. Live rating, project submission, profile and
+feedback writes, and complete visual parity remain unverified or incomplete.
 
 The native shared realtime connection is now wired to visible channel and DM
 routes, with owner invalidation, event routing, bounded reconnects, and catch-up
