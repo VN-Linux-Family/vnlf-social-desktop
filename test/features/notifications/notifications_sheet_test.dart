@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'dart:convert';
+
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,24 +13,90 @@ import 'package:vnlfsocialapp/src/features/notifications/presentation/notificati
 void main() {
   for (final example in [
     ('FEEDBACK', 'ticket-1', '/feedback/ticket-1', 'ticket'),
-    ('CONVERSATION', 'conversation-1', '/messages/conversation-1', 'conversation'),
+    (
+      'CONVERSATION',
+      'conversation-1',
+      '/messages/conversation-1',
+      'conversation',
+    ),
     ('PROJECT', 'project-1', '/projects/community-tool', 'project'),
   ]) {
-    testWidgets('notification opens the native ${example.$4} route', (tester) async {
-      final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (request) async {
-        final payload = request.method == 'GET' ? {'items':[{'id':'notice','type':'update','targetType':example.$1,'targetId':example.$2,'href':example.$3,'targetSummary':{'title':'Notice target'},'actors':<Object?>[], 'readAt':'2026-01-01T00:00:00Z'}], 'nextCursor':null} : {'ok':true};
-        return ApiResponse(statusCode:200,body:jsonEncode(payload));
-      });
-      final router=GoRouter(routes:[
-        GoRoute(path:'/',builder:(context,_)=>Scaffold(body:TextButton(onPressed:()=>showModalBottomSheet<void>(context:context,builder:(_)=>const NotificationsSheet()),child:const Text('Open')))),
-        GoRoute(path:'/feedback/:id',builder:(_,_)=>const Scaffold(body:Text('ticket'))),
-        GoRoute(path:'/messages/:id',builder:(_,_)=>const Scaffold(body:Text('conversation'))),
-        GoRoute(path:'/projects/:slug',builder:(_,_)=>const Scaffold(body:Text('project'))),
-      ]); addTearDown(router.dispose);
-      await tester.pumpWidget(ProviderScope(overrides:[sessionStateProvider.overrideWith((_)=>const Session(userId:'owner',displayName:'Owner',role:'MEMBER')),apiClientProvider.overrideWithValue(client)],child:MaterialApp.router(routerConfig:router)));
-      await tester.tap(find.text('Open'));await tester.pumpAndSettle();
-      await tester.tap(find.text('Notice target'));await tester.pumpAndSettle();
-      expect(find.text(example.$4),findsOneWidget);
+    testWidgets('notification opens the native ${example.$4} route', (
+      tester,
+    ) async {
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        transport: (request) async {
+          final payload = request.method == 'GET'
+              ? {
+                  'items': [
+                    {
+                      'id': 'notice',
+                      'type': 'update',
+                      'targetType': example.$1,
+                      'targetId': example.$2,
+                      'href': example.$3,
+                      'targetSummary': {'title': 'Notice target'},
+                      'actors': <Object?>[],
+                      'readAt': '2026-01-01T00:00:00Z',
+                    },
+                  ],
+                  'nextCursor': null,
+                }
+              : {'ok': true};
+          return ApiResponse(statusCode: 200, body: jsonEncode(payload));
+        },
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, _) => Scaffold(
+              body: TextButton(
+                onPressed: () => showModalBottomSheet<void>(
+                  context: context,
+                  builder: (_) => const NotificationsSheet(),
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/feedback/:id',
+            builder: (_, _) => const Scaffold(body: Text('ticket')),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            builder: (_, _) => const Scaffold(body: Text('conversation')),
+          ),
+          GoRoute(
+            path: '/projects/:slug',
+            builder: (_, _) => const Scaffold(body: Text('project')),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionStateProvider.overrideWith(
+              (_) => const Session(
+                userId: 'owner',
+                displayName: 'Owner',
+                role: 'MEMBER',
+              ),
+            ),
+            apiClientProvider.overrideWithValue(client),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Notice target'));
+      await tester.pumpAndSettle();
+      expect(find.text(example.$4), findsOneWidget);
     });
   }
 

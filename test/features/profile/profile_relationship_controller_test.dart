@@ -101,6 +101,37 @@ void main() {
     controller.dispose();
   });
 
+  test('missing relationship state cannot confirm an unblock', () async {
+    final controller = _controller(
+      _Repository(),
+      refresh: () async => const PublicProfile(author: _author),
+    );
+    await controller.perform(
+      ProfileRelationshipAction.unblock,
+      _profile(blocked: true),
+    );
+    expect(controller.state.failure, isA<RelationshipUnconfirmed>());
+    expect(controller.state.completed, isNull);
+    controller.dispose();
+  });
+
+  test('server error after a write reconciles without resending', () async {
+    final repository = _Repository()..failure = const HttpFailure(500);
+    var reads = 0;
+    final controller = _controller(
+      repository,
+      refresh: () async {
+        reads++;
+        return _profile(blocked: true);
+      },
+    );
+    await controller.perform(ProfileRelationshipAction.block, _profile());
+    expect(repository.calls, ['block:target']);
+    expect(reads, 1);
+    expect(controller.state.failure, isA<RelationshipUnconfirmed>());
+    controller.dispose();
+  });
+
   test('repeated taps are single flight and never retried', () async {
     final repository = _Repository()..gate = Completer<void>();
     final controller = _controller(
@@ -120,30 +151,33 @@ void main() {
     controller.dispose();
   });
 
-  test('server refusal keeps the profile untouched and is not retried', () async {
-    final repository = _Repository()
-      ..failure = const HttpFailure(403, code: 'USER_BLOCKED');
-    var reads = 0;
-    final controller = _controller(
-      repository,
-      refresh: () async {
-        reads++;
-        return _profile();
-      },
-    );
-    await controller.perform(ProfileRelationshipAction.follow, _profile());
-    expect(controller.state.failure, isA<RelationshipRejected>());
-    expect(controller.state.completed, isNull);
-    expect(repository.calls.length, 1);
-    expect(reads, 0);
-    controller.dispose();
-  });
+  test(
+    'server refusal keeps the profile untouched and is not retried',
+    () async {
+      final repository = _Repository()
+        ..failure = const HttpFailure(403, code: 'USER_BLOCKED');
+      var reads = 0;
+      final controller = _controller(
+        repository,
+        refresh: () async {
+          reads++;
+          return _profile();
+        },
+      );
+      await controller.perform(ProfileRelationshipAction.follow, _profile());
+      expect(controller.state.failure, isA<RelationshipRejected>());
+      expect(controller.state.completed, isNull);
+      expect(repository.calls.length, 1);
+      expect(reads, 0);
+      controller.dispose();
+    },
+  );
 
   for (final (status, matcher) in [
     (401, isA<RelationshipSignedOut>()),
     (404, isA<RelationshipUserMissing>()),
     (429, isA<RelationshipRateLimited>()),
-    (500, isA<RelationshipNetworkFailure>()),
+    (500, isA<RelationshipUnconfirmed>()),
   ]) {
     test('HTTP $status maps to a typed failure', () async {
       final controller = _controller(
@@ -156,23 +190,26 @@ void main() {
     });
   }
 
-  test('an unknown transport outcome triggers one read, not a resend', () async {
-    final repository = _Repository()..failure = const TransportFailure();
-    var reads = 0;
-    final controller = _controller(
-      repository,
-      refresh: () async {
-        reads++;
-        return _profile();
-      },
-    );
-    await controller.perform(ProfileRelationshipAction.follow, _profile());
-    expect(repository.calls.length, 1);
-    expect(reads, 1);
-    expect(controller.state.failure, isA<RelationshipNetworkFailure>());
-    expect(controller.state.completed, isNull);
-    controller.dispose();
-  });
+  test(
+    'an unknown transport outcome triggers one read, not a resend',
+    () async {
+      final repository = _Repository()..failure = const TransportFailure();
+      var reads = 0;
+      final controller = _controller(
+        repository,
+        refresh: () async {
+          reads++;
+          return _profile();
+        },
+      );
+      await controller.perform(ProfileRelationshipAction.follow, _profile());
+      expect(repository.calls.length, 1);
+      expect(reads, 1);
+      expect(controller.state.failure, isA<RelationshipUnconfirmed>());
+      expect(controller.state.completed, isNull);
+      controller.dispose();
+    },
+  );
 
   test('another account taking over drops late results', () async {
     final repository = _Repository()..gate = Completer<void>();
@@ -278,18 +315,21 @@ void main() {
       expect(requests.every((r) => r.body == null), isTrue);
     });
 
-    test('accepts the unblock acknowledgment carrying a viewer state', () async {
-      final repository = LiveProfileRelationshipRepository(
-        client(
-          (_) => ApiResponse(
-            statusCode: 200,
-            body: '{"ok":true,"viewerState":"REQUEST_REQUIRED"}',
+    test(
+      'accepts the unblock acknowledgment carrying a viewer state',
+      () async {
+        final repository = LiveProfileRelationshipRepository(
+          client(
+            (_) => ApiResponse(
+              statusCode: 200,
+              body: '{"ok":true,"viewerState":"REQUEST_REQUIRED"}',
+            ),
           ),
-        ),
-      );
-      await repository.setBlocked('user-1', blocked: false);
-      expect(requests.length, 1);
-    });
+        );
+        await repository.setBlocked('user-1', blocked: false);
+        expect(requests.length, 1);
+      },
+    );
 
     for (final body in ['{}', '{"ok":false}', '{"ok":"true"}']) {
       test('rejects the unacknowledged body $body', () async {
@@ -315,16 +355,19 @@ void main() {
     });
 
     for (final status in [429, 500, 503]) {
-      test('sends a write exactly once when the server answers $status', () async {
-        final repository = LiveProfileRelationshipRepository(
-          client((_) => ApiResponse(statusCode: status, body: '{}')),
-        );
-        await expectLater(
-          repository.setFollowing('user-1', following: true),
-          throwsA(isA<HttpFailure>()),
-        );
-        expect(requests.length, 1);
-      });
+      test(
+        'sends a write exactly once when the server answers $status',
+        () async {
+          final repository = LiveProfileRelationshipRepository(
+            client((_) => ApiResponse(statusCode: status, body: '{}')),
+          );
+          await expectLater(
+            repository.setFollowing('user-1', following: true),
+            throwsA(isA<HttpFailure>()),
+          );
+          expect(requests.length, 1);
+        },
+      );
     }
 
     test('keeps the server refusal code', () async {
@@ -343,30 +386,33 @@ void main() {
       );
     });
 
-    test('profile read exposes viewer relationship flags, guests get false', () async {
-      Map<String, dynamic> body({Object? followed, Object? blocked}) => {
-        'id': 'user-1',
-        'username': 'synthetic',
-        'displayName': 'Synthetic Member',
-        'followedByViewer': ?followed,
-        'blockedByViewer': ?blocked,
-      };
-      var next = body(followed: true, blocked: false);
-      final repository = LivePublicProfileRepository(
-        client((_) => ApiResponse(statusCode: 200, body: jsonEncode(next))),
-      );
-      var profile = (await repository.getProfile('synthetic'))!;
-      expect(profile.followedByViewer, isTrue);
-      expect(profile.blockedByViewer, isFalse);
-      next = body();
-      profile = (await repository.getProfile('synthetic'))!;
-      expect(profile.followedByViewer, isFalse);
-      expect(profile.blockedByViewer, isFalse);
-      next = body(blocked: 'yes');
-      await expectLater(
-        repository.getProfile('synthetic'),
-        throwsA(isA<ParseFailure>()),
-      );
-    });
+    test(
+      'profile read preserves missing relationship flags as unknown',
+      () async {
+        Map<String, dynamic> body({Object? followed, Object? blocked}) => {
+          'id': 'user-1',
+          'username': 'synthetic',
+          'displayName': 'Synthetic Member',
+          'followedByViewer': ?followed,
+          'blockedByViewer': ?blocked,
+        };
+        var next = body(followed: true, blocked: false);
+        final repository = LivePublicProfileRepository(
+          client((_) => ApiResponse(statusCode: 200, body: jsonEncode(next))),
+        );
+        var profile = (await repository.getProfile('synthetic'))!;
+        expect(profile.followedByViewer, isTrue);
+        expect(profile.blockedByViewer, isFalse);
+        next = body();
+        profile = (await repository.getProfile('synthetic'))!;
+        expect(profile.followedByViewer, isNull);
+        expect(profile.blockedByViewer, isNull);
+        next = body(blocked: 'yes');
+        await expectLater(
+          repository.getProfile('synthetic'),
+          throwsA(isA<ParseFailure>()),
+        );
+      },
+    );
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -126,6 +127,11 @@ Future<ProviderContainer> _pump(
         routerConfig: router,
         locale: locale,
         supportedLocales: const [Locale('vi'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
       ),
     ),
   );
@@ -149,7 +155,10 @@ void main() {
       relationships: relationships,
       session: null,
     );
-    expect(find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'),
+      findsOneWidget,
+    );
     expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
     await tester.tap(find.text('Theo dõi'));
     await tester.pumpAndSettle();
@@ -232,7 +241,10 @@ void main() {
     await _pump(tester, profiles: profiles, relationships: relationships);
     await tester.tap(find.text('Theo dõi'));
     await tester.pumpAndSettle();
-    expect(find.text('Không thực hiện được với thành viên này.'), findsOneWidget);
+    expect(
+      find.text('Không thực hiện được với thành viên này.'),
+      findsOneWidget,
+    );
     expect(find.text('Theo dõi'), findsOneWidget);
     expect(profiles.reads, 1);
     await tester.pump(const Duration(seconds: 10));
@@ -267,34 +279,35 @@ void main() {
     expect(find.text('Theo dõi'), findsOneWidget);
   });
 
-  testWidgets('confirmed block leaves only unblock and unblock restores follow', (
-    tester,
-  ) async {
-    final profiles = _Profiles()..followed = true;
-    final relationships = _Relationships()
-      ..onAcknowledged = () {
-        profiles.blocked = true;
-        profiles.followed = false;
-      };
-    await _pump(tester, profiles: profiles, relationships: relationships);
-    await _openBlockDialog(tester);
-    await tester.tap(find.widgetWithText(FilledButton, 'Chặn'));
-    await tester.pumpAndSettle();
-    expect(relationships.calls, ['block:target-1']);
-    expect(find.text('Bỏ chặn'), findsOneWidget);
-    expect(find.text('Bạn đã chặn người này.'), findsOneWidget);
-    expect(find.text('Theo dõi'), findsNothing);
-    expect(find.text('Đang theo dõi'), findsNothing);
-    expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
+  testWidgets(
+    'confirmed block leaves only unblock and unblock restores follow',
+    (tester) async {
+      final profiles = _Profiles()..followed = true;
+      final relationships = _Relationships()
+        ..onAcknowledged = () {
+          profiles.blocked = true;
+          profiles.followed = false;
+        };
+      await _pump(tester, profiles: profiles, relationships: relationships);
+      await _openBlockDialog(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Chặn'));
+      await tester.pumpAndSettle();
+      expect(relationships.calls, ['block:target-1']);
+      expect(find.text('Bỏ chặn'), findsOneWidget);
+      expect(find.text('Bạn đã chặn người này.'), findsOneWidget);
+      expect(find.text('Theo dõi'), findsNothing);
+      expect(find.text('Đang theo dõi'), findsNothing);
+      expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
 
-    relationships.onAcknowledged = () => profiles.blocked = false;
-    await tester.tap(find.text('Bỏ chặn'));
-    await tester.pumpAndSettle();
-    expect(relationships.calls.last, 'unblock:target-1');
-    expect(find.text('Theo dõi'), findsOneWidget);
-  });
+      relationships.onAcknowledged = () => profiles.blocked = false;
+      await tester.tap(find.text('Bỏ chặn'));
+      await tester.pumpAndSettle();
+      expect(relationships.calls.last, 'unblock:target-1');
+      expect(find.text('Theo dõi'), findsOneWidget);
+    },
+  );
 
-  testWidgets('a failed block keeps the confirmed state and tells the user', (
+  testWidgets('an uncertain block is reconciled and tells the user', (
     tester,
   ) async {
     final relationships = _Relationships()..failure = const HttpFailure(500);
@@ -302,7 +315,10 @@ void main() {
     await _openBlockDialog(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Chặn'));
     await tester.pumpAndSettle();
-    expect(find.text('Chưa chặn được. Thử lại sau.'), findsOneWidget);
+    expect(
+      find.text('Chưa xác nhận được kết quả. Hãy tải lại hồ sơ để kiểm tra.'),
+      findsOneWidget,
+    );
     expect(find.text('Theo dõi'), findsOneWidget);
     expect(relationships.calls.length, 1);
   });
@@ -343,7 +359,10 @@ void main() {
     container.read(sessionStateProvider.notifier).state = null;
     await tester.pumpAndSettle();
     expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
-    expect(find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('English labels and a toggle state for assistive tech', (

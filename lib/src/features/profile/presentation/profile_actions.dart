@@ -49,7 +49,11 @@ class ProfileActions extends ConsumerWidget {
             session.username.toLowerCase() ==
                 profile.author.username.toLowerCase());
     final repository = ref.watch(profileRelationshipRepositoryProvider);
-    if (isOwner || targetId.isEmpty || repository == null) {
+    if (isOwner ||
+        targetId.isEmpty ||
+        repository == null ||
+        profile.followedByViewer == null ||
+        profile.blockedByViewer == null) {
       return const SizedBox.shrink();
     }
     return _SignedInActions(
@@ -97,7 +101,8 @@ class _SignedInActions extends ConsumerWidget {
       profileRelationshipProvider(relationship).notifier,
     );
     final busy = state.pending != null;
-    final blocked = profile.blockedByViewer;
+    final blocked = profile.blockedByViewer == true;
+    final followed = profile.followedByViewer == true;
 
     Future<void> block() async {
       final confirmed = await showDialog<bool>(
@@ -147,18 +152,18 @@ class _SignedInActions extends ConsumerWidget {
           _FollowButton(
             label: busy
                 ? copy.updating
-                : profile.followedByViewer
+                : followed
                 ? copy.following
                 : copy.follow,
-            semanticLabel: copy.followToggleLabel(profile.followedByViewer),
-            toggled: profile.followedByViewer,
-            icon: profile.followedByViewer
+            semanticLabel: copy.followToggleLabel(followed),
+            toggled: followed,
+            icon: followed
                 ? Icons.check_rounded
                 : Icons.person_add_alt_1_rounded,
             onPressed: busy
                 ? null
                 : () => controller.perform(
-                    profile.followedByViewer
+                    followed
                         ? ProfileRelationshipAction.unfollow
                         : ProfileRelationshipAction.follow,
                     profile,

@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
+import '../../direct_messages/presentation/direct_message_state.dart';
+import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../data/live_profile_relationship_repository.dart';
 import '../domain/profile_relationship.dart';
@@ -62,18 +66,15 @@ typedef ProfileRefresh = Future<PublicProfile?> Function();
 class ProfileRelationshipController
     extends StateNotifier<ProfileRelationshipState> {
   ProfileRelationshipController({
-    required ProfileRelationshipRepository repository,
-    required ProfileRefresh refresh,
-    required bool Function() isViewerCurrent,
+    required this.repository,
+    required this.refresh,
+    required this.isViewerCurrent,
     required this.viewerId,
     required this.targetId,
-  }) : _repository = repository,
-       _refresh = refresh,
-       _isViewerCurrent = isViewerCurrent,
-       super(const ProfileRelationshipState());
-  final ProfileRelationshipRepository _repository;
-  final ProfileRefresh _refresh;
-  final bool Function() _isViewerCurrent;
+  }) : super(const ProfileRelationshipState());
+  final ProfileRelationshipRepository repository;
+  final ProfileRefresh refresh;
+  final bool Function() isViewerCurrent;
   final String viewerId;
   final String targetId;
   int _generation = 0;
@@ -84,10 +85,10 @@ class ProfileRelationshipController
     }
     return switch (action) {
       ProfileRelationshipAction.follow =>
-        !profile.followedByViewer && !profile.blockedByViewer,
-      ProfileRelationshipAction.unfollow => profile.followedByViewer,
-      ProfileRelationshipAction.block => !profile.blockedByViewer,
-      ProfileRelationshipAction.unblock => profile.blockedByViewer,
+        profile.followedByViewer == false && profile.blockedByViewer == false,
+      ProfileRelationshipAction.unfollow => profile.followedByViewer == true,
+      ProfileRelationshipAction.block => profile.blockedByViewer == false,
+      ProfileRelationshipAction.unblock => profile.blockedByViewer == true,
     };
   }
 
@@ -96,35 +97,34 @@ class ProfileRelationshipController
     ProfileRelationshipAction action,
     PublicProfile profile,
   ) async {
-    if (state.pending != null || !_isViewerCurrent()) return;
+    if (state.pending != null || !isViewerCurrent()) return;
     if (!allows(action, profile)) return;
     final generation = ++_generation;
-    state = ProfileRelationshipState(
-      pending: action,
-      revision: state.revision,
-    );
+    state = ProfileRelationshipState(pending: action, revision: state.revision);
     try {
       await switch (action) {
-        ProfileRelationshipAction.follow => _repository.setFollowing(
+        ProfileRelationshipAction.follow => repository.setFollowing(
           targetId,
           following: true,
         ),
-        ProfileRelationshipAction.unfollow => _repository.setFollowing(
+        ProfileRelationshipAction.unfollow => repository.setFollowing(
           targetId,
           following: false,
         ),
-        ProfileRelationshipAction.block => _repository.setBlocked(
+        ProfileRelationshipAction.block => repository.setBlocked(
           targetId,
           blocked: true,
         ),
-        ProfileRelationshipAction.unblock => _repository.setBlocked(
+        ProfileRelationshipAction.unblock => repository.setBlocked(
           targetId,
           blocked: false,
         ),
       };
     } on Object catch (error) {
       if (!_live(generation)) return;
-      final ambiguous = error is! HttpFailure && error is! RateLimited;
+      final ambiguous =
+          error is! RateLimited &&
+          (error is! HttpFailure || error.statusCode >= 500);
       if (ambiguous) await _reconcile();
       if (!_live(generation)) return;
       _finish(action, failure: _classify(error, ambiguous));
@@ -132,13 +132,11 @@ class ProfileRelationshipController
     }
     if (!_live(generation)) return;
     try {
-      final fresh = await _refresh();
+      final fresh = await refresh();
       if (!_live(generation)) return;
       _finish(
         action,
-        failure: fresh != null && _matches(action, fresh)
-            ? null
-            : _unconfirmed,
+        failure: fresh != null && _matches(action, fresh) ? null : _unconfirmed,
         completed: action,
       );
     } on Object {
@@ -150,11 +148,11 @@ class ProfileRelationshipController
   static const _unconfirmed = RelationshipUnconfirmed();
 
   bool _live(int generation) =>
-      mounted && generation == _generation && _isViewerCurrent();
+      mounted && generation == _generation && isViewerCurrent();
 
   Future<void> _reconcile() async {
     try {
-      await _refresh();
+      await refresh();
     } on Object {
       // The failure that triggered reconciliation is the one reported.
     }
@@ -175,17 +173,15 @@ class ProfileRelationshipController
 
   bool _matches(ProfileRelationshipAction action, PublicProfile fresh) =>
       switch (action) {
-        ProfileRelationshipAction.follow => fresh.followedByViewer,
-        ProfileRelationshipAction.unfollow => !fresh.followedByViewer,
-        ProfileRelationshipAction.block => fresh.blockedByViewer,
-        ProfileRelationshipAction.unblock => !fresh.blockedByViewer,
+        ProfileRelationshipAction.follow => fresh.followedByViewer == true,
+        ProfileRelationshipAction.unfollow => fresh.followedByViewer == false,
+        ProfileRelationshipAction.block => fresh.blockedByViewer == true,
+        ProfileRelationshipAction.unblock => fresh.blockedByViewer == false,
       };
 
   ProfileRelationshipFailure _classify(Object error, bool ambiguous) {
     if (ambiguous) {
-      return error is ParseFailure
-          ? _unconfirmed
-          : const RelationshipNetworkFailure();
+      return _unconfirmed;
     }
     if (error is RateLimited) return const RelationshipRateLimited();
     if (error is! HttpFailure) return const RelationshipNetworkFailure();
@@ -235,6 +231,11 @@ final profileRelationshipProvider = StateNotifierProvider.autoDispose
         refresh: () {
           // A write may have happened without us seeing the answer.
           ref.read(apiClientProvider).clearCache();
+          ref.invalidate(feedProvider);
+          ref.invalidate(feedNotifierProvider);
+          if (ref.exists(dmInboxProvider)) {
+            unawaited(ref.read(dmInboxProvider.notifier).load(refresh: true));
+          }
           return ref.refresh(profileProvider(key.username).future);
         },
       );

@@ -12,8 +12,8 @@ final class PublicProfile {
     this.coverUrl,
     this.guestbookEnabled = true,
     this.isSample = false,
-    this.followedByViewer = false,
-    this.blockedByViewer = false,
+    this.followedByViewer,
+    this.blockedByViewer,
   });
   final Author author;
   final String? bio;
@@ -26,9 +26,9 @@ final class PublicProfile {
   final bool guestbookEnabled;
   final bool isSample;
 
-  /// Server-reported state for the signed-in viewer; false for guests.
-  final bool followedByViewer;
-  final bool blockedByViewer;
+  /// Null means the server did not provide the viewer's relationship state.
+  final bool? followedByViewer;
+  final bool? blockedByViewer;
 }
 
 final class ProfileComment {
