@@ -592,3 +592,24 @@ Reference: project 86991275, commit
 
 Typed native repository/state checks use synthetic data only. Live poll mutation
 behavior, composer integration and native visual parity are not yet verified.
+
+## Profile relationships and feedback media — 2026-11-06
+
+At source commit `ab23799bf66ecec2176b89fa0c7e1151bf5782d3`, profile
+relationships use `POST`/`DELETE /api/v1/users/:id/follow` and
+`POST`/`DELETE /api/v1/users/:id/block`, with an explicit `ok: true`
+acknowledgment. A fresh profile read supplies `followedByViewer` and
+`blockedByViewer`; missing values are unknown, not proof of a cleared state.
+Server errors or interrupted writes are reconciled once and reported as
+unconfirmed. Synthetic tests cover these paths; no live relationship write was
+performed. Blocking also affects feeds and messaging, and an already-open DM
+timeline may require a refresh.
+
+The same source's feedback module allows up to five private media assets per
+submission. Image MIME types are JPEG, PNG, WebP and GIF up to 10 MiB; MP4 and
+WebM video may be up to 50 MiB. Presigning uses
+`POST /api/v1/feedback/assets/presign`, a raw upload to the returned URL, and
+`POST /api/v1/feedback/assets/:assetId/complete`; an unsubmitted asset can be
+removed with `DELETE /api/v1/feedback/assets/:assetId`. Both the submission UUID
+and feedback kind bind the asset to the submission. This is a source contract,
+not evidence of a live upload or completed native attachment UI.
