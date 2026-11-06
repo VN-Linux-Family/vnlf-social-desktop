@@ -1,3 +1,4 @@
+import '../../polls/data/poll_dto.dart';
 import '../../../data/field_reader.dart';
 import '../../../domain/models.dart';
 import '../domain/direct_message_models.dart';
@@ -182,7 +183,7 @@ final class DmMessageDto {
         'message.attachments',
       ).map(_parseAttachment).toList(growable: false),
       gif: gifMap == null ? null : _parseGif(gifMap),
-      poll: objectValue(json['poll'], 'message.poll'),
+      poll: PollDto.optional(json['poll']),
       createdAt: dateValue(json['createdAt'], 'message.createdAt'),
       editedAt: dateValue(json['editedAt'], 'message.editedAt'),
       deletedAt: dateValue(json['deletedAt'], 'message.deletedAt'),

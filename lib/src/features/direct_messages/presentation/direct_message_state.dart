@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_state.dart';
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,6 +60,10 @@ final dmTimelineProvider = StateNotifierProvider.autoDispose
         onConversationSynced: (conversation) {
           ref.read(dmInboxProvider.notifier).upsertConversation(conversation);
         },
+        capturePollRead: () => ref.read(pollStoreProvider.notifier).beginRead(),
+        onPollRealtime: (poll, preserve) => ref
+            .read(pollStoreProvider.notifier)
+            .ingestRealtime(poll, preserveViewerSelection: preserve),
         onConversationRemoved: (removedId) {
           ref.read(dmInboxProvider.notifier).removeConversation(removedId);
         },

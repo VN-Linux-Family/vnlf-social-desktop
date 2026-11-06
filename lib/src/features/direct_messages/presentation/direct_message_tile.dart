@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_card.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,12 +8,6 @@ import '../../shared/presentation/author_mapper.dart';
 import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_media.dart';
-
-typedef DmPollWidgetBuilder = Widget Function(
-  BuildContext context,
-  DmMessage message,
-  Map<String, dynamic> poll,
-);
 
 class DirectMessageTile extends StatelessWidget {
   const DirectMessageTile({
@@ -28,7 +24,6 @@ class DirectMessageTile extends StatelessWidget {
     this.isHighlighted = false,
     this.isPeerReadBarrier = false,
     this.onTapReply,
-    this.pollBuilder,
   });
 
   final DmMessage message;
@@ -43,7 +38,6 @@ class DirectMessageTile extends StatelessWidget {
   final VoidCallback onDelete;
   final ValueChanged<String> onReact;
   final ValueChanged<String>? onTapReply;
-  final DmPollWidgetBuilder? pollBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -286,18 +280,11 @@ class DirectMessageTile extends StatelessWidget {
                           ),
                         ),
                       if (message.poll case final poll?)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: pollBuilder != null
-                              ? pollBuilder!(context, message, poll)
-                              : Text(
-                                  dmText(
-                                    context,
-                                    'Tin nhắn có bình chọn',
-                                    'Message contains a poll',
-                                  ),
-                                  style: VnlfTypography.caption(colors.muted),
-                                ),
+                        PollCard(
+                          poll: poll,
+                          authorId: message.authorId,
+                          disabled: busy,
+                          maxWidth: 340,
                         ),
                       Wrap(
                         spacing: 6,

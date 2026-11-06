@@ -1,3 +1,4 @@
+import '../../polls/presentation/poll_state.dart';
 import '../../../core/request_identity.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,7 @@ final channelTimelineProvider =
       final controller = ChannelTimelineController(
         ref.watch(liveChannelRepositoryProvider),
         id,
+        capturePollRead: () => ref.read(pollStoreProvider.notifier).beginRead(),
       );
       controller.load();
       return controller;
@@ -97,8 +99,12 @@ final class ChannelTimelineState {
 }
 
 class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
-  ChannelTimelineController(this._repository, this._channelId)
-    : super(ChannelTimelineState());
+  ChannelTimelineController(
+    this._repository,
+    this._channelId, {
+    this._capturePollRead,
+  }) : super(ChannelTimelineState());
+  final PollReadTicket Function()? _capturePollRead;
   final ChannelRepository _repository;
   final String _channelId;
   int _revision = 0;
@@ -114,8 +120,10 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       confirmedRefreshFailed: false,
     );
     try {
+      final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(_channelId);
       if (!mounted || revision != _revision) return;
+      pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copy(
         messages: _merge(page.items),
         nextCursor: page.nextCursor,
@@ -136,8 +144,10 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     final revision = _revision;
     state = state.copy(loadingOlder: true, clearFailure: true);
     try {
+      final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(_channelId, cursor: cursor);
       if (!mounted || revision != _revision) return;
+      pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copy(
         messages: _merge([...page.items, ...state.messages]),
         nextCursor: page.nextCursor == cursor ? null : page.nextCursor,

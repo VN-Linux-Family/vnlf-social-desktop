@@ -1,3 +1,6 @@
+import '../../polls/domain/poll_models.dart';
+import '../../polls/presentation/poll_state.dart';
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +19,8 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     this._readActiveUserId,
     this._onConversationSynced,
     this._onConversationRemoved,
+    this._capturePollRead,
+    this._onPollRealtime,
   }) : super(DmTimelineState(conversationId: conversationId));
 
   final DirectMessageRepository _repository;
@@ -23,6 +28,8 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
   final String? Function()? _readActiveUserId;
   final void Function(DmConversation)? _onConversationSynced;
   final void Function(String)? _onConversationRemoved;
+  final PollReadTicket Function()? _capturePollRead;
+  final void Function(Poll, bool)? _onPollRealtime;
   int _revision = 0;
   String? _draftClientId;
 
@@ -43,6 +50,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       confirmedRefreshFailed: false,
     );
     try {
+      final pollRead = _capturePollRead?.call();
       final results = await Future.wait<Object>([
         _repository.getConversation(state.conversationId, refresh: refresh),
         _repository.getMessages(state.conversationId),
@@ -51,6 +59,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       final page = results[1] as DmMessagePage;
       if (!_isSessionValid(revision)) return;
 
+      pollRead?.acceptAll(page.items.map((message) => message.poll));
       final mergedMessages = _mergeMessages(page.items);
       final resolvedViewerState = page.viewerState == DmViewerState.blockedByMe
           ? DmViewerState.blockedByMe
@@ -97,11 +106,13 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     final revision = _revision;
     state = state.copyWith(loadingOlder: true, clearFailure: true);
     try {
+      final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(
         state.conversationId,
         cursor: cursor,
       );
       if (!_isSessionValid(revision)) return;
+      pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copyWith(
         messages: _mergeMessages(<DmMessage>[...page.items, ...state.messages]),
         nextCursor: page.nextCursor == cursor ? null : page.nextCursor,
@@ -121,11 +132,13 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     final revision = ++_revision;
     state = state.copyWith(loading: true, clearFailure: true);
     try {
+      final pollRead = _capturePollRead?.call();
       final window = await _repository.getMessageContext(
         state.conversationId,
         aroundMessageId: target,
       );
       if (!_isSessionValid(revision)) return;
+      pollRead?.acceptAll(window.items.map((message) => message.poll));
       state = state.copyWith(
         messages: _mergeMessages(window.items),
         nextCursor: null,
@@ -529,6 +542,9 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     final resolved = preservePollViewerOptionId
         ? incoming.withPreservedPollViewerChoice(existing)
         : incoming;
+    if (resolved.poll case final poll?) {
+      _onPollRealtime?.call(poll, preservePollViewerOptionId);
+    }
     state = state.copyWith(
       messages: _mergeMessages(<DmMessage>[...state.messages, resolved]),
     );

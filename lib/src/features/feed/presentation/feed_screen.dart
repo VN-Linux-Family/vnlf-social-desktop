@@ -1,3 +1,4 @@
+import '../../polls/presentation/poll_card.dart';
 import '../../moderation/presentation/report_dialog.dart';
 
 import 'package:flutter/material.dart';
@@ -185,6 +186,12 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                   '/thread/${Uri.encodeComponent(data.posts[index].id)}',
                                 ),
                                 child: VnlfPostCard(
+                                  poll: source.poll == null
+                                      ? null
+                                      : PollCard(
+                                          poll: source.poll!,
+                                          authorId: source.author.id,
+                                        ),
                                   key: ValueKey(data.posts[index].id),
                                   post: interaction.apply(
                                     presentPost(source, english: english),

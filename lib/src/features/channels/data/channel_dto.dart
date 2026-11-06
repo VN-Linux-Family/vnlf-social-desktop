@@ -1,3 +1,4 @@
+import '../../polls/data/poll_dto.dart';
 import '../../../data/field_reader.dart';
 import '../../../data/profile_dto.dart';
 import '../../../domain/models.dart';
@@ -70,7 +71,7 @@ final class ChannelMessageDto {
           )
           .toList(),
       hasGif: objectValue(json['gif'], 'gif') != null,
-      hasPoll: objectValue(json['poll'], 'poll') != null,
+      poll: PollDto.optional(json['poll']),
     );
   }
 }

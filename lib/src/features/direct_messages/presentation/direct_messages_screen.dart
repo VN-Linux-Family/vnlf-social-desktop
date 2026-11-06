@@ -14,13 +14,8 @@ import 'direct_message_state.dart';
 import 'direct_message_tile.dart';
 
 class DirectMessagesScreen extends ConsumerWidget {
-  const DirectMessagesScreen({
-    super.key,
-    this.pollBuilder,
-    this.conversationId,
-  });
+  const DirectMessagesScreen({super.key, this.conversationId});
 
-  final DmPollWidgetBuilder? pollBuilder;
   final String? conversationId;
 
   @override
@@ -82,7 +77,6 @@ class DirectMessagesScreen extends ConsumerWidget {
                       viewerUserId: session.userId,
                       wide: wide,
                       onOpenInboxSheet: () => context.go('/messages'),
-                      pollBuilder: pollBuilder,
                     ),
             ),
           ],
@@ -100,7 +94,6 @@ class _DmConversationPane extends ConsumerWidget {
     required this.viewerUserId,
     required this.wide,
     required this.onOpenInboxSheet,
-    this.pollBuilder,
   });
 
   final String conversationId;
@@ -108,7 +101,6 @@ class _DmConversationPane extends ConsumerWidget {
   final String viewerUserId;
   final bool wide;
   final VoidCallback onOpenInboxSheet;
-  final DmPollWidgetBuilder? pollBuilder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -325,7 +317,6 @@ class _DmConversationPane extends ConsumerWidget {
                         onDelete: () =>
                             _confirmDeleteMessage(context, controller, message),
                         onTapReply: controller.jumpToMessageContext,
-                        pollBuilder: pollBuilder,
                       );
                     },
                   ),

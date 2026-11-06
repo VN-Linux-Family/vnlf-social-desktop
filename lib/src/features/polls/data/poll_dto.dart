@@ -5,6 +5,10 @@ import '../domain/poll_models.dart';
 final class PollDto {
   const PollDto(this.json);
   final Map<String, dynamic> json;
+  static Poll? optional(Object? value) {
+    final data = objectValue(value, 'poll');
+    return data == null ? null : PollDto(data).toDomain();
+  }
 
   Poll toDomain() {
     final id = _id(json['id'], 'poll.id');

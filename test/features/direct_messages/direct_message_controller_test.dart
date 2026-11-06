@@ -1,3 +1,5 @@
+import 'package:vnlfsocialapp/src/features/polls/domain/poll_models.dart';
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -148,11 +150,16 @@ void main() {
         displayName: 'Người thử nghiệm',
       ),
       content: 'Bình chọn distro',
-      poll: const <String, dynamic>{
-        'id': 'poll-1',
-        'totalVotes': 1,
-        'viewerOptionId': 'opt-recipient',
-      },
+      poll: Poll(
+        id: 'poll-1',
+        question: 'Distro?',
+        totalVotes: 1,
+        viewerOptionId: 'opt-recipient',
+        options: const [
+          PollOption(id: 'opt-recipient', label: 'Arch', votes: 1),
+          PollOption(id: 'opt-sender', label: 'Debian', votes: 0),
+        ],
+      ),
       createdAt: DateTime.utc(2026, 11, 5, 10),
     );
     final repo = ControlledDmRepository()
@@ -175,19 +182,24 @@ void main() {
         displayName: 'Người thử nghiệm',
       ),
       content: 'Bình chọn distro',
-      poll: const <String, dynamic>{
-        'id': 'poll-1',
-        'totalVotes': 2,
-        'viewerOptionId': 'opt-sender',
-      },
+      poll: Poll(
+        id: 'poll-1',
+        question: 'Distro?',
+        totalVotes: 2,
+        viewerOptionId: 'opt-sender',
+        options: const [
+          PollOption(id: 'opt-recipient', label: 'Arch', votes: 1),
+          PollOption(id: 'opt-sender', label: 'Debian', votes: 1),
+        ],
+      ),
       createdAt: DateTime.utc(2026, 11, 5, 10),
     );
 
     controller.applyRealtimeMessage(incomingBroadcast);
 
     final updatedPoll = controller.state.messages.single.poll!;
-    expect(updatedPoll['totalVotes'], 2);
-    expect(updatedPoll['viewerOptionId'], 'opt-recipient');
+    expect(updatedPoll.totalVotes, 2);
+    expect(updatedPoll.viewerOptionId, 'opt-recipient');
   });
 
   test('message action lock prevents concurrent sends and marks deleted message on confirmation', () async {

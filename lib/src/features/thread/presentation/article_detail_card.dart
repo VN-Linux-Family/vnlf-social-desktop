@@ -20,8 +20,10 @@ class ArticleDetailCard extends StatelessWidget {
     this.onVote,
     this.onReport,
     this.onEdit,
+    this.poll,
   });
   final FeedPost source;
+  final Widget? poll;
   final PostData post;
   final VoidCallback? onAuthor;
   final VoidCallback? onComment;
@@ -179,6 +181,7 @@ class ArticleDetailCard extends StatelessWidget {
                   SelectableText(source.contentText, style: body),
                 if (post.attachment case final MediaGalleryAttachment gallery)
                   VnlfMediaGallery(items: gallery.items),
+                ?poll,
                 const SizedBox(height: 4),
                 Divider(height: 1, color: colors.line),
                 const SizedBox(height: 8),

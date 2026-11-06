@@ -1,3 +1,4 @@
+import '../../polls/domain/poll_models.dart';
 import '../../../domain/models.dart';
 
 // Channel authors share the site's identity and decoration contract.
@@ -57,7 +58,7 @@ final class ChannelMessage {
     List<ChannelReaction> reactions = const [],
     List<ChannelAttachment> attachments = const [],
     this.hasGif = false,
-    this.hasPoll = false,
+    this.poll,
   }) : reactions = List.unmodifiable(reactions),
        attachments = List.unmodifiable(attachments);
   final String id;
@@ -71,7 +72,8 @@ final class ChannelMessage {
   final List<ChannelReaction> reactions;
   final List<ChannelAttachment> attachments;
   final bool hasGif;
-  final bool hasPoll;
+  final Poll? poll;
+  bool get hasPoll => poll != null;
 }
 
 final class ChannelReply {

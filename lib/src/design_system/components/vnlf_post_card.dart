@@ -104,6 +104,7 @@ class VnlfPostCard extends StatelessWidget {
   const VnlfPostCard({
     super.key,
     this.post,
+    this.poll,
     this.isLoading = false,
     this.isEmpty = false,
     this.controller,
@@ -154,6 +155,7 @@ class VnlfPostCard extends StatelessWidget {
     this.semanticLabel,
     this.loadingSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = true,
        isEmpty = false,
        emptyTitle = '',
@@ -197,6 +199,7 @@ class VnlfPostCard extends StatelessWidget {
     this.emptySemanticLabel,
     this.actionSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = false,
        isEmpty = true,
        controller = null,
@@ -238,6 +241,7 @@ class VnlfPostCard extends StatelessWidget {
     this.errorSemanticLabel,
     this.actionSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = false,
        isEmpty = false,
        controller = null,
@@ -271,6 +275,7 @@ class VnlfPostCard extends StatelessWidget {
        bookmarkSemanticLabel = null;
 
   final PostData? post;
+  final Widget? poll;
   final bool isLoading;
   final bool isEmpty;
   final Animation<double>? controller;
@@ -557,6 +562,7 @@ class VnlfPostCard extends StatelessWidget {
                       VnlfProjectPreviewCard(project: projectPreview.project),
                   },
                 ],
+                ?poll,
                 if (loadedPost.actionError != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),

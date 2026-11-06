@@ -1,3 +1,4 @@
+import '../../polls/domain/poll_models.dart';
 import '../../../domain/models.dart';
 
 /// Quick reaction emoji palette from `packages/contracts/src/reactions.ts`.
@@ -247,15 +248,14 @@ final class DmMessage {
     List<DmReaction> reactions = const <DmReaction>[],
     List<DmAttachment> attachments = const <DmAttachment>[],
     this.gif,
-    Map<String, dynamic>? poll,
+    this.poll,
     this.createdAt,
     this.editedAt,
     this.deletedAt,
   }) : mentions = List.unmodifiable(mentions),
        attentionUserIds = List.unmodifiable(attentionUserIds),
        reactions = List.unmodifiable(reactions),
-       attachments = List.unmodifiable(attachments),
-       poll = poll == null ? null : Map<String, dynamic>.unmodifiable(poll);
+       attachments = List.unmodifiable(attachments);
 
   final String id;
   final String? conversationId;
@@ -270,7 +270,7 @@ final class DmMessage {
   final List<DmReaction> reactions;
   final List<DmAttachment> attachments;
   final DmGifAttachment? gif;
-  final Map<String, dynamic>? poll;
+  final Poll? poll;
   final DateTime? createdAt;
   final DateTime? editedAt;
   final DateTime? deletedAt;
@@ -284,10 +284,12 @@ final class DmMessage {
   DmMessage withPreservedPollViewerChoice(DmMessage? previous) {
     final currentPoll = poll;
     final previousPoll = previous?.poll;
-    if (currentPoll == null || previousPoll == null) return this;
-    if (!previousPoll.containsKey('viewerOptionId')) return this;
-    final prevChoice = previousPoll['viewerOptionId'];
-    if (currentPoll['viewerOptionId'] == prevChoice) return this;
+    if (currentPoll == null) return this;
+    final choice = previousPoll?.id == currentPoll.id
+        ? previousPoll?.viewerOptionId
+        : null;
+    final resolved = currentPoll.withViewerSelection(choice);
+    if (currentPoll.viewerOptionId == resolved.viewerOptionId) return this;
     return DmMessage(
       id: id,
       conversationId: conversationId,
@@ -302,7 +304,7 @@ final class DmMessage {
       reactions: reactions,
       attachments: attachments,
       gif: gif,
-      poll: <String, dynamic>{...currentPoll, 'viewerOptionId': prevChoice},
+      poll: resolved,
       createdAt: createdAt,
       editedAt: editedAt,
       deletedAt: deletedAt,

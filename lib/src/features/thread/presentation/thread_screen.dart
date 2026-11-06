@@ -1,3 +1,4 @@
+import '../../polls/presentation/poll_card.dart';
 import '../../moderation/presentation/report_dialog.dart';
 
 import 'package:flutter/material.dart';
@@ -145,6 +146,9 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
       children: [
         if (article)
           ArticleDetailCard(
+            poll: source.poll == null
+                ? null
+                : PollCard(poll: source.poll!, authorId: source.author.id),
             source: source,
             post: detail,
             onAuthor: () => context.push(
@@ -171,6 +175,9 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
           )
         else
           VnlfPostCard(
+            poll: source.poll == null
+                ? null
+                : PollCard(poll: source.poll!, authorId: source.author.id),
             post: detail,
             onAuthorTap: () => context.push(
               '/profile/${Uri.encodeComponent(source.author.username)}',

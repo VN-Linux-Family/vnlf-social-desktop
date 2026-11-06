@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_state.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -24,6 +26,7 @@ final publicProfileRepositoryProvider = Provider<PublicProfileRepository>((
 
 final profileProvider = FutureProvider.autoDispose
     .family<PublicProfile?, String>((ref, username) async {
+      ref.watch(sessionStateProvider.select((session) => session?.userId));
       if (username == 'self') {
         username = ref.watch(sessionProvider).valueOrNull?.username ?? '';
         if (username.isEmpty) return null;
@@ -32,22 +35,27 @@ final profileProvider = FutureProvider.autoDispose
     });
 
 final profilePostsProvider = FutureProvider.autoDispose
-    .family<FeedPage, String>(
-      (ref, username) =>
-          ref.watch(publicProfileRepositoryProvider).getPosts(username),
-    );
+    .family<FeedPage, String>((ref, username) async {
+      ref.watch(sessionStateProvider.select((session) => session?.userId));
+      final pollRead = ref.read(pollStoreProvider.notifier).beginRead();
+      final page = await ref
+          .watch(publicProfileRepositoryProvider)
+          .getPosts(username);
+      pollRead.acceptAll(page.items.map((post) => post.poll));
+      return page;
+    });
 final profileCommentsProvider = FutureProvider.autoDispose
-    .family<ProfileCommentsPage, String>(
-      (ref, username) =>
-          ref.watch(publicProfileRepositoryProvider).getComments(username),
-    );
+    .family<ProfileCommentsPage, String>((ref, username) {
+      ref.watch(sessionStateProvider.select((session) => session?.userId));
+      return ref.watch(publicProfileRepositoryProvider).getComments(username);
+    });
 final profileProjectsProvider = FutureProvider.autoDispose
-    .family<ProjectsPage, String>(
-      (ref, username) =>
-          ref.watch(publicProfileRepositoryProvider).getProjects(username),
-    );
+    .family<ProjectsPage, String>((ref, username) {
+      ref.watch(sessionStateProvider.select((session) => session?.userId));
+      return ref.watch(publicProfileRepositoryProvider).getProjects(username);
+    });
 final profileGuestbookProvider = FutureProvider.autoDispose
-    .family<GuestbookPage, String>(
-      (ref, username) =>
-          ref.watch(publicProfileRepositoryProvider).getGuestbook(username),
-    );
+    .family<GuestbookPage, String>((ref, username) {
+      ref.watch(sessionStateProvider.select((session) => session?.userId));
+      return ref.watch(publicProfileRepositoryProvider).getGuestbook(username);
+    });

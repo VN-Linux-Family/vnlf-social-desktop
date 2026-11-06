@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_card.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -206,14 +208,12 @@ class LiveMessageTile extends StatelessWidget {
                       ),
                       style: VnlfTypography.caption(colors.muted),
                     ),
-                  if (message.hasPoll)
-                    Text(
-                      channelText(
-                        context,
-                        'Tin nhắn có bình chọn',
-                        'Message contains a poll',
-                      ),
-                      style: VnlfTypography.caption(colors.muted),
+                  if (!deleted && message.poll != null)
+                    PollCard(
+                      poll: message.poll!,
+                      authorId: message.author.id,
+                      disabled: busy,
+                      maxWidth: 340,
                     ),
                   Wrap(
                     spacing: 6,

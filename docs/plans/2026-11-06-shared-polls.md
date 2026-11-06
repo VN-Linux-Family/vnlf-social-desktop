@@ -54,3 +54,19 @@ single-flight writes, retained state on failure, older/in-flight read rejection,
 account reset, and peer viewer-choice preservation. Parent model/provider/UI
 integration is still in progress; the existing placeholder is not counted as a
 working poll feature. No live poll writes have been made.
+
+## Read, vote and edit integration
+
+Steps 1–3 now use typed polls in feed/detail, discovery/profile and channel/DM
+models. The native card replaces chat placeholders, uses the observed 420px
+post/340px chat widths, hides percentages until voting, routes guests to sign-in
+and exposes author edits before the first vote. The editor preserves failed
+input and uses the server's UTF-16 limits with an honest counter and intact emoji.
+
+Parent read tickets are captured for feed/detail, profile/discovery and chat
+history/context/pagination. A regression first reproduced a stale 67% overlay
+masking a fresh detail response; the integrated path now shows the server's 75%.
+Typed peer message merges do not adopt another viewer's choice. Profile data now
+reloads on owner changes as well. Seventy-five focused integration checks and all
+424 Flutter tests pass, with pub get, formatting and analysis clean. Linux poll
+captures, live owner-account writes and composer authoring remain pending.

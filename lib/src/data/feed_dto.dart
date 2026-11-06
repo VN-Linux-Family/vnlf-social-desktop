@@ -1,3 +1,4 @@
+import '../features/polls/data/poll_dto.dart';
 import '../domain/models.dart';
 import 'field_reader.dart';
 import 'profile_dto.dart';
@@ -60,6 +61,7 @@ final class FeedPostDto {
       tagSlugs: stringList(_json['tagSlugs'], 'tagSlugs'),
       tags: stringList(_json['tags'], 'tags'),
       attachments: attachments,
+      poll: PollDto.optional(_json['poll']),
       publishedAt: dateValue(_json['publishedAt'], 'publishedAt'),
       updatedAt: dateValue(_json['updatedAt'], 'updatedAt'),
     );

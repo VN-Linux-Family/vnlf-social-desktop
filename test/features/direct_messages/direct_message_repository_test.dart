@@ -65,8 +65,8 @@ void main() {
       '/api/v1/assets/private-asset/download',
     );
     expect(first.hasPoll, isTrue);
-    expect(first.poll?['id'], 'poll-1');
-    expect(first.poll?['viewerOptionId'], 'opt-a');
+    expect(first.poll?.id, 'poll-1');
+    expect(first.poll?.viewerOptionId, 'opt-a');
 
     // Blocked peer message omits nested author.id in dm.ts:97 while keeping top-level authorId.
     final redacted = page.items.last;
@@ -375,6 +375,11 @@ const Map<String, dynamic> sampleMessageJson = <String, dynamic>{
     'id': 'poll-1',
     'question': 'Bản phân phối nào?',
     'viewerOptionId': 'opt-a',
+    'totalVotes': 1,
+    'options': [
+      {'id': 'opt-a', 'label': 'Arch', 'votes': 1},
+      {'id': 'opt-b', 'label': 'Debian', 'votes': 0},
+    ],
   },
 };
 

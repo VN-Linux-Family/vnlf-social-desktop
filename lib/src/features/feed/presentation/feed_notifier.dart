@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_state.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -45,9 +47,11 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
     if (arg == FeedTab.following && owner == null) {
       throw const HttpFailure(401);
     }
+    final pollRead = ref.read(pollStoreProvider.notifier).beginRead();
     final page = await ref
         .watch(feedRepositoryProvider)
         .getFeed(type: arg.apiType);
+    pollRead.acceptAll(page.items.map((post) => post.poll));
     return FeedState(posts: page.items, nextCursor: page.nextCursor);
   }
 
@@ -58,9 +62,11 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
       if (arg == FeedTab.following && ref.read(sessionStateProvider) == null) {
         throw const HttpFailure(401);
       }
+      final pollRead = ref.read(pollStoreProvider.notifier).beginRead();
       final page = await ref
           .read(feedRepositoryProvider)
           .getFeed(type: arg.apiType, refresh: true);
+      pollRead.acceptAll(page.items.map((post) => post.poll));
       return FeedState(posts: page.items, nextCursor: page.nextCursor);
     });
     if (_active && generation == _generation) state = result;
@@ -82,10 +88,12 @@ class FeedNotifier extends AutoDisposeFamilyAsyncNotifier<FeedState, FeedTab> {
       ),
     );
     try {
+      final pollRead = ref.read(pollStoreProvider.notifier).beginRead();
       final page = await ref
           .read(feedRepositoryProvider)
           .getFeed(type: arg.apiType, cursor: current.nextCursor);
       if (!_active || generation != _generation) return;
+      pollRead.acceptAll(page.items.map((post) => post.poll));
       final ids = current.posts.map((post) => post.id).toSet();
       state = AsyncData(
         FeedState(

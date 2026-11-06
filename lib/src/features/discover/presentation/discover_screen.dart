@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_state.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +19,10 @@ final discoverProjectsProvider = FutureProvider.autoDispose<DiscoverPage>(
 final discoverDataProvider = FutureProvider.autoDispose<DiscoverData>((
   ref,
 ) async {
+  ref.watch(sessionStateProvider.select((session) => session?.userId));
+  final pollRead = ref.read(pollStoreProvider.notifier).beginRead();
   final data = await ref.watch(discoverRepositoryProvider).getDiscoverData();
+  pollRead.acceptAll(data.articles.map((post) => post.poll));
   final articles = [
     ...data.articles,
     if (offlineFeatures &&
