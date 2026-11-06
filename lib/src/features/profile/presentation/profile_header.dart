@@ -10,8 +10,11 @@ class ProfileHeader extends StatelessWidget {
   static const _avatarPadding = 5.0;
   static const _avatarTop = _coverHeight - 40;
   static const _identityGap = 12.0;
-  const ProfileHeader({super.key, required this.profile});
+  const ProfileHeader({super.key, required this.profile, this.actions});
   final PublicProfile profile;
+
+  /// Member actions such as follow and block, shown under the bio.
+  final Widget? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +99,10 @@ class ProfileHeader extends StatelessWidget {
                     english ? 'Sample profile' : 'Hồ sơ mẫu',
                     style: VnlfTypography.meta(colors.muted),
                   ),
+                ],
+                if (actions case final actions?) ...[
+                  const SizedBox(height: 14),
+                  actions,
                 ],
                 const SizedBox(height: 20),
                 LayoutBuilder(

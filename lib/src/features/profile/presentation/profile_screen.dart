@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../design_system/design_system.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/public_profile.dart';
+import 'profile_actions.dart';
 import 'profile_content.dart';
 import 'profile_data.dart';
 import 'profile_guestbook.dart';
@@ -63,7 +64,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ]
               : [
-                  ProfileHeader(profile: value),
+                  ProfileHeader(
+                    profile: value,
+                    actions: ProfileActions(
+                      profile: value,
+                      profileKey: widget.username,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   VnlfFeedTabBar(
                     tabs: _tabs(value, english),

@@ -12,6 +12,8 @@ final class PublicProfile {
     this.coverUrl,
     this.guestbookEnabled = true,
     this.isSample = false,
+    this.followedByViewer = false,
+    this.blockedByViewer = false,
   });
   final Author author;
   final String? bio;
@@ -23,6 +25,10 @@ final class PublicProfile {
   final String? coverUrl;
   final bool guestbookEnabled;
   final bool isSample;
+
+  /// Server-reported state for the signed-in viewer; false for guests.
+  final bool followedByViewer;
+  final bool blockedByViewer;
 }
 
 final class ProfileComment {

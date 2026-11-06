@@ -50,6 +50,14 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
                     decor?['guestbookEnabled'],
                     'profile.decor.guestbookEnabled',
                   ),
+            followedByViewer: boolValue(
+              json['followedByViewer'],
+              'profile.followedByViewer',
+            ),
+            blockedByViewer: boolValue(
+              json['blockedByViewer'],
+              'profile.blockedByViewer',
+            ),
           );
         },
       );
