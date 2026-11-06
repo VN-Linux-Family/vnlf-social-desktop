@@ -1,5 +1,7 @@
 import '../../../domain/models.dart';
 
+enum NotificationKind { all, like, comment, follow, system }
+
 final class CommunityNotice {
   const CommunityNotice({
     required this.id,
@@ -41,7 +43,11 @@ final class NotificationsPage {
 }
 
 abstract interface class NotificationsRepository {
-  Future<NotificationsPage> load({String? cursor, bool unreadOnly = false});
+  Future<NotificationsPage> load({
+    String? cursor,
+    bool unreadOnly = false,
+    NotificationKind kind = NotificationKind.all,
+  });
   Future<void> seen();
   Future<void> read({List<String>? ids});
 }

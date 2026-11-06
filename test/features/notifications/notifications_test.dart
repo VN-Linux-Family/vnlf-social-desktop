@@ -1,3 +1,5 @@
+import 'package:vnlfsocialapp/src/features/notifications/domain/notifications_repository.dart';
+
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,33 @@ import 'package:vnlfsocialapp/src/features/notifications/data/live_notifications
 import 'package:vnlfsocialapp/src/features/notifications/presentation/notifications_controller.dart';
 
 void main() {
+  test('server kind filter survives pagination and unread changes', () async {
+    final requests = <ApiRequest>[];
+    final repo = LiveNotificationsRepository(
+      ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        transport: (request) async {
+          requests.add(request);
+          return ApiResponse(
+            statusCode: 200,
+            body: request.method == 'GET'
+                ? '{"items":[],"nextCursor":null}'
+                : '{"ok":true}',
+          );
+        },
+      ),
+    );
+    final controller = NotificationsController(repo);
+    addTearDown(controller.dispose);
+    await controller.refresh(kind: NotificationKind.comment);
+    await controller.refresh(unreadOnly: true);
+    final reads = requests.where((r) => r.method == 'GET').toList();
+    expect(reads.last.query['kind'], 'comment');
+    expect(reads.last.query['filter'], 'unread');
+    expect(controller.state.kind, NotificationKind.comment);
+  });
+
   test('notification mutations require the server acknowledgment', () async {
     var calls = 0;
     var body = '{}';

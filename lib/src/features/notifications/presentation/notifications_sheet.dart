@@ -67,6 +67,57 @@ class NotificationsSheet extends ConsumerWidget {
                           ? null
                           : (value) => controller.refresh(unreadOnly: value),
                     ),
+                    SizedBox(
+                      width: 170,
+                      child: DropdownButton<NotificationKind>(
+                        isExpanded: true,
+                        value: state.kind,
+                        items: [
+                          DropdownMenuItem(
+                            value: NotificationKind.all,
+                            child: Text(
+                              english ? 'All types' : 'Mọi loại',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: NotificationKind.like,
+                            child: Text(
+                              english ? 'Likes' : 'Lượt thích',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: NotificationKind.comment,
+                            child: Text(
+                              english ? 'Comments' : 'Bình luận',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: NotificationKind.follow,
+                            child: Text(
+                              english ? 'Follows' : 'Theo dõi',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: NotificationKind.system,
+                            child: Text(
+                              english ? 'System' : 'Hệ thống',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                        onChanged: state.loading || state.busy
+                            ? null
+                            : (kind) {
+                                if (kind != null) {
+                                  controller.refresh(kind: kind);
+                                }
+                              },
+                      ),
+                    ),
                     TextButton(
                       onPressed:
                           state.busy || state.loading || state.unreadCount == 0

@@ -73,7 +73,8 @@ and the public projects listing with facets, then logged out successfully.
 ## Notifications (pinned source and live read)
 
 The upstream web notification center uses `GET /api/v1/notifications` with
-`limit`, `filter`, and an optional cursor. Its API responds to
+`limit`, `filter`, `kind` (all/like/comment/follow/system), and an optional
+cursor. The native sheet passes both filters to the server. Its API responds to
 `POST /api/v1/notifications/seen` and `/read` with `{ok: true}`. The native
 client now requires that acknowledgment before considering either write
 confirmed. An owner-authenticated read-only notification-list probe succeeded

@@ -27,12 +27,14 @@ final class NotificationsState {
     this.loading = false,
     this.busy = false,
     this.unreadOnly = false,
+    this.kind = NotificationKind.all,
     this.nextCursor,
     this.unreadCount = 0,
     this.failure,
   }) : items = List.unmodifiable(items);
   final List<CommunityNotice> items;
   final bool loading, busy, unreadOnly;
+  final NotificationKind kind;
   final String? nextCursor;
   final int unreadCount;
   final AppFailure? failure;
@@ -42,14 +44,16 @@ final class NotificationsState {
     bool? busy,
     int? unreadCount,
     AppFailure? failure,
+    bool clearFailure = false,
   }) => NotificationsState(
     items: items ?? this.items,
     loading: loading ?? this.loading,
     busy: busy ?? this.busy,
     unreadOnly: unreadOnly,
+    kind: kind,
     nextCursor: nextCursor,
     unreadCount: unreadCount ?? this.unreadCount,
-    failure: failure,
+    failure: clearFailure ? null : failure ?? this.failure,
   );
 }
 
@@ -57,18 +61,24 @@ class NotificationsController extends StateNotifier<NotificationsState> {
   NotificationsController(this._repository) : super(NotificationsState());
   final NotificationsRepository _repository;
   bool _seen = false;
-  Future<void> refresh({bool? unreadOnly}) =>
-      _load(reset: true, unreadOnly: unreadOnly);
+  Future<void> refresh({bool? unreadOnly, NotificationKind? kind}) =>
+      _load(reset: true, unreadOnly: unreadOnly, kind: kind);
   Future<void> loadMore() =>
       state.nextCursor == null ? Future.value() : _load(reset: false);
-  Future<void> _load({required bool reset, bool? unreadOnly}) async {
+  Future<void> _load({
+    required bool reset,
+    bool? unreadOnly,
+    NotificationKind? kind,
+  }) async {
     if (state.loading || state.busy) return;
     final filter = unreadOnly ?? state.unreadOnly;
-    state = state.copy(loading: true);
+    final selectedKind = kind ?? state.kind;
+    state = state.copy(loading: true, clearFailure: true);
     try {
       final page = await _repository.load(
         cursor: reset ? null : state.nextCursor,
         unreadOnly: filter,
+        kind: selectedKind,
       );
       if (!mounted) return;
       state = NotificationsState(
@@ -84,6 +94,7 @@ class NotificationsController extends StateNotifier<NotificationsState> {
             : page.nextCursor,
         unreadCount: page.unreadCount,
         unreadOnly: filter,
+        kind: selectedKind,
       );
       if (!_seen) {
         await _repository.seen();
@@ -98,7 +109,7 @@ class NotificationsController extends StateNotifier<NotificationsState> {
   Future<void> markAllRead() => _read(null);
   Future<void> _read(List<String>? ids) async {
     if (state.busy || state.loading) return;
-    state = state.copy(busy: true);
+    state = state.copy(busy: true, clearFailure: true);
     try {
       await _repository.read(ids: ids);
       if (!mounted) return;

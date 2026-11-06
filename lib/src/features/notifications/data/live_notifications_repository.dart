@@ -12,12 +12,14 @@ final class LiveNotificationsRepository implements NotificationsRepository {
   Future<NotificationsPage> load({
     String? cursor,
     bool unreadOnly = false,
+    NotificationKind kind = NotificationKind.all,
   }) => _client.get(
     '/api/v1/notifications',
     refresh: cursor == null,
     query: {
       'limit': '20',
       'filter': unreadOnly ? 'unread' : 'all',
+      'kind': kind.name,
       'cursor': ?cursor,
     },
     decode: (json) => NotificationsPage(
