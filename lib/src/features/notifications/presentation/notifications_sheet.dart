@@ -277,6 +277,22 @@ String? _route(CommunityNotice item) {
   if (item.targetType == 'USER' && item.actor.username.isNotEmpty) {
     return '/profile/${Uri.encodeComponent(item.actor.username)}';
   }
+  if (item.targetType == 'CONVERSATION' && item.targetId.isNotEmpty) {
+    return '/messages/${Uri.encodeComponent(item.targetId)}';
+  }
+  if (item.targetType == 'FEEDBACK' && item.targetId.isNotEmpty) {
+    return '/feedback/${Uri.encodeComponent(item.targetId)}';
+  }
+  final href = Uri.tryParse(item.href);
+  if (href != null &&
+      !href.hasScheme &&
+      !href.hasAuthority &&
+      href.pathSegments.length == 2 &&
+      href.pathSegments.first == 'projects' &&
+      href.pathSegments.last.isNotEmpty &&
+      href.path.startsWith('/')) {
+    return '/projects/${Uri.encodeComponent(href.pathSegments.last)}';
+  }
   return null;
 }
 
