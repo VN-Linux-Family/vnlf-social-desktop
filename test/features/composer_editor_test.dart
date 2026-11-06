@@ -25,10 +25,11 @@ void main() {
     final style = FleatherTheme.of(
       tester.element(find.byType(FleatherEditor)),
     )!;
-    expect(style.paragraph.style.fontSize, 14);
-    expect(style.paragraph.style.height, 1.65);
-    expect(style.heading2.style.fontSize, 29);
-    expect(style.heading3.style.fontSize, 23);
+    expect(style.paragraph.style.fontSize, 13);
+    expect(style.paragraph.style.height, 1.6);
+    expect(style.heading2.style.fontSize, 13);
+    expect(style.heading2.style.fontWeight, FontWeight.w700);
+    expect(style.heading3.style.fontSize, 13);
   });
   testWidgets(
     'native rich editor formats Vietnamese and emits server content',

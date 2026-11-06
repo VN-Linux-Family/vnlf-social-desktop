@@ -1,6 +1,40 @@
 import '../../../domain/models.dart';
 import 'composer_draft.dart';
 
+ComposerDraft asArticle(ComposerDraft draft) {
+  if (draft.media.any((media) => media.isVideo)) {
+    throw const ParseFailure('composer.videoPostOnly');
+  }
+  if (draft.media.any((media) => !media.isReady)) {
+    throw const ParseFailure('composer.mediaNotReady');
+  }
+  return draft.copyWith(
+    format: 'ARTICLE',
+    media: const [],
+    assets: Map.unmodifiable({
+      ...draft.assets,
+      for (final media in draft.media)
+        media.id: media.copyWith(placement: 'INLINE'),
+    }),
+    document: {
+      ...draft.document,
+      'content': [
+        ...draft.document['content'] as List? ?? const [],
+        for (final media in draft.media)
+          {
+            'type': 'image',
+            'attrs': {
+              'assetId': media.id,
+              'src': media.url,
+              'alt': media.alt,
+              'layout': 'normal',
+            },
+          },
+      ],
+    },
+  );
+}
+
 ComposerDraft asRegularPost(ComposerDraft draft) {
   final attachments = {for (final media in draft.media) media.id: media};
   Map<String, dynamic> convert(Map<String, dynamic> node) {

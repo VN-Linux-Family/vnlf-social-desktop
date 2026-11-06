@@ -7,7 +7,7 @@ import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/data/fixture_repositories.dart';
 import 'package:vnlfsocialapp/src/data/live_post_repository.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
-import 'package:vnlfsocialapp/src/features/shared/presentation/feature_widgets.dart';
+import 'package:vnlfsocialapp/src/features/thread/presentation/thread_mobile_header.dart';
 import 'package:vnlfsocialapp/src/features/shared/presentation/post_share.dart';
 
 void main() {
@@ -134,7 +134,8 @@ void main() {
       final router = await _pumpApp(tester);
       router.go('/thread/fixture-post-1');
       await tester.pumpAndSettle();
-      expect(tester.getTopLeft(find.byType(FeatureHeader)).dy, topInset + 12);
+      expect(tester.getTopLeft(find.byType(ThreadMobileHeader)).dy, topInset);
+      expect(tester.getSize(find.byType(ThreadMobileHeader)).height, 54);
       expect(tester.takeException(), isNull);
     });
   }

@@ -4,6 +4,69 @@ import 'package:vnlfsocialapp/src/features/composer/domain/composer_draft.dart';
 import 'package:vnlfsocialapp/src/features/composer/domain/composer_format.dart';
 
 void main() {
+  test(
+    'switching a post to ARTICLE moves image attachments into document nodes',
+    () {
+      final article = asArticle(
+        const ComposerDraft(
+          id: 'draft',
+          version: 3,
+          media: [
+            DraftMedia(
+              id: 'photo',
+              url: 'https://example.invalid/photo.webp',
+              mime: 'image/webp',
+              alt: 'Ảnh được giữ',
+            ),
+          ],
+          document: {
+            'type': 'doc',
+            'content': [
+              {
+                'type': 'paragraph',
+                'content': [
+                  {'type': 'text', 'text': 'Nội dung'},
+                ],
+              },
+            ],
+          },
+        ),
+      );
+      expect(article.format, 'ARTICLE');
+      expect(article.media, isEmpty);
+      expect(
+        article.assets['photo']!.url,
+        'https://example.invalid/photo.webp',
+      );
+      expect((article.document['content'] as List).last, {
+        'type': 'image',
+        'attrs': {
+          'assetId': 'photo',
+          'src': 'https://example.invalid/photo.webp',
+          'alt': 'Ảnh được giữ',
+          'layout': 'normal',
+        },
+      });
+    },
+  );
+  test('video cannot be converted into an article image', () {
+    expect(
+      () => asArticle(
+        const ComposerDraft(
+          id: 'draft',
+          version: 3,
+          media: [
+            DraftMedia(
+              id: 'video',
+              url: 'https://example.invalid/clip.mp4',
+              mime: 'video/mp4',
+            ),
+          ],
+        ),
+      ),
+      throwsA(isA<ParseFailure>()),
+    );
+  });
   test('article conversion moves asset-backed images into attachments and keeps text', () {
     final post = asRegularPost(
       const ComposerDraft(

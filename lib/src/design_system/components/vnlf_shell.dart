@@ -37,6 +37,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     required this.centerChild,
     this.rightSidebarChild,
     this.centerChildHandlesScroll = false,
+    this.centerPadding,
     this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
     this.onDestinationSelected,
@@ -100,6 +101,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final bool centerChildHandlesScroll;
   final bool showMobileHeader;
   final Widget? rightSidebarChild;
+  final EdgeInsets? centerPadding;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final ThemeMode themeMode;
@@ -225,10 +227,12 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   ),
                   Expanded(
                     child: _scrollArea(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
-                      ),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 20,
+                          ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 1053),
@@ -292,10 +296,12 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   ),
                   Expanded(
                     child: _scrollArea(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
@@ -426,7 +432,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     top: false,
                     bottom: false,
                     child: _scrollArea(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.fromLTRB(12, 12, 12, 20),
                       child: centerChild,
                     ),
                   ),

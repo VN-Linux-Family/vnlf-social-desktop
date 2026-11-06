@@ -330,7 +330,11 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         );
         return;
       }
-      controller.edit(draft.copyWith(format: 'ARTICLE'));
+      try {
+        controller.edit(asArticle(controller.draft));
+      } catch (failure) {
+        setState(() => _pickerError = composerFailureText(failure, en));
+      }
       return;
     }
     final confirmed = await showDialog<bool>(

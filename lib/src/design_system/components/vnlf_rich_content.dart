@@ -17,11 +17,13 @@ class VnlfRichContent extends StatefulWidget {
     this.showImages = false,
     this.selectable = false,
     this.postStyle = false,
+    this.articleDetail = false,
   });
   final Map<String, dynamic> document;
   final bool showImages;
   final bool selectable;
   final bool postStyle;
+  final bool articleDetail;
   @override
   State<VnlfRichContent> createState() => _VnlfRichContentState();
 }
@@ -108,34 +110,88 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
     );
   }
 
-  Widget _node(Map<String, dynamic> node, {int depth = 0}) {
+  double _headingHeight(bool h3) {
+    if (widget.postStyle) return 1.6;
+    if (widget.articleDetail) return h3 ? 1.7 : 1.08;
+    return h3 ? 1.2 : 1.14;
+  }
+
+  EdgeInsets _blockSpacing(Map<String, dynamic> node) {
+    if (widget.postStyle) return EdgeInsets.zero;
+    final compact =
+        widget.articleDetail && MediaQuery.sizeOf(context).width <= 840;
+    if (node['type'] == 'paragraph') {
+      return EdgeInsets.only(
+        bottom: widget.articleDetail ? (compact ? 12 : 18) : 17,
+      );
+    }
+    if (node['type'] != 'heading') return EdgeInsets.zero;
+    if (_attrs(node)['level'] == 3) {
+      return const EdgeInsets.only(top: 24, bottom: 7);
+    }
+    if (widget.articleDetail) {
+      return EdgeInsets.only(top: compact ? 12 : 19, bottom: compact ? 7 : 10);
+    }
+    return const EdgeInsets.only(top: 29, bottom: 9);
+  }
+
+  Widget _node(
+    Map<String, dynamic> node, {
+    int depth = 0,
+    double? leadingMargin,
+  }) {
     final colors = VnlfColors.of(context);
-    final children = _children(node);
+    final body = VnlfTypography.body(colors.ink)
+        .copyWith(height: widget.postStyle ? 1.6 : 1.7);
+    // Empty article paragraphs have no CSS line box. POST keeps explicit breaks.
+    final children = _children(node)
+        .where(
+          (child) =>
+              widget.postStyle ||
+              child['type'] != 'paragraph' ||
+              _children(child).isNotEmpty,
+        )
+        .toList();
     final english = Localizations.localeOf(context).languageCode == 'en';
     Widget blocks() => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
-      children: [for (final child in children) _node(child, depth: depth + 1)],
+      children: [
+        for (var i = 0; i < children.length; i++)
+          _node(
+            children[i],
+            depth: depth + 1,
+            leadingMargin: i == 0
+                ? null
+                : (_blockSpacing(children[i]).top -
+                          _blockSpacing(children[i - 1]).bottom)
+                      .clamp(0, double.infinity)
+                      .toDouble(),
+          ),
+      ],
     );
     switch (node['type']) {
       case 'text':
       case 'hardBreak':
-        return Text.rich(_inline(node), style: VnlfTypography.body(colors.ink));
+        return Text.rich(_inline(node), style: body);
       case 'paragraph':
       case 'heading':
         final heading = node['type'] == 'heading';
-        final style = heading && !widget.postStyle
-            ? (_attrs(node)['level'] == 3
-                  ? VnlfTypography.h3(colors.ink)
-                  : VnlfTypography.h2(colors.ink))
-            : VnlfTypography.body(colors.ink).copyWith(
-                fontWeight: heading ? FontWeight.w700 : FontWeight.w400,
-              );
+        final h3 = _attrs(node)['level'] == 3;
+        final style = body.copyWith(
+          fontWeight: heading ? FontWeight.w700 : FontWeight.w400,
+          height: heading ? _headingHeight(h3) : body.height,
+          letterSpacing: heading && !widget.postStyle
+              ? (h3
+                    ? (widget.articleDetail ? 0 : -.39)
+                    : widget.articleDetail
+                    ? -.65
+                    : -.52)
+              : 0,
+        );
+        final spacing = _blockSpacing(node);
         return Padding(
-          padding: EdgeInsets.only(
-            top: heading && !widget.postStyle ? 10 : 0,
-            bottom: widget.postStyle ? 0 : 8,
-          ),
+          padding: spacing.copyWith(top: leadingMargin ?? spacing.top),
           child: Semantics(
             header: heading,
             child: Text.rich(
@@ -175,7 +231,7 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
                       width: depth > 8 ? 14 : 24,
                       child: Text(
                         node['type'] == 'orderedList' ? '${start + i}.' : '•',
-                        style: VnlfTypography.body(colors.ink),
+                        style: body,
                       ),
                     ),
                     Expanded(child: _node(children[i], depth: depth + 1)),

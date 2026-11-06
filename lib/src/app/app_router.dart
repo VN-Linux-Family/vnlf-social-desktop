@@ -135,7 +135,18 @@ GoRouter createMainRouter() {
               final session =
                   ref.watch(sessionProvider).valueOrNull ??
                   ref.watch(sessionStateProvider);
+              final threadId = state.uri.path.startsWith('/thread/')
+                  ? state.pathParameters['id']
+                  : null;
+              final articleDetail =
+                  threadId != null &&
+                  ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
+                      'ARTICLE';
               return VnlfAdaptiveShell(
+                centerPadding:
+                    threadId != null && MediaQuery.sizeOf(context).width <= 840
+                    ? EdgeInsets.zero
+                    : null,
                 themeMode: ref.watch(themeModeProvider),
                 onThemeModeChanged: (mode) =>
                     ref.read(themeModeProvider.notifier).setThemeMode(mode),
@@ -190,7 +201,8 @@ GoRouter createMainRouter() {
                     ].contains(state.uri.path) ||
                     state.uri.path.startsWith('/thread/') ||
                     state.uri.path.startsWith('/profile/'),
-                rightSidebarChild: state.uri.path.startsWith('/thread/')
+                rightSidebarChild:
+                    state.uri.path.startsWith('/thread/') && !articleDetail
                     ? ThreadSidebar(postId: state.pathParameters['id']!)
                     : state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
