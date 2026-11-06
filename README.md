@@ -26,7 +26,8 @@ tool/with_build_slot.sh flutter analyze
 tool/with_build_slot.sh flutter test --concurrency=1
 ```
 
-Linux secure sessions require libsecret and an available, unlocked Secret Service
+Linux archives require the system GTK 3, libmpv (ABI 2), epoxy and libsecret
+runtimes; they are not self-contained installers. Secure sessions also require an available, unlocked Secret Service
 keyring in the user's desktop session, such as GNOME Keyring or a compatible
 KWallet service. A headless session without that service cannot verify account
 sign-in or secure draft recovery. The app reports storage failures; credentials

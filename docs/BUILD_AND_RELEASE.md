@@ -176,3 +176,28 @@ and SHA-256 digests match its complete manifest (version
 `0.1.0-dev.8.1+be5e59e`). Native video fallback fix `e0ab3e5` passes 403 local
 Flutter tests and a Linux release/runtime check; its hosted builds remain pending.
 Device checks and stable signing remain required.
+
+
+## Linux dependency download recovery — 2026-11-06
+
+Run `42166288373` at `1a82bc7` passed eight binary targets, including macOS and
+Windows on both architectures and all three Android ABIs. Linux x64 timed out
+while APT was downloading dependencies, before app compilation. Automatic private
+publication preserved all eight binaries in draft `ci-42166288373-1`, with
+complete=false and linux-x64 missing. Every uploaded size and SHA-256 digest was
+independently verified against the manifest. Draft releases must be resolved by
+release ID/listing; GitHub's published-release-by-tag endpoint returns 404 for them.
+
+The dependency installer now tries HTTPS Ubuntu archives with bounded index and
+download deadlines, IPv4, retained APT download cache, and signed index/hash
+verification unchanged. It downloads before running one offline package install;
+timeouts terminate the whole subprocess group. ARM64 keeps the Ubuntu ports
+archive. Required mpv/epoxy dependencies remain: the pinned video plugin links to
+system libmpv and epoxy. Twenty-six Python tool checks and actionlint across all
+three workflows pass. The revised hosted Linux installation remains unverified
+until a new workflow run completes.
+
+Linux tar archives require compatible system GTK 3, libmpv ABI 2, epoxy and
+libsecret runtimes. They do not bundle those system libraries. An unlocked Secret
+Service provider is also required for secure account sessions and recovery.
+Portable installer packaging and supported OS baselines remain distribution work.

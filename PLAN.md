@@ -21,7 +21,7 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-425 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
+425 Flutter tests and 26 release-tool tests pass; analysis and formatting pass.
 Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Channels and DMs now share the source-defined searchable directory and explicit routes; the fixture-only channel screen is removed. Phone detail views hide global navigation, direct links never fall back to another conversation, and image selection streams through the owner-bound upload pipeline. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks. Fresh Linux guest captures verify an inline-image article and moving video frames; a recoverable hardware-decoder fallback had incorrectly hidden video and is now fixed with bounded first-frame startup and lifecycle tests.
 
 Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
