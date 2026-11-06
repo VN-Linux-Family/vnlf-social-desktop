@@ -2,24 +2,30 @@ name: Build and publish
 
 on:
   push:
-    branches: [main, 'release/**']
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      build_set:
+        description: 'Targets to package (stable tags always build all nine)'
+        type: choice
+        options: [linux-x64, android, all]
+        default: linux-x64
 
 permissions:
   contents: read
 
 concurrency:
   group: builds-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 env:
   FLUTTER_VERSION: '3.47.9'
-  PRIVATE_RELEASE_REPOSITORY: VN-Linux-Family/vnlf-social-desktop
+  PRIVATE_RELEASE_REPOSITORY: ${{ github.repository }}
   PUBLIC_RELEASE_REPOSITORY: VN-Linux-Family/vnlf-social-app
 
 jobs:
   metadata:
+    if: github.repository == 'luank3/vnlfsocialapp'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -29,12 +35,36 @@ jobs:
       private_release_tag: ${{ steps.version.outputs.private_release_tag }}
       is_stable: ${{ steps.version.outputs.is_stable }}
       artifact_prefix: ${{ steps.version.outputs.artifact_prefix }}
+      desktop_matrix: ${{ steps.targets.outputs.desktop_matrix }}
+      build_desktop: ${{ steps.targets.outputs.build_desktop }}
+      build_android: ${{ steps.targets.outputs.build_android }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: version
         run: python3 tool/release_metadata.py
+      - id: targets
+        env:
+          BUILD_SET: ${{ inputs.build_set || 'all' }}
+        run: python3 tool/build_selection.py
+      - name: Record exact source ref for recovery
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          fields = {'repository': 'GITHUB_REPOSITORY', 'sha': 'GITHUB_SHA',
+                    'run_id': 'GITHUB_RUN_ID', 'attempt': 'GITHUB_RUN_ATTEMPT',
+                    'ref_name': 'GITHUB_REF_NAME', 'ref_type': 'GITHUB_REF_TYPE',
+                    'event': 'GITHUB_EVENT_NAME'}
+          pathlib.Path('build-context.json').write_text(json.dumps({k: os.environ[v] for k, v in fields.items()}))
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: build-context-${{ github.run_attempt }}
+          path: build-context.json
+          if-no-files-found: error
+          retention-days: 35
 
   quality:
+    if: github.repository == 'luank3/vnlfsocialapp'
     runs-on: ubuntu-24.04
     needs: metadata
     timeout-minutes: 20
@@ -50,10 +80,12 @@ jobs:
       - run: git diff --exit-code
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
+      - run: dart run test/core/io_transport_headless_smoke.dart
       - run: flutter test --concurrency=2
       - run: python3 -m unittest discover -s test/tool -p '*_test.py'
 
   desktop:
+    if: github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.build_desktop == 'true'
     name: ${{ matrix.platform }}-${{ matrix.arch }}
     needs: [metadata, quality]
     runs-on: ${{ matrix.runner }}
@@ -61,14 +93,7 @@ jobs:
     strategy:
       fail-fast: false
       max-parallel: 2
-      matrix:
-        include:
-          - {platform: linux, arch: x64, runner: ubuntu-24.04}
-          - {platform: linux, arch: arm64, runner: ubuntu-24.04-arm}
-          - {platform: windows, arch: x64, runner: windows-2025}
-          - {platform: windows, arch: arm64, runner: windows-11-arm}
-          - {platform: macos, arch: x64, runner: macos-15-intel}
-          - {platform: macos, arch: arm64, runner: macos-15}
+      matrix: ${{ fromJSON(needs.metadata.outputs.desktop_matrix) }}
     defaults:
       run:
         shell: bash
@@ -204,9 +229,10 @@ jobs:
           name: binary-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_attempt }}
           path: dist/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
 
   android:
+    if: github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.build_android == 'true'
     name: Android armv7, arm64 and x64
     needs: [metadata, quality]
     runs-on: ubuntu-24.04
@@ -258,11 +284,11 @@ jobs:
           name: binary-android-${{ github.run_attempt }}
           path: dist/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
 
   publish-private:
     name: Store every build in private releases
-    if: ${{ always() && !cancelled() && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
+    if: ${{ always() && !cancelled() && github.repository == 'luank3/vnlfsocialapp' && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
     needs: [metadata, quality, desktop, android]
     runs-on: ubuntu-24.04
     permissions:
@@ -274,7 +300,7 @@ jobs:
       APP_VERSION: ${{ needs.metadata.outputs.version }}
       BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
       SOURCE_SHA: ${{ github.sha }}
-      RELEASE_TAG: ${{ needs.metadata.outputs.private_release_tag }}
+      RELEASE_TAG: ci-${{ github.run_id }}-${{ github.run_attempt }}
       IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -302,6 +328,7 @@ jobs:
           BUILD_COMPLETE: ${{ steps.manifest.outputs.complete }}
         run: |
           test "$GITHUB_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY"
+          gh api "repos/$PRIVATE_RELEASE_REPOSITORY" --jq '.private' | grep -qx true
           if ! gh release view "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
               --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
@@ -320,7 +347,7 @@ jobs:
   publish-public:
     name: Publish complete stable binaries for app updates
     needs: [metadata, publish-private]
-    if: ${{ needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
+    if: ${{ github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}

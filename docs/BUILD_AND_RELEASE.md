@@ -1,7 +1,16 @@
 # Build and release
 
-The source repository is private: `VN-Linux-Family/vnlf-social-desktop`.
-Every build workflow stores its available binaries in a private GitHub release.
+Source commits are pushed to both private repositories:
+`VN-Linux-Family/vnlf-social-desktop` and `luank3/vnlfsocialapp`.
+Only `luank3/vnlfsocialapp` executes workflows. The organization's build and CI
+workflows remain manually disabled; every workflow job also checks the exact
+personal repository before allocating a runner. The repository owner pays for
+Actions, regardless of who pushes or dispatches it.
+Every packaging workflow stores its available binaries in the executing private
+repository's release assets. Organization asset mirroring uses the explicit
+recovery command below or `ORG_RELEASE_TOKEN` after the completion workflow is
+on the personal default branch. No personal Actions secrets are configured yet;
+automatic organization release mirroring is therefore not active.
 Incomplete builds remain drafts with an explicit missing-target inventory.
 Private release tags include run ID and attempt, including stable builds, so reruns
 do not overwrite a previous build. Public stable tags retain their semantic version.
@@ -27,6 +36,16 @@ read-only source reviews and its terminals are closed. Codex owns the single
 build/test slot.
 
 ## CI matrix
+
+Routine checks run once per pull-request update, on main pushes, or on explicit
+dispatch. Feature pushes without a pull request do not start checks. Packaging
+runs only for `v*` tags or explicit dispatch, rather than every main/release push.
+The manual `build_set` defaults to `linux-x64`; `android` builds three APKs and
+`all` builds all nine outputs below. Every tag forces all nine targets, regardless
+of an input. A selected subset remains a private draft with its missing targets
+listed; it cannot become a public stable release. Binary artifact retention is
+three days; the tiny recovery context remains for 35 days to support later
+failed-job reruns. Release assets are retained independently.
 
 - Linux x64: `ubuntu-24.04`; Linux arm64: `ubuntu-24.04-arm`.
 - Windows x64: `windows-2025`; Windows arm64: `windows-11-arm`.
@@ -56,11 +75,14 @@ x64 binary cannot silently be labelled arm64. Ubuntu is pinned because the prior
 `ubuntu-latest` job migrated to Ubuntu 26 and rejected deprecated literal-operator
 syntax in an older dependency's JSON header. Do not disable all compiler warnings
 to mask that failure. Desktop matrix concurrency is capped at two hosted runners. Package-manager calls
-have bounded timeouts. The Linux jobs use Ubuntu's primary HTTPS archive after
-two Azure mirror download stalls; package signatures remain required. Build runs
-finish before newer runs replace them so already
-produced binaries can reach the private release inventory; redundant branch/PR
-quality checks share a cancellation group.
+have bounded timeouts. Linux APT failover rewrites both source files and the
+runner's `apt-mirrors*.txt` files, uses HTTPS and retains signature checks.
+New development dispatches cancel obsolete dispatches on the same ref; stable
+tag builds finish. Recovery preserves available uploaded binaries after a
+cancellation. The full matrix keeps its own quality gate even when PR checks
+have already passed, because a release must validate its exact source commit.
+See [measured CI timings](ci-cost-audit-2026-11-06.md) for the queue/build/cost
+breakdown and the confirmed APT and billing failures.
 
 Quality checks run before packaging. Each build uses a numeric platform build
 number and a separate semantic application version. Stable tags must match
@@ -75,7 +97,7 @@ but GitHub rejected organization repository creation with HTTP 403. An organizat
 owner must create `VN-Linux-Family/vnlf-social-app` as public, initialized with only
 a README. The application source remains private.
 
-Configure the private source repository's Actions secrets:
+Configure `luank3/vnlfsocialapp` Actions secrets:
 
 - `PRIVATE_RELEASE_TOKEN`: needed when building a branch whose workflow changes
   are not on the default branch. Use a fine-grained token scoped only to this
@@ -87,6 +109,13 @@ Configure the private source repository's Actions secrets:
 - `PUBLIC_RELEASE_TOKEN`: a fine-grained token or equivalent app token with
   Contents write permission **only** for the public release repository. The
   private repository's normal `GITHUB_TOKEN` cannot publish to a different repo.
+- `ORG_RELEASE_TOKEN`: optional token scoped only to the organization private
+  repository, with Contents write and Workflows write if tag creation requires
+  it. Source Actions/artifact reads retain the personal repository token;
+  destination release operations alone receive the organization token.
+  Used only by completion recovery to mirror binary assets; it does not execute
+  an organization workflow. Local explicit recovery can mirror assets without
+  installing any token into Actions.
 - `ANDROID_KEYSTORE_BASE64`, `ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD`,
   `ANDROID_KEY_ALIAS`: the intended stable Android signing identity. Keep key
   material out of commits, command output, issue text, and release notes.
@@ -134,12 +163,19 @@ cancellation cannot cancel asset recovery. It becomes automatic after this PR's
 workflow reaches the default branch. It accepts only this repository's own
 push/manual build workflow, downloads inert binary assets, and computes metadata
 from the original commit and exact attempt. Current build artifact names include
-the attempt; recovery never mixes attempts. It never publishes to the public repo.
+the attempt; recovery never mixes attempts. A small build-context artifact binds
+the original ref type, SHA, repository and attempt, so manually dispatched version
+tags and similarly named branches are distinguished without guessing. Failed-only
+reruns retain the successful metadata attempt's version but publish under the new
+attempt's private tag, selecting only binary artifacts from that new attempt.
+Legacy ambiguous manual version refs fail explicitly. It never publishes to the public repo.
 
 Until the workflow is on the default branch, recover a completed run explicitly:
 
 ```sh
-tool/with_build_slot.sh python3 tool/publish_private_build.py --run-id RUN_ID --attempt ATTEMPT
+tool/with_build_slot.sh python3 tool/publish_private_build.py --repo luank3/vnlfsocialapp --run-id RUN_ID --attempt ATTEMPT
+# Mirror the same completed build to organization release assets, without an org workflow:
+tool/with_build_slot.sh python3 tool/publish_private_build.py --repo luank3/vnlfsocialapp --release-repo VN-Linux-Family/vnlf-social-desktop --run-id RUN_ID --attempt ATTEMPT
 ```
 
 ARM source SDK checkout must retain the verified official release tag; a detached

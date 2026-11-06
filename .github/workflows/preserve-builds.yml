@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   preserve:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_repository.full_name == github.repository
+    if: github.repository == 'luank3/vnlfsocialapp' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
@@ -38,4 +38,15 @@ jobs:
         with:
           persist-credentials: false
       - name: Preserve available binaries without executing artifact contents
-        run: python3 tool/publish_private_build.py --run-id "$BUILD_RUN_ID" --attempt "$BUILD_RUN_ATTEMPT"
+        run: python3 tool/publish_private_build.py --repo "$GITHUB_REPOSITORY" --run-id "$BUILD_RUN_ID" --attempt "$BUILD_RUN_ATTEMPT"
+      - name: Mirror binaries to the organization when a scoped token is configured
+        env:
+          RELEASE_GH_TOKEN: ${{ secrets.ORG_RELEASE_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_GH_TOKEN" ]]; then
+            echo '::notice::Organization release mirroring requires ORG_RELEASE_TOKEN or explicit CLI recovery; source pushes remain mirrored.'
+            exit 0
+          fi
+          python3 tool/publish_private_build.py --repo "$GITHUB_REPOSITORY" \
+            --release-repo VN-Linux-Family/vnlf-social-desktop \
+            --run-id "$BUILD_RUN_ID" --attempt "$BUILD_RUN_ATTEMPT"

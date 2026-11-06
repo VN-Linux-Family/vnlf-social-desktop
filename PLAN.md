@@ -21,13 +21,22 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-425 Flutter tests and 26 release-tool tests pass; analysis and formatting pass.
+425 Flutter tests and 37 release-tool tests pass; analysis, formatting, all three
+workflow definitions, and the plain Dart HTTP/auth fixture smoke check pass.
 Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Channels and DMs now share the source-defined searchable directory and explicit routes; the fixture-only channel screen is removed. Phone detail views hide global navigation, direct links never fall back to another conversation, and image selection streams through the owner-bound upload pipeline. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks. Fresh Linux guest captures verify an inline-image article and moving video frames; a recoverable hardware-decoder fallback had incorrectly hidden video and is now fixed with bounded first-frame startup and lifecycle tests.
 
 Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
 `--concurrency=1`. Gradle heap 1536 MB, two workers, no daemon. Full hosted build
 matrix uses native x64/arm64 runners and three Android ABIs, with an artifact
-inventory and checksums. All nine native build targets passed in hosted run
+inventory and checksums. Source is pushed to both private repositories, but all
+workflow jobs are restricted to `luank3/vnlfsocialapp`; the organization's two
+registered workflows remain manually disabled. Feature PR checks run once;
+packaging runs on explicit dispatch (Linux x64 by default, optional Android/all)
+or release tags (all nine). The CI timing review separates matrix queueing,
+execution and estimated allowance usage in `docs/ci-cost-audit-2026-11-06.md`.
+The runner mirror-list omission is reproduced and fixed locally; the corrected
+x64 dependency install still requires hosted validation. No new full matrix is
+dispatched for this migration. All nine native build targets passed in hosted run
 42163419636 at the messaging checkpoint and were automatically published in private prerelease `ci-42163419636-1`; uploaded sizes and SHA-256 digests match its complete manifest. Windows
 uses Media Foundation on both architectures. Earlier source-branch release creation hit GitHub's workflow-file permission guard; scoped publishing credentials and explicit private recovery remain documented. Public repository creation failed with organization
 HTTP 403; an owner must create it and configure scoped publishing and stable
@@ -38,6 +47,14 @@ Remaining work is tracked in `docs/source-parity-audit.md` and
 live-account checks, poll authoring/live checks, notification/report runtime checks, DM live verification, recovery and realtime wiring, fuller profile/settings/projects/chat support,
 remaining device media/voice, visual parity/performance and signing
 remain release gates. Do not replace these with simulated success states.
+
+Live owner verification: production HTTP/auth repositories authenticated the
+authorized owner, confirmed the matching session, logged out and confirmed an
+empty session afterward. Credentials and cookies stayed in anonymous stdin and
+memory; no content was posted. Desktop keyring persistence and live DM/poll
+writes are separate unverified gates. The HTTP SessionStorage interface is now
+independent of Flutter platform plugins so that this verification also runs in
+plain Dart; secure native storage remains the application's implementation.
 
 ---
 
