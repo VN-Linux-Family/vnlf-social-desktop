@@ -44,3 +44,13 @@ connect that path when the verified community socket is integrated.
 Use synthetic repositories first. Live validation uses the owner's account and
 its own test content or the controlled-recipient conversation. Remove all new
 test writes and preserve existing content as required by the task authorization.
+
+## Foundation evidence
+
+Domain/DTO/repository and owner-scoped shared state are implemented. Twelve
+focused tests and analysis pass. They cover exact payloads, missing/unrelated
+acknowledgments, no automatic write retry, immutable parsing/input normalization,
+single-flight writes, retained state on failure, older/in-flight read rejection,
+account reset, and peer viewer-choice preservation. Parent model/provider/UI
+integration is still in progress; the existing placeholder is not counted as a
+working poll feature. No live poll writes have been made.

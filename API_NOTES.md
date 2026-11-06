@@ -488,3 +488,29 @@ The account-change and malformed-completion regressions pass, along with the
 relevant authentication/request and DM tests. These checks use synthetic data;
 no live upload was submitted. The owner named a controlled DM recipient for a
 later live check; only created test content may be cleaned up.
+
+## Poll contracts verified from pinned source — 2026-11-06
+
+Reference: project 86991275, commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3`, contracts `polls.ts`, API modules
+`polls.ts` and `articles.ts`, API library `polls.ts`, and web poll card.
+
+- Poll DTO: id, question, options(id/label/votes), totalVotes, nullable
+  viewerOptionId. Article and chat DTOs contain an optional nullable poll.
+- POST `/api/v1/polls/:id/vote`: `{optionId: UUID|null}`; full Poll DTO acknowledgment.
+  Voting for a different option changes the choice; null removes it.
+- PUT `/api/v1/polls/:id`: `{question, options: string[]}`; full Poll DTO.
+  Author only, before any votes; `POLL_HAS_VOTES` rejects an edit after voting.
+  Editing replaces option identities. This route also works on published posts.
+- PUT `/api/v1/articles/:id/poll`: `{poll: PollInput|null}`; acknowledgment
+  `{poll: PollDto|null}`. The owner may set/remove it only when publishedAt is
+  absent. `POLL_LOCKED` rejects an article that has previously been published.
+- Input limits: question 200 UTF-16 units, choices 100 each, two to six choices.
+  Source cleanup collapses whitespace, trims, removes empty choices and
+  de-duplicates case-sensitively. Native inputs validate before sending.
+- Percentages are visible after this viewer votes; total votes remain visible.
+  Peer realtime DTOs retain this viewer's selection rather than adopting the
+  broadcaster's viewerOptionId.
+
+Typed native repository/state checks use synthetic data only. Live poll mutation
+behavior, composer integration and native visual parity are not yet verified.
