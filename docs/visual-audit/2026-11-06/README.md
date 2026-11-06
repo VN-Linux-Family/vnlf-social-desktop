@@ -47,3 +47,52 @@ passed. Build processes were capped at 3 GiB and 150% of one CPU; capture at
 1 GiB and 100%, with one shared SDK slot. App/Xvfb capture processes stopped
 on completion. No Flutter overflow/exception was logged. The headless GTK ATK
 embedding warning leaves assistive-technology behavior unverified.
+
+## Communication and public media runtime review
+
+Messaging checkpoint: `be5e59e`. The combined directory and explicit routes run
+through the same widgets used in production. These Linux captures use synthetic
+account/history data and a transport that rejects mutations; they do not prove
+live delivery or a complete authenticated website comparison.
+
+| Desktop | Phone |
+| --- | --- |
+| [![Communication desktop](native-communication-desktop.png)](native-communication-desktop.png) | [![Communication phone](native-communication-mobile.png)](native-communication-mobile.png) |
+
+The source defines one searchable channel/DM directory, persistent channel
+collapse, a 240px desktop/205px intermediate rail and a 54px chat header. Actual
+route tests cover those widths, phone list/detail navigation, 1.6 text scaling,
+request acknowledgment followed by read failure, and direct links that must not
+open or mark another conversation read. Live-account checks stopped before a
+request because this desktop session has no Secret Service keyring available.
+
+A public article with an inline asset now renders that image in the native Linux
+reader. Both website and native captures are guest reads of
+`https://vietnamlinuxfamily.net/a/toi-yeu-futon-vailon`.
+
+| Size | Website | Native Flutter |
+| --- | --- | --- |
+| Desktop | [![Website image article](web-image-article-desktop.png)](web-image-article-desktop.png) | [![Native image article](native-image-article-desktop.png)](native-image-article-desktop.png) |
+| Phone | [![Website image article phone](web-image-article-mobile.png)](web-image-article-mobile.png) | [![Native image article phone](native-image-article-mobile.png)](native-image-article-mobile.png) |
+
+The runtime video check found and reproduced a separate playback bug. MediaKit
+reported a failed hardware codec attempt, then successfully decoded in software:
+the diagnostic advanced to 8,933ms at 1280×1280. The app had treated every error
+stream message as fatal and hidden its video surface. Fix `e0ab3e5` keeps the
+surface mounted, waits for the first-frame signal, bounds startup, and disposes
+stale/failed sessions. Six lifecycle/startup checks and all 403 Flutter tests pass;
+formatting, analysis and dependency resolution pass.
+
+The same public post (`01a1abd2-8b4f-7f8a-90a5-ce4df94697d1`) then played in the
+actual native reader. The following unchanged captures, three seconds apart,
+show different video frames. Poster display alone was not counted as playback.
+
+| Poster | Playing, first capture | Playing, second capture |
+| --- | --- | --- |
+| [![Video poster](native-video-before.png)](native-video-before.png) | [![Playing video first](native-video-playing-1.png)](native-video-playing-1.png) | [![Playing video second](native-video-playing-2.png)](native-video-playing-2.png) |
+
+Capture processes and their Xvfb instances exited afterward. Native runtime logs
+contain no Flutter overflow/exception. Headless software-renderer/audio warnings
+remain environment limitations; audible output and physical-device performance
+are unverified. Article quote/image spacing, shell placement, authenticated chat
+styling, profiles/decorations and the other parity-audit gates remain open.

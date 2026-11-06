@@ -31,7 +31,7 @@ server with the authorized account, followed by cleanup.
 | Website surface | Native status / remaining gate |
 | --- | --- |
 | Auth/session | Login/logout/session storage implemented; device and expiry checks remain. |
-| Feed and article detail | Live loading and structured native rendering; media states, link previews, polls, and visual comparison remain. |
+| Feed and article detail | Live loading and structured native rendering. Guest Linux captures verify inline images and moving video frames after fixing decoder-fallback handling. More device/media states, link previews, polls and remaining visual differences still need work. |
 | Comments | Persistence verified and test content cleaned; flattened replies and stable retry identity tested. Votes/edit/delete/pin and media display now implemented with failure, permission, acknowledgment and session tests; live checks, media uploads, mention suggestions and sticker packs remain. |
 | Post actions | Vote/bookmark confirmed, rollback and session guards tested; reporting now uses a validated, server-confirmed dialog with retry/error coverage. |
 | Publishing | Native rich composer, versioned autosave, owner-partitioned secure recovery, conflict handling, stable publish identity, images/cover/video processing and format conversion implemented and tested. Live UI write/cleanup checks, polls and advanced editor features remain. |

@@ -167,6 +167,10 @@ and automatic private release publication for the native composer checkpoint.
 Private prerelease `ci-42079702029-1` contains all nine binaries plus release.json
 and SHA256SUMS. Each uploaded binary's server-reported SHA-256 digest and size
 was independently compared with release.json; complete=true, no missing targets.
-No manual recovery was needed for that run. Subsequent live-article typography
-and layout, comment-control and session-isolation changes pass 362 local Flutter tests and analysis; they need their own
-hosted checkpoint. Device checks and stable signing remain required.
+No manual recovery was needed for that run. Run `42134094762` at `d6c24db` subsequently passed all nine binary targets,
+quality checks and automatic private publication in `ci-42134094762-1`; every
+uploaded SHA-256 digest and size matches its complete manifest. The newer
+messaging checkpoint `be5e59e` is running in `42163419636`; do not report its
+unfinished targets as passed. Native video fallback fix `e0ab3e5` passes 403 local
+Flutter tests and a Linux release/runtime check; its hosted builds remain pending.
+Device checks and stable signing remain required.
