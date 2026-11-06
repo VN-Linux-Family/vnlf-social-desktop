@@ -12,7 +12,7 @@ import '../core/request_identity.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/composer/presentation/composer_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
-import '../features/channels/presentation/channel_directory.dart';
+import '../features/direct_messages/presentation/direct_messages_screen.dart';
 import '../features/discover/presentation/discover_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
@@ -124,12 +124,20 @@ GoRouter createMainRouter() {
                   VnlfNavDestination.voice: 'Voice',
                   VnlfNavDestination.projects: 'Dự án',
                 };
-          final active =
-              destinations.entries
-                  .where((entry) => entry.value == state.uri.path)
-                  .map((entry) => entry.key)
-                  .firstOrNull ??
-              VnlfNavDestination.feed;
+          final communication =
+              state.uri.path == '/channels' ||
+              state.uri.path.startsWith('/channels/') ||
+              state.uri.path == '/messages' ||
+              state.uri.path.startsWith('/messages/');
+          final communicationDetail =
+              communication && state.uri.path.split('/').length > 2;
+          final active = communication
+              ? VnlfNavDestination.messages
+              : destinations.entries
+                        .where((entry) => entry.value == state.uri.path)
+                        .map((entry) => entry.key)
+                        .firstOrNull ??
+                    VnlfNavDestination.feed;
           return Consumer(
             builder: (context, ref, _) {
               final session =
@@ -143,8 +151,12 @@ GoRouter createMainRouter() {
                   ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
                       'ARTICLE';
               return VnlfAdaptiveShell(
+                centerMaxWidth: communication ? double.infinity : 1053,
+                showMobileBottomNav: !communicationDetail,
                 centerPadding:
-                    threadId != null && MediaQuery.sizeOf(context).width <= 840
+                    communication ||
+                        threadId != null &&
+                            MediaQuery.sizeOf(context).width <= 840
                     ? EdgeInsets.zero
                     : null,
                 themeMode: ref.watch(themeModeProvider),
@@ -180,15 +192,19 @@ GoRouter createMainRouter() {
                     context.push('/login');
                   }
                 },
-                showMobileHeader: const [
-                  '/',
-                  '/leaderboard',
-                  '/projects',
-                  '/discover',
-                  '/channels',
-                  '/voice',
-                ].contains(state.uri.path),
+                showMobileHeader:
+                    !communicationDetail &&
+                    const [
+                      '/',
+                      '/leaderboard',
+                      '/projects',
+                      '/discover',
+                      '/channels',
+                      '/messages',
+                      '/voice',
+                    ].contains(state.uri.path),
                 centerChildHandlesScroll:
+                    communication ||
                     const [
                       '/',
                       '/leaderboard',
@@ -206,8 +222,6 @@ GoRouter createMainRouter() {
                     ? ThreadSidebar(postId: state.pathParameters['id']!)
                     : state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
-                    : state.uri.path == '/channels'
-                    ? const ActiveCommunityMembers()
                     : null,
                 destinationLabels: labels,
                 brandTitlePrefix: 'VNLF ',
@@ -295,6 +309,25 @@ GoRouter createMainRouter() {
             path: '/channels',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ChannelsScreen()),
+          ),
+          GoRoute(
+            path: '/channels/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ChannelsScreen(channelSlug: state.pathParameters['slug']),
+            ),
+          ),
+          GoRoute(
+            path: '/messages',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DirectMessagesScreen()),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: DirectMessagesScreen(
+                conversationId: state.pathParameters['id'],
+              ),
+            ),
           ),
           GoRoute(
             path: '/voice',

@@ -145,7 +145,7 @@ class DmInboxController extends StateNotifier<DmInboxState> {
     state = state.copyWith(conversations: next);
     final selected = _readSelectedConversationId?.call();
     if (selected == conversationId) {
-      _onSelectConversation?.call(next.firstOrNull?.id);
+      _onSelectConversation?.call(null);
     }
   }
 
@@ -154,7 +154,7 @@ class DmInboxController extends StateNotifier<DmInboxState> {
     if (selected != null && items.any((item) => item.id == selected)) {
       return;
     }
-    _onSelectConversation?.call(items.firstOrNull?.id);
+    if (selected != null) _onSelectConversation?.call(null);
   }
 }
 

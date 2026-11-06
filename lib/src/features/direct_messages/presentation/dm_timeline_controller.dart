@@ -212,7 +212,13 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
         uploadingAttachment: false,
         pendingAttachments: <DmUploadedAsset>[
           ...state.pendingAttachments,
-          uploaded,
+          DmUploadedAsset(
+            assetId: uploaded.assetId,
+            fileName: file.name,
+            status: uploaded.status,
+            mime: uploaded.mime,
+            size: uploaded.size,
+          ),
         ],
       );
     } catch (error) {

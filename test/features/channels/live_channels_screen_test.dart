@@ -168,7 +168,9 @@ Future<void> pump(
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(body: SafeArea(child: LiveChannelsScreen())),
+        home: const Scaffold(
+          body: SafeArea(child: LiveChannelsScreen(channelSlug: 'linux')),
+        ),
       ),
     ),
   );

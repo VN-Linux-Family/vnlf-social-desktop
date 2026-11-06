@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../app/providers.dart';
+import 'dm_attachment_picker.dart';
 import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_state.dart';
@@ -18,6 +20,68 @@ class DirectMessageComposer extends ConsumerStatefulWidget {
 
 class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
   final TextEditingController _input = TextEditingController();
+  bool _selecting = false;
+  String? _pickerError;
+
+  Future<void> _pick() async {
+    if (_selecting) return;
+    final owner = ref.read(sessionStateProvider)?.userId;
+    if (owner == null) return;
+    final controller = ref.read(
+      dmTimelineProvider(widget.conversationId).notifier,
+    );
+    final en = Localizations.localeOf(context).languageCode == 'en';
+    bool current() =>
+        mounted &&
+        ref.read(sessionStateProvider)?.userId == owner &&
+        identical(
+          controller,
+          ref.read(dmTimelineProvider(widget.conversationId).notifier),
+        );
+    setState(() {
+      _selecting = true;
+      _pickerError = null;
+    });
+    try {
+      final files = await ref.read(dmAttachmentPickerProvider)();
+      if (!current()) return;
+      final remaining =
+          4 -
+          ref
+              .read(dmTimelineProvider(widget.conversationId))
+              .pendingAttachments
+              .length;
+      if (files.length > remaining) {
+        setState(
+          () => _pickerError = en
+              ? 'Attach up to four images per message.'
+              : 'Mỗi tin nhắn có tối đa bốn ảnh.',
+        );
+        return;
+      }
+      for (final file in files) {
+        if (!current()) return;
+        await controller.uploadAndAttach(file);
+        if (!current() ||
+            ref
+                    .read(dmTimelineProvider(widget.conversationId))
+                    .operationFailure !=
+                null) {
+          break;
+        }
+      }
+    } catch (_) {
+      if (current()) {
+        setState(
+          () => _pickerError = en
+              ? 'Could not open the selected images. Please try again.'
+              : 'Không mở được ảnh đã chọn. Vui lòng thử lại.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _selecting = false);
+    }
+  }
 
   @override
   void initState() {
@@ -157,6 +221,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
 
     final peerName = conversation?.peer.displayName ?? '';
     final canSubmit =
+        !_selecting &&
         !state.sending &&
         !state.uploadingAttachment &&
         state.busyMessageId == null &&
@@ -175,6 +240,14 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          if (_pickerError != null)
+            Text(
+              _pickerError!,
+              key: const Key('dm-picker-error'),
+              style: TextStyle(color: colors.red),
+            ),
+          if (_selecting || state.uploadingAttachment)
+            const LinearProgressIndicator(),
           if (conversation != null &&
               conversation.isAwaitingAcceptance &&
               conversation.status == DmConversationStatus.requested)
@@ -222,7 +295,9 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                   for (final asset in state.pendingAttachments)
                     InputChip(
                       label: Text(
-                        '${dmText(context, 'Ảnh', 'Image')} (${asset.mime})',
+                        asset.fileName.isEmpty
+                            ? dmText(context, 'Ảnh đính kèm', 'Attached image')
+                            : asset.fileName,
                       ),
                       onDeleted: state.sending
                           ? null
@@ -236,6 +311,18 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: <Widget>[
+              IconButton(
+                key: const Key('dm-attach-button'),
+                tooltip: dmText(context, 'Đính kèm ảnh', 'Attach images'),
+                onPressed:
+                    _selecting ||
+                        state.uploadingAttachment ||
+                        state.sending ||
+                        state.pendingAttachments.length >= 4
+                    ? null
+                    : _pick,
+                icon: const Icon(Icons.add_photo_alternate_outlined),
+              ),
               Expanded(
                 child: TextField(
                   key: const Key('dm-chat-input'),

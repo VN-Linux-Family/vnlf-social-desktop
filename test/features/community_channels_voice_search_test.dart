@@ -1,9 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
+import 'package:vnlfsocialapp/src/app/providers.dart';
+import 'package:vnlfsocialapp/src/core/api_client.dart';
+
+import 'channels/live_channels_test.dart' show channelJson, messageJson;
+
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/projects/presentation/projects_screen.dart';
@@ -17,41 +24,97 @@ void main() {
     expect(find.byKey(const Key('search-input')), findsOneWidget);
   });
 
-  testWidgets('channel switch isolates messages and retains local sends', (
-    tester,
-  ) async {
-    await _pump(tester, '/channels');
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#hoi-dap-linux'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('chat-input')),
-      'Tiếng Việt: ặ ữ ờ ẫ ệ',
-    );
-    await tester.pump();
-    await tester.tap(find.byTooltip('Gửi tin nhắn'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('chat-input')))
-          .controller!
-          .text,
-      isEmpty,
-    );
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#chung'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsNothing);
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#hoi-dap-linux'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'channel routes isolate history and retain acknowledged server sends',
+    (tester) async {
+      const owner = Session(userId: 'me', displayName: 'Một', role: 'MEMBER');
+      final saved = <Map<String, dynamic>>[];
+      var sends = 0;
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        cacheDuration: Duration.zero,
+        transport: (request) async {
+          Object data = {'items': <Object?>[], 'nextCursor': null};
+          if (request.path == '/api/v1/channels') {
+            data = {
+              'items': [
+                {
+                  ...channelJson,
+                  'id': 'channel-1',
+                  'slug': 'chung',
+                  'name': 'Chung',
+                  'minRoleToPost': 'MEMBER',
+                },
+                {
+                  ...channelJson,
+                  'id': 'channel-2',
+                  'slug': 'hoi-dap-linux',
+                  'name': 'Hỏi đáp Linux',
+                  'minRoleToPost': 'MEMBER',
+                },
+              ],
+            };
+          } else if (request.path == '/api/v1/channels/channel-2/messages') {
+            if (request.method == 'POST') {
+              sends++;
+              final body = jsonDecode(request.body!) as Map<String, dynamic>;
+              saved.add({
+                ...messageJson,
+                'id': 'created-1',
+                'content': body['content'],
+                'clientMessageId': body['clientMessageId'],
+              });
+              data = saved.last;
+            } else {
+              data = {'items': saved, 'nextCursor': null};
+            }
+          }
+          return ApiResponse(statusCode: 200, body: jsonEncode(data));
+        },
+      );
+      final router = await _pump(
+        tester,
+        '/channels',
+        overrides: [
+          sessionStateProvider.overrideWith((ref) => owner),
+          sessionProvider.overrideWithValue(const AsyncData(owner)),
+          apiClientProvider.overrideWithValue(client),
+        ],
+      );
+      await tester.tap(
+        find.byKey(const Key('communication-channel-channel-2')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('chat-input')),
+        'Tiếng Việt: ặ ữ ờ ẫ ệ',
+      );
+      await tester.pump();
+      await tester.tap(find.byTooltip('Gửi tin nhắn'));
+      await tester.pumpAndSettle();
+      expect(sends, 1);
+      expect(saved.single['content'], 'Tiếng Việt: ặ ữ ờ ẫ ệ');
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('chat-input')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      router.go('/channels/chung');
+      await tester.pumpAndSettle();
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsNothing);
+      router.go('/channels/hoi-dap-linux');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Làm mới tin nhắn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(sends, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('voice join enables mute, deafen, share and leave controls', (
     tester,
@@ -239,7 +302,7 @@ void main() {
         expect(find.text('Màn hình này chưa có nội dung.'), findsNothing);
         expect(tester.takeException(), isNull);
         if (route == '/channels' && width == 1440) {
-          expect(find.text('Đang hoạt động'), findsOneWidget);
+          expect(find.text('Đăng nhập để xem kênh cộng đồng'), findsOneWidget);
         }
       });
     }

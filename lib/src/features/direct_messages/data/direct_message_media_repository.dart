@@ -149,6 +149,7 @@ final class DirectMessageMediaRepository {
 
     return DmUploadedAsset(
       assetId: completedId,
+      fileName: name,
       status: status,
       mime: mime,
       size: file.length,

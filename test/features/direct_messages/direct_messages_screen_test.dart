@@ -16,6 +16,73 @@ import 'direct_message_repository_test.dart'
     show sampleConversationJson, sampleMessageJson;
 
 void main() {
+  testWidgets('collection does not open or mark the first conversation read', (
+    tester,
+  ) async {
+    final paths = <String>[];
+    await _pumpDmScreen(
+      tester,
+      signedIn: true,
+      conversationId: null,
+      transport: (request) async {
+        paths.add(request.path);
+        if (request.path == '/api/v1/dm/conversations') {
+          return _reply({
+            'items': [sampleConversationJson],
+          });
+        }
+        if (request.path == '/api/v1/channels') {
+          return _reply({'items': <Object?>[]});
+        }
+        if (request.path == '/api/v1/dm/conversations/conv-1') {
+          return _reply(sampleConversationJson);
+        }
+        return _reply({
+          'items': [sampleMessageJson],
+          'nextCursor': null,
+        });
+      },
+    );
+    expect(paths.where((path) => path.contains('/conversations/')), isEmpty);
+    expect(find.byKey(const Key('dm-chat-input')), findsNothing);
+  });
+
+  testWidgets(
+    'a missing direct conversation never falls back to another inbox row',
+    (tester) async {
+      final paths = <String>[];
+      await _pumpDmScreen(
+        tester,
+        signedIn: true,
+        conversationId: 'conv-missing',
+        transport: (request) async {
+          paths.add(request.path);
+          if (request.path == '/api/v1/dm/conversations') {
+            return _reply({
+              'items': [sampleConversationJson],
+            });
+          }
+          if (request.path == '/api/v1/channels') {
+            return _reply({'items': <Object?>[]});
+          }
+          if (request.path.contains('conv-missing')) {
+            return ApiResponse(statusCode: 404, body: '{}');
+          }
+          if (request.path == '/api/v1/dm/conversations/conv-1') {
+            return _reply(sampleConversationJson);
+          }
+          return _reply({
+            'items': [sampleMessageJson],
+            'nextCursor': null,
+          });
+        },
+      );
+      expect(paths.any((path) => path.contains('conv-missing')), isTrue);
+      expect(paths.any((path) => path.contains('conv-1')), isFalse);
+      expect(find.byKey(const Key('dm-chat-input')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets(
     'guest sees sign-in state card without firing any DM network requests',
     (tester) async {
@@ -168,6 +235,7 @@ Future<void> _pumpDmScreen(
   WidgetTester tester, {
   required ApiTransport transport,
   required bool signedIn,
+  String? conversationId = 'conv-1',
 }) async {
   tester.view.physicalSize = const Size(900, 850);
   tester.view.devicePixelRatio = 1;
@@ -196,7 +264,11 @@ Future<void> _pumpDmScreen(
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(body: SafeArea(child: DirectMessagesScreen())),
+        home: Scaffold(
+          body: SafeArea(
+            child: DirectMessagesScreen(conversationId: conversationId),
+          ),
+        ),
       ),
     ),
   );

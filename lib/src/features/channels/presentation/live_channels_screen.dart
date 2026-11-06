@@ -7,130 +7,125 @@ import '../../../design_system/design_system.dart';
 import '../domain/channel_models.dart';
 import 'channel_feedback.dart';
 import 'live_channel_composer.dart';
-import 'live_channel_directory.dart';
+import '../../communication/presentation/communication_directory.dart';
 import 'live_channel_state.dart';
 import 'live_message_tile.dart';
 
 class LiveChannelsScreen extends ConsumerWidget {
-  const LiveChannelsScreen({super.key});
+  const LiveChannelsScreen({super.key, this.channelSlug});
+  final String? channelSlug;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(sessionStateProvider);
     if (session == null) {
       return Center(
-        child: SingleChildScrollView(
-          child: VnlfStateCard(
-            icon: Icons.forum_outlined,
-            title: channelText(
-              context,
-              'Đăng nhập để xem kênh cộng đồng',
-              'Sign in to view community channels',
-            ),
-            message: channelText(
-              context,
-              'Kênh và lịch sử trò chuyện chỉ dành cho thành viên.',
-              'Channels and chat history are available to members.',
-            ),
-            actionLabel: channelText(context, 'Đăng nhập', 'Sign in'),
-            onAction: () => context.push('/login'),
+        child: VnlfStateCard(
+          icon: Icons.forum_outlined,
+          title: channelText(
+            context,
+            'Đăng nhập để xem kênh cộng đồng',
+            'Sign in to view community channels',
           ),
+          message: channelText(
+            context,
+            'Kênh và lịch sử trò chuyện chỉ dành cho thành viên.',
+            'Channels and chat history are available to members.',
+          ),
+          actionLabel: channelText(context, 'Đăng nhập', 'Sign in'),
+          onAction: () => context.push('/login'),
         ),
       );
     }
     final channels = ref.watch(liveChannelsProvider);
-    return Column(
-      children: [
-        VnlfCenterPageHeader(
-          title: channelText(context, 'Kênh & trò chuyện', 'Channels & chat'),
-        ),
-        Expanded(
-          child: channels.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: SingleChildScrollView(
-                child: VnlfStateCard(
-                  icon: Icons.cloud_off_outlined,
-                  title: channelText(
-                    context,
-                    'Không tải được kênh',
-                    'Channels could not be loaded',
-                  ),
-                  message: channelFailure(context, error),
-                  isError: true,
-                  actionLabel: channelText(context, 'Thử lại', 'Try again'),
-                  onAction: () {
-                    ref.read(apiClientProvider).clearCache();
-                    ref.invalidate(liveChannelsProvider);
-                  },
-                ),
-              ),
-            ),
-            data: (items) {
-              if (items.isEmpty) {
-                return Center(
-                  child: Text(
-                    channelText(context, 'Chưa có kênh', 'No channels yet'),
-                  ),
-                );
-              }
-              final sorted = [...items]
-                ..sort((a, b) => a.position.compareTo(b.position));
-              final selected = ref.watch(liveSelectedChannelProvider);
-              final channel =
-                  sorted.where((c) => c.id == selected).firstOrNull ??
-                  sorted.first;
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 700;
-                  return Row(
-                    children: [
-                      if (wide) ...[
-                        const SizedBox(
-                          width: 210,
-                          child: LiveChannelDirectory(),
-                        ),
-                        const VerticalDivider(width: 12),
-                      ],
-                      Expanded(
-                        child: Column(
-                          children: [
-                            ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
+    final channel = channels.valueOrNull
+        ?.where((item) => item.slug == channelSlug && !item.isArchived)
+        .firstOrNull;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = MediaQuery.sizeOf(context).width;
+        final wide = viewport > 840 && constraints.maxWidth >= 650;
+        final directory = CommunicationDirectory(activeChannelId: channel?.id);
+        if (!wide && channelSlug == null) return directory;
+        return Row(
+          children: [
+            if (wide) ...[
+              SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
+              const VerticalDivider(width: 1),
+            ],
+            Expanded(
+              child: channel == null
+                  ? Center(
+                      child: channels.isLoading
+                          ? const CircularProgressIndicator()
+                          : channelSlug == null
+                          ? Text(
+                              channelText(
+                                context,
+                                'Chọn một kênh hoặc cuộc trò chuyện',
+                                'Choose a channel or conversation',
                               ),
-                              leading: wide
-                                  ? null
-                                  : IconButton(
-                                      tooltip: channelText(
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  channelText(
+                                    context,
+                                    'Không mở được kênh này',
+                                    'Could not open this channel',
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      ref.invalidate(liveChannelsProvider),
+                                  child: Text(
+                                    channelText(
+                                      context,
+                                      'Thử lại',
+                                      'Try again',
+                                    ),
+                                  ),
+                                ),
+                                if (!wide)
+                                  TextButton(
+                                    onPressed: () => context.go('/channels'),
+                                    child: Text(
+                                      channelText(
                                         context,
-                                        'Chọn kênh',
-                                        'Choose channel',
+                                        'Danh sách trò chuyện',
+                                        'Conversation list',
                                       ),
-                                      icon: const Icon(Icons.tag),
-                                      onPressed: () =>
-                                          showModalBottomSheet<void>(
-                                            context: context,
-                                            builder: (sheet) => SafeArea(
-                                              child: LiveChannelDirectory(
-                                                onSelected: () =>
-                                                    Navigator.pop(sheet),
-                                              ),
-                                            ),
-                                          ),
                                     ),
-                              title: Text(
-                                '#${channel.slug}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(
+                          height: 54,
+                          child: Row(
+                            children: [
+                              if (!wide)
+                                IconButton(
+                                  tooltip: channelText(
+                                    context,
+                                    'Danh sách trò chuyện',
+                                    'Conversation list',
+                                  ),
+                                  onPressed: () => context.go('/channels'),
+                                  icon: const Icon(Icons.arrow_back),
+                                ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  '#${channel.slug}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              subtitle: channel.description.isEmpty
-                                  ? null
-                                  : Text(
-                                      channel.description,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                              trailing: IconButton(
+                              IconButton(
                                 tooltip: channelText(
                                   context,
                                   'Làm mới tin nhắn',
@@ -147,28 +142,24 @@ class LiveChannelsScreen extends ConsumerWidget {
                                       .refresh();
                                 },
                               ),
-                            ),
-                            Expanded(
-                              child: _ChannelHistory(
-                                key: ValueKey(
-                                  '${session.userId}-${channel.id}',
-                                ),
-                                channel: channel,
-                                userId: session.userId,
-                                canPost: channel.canPost(session.role),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
+                        const Divider(height: 1),
+                        Expanded(
+                          child: _ChannelHistory(
+                            key: ValueKey('${session.userId}-${channel.id}'),
+                            channel: channel,
+                            userId: session.userId,
+                            canPost: channel.canPost(session.role),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

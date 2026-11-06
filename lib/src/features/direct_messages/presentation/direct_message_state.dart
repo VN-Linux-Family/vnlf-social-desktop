@@ -23,13 +23,6 @@ final selectedDmConversationIdProvider = StateProvider<String?>((ref) {
   return null;
 });
 
-enum DmInboxTab { all, requests }
-
-final dmInboxTabProvider = StateProvider<DmInboxTab>((ref) {
-  ref.watch(sessionStateProvider.select((session) => session?.userId));
-  return DmInboxTab.all;
-});
-
 final dmInboxProvider = StateNotifierProvider<DmInboxController, DmInboxState>((
   ref,
 ) {

@@ -38,6 +38,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.rightSidebarChild,
     this.centerChildHandlesScroll = false,
     this.centerPadding,
+    this.centerMaxWidth = 1053,
+    this.showMobileBottomNav = true,
     this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
     this.onDestinationSelected,
@@ -102,6 +104,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final bool showMobileHeader;
   final Widget? rightSidebarChild;
   final EdgeInsets? centerPadding;
+  final double centerMaxWidth;
+  final bool showMobileBottomNav;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final ThemeMode themeMode;
@@ -235,7 +239,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                           ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1053),
+                          constraints: BoxConstraints(maxWidth: centerMaxWidth),
                           child: Row(
                             crossAxisAlignment: centerChildHandlesScroll
                                 ? CrossAxisAlignment.stretch
@@ -243,8 +247,10 @@ class VnlfAdaptiveShell extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: VnlfDimensions.centerFeedMaxWidth,
+                                  constraints: BoxConstraints(
+                                    maxWidth: centerMaxWidth == double.infinity
+                                        ? double.infinity
+                                        : VnlfDimensions.centerFeedMaxWidth,
                                   ),
                                   child: centerChild,
                                 ),
@@ -441,13 +447,15 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 ),
               ],
             ),
-            bottomNavigationBar: VnlfMobileBottomNav(
-              activeDestination: activeDestination,
-              onDestinationSelected: onDestinationSelected,
-              destinationLabels: destinationLabels,
-              destinationSemanticLabels: destinationSemanticLabels,
-              semanticLabel: mobileBottomNavSemanticLabel,
-            ),
+            bottomNavigationBar: !showMobileBottomNav
+                ? null
+                : VnlfMobileBottomNav(
+                    activeDestination: activeDestination,
+                    onDestinationSelected: onDestinationSelected,
+                    destinationLabels: destinationLabels,
+                    destinationSemanticLabels: destinationSemanticLabels,
+                    semanticLabel: mobileBottomNavSemanticLabel,
+                  ),
           ),
         };
       },

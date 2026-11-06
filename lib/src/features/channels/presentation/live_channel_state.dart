@@ -11,7 +11,6 @@ import '../domain/channel_repository.dart';
 final liveChannelRepositoryProvider = Provider<ChannelRepository>(
   (ref) => LiveChannelRepository(ref.watch(apiClientProvider)),
 );
-final liveSelectedChannelProvider = StateProvider<String?>((ref) => null);
 final liveChannelsProvider = FutureProvider<List<ChatChannel>>((ref) {
   final user = ref.watch(sessionStateProvider);
   if (user == null) return [];

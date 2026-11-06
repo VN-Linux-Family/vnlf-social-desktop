@@ -70,6 +70,22 @@ acceptance only if the actual conversation requires it. Never log credentials,
 cookies, signed callback URLs, email addresses or private message bodies.
 
 CodeRabbit needs a current authenticated CLI session before its review can run.
-Argon independently reviews coordinator changes in one bounded worker; release
-its terminal after accepting the report. Public update repository setup and
+Argon’s follow-up review stopped at its provider quota limit without a report; its terminal is closed. Public update repository setup and
 stable signing still require organization-owner actions already requested.
+
+## Integration evidence — 2026-11-06
+
+Steps 1–2 are implemented. Actual route checks cover 360/900/1440px and 1.6 text
+scaling, including the 54px header, 240/205px rail, phone navigation and shared
+filter/collapse behavior. Two direct-link regressions failed before the change:
+collection routes opened the first conversation, and a missing requested ID fell
+back to that row. They now pass without fetching or marking that other thread.
+Image-picker tests cover streamed bytes, retained Vietnamese text/filenames,
+four-image limits and account changes while the system picker is open.
+
+The separate fixture channel screen/state/directories and unused DM-only inbox
+were removed. Existing send/switch/read-back coverage now uses the actual routes
+with a stateful synthetic HTTP backend. `flutter pub get`, formatting, analysis
+and all 397 Flutter tests pass (serialized under the shared build lock). Native
+Linux capture and live controlled-recipient checks remain pending. No new live
+messages, posts, comments or reactions were created during this integration.

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -58,7 +59,9 @@ class _NewDmRecipientDialogState extends ConsumerState<NewDmRecipientDialog> {
         .openOrRequestConversation(member.id);
     if (!mounted || ref.read(sessionStateProvider)?.userId != owner) return;
     if (id != null) {
+      final router = GoRouter.maybeOf(context);
       Navigator.pop(context);
+      router?.go('/messages/$id');
     } else {
       setState(() {
         _opening = false;

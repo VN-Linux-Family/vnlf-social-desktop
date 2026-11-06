@@ -4,19 +4,24 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
-import '../../shared/presentation/author_mapper.dart';
+import 'dm_conversation_header.dart';
 import '../domain/direct_message_models.dart';
 import 'direct_message_composer.dart';
 import 'direct_message_feedback.dart';
-import 'direct_message_inbox.dart';
+import '../../communication/presentation/communication_directory.dart';
 import 'direct_message_panels.dart';
 import 'direct_message_state.dart';
 import 'direct_message_tile.dart';
 
 class DirectMessagesScreen extends ConsumerWidget {
-  const DirectMessagesScreen({super.key, this.pollBuilder});
+  const DirectMessagesScreen({
+    super.key,
+    this.pollBuilder,
+    this.conversationId,
+  });
 
   final DmPollWidgetBuilder? pollBuilder;
+  final String? conversationId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,145 +49,45 @@ class DirectMessagesScreen extends ConsumerWidget {
     }
 
     final inbox = ref.watch(dmInboxProvider);
-    final selectedId = ref.watch(selectedDmConversationIdProvider);
-
-    return Column(
-      children: <Widget>[
-        VnlfCenterPageHeader(
-          title: dmText(context, 'Tin nhắn trực tiếp', 'Direct messages'),
-        ),
-        Expanded(
-          child: inbox.loading && !inbox.loaded
-              ? const Center(child: CircularProgressIndicator())
-              : inbox.failure != null && inbox.conversations.isEmpty
-              ? Center(
-                  child: SingleChildScrollView(
-                    child: VnlfStateCard(
-                      icon: Icons.cloud_off_outlined,
-                      title: dmText(
-                        context,
-                        'Không tải được hộp thư',
-                        'Could not load inbox',
-                      ),
-                      message: dmFailureMessage(context, inbox.failure),
-                      isError: true,
-                      actionLabel: dmText(context, 'Thử lại', 'Try again'),
-                      onAction: () {
-                        ref.read(apiClientProvider).clearCache();
-                        ref.read(dmInboxProvider.notifier).load(refresh: true);
-                      },
-                    ),
-                  ),
-                )
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final wide = constraints.maxWidth >= 720;
-                    final activeConversation =
-                        inbox.conversations
-                            .where((item) => item.id == selectedId)
-                            .firstOrNull ??
-                        inbox.conversations.firstOrNull;
-
-                    return Row(
-                      children: <Widget>[
-                        if (wide) ...<Widget>[
-                          const SizedBox(
-                            width: 280,
-                            child: DirectMessageInbox(),
-                          ),
-                          const VerticalDivider(width: 1),
-                        ],
-                        Expanded(
-                          child: activeConversation == null
-                              ? _EmptyConversationPlaceholder(
-                                  wide: wide,
-                                  onOpenInboxSheet: () =>
-                                      _openInboxBottomSheet(context),
-                                  onNewConversation: () =>
-                                      showNewDmDialog(context, ref),
-                                )
-                              : _DmConversationPane(
-                                  key: ValueKey(
-                                    '${session.userId}-${activeConversation.id}',
-                                  ),
-                                  conversation: activeConversation,
-                                  viewerUserId: session.userId,
-                                  wide: wide,
-                                  onOpenInboxSheet: () =>
-                                      _openInboxBottomSheet(context),
-                                  pollBuilder: pollBuilder,
-                                ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  void _openInboxBottomSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: DirectMessageInbox(
-          onSelected: () => Navigator.pop(sheetContext),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyConversationPlaceholder extends StatelessWidget {
-  const _EmptyConversationPlaceholder({
-    required this.wide,
-    required this.onOpenInboxSheet,
-    required this.onNewConversation,
-  });
-
-  final bool wide;
-  final VoidCallback onOpenInboxSheet;
-  final VoidCallback onNewConversation;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            VnlfStateCard(
-              icon: Icons.chat_bubble_outline_rounded,
-              title: dmText(
-                context,
-                'Chưa có cuộc trò chuyện nào được chọn',
-                'No conversation selected',
-              ),
-              message: dmText(
-                context,
-                'Chọn một cuộc trò chuyện từ hộp thư đến hoặc bắt đầu cuộc trò chuyện mới.',
-                'Choose a conversation from your inbox or start a new one.',
-              ),
-              actionLabel: dmText(
-                context,
-                'Trò chuyện mới',
-                'New conversation',
-              ),
-              onAction: onNewConversation,
-            ),
-            if (!wide) ...<Widget>[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: onOpenInboxSheet,
-                icon: const Icon(Icons.inbox_outlined),
-                label: Text(dmText(context, 'Mở hộp thư đến', 'Open inbox')),
-              ),
+    final id = conversationId;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = MediaQuery.sizeOf(context).width;
+        final wide = viewport > 840 && constraints.maxWidth >= 650;
+        final directory = CommunicationDirectory(activeConversationId: id);
+        if (!wide && id == null) return directory;
+        return Row(
+          children: [
+            if (wide) ...[
+              SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
+              const VerticalDivider(width: 1),
             ],
+            Expanded(
+              child: id == null
+                  ? Center(
+                      child: Text(
+                        dmText(
+                          context,
+                          'Chọn một cuộc trò chuyện',
+                          'Choose a conversation',
+                        ),
+                      ),
+                    )
+                  : _DmConversationPane(
+                      key: ValueKey('${session.userId}-$id'),
+                      conversationId: id,
+                      conversation: inbox.conversations
+                          .where((item) => item.id == id)
+                          .firstOrNull,
+                      viewerUserId: session.userId,
+                      wide: wide,
+                      onOpenInboxSheet: () => context.go('/messages'),
+                      pollBuilder: pollBuilder,
+                    ),
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -190,14 +95,16 @@ class _EmptyConversationPlaceholder extends StatelessWidget {
 class _DmConversationPane extends ConsumerWidget {
   const _DmConversationPane({
     super.key,
-    required this.conversation,
+    required this.conversationId,
+    this.conversation,
     required this.viewerUserId,
     required this.wide,
     required this.onOpenInboxSheet,
     this.pollBuilder,
   });
 
-  final DmConversation conversation;
+  final String conversationId;
+  final DmConversation? conversation;
   final String viewerUserId;
   final bool wide;
   final VoidCallback onOpenInboxSheet;
@@ -205,165 +112,69 @@ class _DmConversationPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(dmTimelineProvider(conversation.id));
-    final controller = ref.read(dmTimelineProvider(conversation.id).notifier);
+    final state = ref.watch(dmTimelineProvider(conversationId));
+    final controller = ref.read(dmTimelineProvider(conversationId).notifier);
     final colors = VnlfColors.of(context);
     final activeConversation = state.conversation ?? conversation;
-    final peer = activeConversation.peer;
-    final peerAuthor = presentAuthor(peer.toAuthor());
+    if (activeConversation == null) {
+      return Column(
+        children: [
+          if (!wide)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                tooltip: dmText(
+                  context,
+                  'Danh sách cuộc trò chuyện',
+                  'Conversation list',
+                ),
+                onPressed: onOpenInboxSheet,
+                icon: const Icon(Icons.arrow_back),
+              ),
+            ),
+          Expanded(
+            child: Center(
+              child: state.loading
+                  ? const CircularProgressIndicator()
+                  : VnlfStateCard(
+                      icon: Icons.chat_bubble_outline,
+                      title: dmText(
+                        context,
+                        'Không mở được cuộc trò chuyện',
+                        'Could not open conversation',
+                      ),
+                      message: dmFailureMessage(context, state.failure),
+                      isError: true,
+                      actionLabel: dmText(context, 'Thử lại', 'Try again'),
+                      onAction: controller.refresh,
+                    ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return Column(
       children: <Widget>[
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-          leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              if (!wide)
-                IconButton(
-                  key: const Key('dm-open-inbox-sheet-button'),
-                  tooltip: dmText(
-                    context,
-                    'Danh sách cuộc trò chuyện',
-                    'Conversation list',
-                  ),
-                  onPressed: onOpenInboxSheet,
-                  icon: const Icon(Icons.menu_open_rounded),
-                ),
-              VnlfAvatar(
-                author: peerAuthor,
-                size: 36,
-                semanticLabel: peer.displayName,
-              ),
-            ],
-          ),
-          title: Row(
-            children: <Widget>[
-              Flexible(
-                child: Text(
-                  peer.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: peer.isOnline ? const Color(0xFF22C55E) : colors.muted,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ),
-          subtitle: Text(
-            peer.username.isNotEmpty
-                ? '@${peer.username} · ${peer.isOnline ? dmText(context, 'Trực tuyến', 'Online') : dmText(context, 'Ngoại tuyến', 'Offline')}'
-                : (peer.isOnline
-                      ? dmText(context, 'Trực tuyến', 'Online')
-                      : dmText(context, 'Ngoại tuyến', 'Offline')),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              IconButton(
-                key: const Key('dm-search-button'),
-                tooltip: dmText(
-                  context,
-                  'Tìm trong cuộc trò chuyện',
-                  'Search in conversation',
-                ),
-                onPressed: () =>
-                    showDmSearchSheet(context, conversationId: conversation.id),
-                icon: const Icon(Icons.search, size: 20),
-              ),
-              IconButton(
-                key: const Key('dm-media-button'),
-                tooltip: dmText(context, 'Ảnh đã chia sẻ', 'Shared media'),
-                onPressed: () =>
-                    showDmMediaSheet(context, conversationId: conversation.id),
-                icon: const Icon(Icons.photo_library_outlined, size: 20),
-              ),
-              IconButton(
-                key: const Key('dm-refresh-timeline-button'),
-                tooltip: dmText(
-                  context,
-                  'Làm mới tin nhắn',
-                  'Refresh messages',
-                ),
-                onPressed: state.loading
-                    ? null
-                    : () {
-                        ref.read(apiClientProvider).clearCache();
-                        controller.refresh();
-                      },
-                icon: const Icon(Icons.refresh, size: 20),
-              ),
-              PopupMenuButton<String>(
-                key: const Key('dm-conversation-menu'),
-                tooltip: dmText(
-                  context,
-                  'Tùy chọn cuộc trò chuyện',
-                  'Conversation options',
-                ),
-                enabled: !state.mutatingConversation,
-                onSelected: (action) => _handleConversationMenu(
-                  context,
-                  ref,
-                  action: action,
-                  conversation: activeConversation,
-                ),
-                itemBuilder: (menuContext) => <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
-                    value: 'mark_read',
-                    child: Text(
-                      dmText(menuContext, 'Đánh dấu đã đọc', 'Mark as read'),
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: activeConversation.isBlockedByMe
-                        ? 'unblock'
-                        : 'block',
-                    child: Text(
-                      activeConversation.isBlockedByMe
-                          ? dmText(
-                              menuContext,
-                              'Bỏ chặn người dùng',
-                              'Unblock user',
-                            )
-                          : dmText(
-                              menuContext,
-                              'Chặn người dùng',
-                              'Block user',
-                            ),
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'report',
-                    child: Text(
-                      dmText(
-                        menuContext,
-                        'Báo cáo cuộc trò chuyện',
-                        'Report conversation',
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'delete_conversation',
-                    child: Text(
-                      dmText(
-                        menuContext,
-                        'Xóa cuộc trò chuyện',
-                        'Delete conversation',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        DmConversationHeader(
+          conversation: activeConversation,
+          wide: wide,
+          loading: state.loading,
+          busy: state.mutatingConversation,
+          onBack: onOpenInboxSheet,
+          onSearch: () =>
+              showDmSearchSheet(context, conversationId: conversationId),
+          onMedia: () =>
+              showDmMediaSheet(context, conversationId: conversationId),
+          onRefresh: () {
+            ref.read(apiClientProvider).clearCache();
+            controller.refresh();
+          },
+          onAction: (action) => _handleConversationMenu(
+            context,
+            ref,
+            action: action,
+            conversation: activeConversation,
           ),
         ),
         const Divider(height: 1),
@@ -523,8 +334,8 @@ class _DmConversationPane extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(8),
           child: DirectMessageComposer(
-            key: ValueKey('dm-composer-${conversation.id}'),
-            conversationId: conversation.id,
+            key: ValueKey('dm-composer-$conversationId'),
+            conversationId: conversationId,
           ),
         ),
       ],
