@@ -1,3 +1,5 @@
+import '../../realtime/presentation/chat_realtime_bindings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,15 +70,18 @@ class DirectMessagesScreen extends ConsumerWidget {
                         ),
                       ),
                     )
-                  : _DmConversationPane(
-                      key: ValueKey('${session.userId}-$id'),
+                  : DmRealtimeBinding(
                       conversationId: id,
-                      conversation: inbox.conversations
-                          .where((item) => item.id == id)
-                          .firstOrNull,
-                      viewerUserId: session.userId,
-                      wide: wide,
-                      onOpenInboxSheet: () => context.go('/messages'),
+                      child: _DmConversationPane(
+                        key: ValueKey('${session.userId}-$id'),
+                        conversationId: id,
+                        conversation: inbox.conversations
+                            .where((item) => item.id == id)
+                            .firstOrNull,
+                        viewerUserId: session.userId,
+                        wide: wide,
+                        onOpenInboxSheet: () => context.go('/messages'),
+                      ),
                     ),
             ),
           ],

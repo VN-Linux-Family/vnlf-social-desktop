@@ -359,9 +359,9 @@ void main() {
     await client.dispose();
   });
 
-  testWidgets(
+  test(
     'access revocation reconnects, keeps leases and rejects the old join ack',
-    (tester) async {
+    () async {
       final first = _Connection()..holdType = 'conversation:join';
       final second = _Connection()..holdType = 'conversation:join';
       var connects = 0;
@@ -383,14 +383,14 @@ void main() {
       expect(first.closeCount, 1);
       expect(client.status.phase, CommunityConnectionPhase.reconnecting);
       first.ack(oldId);
-      await tester.pump(const Duration(milliseconds: 10));
-      await tester.pump();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await Future<void>.delayed(Duration.zero);
       expect(connects, 2);
       expect(second.types, ['presence:heartbeat', 'conversation:join']);
       expect(client.status.joinedTopics, isEmpty);
       second.holdType = null;
       second.ack(second.sent.last['requestId'] as String);
-      await tester.pump();
+      await Future<void>.delayed(Duration.zero);
       expect(client.status.joinedTopics, {_topic});
       await listener.cancel();
       await client.dispose();
@@ -433,34 +433,37 @@ void main() {
     await client.dispose();
   });
 
-  testWidgets('retry reports reconnecting while it drops a joining connection', (
-    tester,
-  ) async {
-    final first = _Connection(), second = _Connection(), third = _Connection();
-    final sockets = [first, second, third];
-    var connects = 0;
-    final client = CommunitySocketClient(
-      connector: () async => sockets[connects++],
-      reconnectDelay: (_) => const Duration(milliseconds: 10),
-    );
-    await client.start();
-    await client.join(_topic);
-    second.holdType = 'conversation:join';
-    await first.remoteClose(1006);
-    await tester.pump(const Duration(milliseconds: 10));
-    await tester.pump();
-    expect(client.status.phase, CommunityConnectionPhase.connected);
-    expect(second.types, ['presence:heartbeat', 'conversation:join']);
-    final retry = client.retry();
-    expect(client.status.phase, CommunityConnectionPhase.reconnecting);
-    await retry;
-    await tester.pump();
-    expect(connects, 3);
-    expect(second.closeCount, 1);
-    expect(third.types, ['presence:heartbeat', 'conversation:join']);
-    expect(client.status.phase, CommunityConnectionPhase.connected);
-    await client.dispose();
-  });
+  testWidgets(
+    'retry reports reconnecting while it drops a joining connection',
+    (tester) async {
+      final first = _Connection(),
+          second = _Connection(),
+          third = _Connection();
+      final sockets = [first, second, third];
+      var connects = 0;
+      final client = CommunitySocketClient(
+        connector: () async => sockets[connects++],
+        reconnectDelay: (_) => const Duration(milliseconds: 10),
+      );
+      await client.start();
+      await client.join(_topic);
+      second.holdType = 'conversation:join';
+      await first.remoteClose(1006);
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.pump();
+      expect(client.status.phase, CommunityConnectionPhase.connected);
+      expect(second.types, ['presence:heartbeat', 'conversation:join']);
+      final retry = client.retry();
+      expect(client.status.phase, CommunityConnectionPhase.reconnecting);
+      await retry;
+      await tester.pump();
+      expect(connects, 3);
+      expect(second.closeCount, 1);
+      expect(third.types, ['presence:heartbeat', 'conversation:join']);
+      expect(client.status.phase, CommunityConnectionPhase.connected);
+      await client.dispose();
+    },
+  );
 
   testWidgets('any authentication ack revokes terminally', (tester) async {
     final socket = _Connection();
@@ -484,9 +487,7 @@ void main() {
     socket.autoAck = true;
     await expectLater(
       client.request('message:typing', {}),
-      throwsA(
-        isA<HttpFailure>().having((f) => f.statusCode, 'status', 401),
-      ),
+      throwsA(isA<HttpFailure>().having((f) => f.statusCode, 'status', 401)),
     );
     await unrelated;
     expect(client.status.phase, CommunityConnectionPhase.revoked);

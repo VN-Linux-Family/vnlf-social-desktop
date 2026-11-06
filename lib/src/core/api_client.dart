@@ -87,6 +87,13 @@ final class ApiClient {
   final _cache = <String, (DateTime, String)>{};
   int _cacheRevision = 0;
   int _sessionRevision = 0;
+  final _sessionListeners = <void Function()>{};
+
+  /// Returns an unsubscribe callback for owner-bound long-lived transports.
+  void Function() observeSessionInvalidation(void Function() listener) {
+    _sessionListeners.add(listener);
+    return () => _sessionListeners.remove(listener);
+  }
 
   ApiSessionScope captureSession() => ApiSessionScope._(this, _sessionRevision);
 
@@ -94,6 +101,9 @@ final class ApiClient {
   void invalidateSession() {
     _sessionRevision++;
     clearCache();
+    for (final listener in _sessionListeners.toList()) {
+      listener();
+    }
   }
 
   void clearCache() {

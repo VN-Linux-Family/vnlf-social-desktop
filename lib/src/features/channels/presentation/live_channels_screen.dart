@@ -1,3 +1,5 @@
+import '../../realtime/presentation/chat_realtime_bindings.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -147,11 +149,14 @@ class LiveChannelsScreen extends ConsumerWidget {
                         ),
                         const Divider(height: 1),
                         Expanded(
-                          child: _ChannelHistory(
-                            key: ValueKey('${session.userId}-${channel.id}'),
-                            channel: channel,
-                            userId: session.userId,
-                            canPost: channel.canPost(session.role),
+                          child: ChannelRealtimeBinding(
+                            channelId: channel.id,
+                            child: _ChannelHistory(
+                              key: ValueKey('${session.userId}-${channel.id}'),
+                              channel: channel,
+                              userId: session.userId,
+                              canPost: channel.canPost(session.role),
+                            ),
                           ),
                         ),
                       ],

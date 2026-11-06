@@ -1,3 +1,9 @@
+import '../../realtime/domain/latest_history_window.dart';
+
+import 'dart:async';
+
+import '../../realtime/domain/message_read_reconciler.dart';
+import '../../polls/domain/poll_models.dart';
 import '../../polls/presentation/poll_state.dart';
 import '../../../core/request_identity.dart';
 
@@ -27,6 +33,9 @@ final channelTimelineProvider =
       final controller = ChannelTimelineController(
         ref.watch(liveChannelRepositoryProvider),
         id,
+        onPollRealtime: (poll) => ref
+            .read(pollStoreProvider.notifier)
+            .ingestRealtime(poll, preserveViewerSelection: true),
         capturePollRead: () => ref.read(pollStoreProvider.notifier).beginRead(),
       );
       controller.load();
@@ -103,8 +112,14 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     this._repository,
     this._channelId, {
     this._capturePollRead,
+    this.onPollRealtime,
   }) : super(ChannelTimelineState());
   final PollReadTicket Function()? _capturePollRead;
+  final void Function(Poll)? onPollRealtime;
+  final _messageReads = MessageReadReconciler<ChannelMessage>(
+    idOf: (m) => m.id,
+  );
+  bool _catchUpPending = false, _accessRevoked = false;
   final ChannelRepository _repository;
   final String _channelId;
   int _revision = 0;
@@ -119,13 +134,14 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       clearFailure: true,
       confirmedRefreshFailed: false,
     );
+    final read = _messageReads.beginRead();
     try {
       final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(_channelId);
       if (!mounted || revision != _revision) return;
       pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copy(
-        messages: _merge(page.items),
+        messages: _merge(_messageReads.complete(read, page.items)),
         nextCursor: page.nextCursor,
         replaceCursor: true,
         loading: false,
@@ -135,6 +151,12 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       if (mounted && revision == _revision) {
         state = state.copy(loading: false, failure: _failure(error));
       }
+    } finally {
+      _messageReads.cancel(read);
+      if (mounted && _catchUpPending && !state.loading && !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
+      }
     }
   }
 
@@ -143,13 +165,16 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     if (cursor == null || state.loading || state.loadingOlder) return;
     final revision = _revision;
     state = state.copy(loadingOlder: true, clearFailure: true);
+    final read = _messageReads.beginRead();
     try {
       final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(_channelId, cursor: cursor);
       if (!mounted || revision != _revision) return;
       pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copy(
-        messages: _merge([...page.items, ...state.messages]),
+        messages: _merge(
+          _messageReads.complete(read, [...page.items, ...state.messages]),
+        ),
         nextCursor: page.nextCursor == cursor ? null : page.nextCursor,
         replaceCursor: true,
         loadingOlder: false,
@@ -158,7 +183,97 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       if (mounted && revision == _revision) {
         state = state.copy(loadingOlder: false, failure: _failure(error));
       }
+    } finally {
+      _messageReads.cancel(read);
+      if (mounted && _catchUpPending && !state.loading && !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
+      }
     }
+  }
+
+  void applyRealtimeMessage(ChannelMessage incoming) {
+    if (!mounted || _accessRevoked || incoming.channelId != _channelId) return;
+    final previous = state.messages
+        .where((m) => m.id == incoming.id)
+        .firstOrNull;
+    final poll = incoming.poll;
+    final resolved = incoming.withState(
+      reactions: incoming.reactions
+          .map(
+            (r) => ChannelReaction(
+              emoji: r.emoji,
+              count: r.count,
+              viewerReacted:
+                  previous?.reactions.any(
+                    (p) => p.emoji == r.emoji && p.viewerReacted,
+                  ) ??
+                  false,
+            ),
+          )
+          .toList(),
+      poll: poll?.withViewerSelection(
+        previous?.poll?.id == poll.id ? previous?.poll?.viewerOptionId : null,
+      ),
+      replacePoll: true,
+    );
+    _messageReads.upsert(resolved);
+    if (resolved.poll case final poll?) onPollRealtime?.call(poll);
+    state = state.copy(messages: _merge([...state.messages, resolved]));
+  }
+
+  void removeRealtimeMessage(String id) {
+    if (!mounted) return;
+    _messageReads.remove(id);
+    state = state.copy(
+      messages: state.messages.where((m) => m.id != id).toList(),
+    );
+  }
+
+  void applyRealtimeReactions(String id, List<ChannelReaction> reactions) {
+    final previous = state.messages.where((m) => m.id == id).firstOrNull;
+    if (previous != null) {
+      applyRealtimeMessage(previous.withState(reactions: reactions));
+    }
+  }
+
+  void reportRealtimeFailure(AppFailure failure) {
+    if (!mounted) return;
+    if (failure is HttpFailure &&
+        (failure.statusCode == 401 || failure.statusCode == 403)) {
+      revokeAccess();
+    } else {
+      state = state.copy(operationFailure: failure);
+    }
+  }
+
+  void revokeAccess() {
+    if (!mounted) return;
+    _accessRevoked = true;
+    _revision++;
+    _messageReads.reset();
+    state = state.copy(
+      messages: [],
+      loading: false,
+      loadingOlder: false,
+      clearReply: true,
+      failure: const HttpFailure(403),
+    );
+  }
+
+  Future<void> catchUp() {
+    if (!mounted) return Future.value();
+    if (state.loading || state.loadingOlder) {
+      _catchUpPending = true;
+      return Future.value();
+    }
+    return _reloadAfterConfirmation(reconcileLatest: true);
+  }
+
+  @override
+  void dispose() {
+    _messageReads.reset();
+    super.dispose();
   }
 
   void updateDraft(String value) {
@@ -209,11 +324,7 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       _act(id, () => _repository.edit(id, content));
   Future<void> delete(String id) => _act(id, () async {
     await _repository.delete(id);
-    if (mounted) {
-      state = state.copy(
-        messages: state.messages.where((message) => message.id != id).toList(),
-      );
-    }
+    if (mounted) removeRealtimeMessage(id);
   });
   Future<void> react(String id, String emoji) => _act(
     id,
@@ -244,14 +355,28 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     }
   }
 
-  Future<void> _reloadAfterConfirmation() async {
+  Future<void> _reloadAfterConfirmation({bool reconcileLatest = false}) async {
     // A confirmed write is never repeated if the follow-up read fails.
     final revision = ++_revision;
+    final read = _messageReads.beginRead();
     try {
       final page = await _repository.getMessages(_channelId);
       if (!mounted || revision != _revision) return;
       state = state.copy(
-        messages: _merge([...state.messages, ...page.items]),
+        messages: _merge(
+          _messageReads.complete(
+            read,
+            reconcileLatest
+                ? latestHistoryWindow(
+                    current: state.messages,
+                    incoming: page.items,
+                    hasOlder: page.nextCursor != null,
+                    idOf: (m) => m.id,
+                    createdAt: (m) => m.createdAt,
+                  )
+                : [...state.messages, ...page.items],
+          ),
+        ),
         nextCursor: state.loaded ? state.nextCursor : page.nextCursor,
         replaceCursor: true,
         loaded: true,
@@ -267,6 +392,12 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
           confirmedRefreshFailed: true,
           failure: _failure(error),
         );
+      }
+    } finally {
+      _messageReads.cancel(read);
+      if (mounted && _catchUpPending && !state.loading && !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
       }
     }
   }

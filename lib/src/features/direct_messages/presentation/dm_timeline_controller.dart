@@ -1,3 +1,5 @@
+import '../../realtime/domain/latest_history_window.dart';
+import '../../realtime/domain/message_read_reconciler.dart';
 import '../../polls/domain/poll_models.dart';
 import '../../polls/presentation/poll_state.dart';
 
@@ -30,6 +32,8 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
   final void Function(String)? _onConversationRemoved;
   final PollReadTicket Function()? _capturePollRead;
   final void Function(Poll, bool)? _onPollRealtime;
+  final _messageReads = MessageReadReconciler<DmMessage>(idOf: (m) => m.id);
+  bool _catchUpPending = false, _accessRevoked = false;
   int _revision = 0;
   String? _draftClientId;
 
@@ -49,6 +53,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       clearFailure: true,
       confirmedRefreshFailed: false,
     );
+    final read = _messageReads.beginRead();
     try {
       final pollRead = _capturePollRead?.call();
       final results = await Future.wait<Object>([
@@ -60,7 +65,9 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       if (!_isSessionValid(revision)) return;
 
       pollRead?.acceptAll(page.items.map((message) => message.poll));
-      final mergedMessages = _mergeMessages(page.items);
+      final mergedMessages = _mergeMessages(
+        _messageReads.complete(read, page.items),
+      );
       final resolvedViewerState = page.viewerState == DmViewerState.blockedByMe
           ? DmViewerState.blockedByMe
           : conversation.viewerState;
@@ -89,6 +96,15 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       if (_isSessionValid(revision)) {
         state = state.copyWith(loading: false, failure: _asFailure(error));
       }
+    } finally {
+      _messageReads.cancel(read);
+      if (_isSessionValid() &&
+          _catchUpPending &&
+          !state.loading &&
+          !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
+      }
     }
   }
 
@@ -105,6 +121,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     }
     final revision = _revision;
     state = state.copyWith(loadingOlder: true, clearFailure: true);
+    final read = _messageReads.beginRead();
     try {
       final pollRead = _capturePollRead?.call();
       final page = await _repository.getMessages(
@@ -114,7 +131,12 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       if (!_isSessionValid(revision)) return;
       pollRead?.acceptAll(page.items.map((message) => message.poll));
       state = state.copyWith(
-        messages: _mergeMessages(<DmMessage>[...page.items, ...state.messages]),
+        messages: _mergeMessages(
+          _messageReads.complete(read, <DmMessage>[
+            ...page.items,
+            ...state.messages,
+          ]),
+        ),
         nextCursor: page.nextCursor == cursor ? null : page.nextCursor,
         replaceCursor: true,
         loadingOlder: false,
@@ -122,6 +144,15 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     } catch (error) {
       if (_isSessionValid(revision)) {
         state = state.copyWith(loadingOlder: false, failure: _asFailure(error));
+      }
+    } finally {
+      _messageReads.cancel(read);
+      if (_isSessionValid() &&
+          _catchUpPending &&
+          !state.loading &&
+          !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
       }
     }
   }
@@ -131,6 +162,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     if (!_isSessionValid() || target.isEmpty || state.loading) return;
     final revision = ++_revision;
     state = state.copyWith(loading: true, clearFailure: true);
+    final read = _messageReads.beginRead();
     try {
       final pollRead = _capturePollRead?.call();
       final window = await _repository.getMessageContext(
@@ -140,7 +172,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       if (!_isSessionValid(revision)) return;
       pollRead?.acceptAll(window.items.map((message) => message.poll));
       state = state.copyWith(
-        messages: _mergeMessages(window.items),
+        messages: _mergeMessages(_messageReads.complete(read, window.items)),
         nextCursor: null,
         replaceCursor: true,
         loading: false,
@@ -151,6 +183,15 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     } catch (error) {
       if (_isSessionValid(revision)) {
         state = state.copyWith(loading: false, failure: _asFailure(error));
+      }
+    } finally {
+      _messageReads.cancel(read);
+      if (_isSessionValid() &&
+          _catchUpPending &&
+          !state.loading &&
+          !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
       }
     }
   }
@@ -286,6 +327,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       );
       if (!_isSessionValid()) return;
       _draftClientId = null;
+      _messageReads.upsert(created);
       state = state.copyWith(
         draft: '',
         clearReplyTarget: true,
@@ -349,6 +391,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     await _actOnMessage(messageId, () async {
       final updated = await _repository.editMessage(messageId, tidied);
       if (!_isSessionValid()) return;
+      _messageReads.upsert(updated);
       state = state.copyWith(
         clearEditingMessage: true,
         editDraft: '',
@@ -362,6 +405,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     await _actOnMessage(messageId, () async {
       await _repository.deleteMessage(messageId);
       if (!_isSessionValid()) return;
+      _messageReads.remove(messageId);
       final now = DateTime.now().toUtc();
       state = state.copyWith(
         messages: state.messages
@@ -534,20 +578,140 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
   void applyRealtimeMessage(
     DmMessage incoming, {
     bool preservePollViewerOptionId = true,
+    bool preserveViewerState = true,
   }) {
-    if (!_isSessionValid()) return;
+    if (!_isSessionValid() ||
+        _accessRevoked ||
+        incoming.conversationId != state.conversationId) {
+      return;
+    }
     final existing = state.messages
         .where((item) => item.id == incoming.id)
         .firstOrNull;
-    final resolved = preservePollViewerOptionId
+    var resolved = preserveViewerState && preservePollViewerOptionId
         ? incoming.withPreservedPollViewerChoice(existing)
         : incoming;
+    if (preserveViewerState) {
+      resolved = resolved.withReactions(
+        resolved.reactions
+            .map(
+              (r) => DmReaction(
+                emoji: r.emoji,
+                count: r.count,
+                viewerReacted:
+                    existing?.reactions.any(
+                      (old) => old.emoji == r.emoji && old.viewerReacted,
+                    ) ??
+                    false,
+              ),
+            )
+            .toList(),
+      );
+    }
+    _messageReads.upsert(resolved);
     if (resolved.poll case final poll?) {
       _onPollRealtime?.call(poll, preservePollViewerOptionId);
     }
     state = state.copyWith(
       messages: _mergeMessages(<DmMessage>[...state.messages, resolved]),
     );
+  }
+
+  void removeRealtimeMessage(String id) {
+    if (!_isSessionValid()) return;
+    _messageReads.remove(id);
+    state = state.copyWith(
+      messages: state.messages.where((m) => m.id != id).toList(),
+    );
+  }
+
+  void applyRealtimeReactions(String id, List<DmReaction> reactions) {
+    final existing = state.messages.where((m) => m.id == id).firstOrNull;
+    if (existing == null) return;
+    applyRealtimeMessage(existing.withReactions(reactions));
+  }
+
+  Future<void> catchUp() {
+    if (!_isSessionValid()) return Future.value();
+    if (state.loading || state.loadingOlder) {
+      _catchUpPending = true;
+      return Future.value();
+    }
+    return _reloadAfterConfirmation(reconcileLatest: true);
+  }
+
+  void applyPeerRead(String? id) {
+    if (!_isSessionValid() || _accessRevoked || id == null) return;
+    final conversation = state.conversation;
+    final index = state.messages.indexWhere((m) => m.id == id);
+    if (conversation == null ||
+        index < 0 ||
+        state.messages[index].authorId != _userId) {
+      return;
+    }
+    final previous = state.messages.indexWhere(
+      (m) => m.id == conversation.peerLastReadMessageId,
+    );
+    if (previous > index) return;
+    final updated = conversation.copyWith(
+      peerLastReadMessageId: id,
+      replacePeerLastRead: true,
+    );
+    state = state.copyWith(conversation: updated);
+    _onConversationSynced?.call(updated);
+  }
+
+  void applyPeerPresence(DmPeerPresence presence) {
+    if (!_isSessionValid() || _accessRevoked) return;
+    final conversation = state.conversation;
+    if (conversation == null) return;
+    final peer = conversation.peer;
+    state = state.copyWith(
+      conversation: conversation.copyWith(
+        peer: DmPeer(
+          id: peer.id,
+          username: peer.username,
+          displayName: peer.displayName,
+          avatarUrl: peer.avatarUrl,
+          style: peer.style,
+          presence: presence,
+        ),
+      ),
+    );
+  }
+
+  void reportRealtimeFailure(AppFailure failure) {
+    if (!_isSessionValid()) return;
+    if (failure is HttpFailure &&
+        (failure.statusCode == 401 || failure.statusCode == 403)) {
+      revokeAccess();
+    } else {
+      state = state.copyWith(operationFailure: failure);
+    }
+  }
+
+  void revokeAccess() {
+    if (!_isSessionValid()) return;
+    _accessRevoked = true;
+    _revision++;
+    _messageReads.reset();
+    state = DmTimelineState(
+      conversationId: state.conversationId,
+      conversation: state.conversation?.copyWith(
+        status: DmConversationStatus.closed,
+        viewerState: DmViewerState.unknown,
+        canSend: false,
+      ),
+      viewerState: DmViewerState.unknown,
+      failure: const HttpFailure(403),
+    );
+    _onConversationRemoved?.call(state.conversationId);
+  }
+
+  @override
+  void dispose() {
+    _messageReads.reset();
+    super.dispose();
   }
 
   Future<void> loadMedia({bool loadMore = false}) async {
@@ -641,9 +805,10 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     }
   }
 
-  Future<void> _reloadAfterConfirmation() async {
+  Future<void> _reloadAfterConfirmation({bool reconcileLatest = false}) async {
     // A confirmed write is never repeated if the follow-up read fails.
     final revision = ++_revision;
+    final read = _messageReads.beginRead();
     try {
       final results = await Future.wait<Object>([
         _repository.getConversation(state.conversationId, refresh: true),
@@ -661,7 +826,20 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       );
       state = state.copyWith(
         conversation: syncedConversation,
-        messages: _mergeMessages(<DmMessage>[...state.messages, ...page.items]),
+        messages: _mergeMessages(
+          _messageReads.complete(
+            read,
+            reconcileLatest
+                ? latestHistoryWindow(
+                    current: state.messages,
+                    incoming: page.items,
+                    hasOlder: page.nextCursor != null,
+                    idOf: (m) => m.id,
+                    createdAt: (m) => m.createdAt,
+                  )
+                : [...state.messages, ...page.items],
+          ),
+        ),
         nextCursor: state.loaded ? state.nextCursor : page.nextCursor,
         replaceCursor: true,
         viewerState: resolvedViewerState,
@@ -679,6 +857,15 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
           confirmedRefreshFailed: true,
           failure: _asFailure(error),
         );
+      }
+    } finally {
+      _messageReads.cancel(read);
+      if (_isSessionValid() &&
+          _catchUpPending &&
+          !state.loading &&
+          !state.loadingOlder) {
+        _catchUpPending = false;
+        unawaited(catchUp());
       }
     }
   }

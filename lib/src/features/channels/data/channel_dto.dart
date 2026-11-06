@@ -31,6 +31,7 @@ final class ChannelMessageDto {
   ChannelMessage toDomain() {
     final reply = objectValue(json['replyTo'], 'replyTo');
     return ChannelMessage(
+      channelId: nullableString(json['channelId'], 'channelId'),
       id: _identity(json['id']),
       author: ProfileDto.fromJson(objectValue(json['author'], 'author') ?? {})
           .toDomain(),

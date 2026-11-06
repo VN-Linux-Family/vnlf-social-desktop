@@ -48,6 +48,7 @@ final class ChannelMessagePage {
 final class ChannelMessage {
   ChannelMessage({
     required this.id,
+    this.channelId,
     required this.author,
     required this.content,
     this.createdAt,
@@ -62,6 +63,7 @@ final class ChannelMessage {
   }) : reactions = List.unmodifiable(reactions),
        attachments = List.unmodifiable(attachments);
   final String id;
+  final String? channelId;
   final ChannelAuthor author;
   final String content;
   final String clientMessageId;
@@ -74,6 +76,25 @@ final class ChannelMessage {
   final bool hasGif;
   final Poll? poll;
   bool get hasPoll => poll != null;
+  ChannelMessage withState({
+    List<ChannelReaction>? reactions,
+    Poll? poll,
+    bool replacePoll = false,
+  }) => ChannelMessage(
+    id: id,
+    channelId: channelId,
+    author: author,
+    content: content,
+    createdAt: createdAt,
+    editedAt: editedAt,
+    deletedAt: deletedAt,
+    replyTo: replyTo,
+    clientMessageId: clientMessageId,
+    reactions: reactions ?? this.reactions,
+    attachments: attachments,
+    hasGif: hasGif,
+    poll: replacePoll ? poll : this.poll,
+  );
 }
 
 final class ChannelReply {

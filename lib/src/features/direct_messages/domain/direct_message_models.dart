@@ -311,6 +311,26 @@ final class DmMessage {
     );
   }
 
+  DmMessage withReactions(List<DmReaction> value) => DmMessage(
+    id: id,
+    conversationId: conversationId,
+    authorId: authorId,
+    author: author,
+    content: content,
+    clientMessageId: clientMessageId,
+    replyToMessageId: replyToMessageId,
+    replyTo: replyTo,
+    mentions: mentions,
+    attentionUserIds: attentionUserIds,
+    reactions: value,
+    attachments: attachments,
+    gif: gif,
+    poll: poll,
+    createdAt: createdAt,
+    editedAt: editedAt,
+    deletedAt: deletedAt,
+  );
+
   /// Server enforces a 15-minute edit window (`channels.ts:146`).
   bool canEditAt(DateTime now) {
     if (isDeleted) return false;

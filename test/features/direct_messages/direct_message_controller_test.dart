@@ -143,6 +143,7 @@ void main() {
   test('realtime poll update preserves recipient viewerOptionId instead of adopting sender choice', () async {
     final initialWithPoll = DmMessage(
       id: 'msg-poll',
+      conversationId: 'conv-1',
       authorId: 'peer-1',
       author: const Author(
         id: 'peer-1',
@@ -175,6 +176,7 @@ void main() {
     // Incoming broadcast from sender has sender's viewerOptionId ('opt-sender').
     final incomingBroadcast = DmMessage(
       id: 'msg-poll',
+      conversationId: 'conv-1',
       authorId: 'peer-1',
       author: const Author(
         id: 'peer-1',

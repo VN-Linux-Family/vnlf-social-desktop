@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/design_system/tokens/vnlf_theme.dart';
 import 'package:vnlfsocialapp/src/features/realtime/domain/community_status.dart';
@@ -25,7 +26,9 @@ void main() {
       }
     });
 
-    testWidgets('announces Vietnamese progress copy by default', (tester) async {
+    testWidgets('announces Vietnamese progress copy by default', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _app(
           CommunityConnectionNotice(
@@ -163,7 +166,6 @@ void main() {
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
 
       await tester.pumpWidget(
         _app(
@@ -177,6 +179,7 @@ void main() {
         find.bySemanticsLabel('Đang kết nối để cập nhật tin nhắn.'),
         findsOneWidget,
       );
+      semantics.dispose();
     });
   });
 }
@@ -186,17 +189,17 @@ Widget _app(
   Locale locale = const Locale('vi'),
   double textScaleFactor = 1,
   bool disableAnimations = false,
-}) =>
-    MaterialApp(
-      locale: locale,
-      supportedLocales: const [Locale('vi'), Locale('en')],
-      theme: VnlfTheme.light(),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(textScaleFactor),
-          disableAnimations: disableAnimations,
-        ),
-        child: child!,
-      ),
-      home: Scaffold(body: child),
-    );
+}) => MaterialApp(
+  locale: locale,
+  supportedLocales: const [Locale('vi'), Locale('en')],
+  localizationsDelegates: GlobalMaterialLocalizations.delegates,
+  theme: VnlfTheme.light(),
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(
+      textScaler: TextScaler.linear(textScaleFactor),
+      disableAnimations: disableAnimations,
+    ),
+    child: child!,
+  ),
+  home: Scaffold(body: child),
+);
