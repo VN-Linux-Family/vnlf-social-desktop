@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../design_system/design_system.dart';
 import '../core/request_identity.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/activity/presentation/activity_page.dart';
 import '../features/composer/presentation/composer_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
 import '../features/direct_messages/presentation/direct_messages_screen.dart';
@@ -201,6 +202,7 @@ GoRouter createMainRouter() {
                     const [
                       '/',
                       '/leaderboard',
+                      '/activity',
                       '/projects',
                       '/discover',
                       '/channels',
@@ -212,6 +214,7 @@ GoRouter createMainRouter() {
                     const [
                       '/',
                       '/leaderboard',
+                      '/activity',
                       '/projects',
                       '/settings',
                       '/discover',
@@ -279,6 +282,11 @@ GoRouter createMainRouter() {
             path: '/leaderboard',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: LeaderboardScreen()),
+          ),
+          GoRoute(
+            path: '/activity',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ActivityPage()),
           ),
           GoRoute(
             path: '/projects',

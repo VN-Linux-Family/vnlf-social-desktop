@@ -12,7 +12,6 @@ final class ActivityService {
     return _repository.loadCalendar(from: range.from, to: range.to);
   }
 
-  Future<CheckInAcknowledgment> checkIn({
-    required bool claimCelebration,
-  }) => _repository.checkIn(claimCelebration: claimCelebration);
+  Future<CheckInAcknowledgment> checkIn({required bool claimCelebration}) =>
+      _repository.checkIn(claimCelebration: claimCelebration);
 }

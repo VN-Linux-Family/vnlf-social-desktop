@@ -92,6 +92,14 @@ class LeaderboardScreen extends ConsumerWidget {
           Text(
             english ? 'Sample community rankings' : 'Xếp hạng cộng đồng mẫu',
           ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => context.push('/activity'),
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: Text(english ? 'My activity' : 'Hoạt động của tôi'),
+          ),
+        ),
         const SizedBox(height: 12),
         const LeaderboardPanel(),
       ],

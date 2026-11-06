@@ -38,16 +38,24 @@ class ActivityCheckInCelebration extends StatelessWidget {
     final colors = VnlfColors.of(context);
     final year = int.parse(acknowledgment.date.substring(0, 4));
     final month = int.parse(acknowledgment.date.substring(5, 7));
-    final checkins = {for (final day in acknowledgment.checkins) day.date: day.streakDay};
+    final checkins = {
+      for (final day in acknowledgment.checkins) day.date: day.streakDay,
+    };
     final range = activityMonthRange(year, month);
     final days = <ActivityDay>[];
-    for (var date = range.from; date.compareTo(range.to) <= 0; date = shiftActivityDay(date, 1)) {
-      days.add(ActivityDay(
-        date: date,
-        points: 0,
-        checkedIn: checkins.containsKey(date),
-        streakDay: checkins[date] ?? 0,
-      ));
+    for (
+      var date = range.from;
+      date.compareTo(range.to) <= 0;
+      date = shiftActivityDay(date, 1)
+    ) {
+      days.add(
+        ActivityDay(
+          date: date,
+          points: 0,
+          checkedIn: checkins.containsKey(date),
+          streakDay: checkins[date] ?? 0,
+        ),
+      );
     }
 
     return AlertDialog(
@@ -92,7 +100,8 @@ class ActivityCheckInCelebration extends StatelessWidget {
   }
 }
 
-class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObserver {
+class _ActivityScreenState extends State<ActivityScreen>
+    with WidgetsBindingObserver {
   late DateTime _today;
   Timer? _dayTimer;
   late int _year;
@@ -122,8 +131,9 @@ class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObse
     _scheduleDayChange();
   }
 
-  DateTime _vietnamNow() =>
-      (widget.clock?.call() ?? DateTime.now()).toUtc().add(const Duration(hours: 7));
+  DateTime _vietnamNow() => (widget.clock?.call() ?? DateTime.now())
+      .toUtc()
+      .add(const Duration(hours: 7));
 
   void _scheduleDayChange() {
     _dayTimer?.cancel();
@@ -190,9 +200,7 @@ class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObse
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
-        VnlfCenterPageHeader(
-          title: english ? 'Activity' : 'Hoạt động',
-        ),
+        VnlfCenterPageHeader(title: english ? 'Activity' : 'Hoạt động'),
         const SizedBox(height: 12),
         FutureBuilder<ActivityCalendarData>(
           key: ValueKey('$_year-$_month-$_loadRevision'),
@@ -281,7 +289,8 @@ class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObse
       children: [
         _CalendarGrid(
           days: data.days,
-          today: '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
+          today:
+              '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
           selectedDate: _selectedDate,
           english: english,
           colors: colors,
@@ -290,7 +299,8 @@ class _ActivityScreenState extends State<ActivityScreen> with WidgetsBindingObse
         if (_selectedDate != null)
           _SelectedDay(
             day: data.days.firstWhere((day) => day.date == _selectedDate),
-            today: '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
+            today:
+                '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
             english: english,
             colors: colors,
           ),
@@ -347,7 +357,10 @@ class _StreakHero extends StatelessWidget {
           child: Column(
             children: [
               Text('$streak', style: VnlfTypography.h1(colors.brand)),
-              Text(english ? 'days' : 'ngày', style: VnlfTypography.meta(colors.muted)),
+              Text(
+                english ? 'days' : 'ngày',
+                style: VnlfTypography.meta(colors.muted),
+              ),
             ],
           ),
         ),
@@ -402,7 +415,10 @@ class _ActivityPanel extends StatelessWidget {
               ),
               Semantics(
                 liveRegion: true,
-                child: Text(monthLabel, style: VnlfTypography.control(colors.ink)),
+                child: Text(
+                  monthLabel,
+                  style: VnlfTypography.control(colors.ink),
+                ),
               ),
               IconButton(
                 tooltip: english ? 'Next month' : 'Tháng sau',
@@ -463,7 +479,10 @@ class _CalendarGrid extends StatelessWidget {
                 child: Center(
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 7),
-                    child: Text(label, style: VnlfTypography.meta(colors.muted)),
+                    child: Text(
+                      label,
+                      style: VnlfTypography.meta(colors.muted),
+                    ),
                   ),
                 ),
               ),
@@ -518,7 +537,9 @@ class _CalendarGrid extends StatelessWidget {
                   ),
                   child: Text(
                     '${int.parse(day.date.substring(8, 10))}',
-                    style: VnlfTypography.control(future ? colors.muted : foreground),
+                    style: VnlfTypography.control(
+                      future ? colors.muted : foreground,
+                    ),
                   ),
                 ),
               ),
@@ -531,9 +552,21 @@ class _CalendarGrid extends StatelessWidget {
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _LegendDot(color: colors.surfaceSoft, label: english ? 'No check-in' : 'Chưa điểm danh', colors: colors),
-            _LegendDot(color: colors.brand, label: english ? 'Checked in' : 'Đã điểm danh', colors: colors),
-            _LegendDot(color: colors.brandSoft, label: english ? 'Earned points' : 'Có điểm', colors: colors),
+            _LegendDot(
+              color: colors.surfaceSoft,
+              label: english ? 'No check-in' : 'Chưa điểm danh',
+              colors: colors,
+            ),
+            _LegendDot(
+              color: colors.brand,
+              label: english ? 'Checked in' : 'Đã điểm danh',
+              colors: colors,
+            ),
+            _LegendDot(
+              color: colors.brandSoft,
+              label: english ? 'Earned points' : 'Có điểm',
+              colors: colors,
+            ),
           ],
         ),
       ],
@@ -542,7 +575,11 @@ class _CalendarGrid extends StatelessWidget {
 }
 
 class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label, required this.colors});
+  const _LegendDot({
+    required this.color,
+    required this.label,
+    required this.colors,
+  });
   final Color color;
   final String label;
   final VnlfColors colors;
@@ -567,7 +604,12 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _SelectedDay extends StatelessWidget {
-  const _SelectedDay({required this.day, required this.today, required this.english, required this.colors});
+  const _SelectedDay({
+    required this.day,
+    required this.today,
+    required this.english,
+    required this.colors,
+  });
   final ActivityDay day;
   final String today;
   final bool english;
@@ -576,12 +618,15 @@ class _SelectedDay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final date = DateTime.parse('${day.date}T00:00:00Z');
-    final dateLabel = '${date.day.toString().padLeft(2, '0')}/'
+    final dateLabel =
+        '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/${date.year}';
     final status = day.date.compareTo(today) > 0
         ? (english ? 'Not yet' : 'Chưa đến ngày')
         : day.checkedIn
-        ? (english ? 'Checked in, streak day ${day.streakDay}' : 'Đã điểm danh, ngày thứ ${day.streakDay}')
+        ? (english
+              ? 'Checked in, streak day ${day.streakDay}'
+              : 'Đã điểm danh, ngày thứ ${day.streakDay}')
         : (english ? 'Not checked in' : 'Chưa điểm danh');
     return Padding(
       padding: const EdgeInsets.only(top: 12),
@@ -597,7 +642,11 @@ class _SelectedDay extends StatelessWidget {
 }
 
 class _TotalsPanel extends StatelessWidget {
-  const _TotalsPanel({required this.data, required this.english, required this.colors});
+  const _TotalsPanel({
+    required this.data,
+    required this.english,
+    required this.colors,
+  });
   final ActivityCalendarData? data;
   final bool english;
   final VnlfColors colors;
@@ -608,13 +657,28 @@ class _TotalsPanel extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(english ? 'Points this month' : 'Điểm trong tháng', style: VnlfTypography.h2(colors.ink)),
+        Text(
+          english ? 'Points this month' : 'Điểm trong tháng',
+          style: VnlfTypography.h2(colors.ink),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
-            _Total(label: english ? 'Total' : 'Tổng điểm', value: data?.totalPoints, colors: colors),
-            _Total(label: english ? 'Earned' : 'Điểm nhận', value: data?.earnedPoints, colors: colors),
-            _Total(label: english ? 'Adjusted' : 'Điều chỉnh', value: data?.reversedPoints, colors: colors),
+            _Total(
+              label: english ? 'Total' : 'Tổng điểm',
+              value: data?.totalPoints,
+              colors: colors,
+            ),
+            _Total(
+              label: english ? 'Earned' : 'Điểm nhận',
+              value: data?.earnedPoints,
+              colors: colors,
+            ),
+            _Total(
+              label: english ? 'Adjusted' : 'Điều chỉnh',
+              value: data?.reversedPoints,
+              colors: colors,
+            ),
           ],
         ),
       ],
@@ -623,7 +687,11 @@ class _TotalsPanel extends StatelessWidget {
 }
 
 class _Total extends StatelessWidget {
-  const _Total({required this.label, required this.value, required this.colors});
+  const _Total({
+    required this.label,
+    required this.value,
+    required this.colors,
+  });
   final String label;
   final int? value;
   final VnlfColors colors;
@@ -643,7 +711,11 @@ class _Total extends StatelessWidget {
 }
 
 class _ActivityError extends StatelessWidget {
-  const _ActivityError({required this.message, required this.retryLabel, required this.onRetry});
+  const _ActivityError({
+    required this.message,
+    required this.retryLabel,
+    required this.onRetry,
+  });
   final String message;
   final String retryLabel;
   final VoidCallback onRetry;
@@ -689,8 +761,18 @@ class _Panel extends StatelessWidget {
 }
 
 const _englishMonths = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 String _daySemantics(ActivityDay day, String today, bool english) {
@@ -701,7 +783,9 @@ String _daySemantics(ActivityDay day, String today, bool english) {
   final state = day.date.compareTo(today) > 0
       ? (english ? 'not yet' : 'chưa đến ngày')
       : day.checkedIn
-      ? (english ? 'checked in, streak day ${day.streakDay}' : 'đã điểm danh, ngày thứ ${day.streakDay}')
+      ? (english
+            ? 'checked in, streak day ${day.streakDay}'
+            : 'đã điểm danh, ngày thứ ${day.streakDay}')
       : (english ? 'not checked in' : 'chưa điểm danh');
   return '$dateLabel, $state, ${day.points} XP';
 }

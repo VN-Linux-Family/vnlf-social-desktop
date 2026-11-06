@@ -13,18 +13,17 @@ final class LiveActivityRepository implements ActivityRepository {
   LiveActivityRepository(
     this._client, {
     required this.ownerId,
-    required String? Function() currentOwnerId,
-  }) : _currentOwnerId = currentOwnerId,
-       _session = _client.captureSession();
+    required this.currentOwnerId,
+  }) : _session = _client.captureSession();
 
   final ApiClient _client;
   final String ownerId;
-  final String? Function() _currentOwnerId;
+  final String? Function() currentOwnerId;
   final ApiSessionScope _session;
 
   void _ensureOwner() {
     _session.ensureCurrent();
-    if (_currentOwnerId() != ownerId) throw const HttpFailure(401);
+    if (currentOwnerId() != ownerId) throw const HttpFailure(401);
   }
 
   @override
@@ -91,16 +90,8 @@ final class LiveActivityRepository implements ActivityRepository {
         ActivityDay(
           date: date,
           points: _requiredInt(day, 'points', 'activity.day.points'),
-          checkedIn: _requiredBool(
-            day,
-            'checkedIn',
-            'activity.day.checkedIn',
-          ),
-          streakDay: _requiredInt(
-            day,
-            'streakDay',
-            'activity.day.streakDay',
-          ),
+          checkedIn: _requiredBool(day, 'checkedIn', 'activity.day.checkedIn'),
+          streakDay: _requiredInt(day, 'streakDay', 'activity.day.streakDay'),
         ),
       );
     }
