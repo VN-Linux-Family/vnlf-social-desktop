@@ -6,6 +6,33 @@ import 'package:vnlfsocialapp/src/features/notifications/data/live_notifications
 import 'package:vnlfsocialapp/src/features/notifications/presentation/notifications_controller.dart';
 
 void main() {
+  test('notification mutations require the server acknowledgment', () async {
+    var calls = 0;
+    var body = '{}';
+    final repo = LiveNotificationsRepository(
+      ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        transport: (_) async {
+          calls++;
+          return ApiResponse(statusCode: 200, body: body);
+        },
+      ),
+    );
+    await expectLater(repo.seen(), throwsA(isA<ParseFailure>()));
+    await expectLater(
+      repo.read(ids: ['synthetic']),
+      throwsA(isA<ParseFailure>()),
+    );
+    body = '{"ok":false}';
+    await expectLater(repo.read(), throwsA(isA<ParseFailure>()));
+    expect(calls, 3);
+    body = '{"ok":true}';
+    await repo.seen();
+    await repo.read();
+    expect(calls, 5);
+  });
+
   test('live notifications map server records and only confirm read writes after success', () async {
     var rejectRead = true;
     final writes = <ApiRequest>[];
@@ -18,8 +45,8 @@ void main() {
           return ApiResponse(
             statusCode: request.path.endsWith('/read') && rejectRead
                 ? 403
-                : 204,
-            body: '',
+                : 200,
+            body: '{"ok":true}',
           );
         }
         return ApiResponse(

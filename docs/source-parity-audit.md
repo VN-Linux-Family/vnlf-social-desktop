@@ -41,7 +41,7 @@ server with the authorized account, followed by cleanup.
 | Search/discover | Live search integrated with debounce/stale-response tests; verify website scope filtering and live discovery. |
 | Rankings/check-in | Weekly archive integrated and tested; check-in and personal activity remain. Do not invent an all-time endpoint. |
 | Profile/social graph | Public reads implemented; follow/block, guestbook writes and full account customization need implementation. |
-| Notifications | Live list/read/seen, unread filtering, pagination and routing implemented; real-account and visual checks remain. |
+| Notifications | Live list/read/seen, unread filtering, pagination and routing implemented. An owner-account list read passed; mutations require `{ok:true}` and have synthetic tests. Live mutation, notification-category filters and visual checks remain. |
 | Feedback/support | Submission validation/acknowledgment, member history and ticket conversations are implemented with synthetic repository and route tests. The owner history read passed live; thread writes, feedback attachments and support-specific workflows remain. |
 | Projects | Live listing with source-confirmed server filters, sorting, pagination and facets implemented; an owner-authenticated listing/facets read passed. Full live filter coverage and submission lifecycle remain incomplete. A native detail route, media gallery and rating control are implemented; one detail read passed live, but rating writes and visual parity remain unverified. |
 | Settings | Local preferences, updater and server profile editing are implemented with synthetic tests; the owner profile read passed live. Live profile writes, other account preferences and blocked-user management remain. |

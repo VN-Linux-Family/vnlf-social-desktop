@@ -55,13 +55,19 @@ final class LiveNotificationsRepository implements NotificationsRepository {
   Future<void> seen() => _client.request<void>(
     'POST',
     '/api/v1/notifications/seen',
-    decode: (_) {},
+    decode: _confirmed,
   );
   @override
   Future<void> read({List<String>? ids}) => _client.request<void>(
     'POST',
     '/api/v1/notifications/read',
     body: jsonEncode({'ids': ?ids}),
-    decode: (_) {},
+    decode: _confirmed,
   );
+}
+
+void _confirmed(Map<String, dynamic> json) {
+  if (json['ok'] != true) {
+    throw const ParseFailure('notifications.acknowledgment');
+  }
 }

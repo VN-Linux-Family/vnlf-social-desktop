@@ -70,6 +70,15 @@ and the public projects listing with facets, then logged out successfully.
   and `POST` to the same messages route submits a message with a stable
   `clientMessageId`. The source enforces ticket ownership.
 
+## Notifications (pinned source and live read)
+
+The upstream web notification center uses `GET /api/v1/notifications` with
+`limit`, `filter`, and an optional cursor. Its API responds to
+`POST /api/v1/notifications/seen` and `/read` with `{ok: true}`. The native
+client now requires that acknowledgment before considering either write
+confirmed. An owner-authenticated read-only notification-list probe succeeded
+and logged out; it did not mark any notification read or seen.
+
 ## Public article sharing (2026-11-05)
 
 - [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection
