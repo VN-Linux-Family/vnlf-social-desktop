@@ -52,10 +52,16 @@ Files: create features/realtime/data/community_socket_client.dart; test/features
 
 Interfaces: `CommunitySocketClient` accepts connector and injectable timing/randomness, exposes events and connection status, provides request(type,data), join/leave leases and setForeground. It owns all timer/subscription disposal. Duplicate events are bounded by a recent event-ID set; pending ack map is bounded and drained on timeout/disconnect.
 
-- [ ] Write fake-connection tests for correlation, late/unrelated acks, eight-second timeout, negative ack, disconnect cleanup and no message-write replay.
-- [ ] Write tests for one initial heartbeat, twenty-second heartbeat scheduling, failure/reconnect, reference-counted joins/leaves and rejoin after reconnect.
-- [ ] Test stale connector completion after stop/owner change, 4401 without reconnect, bounded exponential backoff with jitter, and complete timer/listener disposal. Native backoff is 1/2/4/8/15 seconds plus 0–349ms jitter, stopping after six consecutive failed connection attempts until explicit retry/resume.
-- [ ] Implement, run green and analysis, then commit.
+- [x] Write fake-connection tests for correlation, late/unrelated acks, eight-second timeout, negative ack, disconnect cleanup and no message-write replay.
+- [x] Write tests for one initial heartbeat, twenty-second heartbeat scheduling, failure/reconnect, reference-counted joins/leaves and rejoin after reconnect.
+- [x] Test stale connector completion after stop/owner change, 4401 without reconnect, bounded exponential backoff with jitter, and complete timer/listener disposal. Native backoff is 1/2/4/8/15 seconds plus 0–349ms jitter, stopping after six consecutive failed connection attempts until explicit retry/resume.
+- [x] Implement, run green and analysis, then commit.
+
+Task 2 evidence: 17 client lifecycle tests plus four protocol tests pass, with
+analysis clean. A regression reproduced re-opening a revoked session on resume;
+revocation is now terminal for the lifetime of that client. Stream-only cases use
+real asynchronous scheduling; timing cases use Flutter's simulated clock. No
+live sockets or app bindings have been enabled by these two foundation tasks.
 
 ## Task 3: Channel and DM event integration
 
