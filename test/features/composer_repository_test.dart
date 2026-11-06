@@ -7,6 +7,89 @@ import 'package:vnlfsocialapp/src/features/composer/domain/composer_draft.dart';
 import 'package:vnlfsocialapp/src/features/composer/domain/compose_document.dart';
 
 void main() {
+  test('an article upload cannot complete after its account changes', () async {
+    var completes = 0;
+    final client = ApiClient(
+      transport: (r) async {
+        if (r.path.endsWith('/complete')) completes++;
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode(
+            r.path.endsWith('/presign')
+                ? {
+                    'assetId': 'image',
+                    'uploadUrl': 'https://example.org/upload',
+                  }
+                : {
+                    'assetId': 'image',
+                    'status': 'READY',
+                    'url': 'https://example.org/image.png',
+                  },
+          ),
+        );
+      },
+      throttleInterval: Duration.zero,
+      hostKey: Object(),
+    );
+    final repo = LiveComposerRepository(
+      client,
+      upload: (url, file) async {
+        client.invalidateSession();
+      },
+    );
+    await expectLater(
+      repo.upload(
+        'draft',
+        ComposerUpload(
+          name: 'test.png',
+          mime: 'image/png',
+          length: 4,
+          openRead: () => Stream.value([1, 2, 3, 4]),
+        ),
+      ),
+      throwsA(isA<HttpFailure>()),
+    );
+    expect(completes, 0);
+  });
+  test('article upload completion must match the presigned asset and explicit status', () async {
+    for (final completion in [
+      {
+        'assetId': 'different',
+        'status': 'READY',
+        'url': 'https://example.org/image.png',
+      },
+      {'assetId': 'image', 'url': 'https://example.org/image.png'},
+    ]) {
+      final client = ApiClient(
+        transport: (r) async => ApiResponse(
+          statusCode: 200,
+          body: jsonEncode(
+            r.path.endsWith('/presign')
+                ? {
+                    'assetId': 'image',
+                    'uploadUrl': 'https://example.org/upload',
+                  }
+                : completion,
+          ),
+        ),
+        throttleInterval: Duration.zero,
+        hostKey: Object(),
+      );
+      final repo = LiveComposerRepository(client, upload: (url, file) async {});
+      await expectLater(
+        repo.upload(
+          'draft',
+          ComposerUpload(
+            name: 'test.png',
+            mime: 'image/png',
+            length: 4,
+            openRead: () => Stream.value([1, 2, 3, 4]),
+          ),
+        ),
+        throwsA(isA<ParseFailure>()),
+      );
+    }
+  });
   test('empty publication is rejected without a network request', () async {
     var calls = 0;
     final repository = LiveComposerRepository(

@@ -135,6 +135,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   ) {
     if (before != after) client.invalidateSession();
   });
+  ref.onDispose(client.invalidateSession);
   return client;
 });
 

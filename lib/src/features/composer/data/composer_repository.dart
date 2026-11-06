@@ -148,6 +148,7 @@ final class LiveComposerRepository implements ComposerRepository {
     String placement = 'ATTACHMENT',
     String format = 'POST',
   }) async {
+    final session = _client.captureSession();
     final video = const {
       'video/mp4',
       'video/quicktime',
@@ -186,17 +187,33 @@ final class LiveComposerRepository implements ComposerRepository {
     if (assetId.isEmpty ||
         url == null ||
         url.scheme != 'https' ||
-        url.host.isEmpty) {
+        url.host.isEmpty ||
+        url.userInfo.isNotEmpty) {
       throw const ParseFailure('upload.url');
     }
-    await _upload(url, file);
+    session.ensureCurrent();
+    final guardedFile = ComposerUpload(
+      name: file.name,
+      mime: file.mime,
+      length: file.length,
+      openRead: () => file.openRead().map((chunk) {
+        session.ensureCurrent();
+        return chunk;
+      }),
+    );
+    await _upload(url, guardedFile);
+    session.ensureCurrent();
     final completed = await _client.request<Map<String, dynamic>>(
       'POST',
       '${_path(id)}/assets/${Uri.encodeComponent(assetId)}/complete',
     );
+    if (completed['assetId'] != assetId ||
+        !const {'READY', 'PENDING', 'FAILED'}.contains(completed['status'])) {
+      throw const ParseFailure('upload.complete');
+    }
     final result = draftMediaFromJson({
       ...completed,
-      'id': completed['assetId'] ?? assetId,
+      'id': assetId,
       'mime': file.mime,
       'placement': placement,
     });

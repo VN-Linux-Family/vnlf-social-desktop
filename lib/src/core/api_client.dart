@@ -47,6 +47,17 @@ typedef ApiTransport = Future<ApiResponse> Function(ApiRequest request);
 typedef ApiInterceptor = Future<ApiRequest> Function(ApiRequest request);
 typedef RetryDelay = Future<void> Function(Duration delay);
 
+/// Keeps all stages of an operation bound to the account that started it.
+final class ApiSessionScope {
+  ApiSessionScope._(this._client, this._generation);
+  final ApiClient _client;
+  final int _generation;
+
+  void ensureCurrent() {
+    if (_generation != _client._sessionRevision) throw const HttpFailure(401);
+  }
+}
+
 final class ApiClient {
   ApiClient({
     required ApiTransport transport,
@@ -75,6 +86,8 @@ final class ApiClient {
   final _cache = <String, (DateTime, String)>{};
   int _cacheRevision = 0;
   int _sessionRevision = 0;
+
+  ApiSessionScope captureSession() => ApiSessionScope._(this, _sessionRevision);
 
   /// Reject queued work from the previous account before it reaches transport.
   void invalidateSession() {

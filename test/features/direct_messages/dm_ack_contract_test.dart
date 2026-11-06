@@ -10,6 +10,88 @@ import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/features/direct_messages/data/live_direct_message_repository.dart';
 
 void main() {
+  test(
+    'private upload stops reading file chunks after its account changes',
+    () async {
+      var bytesSent = 0;
+      var completes = 0;
+      final client = _client((r) async {
+        if (r.path.endsWith('/complete')) completes++;
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode({
+            'assetId': 'image',
+            'uploadUrl': 'https://example.org/upload',
+            'headers': {'content-type': 'image/png'},
+          }),
+        );
+      });
+      final media = DirectMessageMediaRepository(
+        client,
+        upload: (url, file, headers) async {
+          await for (final chunk in file.openRead()) {
+            bytesSent += chunk.length;
+            client.invalidateSession();
+          }
+        },
+      );
+      await expectLater(
+        media.upload(
+          DmUploadFile(
+            name: 'test.png',
+            mime: 'image/png',
+            length: 4,
+            openRead: () => Stream.fromIterable([
+              [1, 2],
+              [3, 4],
+            ]),
+          ),
+        ),
+        throwsA(isA<HttpFailure>()),
+      );
+      expect(bytesSent, 2);
+      expect(completes, 0);
+    },
+  );
+  test(
+    'a private upload cannot complete under an account that changed during PUT',
+    () async {
+      var completes = 0;
+      final client = _client((r) async {
+        if (r.path.endsWith('/complete')) completes++;
+        return ApiResponse(
+          statusCode: 200,
+          body: jsonEncode(
+            r.path.endsWith('/presign')
+                ? {
+                    'assetId': 'expected-asset',
+                    'uploadUrl': 'https://example.org/upload',
+                    'headers': {'content-type': 'image/png'},
+                  }
+                : {'assetId': 'expected-asset', 'status': 'READY'},
+          ),
+        );
+      });
+      final media = DirectMessageMediaRepository(
+        client,
+        upload: (url, file, headers) async {
+          client.invalidateSession();
+        },
+      );
+      await expectLater(
+        media.upload(
+          DmUploadFile(
+            name: 'test.png',
+            mime: 'image/png',
+            length: 4,
+            openRead: () => Stream.value([1, 2, 3, 4]),
+          ),
+        ),
+        throwsA(isA<HttpFailure>()),
+      );
+      expect(completes, 0);
+    },
+  );
   test('DM send acknowledgments must identify the requested conversation and client message', () async {
     for (final change in [
       {'conversationId': 'another-conversation'},

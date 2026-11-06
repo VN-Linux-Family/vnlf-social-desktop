@@ -69,6 +69,7 @@ final class DirectMessageMediaRepository {
   /// 2. Unauthenticated `PUT` to the presigned object storage URL
   /// 3. `POST /api/v1/dm/assets/:assetId/complete`
   Future<DmUploadedAsset> upload(DmUploadFile file) async {
+    final session = _client.captureSession();
     final name = file.name.trim();
     final mime = file.mime.trim().toLowerCase();
     if (name.isEmpty || name.length > 180) {
@@ -121,7 +122,18 @@ final class DirectMessageMediaRepository {
       }
     }
 
-    await _upload(uploadUri, file, Map.unmodifiable(uploadHeaders));
+    session.ensureCurrent();
+    final guardedFile = DmUploadFile(
+      name: file.name,
+      mime: file.mime,
+      length: file.length,
+      openRead: () => file.openRead().map((chunk) {
+        session.ensureCurrent();
+        return chunk;
+      }),
+    );
+    await _upload(uploadUri, guardedFile, Map.unmodifiable(uploadHeaders));
+    session.ensureCurrent();
 
     final encodedAssetId = Uri.encodeComponent(assetId);
     final completed = await _client.request<Map<String, dynamic>>(

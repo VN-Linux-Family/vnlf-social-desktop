@@ -472,3 +472,19 @@ edits or vote totals. Replies whose parent was deleted become root comments with
 the recipient mention, since the verified API accepts only active root targets.
 The upstream comments list is capped at 100 oldest active rows without a cursor;
 viewing later comments needs an upstream contract change, not invented pagination.
+
+## Upload operation account boundaries — 2026-11-06
+
+Synthetic transfer tests reproduced a second-stage account race in both public
+article and private DM uploads: a raw PUT could finish after login/logout and
+then start its completion request with the next account. ApiClient now provides
+an operation-wide session scope. Uploads check it before raw transfer, on each
+file chunk and before completion; disposing the app's client also invalidates
+its scopes. Already-transmitted bytes cannot be recalled. No automatic retry is
+introduced. Completion must identify the presigned asset, and article completion
+must carry an explicit supported processing status instead of implicit success.
+
+The account-change and malformed-completion regressions pass, along with the
+relevant authentication/request and DM tests. These checks use synthetic data;
+no live upload was submitted. The owner named a controlled DM recipient for a
+later live check; only created test content may be cleaned up.
