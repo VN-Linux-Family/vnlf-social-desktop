@@ -32,8 +32,14 @@ replace a poll, because the server replaces option IDs on draft poll writes.
 Pinned source re-check: realtime is raw JSON WebSocket at `/ws/community`, with
 client events such as `channel:join`, `conversation:join`, `presence:heartbeat`
 and `dm:typing`, rather than Socket.IO or dotted `dm.join` frames. Server
-envelopes carry type/eventId/occurredAt/data. The native shared connection is
-still pending; source confirmation alone is not a live socket verification.
+envelopes carry type/eventId/occurredAt/data. Native channel and DM views now use
+an owner-bound shared connection with topic leases and reconnect catch-up. Its
+synthetic tests cover routing, duplicate events, viewer-specific reactions and
+polls, lifecycle, and in-flight history reconciliation. Source confirmation is
+not live socket verification: on 2026-11-06 an authenticated owner probe received
+HTTP 403 from Cloudflare for the WebSocket upgrade in this environment. No test
+message was sent; the connection closed, logout succeeded, and cleanup was clear.
+Whether this response is specific to this network or configuration remains unknown.
 
 ## Public article sharing (2026-11-05)
 

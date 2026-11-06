@@ -21,7 +21,8 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-438 Flutter tests and 37 release-tool tests pass; analysis, formatting, all three
+503 Flutter tests passed before the final direct-link guard, whose focused
+realtime suite passed separately; 37 release-tool tests pass. Analysis, formatting, all three
 workflow definitions, and the plain Dart HTTP/auth fixture smoke check pass.
 Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Channels and DMs now share the source-defined searchable directory and explicit routes; the fixture-only channel screen is removed. Phone detail views hide global navigation, direct links never fall back to another conversation, and image selection streams through the owner-bound upload pipeline. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks. Fresh Linux guest captures verify an inline-image article and moving video frames; a recoverable hardware-decoder fallback had incorrectly hidden video and is now fixed with bounded first-frame startup and lifecycle tests.
 
@@ -58,9 +59,17 @@ message were deleted and absence confirmed. Both sessions were logged out and
 cleanup registries cleared. These are HTTP/repository checks; persistent keyring
 storage, physical-device UI and realtime delivery are separate checks.
 
+The native shared realtime connection is now wired to visible channel and DM
+routes, with owner invalidation, event routing, bounded reconnects, and catch-up
+that preserves events racing history reads. Topic-less typing/read events remain
+unattributed. A production owner probe reached the active controlled conversation,
+but Cloudflare returned HTTP 403 to the authenticated upgrade in this environment;
+no test message was sent, the socket closed, logout succeeded, and cleanup was
+clear. Live delivery, the cause of the 403, and runtime visual parity remain open.
+
 Remaining work is tracked in `docs/source-parity-audit.md` and
 `docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
-live UI checks, notification/report runtime checks, recovery and realtime wiring, fuller profile/settings/projects/chat support,
+live UI checks, notification/report runtime checks, recovery and live realtime verification, fuller profile/settings/projects/chat support,
 remaining device media/voice, visual parity/performance and signing
 remain release gates. Do not replace these with simulated success states.
 

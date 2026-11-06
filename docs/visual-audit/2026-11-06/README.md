@@ -115,3 +115,12 @@ contain no Flutter overflow/exception. Headless software-renderer/audio warnings
 remain environment limitations; audible output and physical-device performance
 are unverified. Article quote/image spacing, shell placement, authenticated chat
 styling, profiles/decorations and the other parity-audit gates remain open.
+
+## Realtime connection notice
+
+The disconnected notice has synthetic widget and route coverage. On this host,
+two headless Linux capture attempts launched the application but did not produce
+a visible first frame; no new screenshot is presented as visual evidence. The
+existing [native communication capture](native-communication-desktop.png) shows
+the prior normal state. Authenticated website parity and live delivery remain
+unverified; the owner probe received HTTP 403 for the upgrade in this environment.
