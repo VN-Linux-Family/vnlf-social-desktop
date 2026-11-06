@@ -426,3 +426,49 @@ known marks, lists, headings, code, hard breaks and image attributes. Unsupporte
 blocks/marks and complex list structures remain preserved embeds. Poll editing,
 advanced editor shortcuts/paste, new composer live-account writes/cleanup and
 real-device file/media checks remain incomplete or unverified.
+
+## Comment mutation and media contract — 2026-11-05
+
+Pinned source `apps/api/src/modules/articles.ts:93` returns `pinned` (not
+`isPinned`), canPin, editedAt, attachments and gif. Native DTOs now retain these.
+Hidden VNLF stickers render a placeholder without fetching their image. Other
+GIF/sticker media and photo attachments render through native media widgets.
+Sticker pack browsing, media upload and mention suggestions remain separate gates.
+
+- `PUT /api/v1/comments/:id/vote`: `{value:-1|0|1}`, acknowledgment must contain
+  integer voteScore and valid viewerVote. Native callbacks were previously absent.
+- `PATCH /api/v1/comments/:id`: `{content}`, maximum 4000 UTF-16 code units;
+  server returns a full comment. Existing media remains, so empty text is valid
+  when media is present. Emptying a text-only comment uses confirmed deletion,
+  following the website's behavior.
+- `DELETE /api/v1/comments/:id`: require `{ok:true}`. Replies remain; a deleted
+  root's surviving replies are presented as roots rather than hidden.
+- `PUT /api/v1/articles/:id/pinned-comment`: `{commentId:UUID|null}`; require a
+  matching pinnedCommentId acknowledgment. Only canPin root comments expose it;
+  only the acknowledged root leads the discussion, with its replies.
+
+Requests serialize per comment, errors remain visible, failed edit text is kept,
+account changes discard pending UI results, and delete requires confirmation.
+New checks use synthetic transport data; these new actions have not yet been
+verified with live owner-account writes. No test content was created this turn.
+
+## Account request isolation — 2026-11-05
+
+Reproduced two request-layer races with a synthetic transport and a loopback HTTP
+server: clearing cached reads did not cancel an older queued write, and a write
+waiting on secure-cookie restoration could still leave after logout. ApiClient
+now tracks session generations, rejects stale queued requests before transport
+and stale results after transport, and clears session-scoped cache on changes.
+Login/register/logout and owner-state changes advance this generation. Native
+transport snapshots cookies and checks cleanup revisions after restoration and
+connection setup, so an older request cannot acquire the next account's cookie.
+Already-sent server writes cannot be undone by local cancellation; their late
+responses are ignored. Automatic write retry remains disabled.
+
+Fresh comment reads started after a mutation replace its temporary acknowledged
+UI state. A read begun before a later mutation cannot erase that newer result.
+This prevents an acknowledgment overlay from permanently overriding later server
+edits or vote totals. Replies whose parent was deleted become root comments with
+the recipient mention, since the verified API accepts only active root targets.
+The upstream comments list is capped at 100 oldest active rows without a cursor;
+viewing later comments needs an upstream contract change, not invented pagination.

@@ -162,6 +162,11 @@ this workstation. A rerun skips only uploaded assets with an exact size and SHA-
 match. A `--download-dir` argument reuses an existing artifact download; it does
 not download into a missing directory. Keep downloads outside the source tree.
 
-These native build results precede the new composer checkpoint. The composer
-passes 340 local Flutter tests, analysis, formatting and a native Linux release
-build; its new source still needs the next hosted matrix and device checks.
+Run `42079702029` at `04e0dca` also passed every binary target, quality checks
+and automatic private release publication for the native composer checkpoint.
+Private prerelease `ci-42079702029-1` contains all nine binaries plus release.json
+and SHA256SUMS. Each uploaded binary's server-reported SHA-256 digest and size
+was independently compared with release.json; complete=true, no missing targets.
+No manual recovery was needed for that run. Subsequent live-article typography
+and layout, comment-control and session-isolation changes pass 362 local Flutter tests and analysis; they need their own
+hosted checkpoint. Device checks and stable signing remain required.

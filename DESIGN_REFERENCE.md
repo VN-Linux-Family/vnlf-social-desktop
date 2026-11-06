@@ -199,8 +199,54 @@ processes afterward. All 11 native Linux ARM64 binaries passed architecture chec
 No Flutter overflow/exception appeared; headless GTK emitted an ATK embedding
 warning, so this capture is not proof of native assistive-technology behavior.
 
-Composer body styles follow the pinned source's `.article-prosemirror` and
-`.post-editor-canvas` values: article body 17px/1.72 (16px at ≤520px), POST editor
-14px/1.65, H2 29px/1.14 and H3 23px/1.2. The authenticated web composer screenshot
-is still pending. Desktop modal framing, title/author treatment, article detail
-reader typography/layout and advanced editing still need direct comparison.
+The original source-only editor sizing was superseded by live CSS inspection.
+The deployed global text-scale rule forces 13px on ordinary elements, including
+article headings and editor text; heading weight is globally 700. Reading the
+component stylesheet alone gives incorrect 17/29/23px sizes. Native typography
+now follows the computed live result: article body 13px/1.7, POST editor
+13px/1.6, editor H2 13px/1.14 and H3 13px/1.2.
+
+## Live article comparison — 2026-11-05
+
+Reference public route: `/a/luanti-co-le-cai-ten-hoi-la-voi-da-so-nguoi-dung-binh-thuong`.
+An isolated guest browser captured 1440×1000 and 430×1000 views. Its temporary
+profile and tab were removed afterward. Computed styles confirm article body
+13px/1.7, detail H2 13px/1.08/700, paragraph bottom margins 18px desktop/12px
+at ≤840px, and H2 margins 19px/10px desktop, 12px/7px compact. Adjacent vertical
+margins collapse to the greater value. Native regression checks measure this
+actual paragraph-to-heading gap, including the mobile breakpoint.
+
+Article details have their own reading layout, without the right sidebar:
+Article/read-time metadata, title, excerpt, author, divider, document, actions
+and comments. Desktop card max width is 780px with a 702px content column;
+compact mode is flat with 16px side padding, a 54px feature header and a back
+to feed control. The native article view now follows this structure. Legacy
+attachment media remains visible alongside asset-backed inline images.
+
+Web screenshots: `/tmp/vnlf-ui-review/web-article-desktop.png` and
+`web-article-mobile.png`. The Orca desktop compositor capture repeats the left
+sidebar at the far right; DOM inspection confirms this is a capture artifact.
+Native Linux comparisons use a guest session and transport that rejects every
+non-GET request. These captures are review evidence; advanced editor behavior,
+image/caption spacing, the shared desktop shell and phone navigation still need
+further comparison and device verification.
+
+The first native article captures revealed excess whitespace from empty TipTap
+paragraphs. A geometry test reproduced 124px between paragraphs where the live
+compact article leaves 12px. Empty article paragraphs now collapse without text
+line boxes; explicit POST line breaks remain intact. Native article captures are
+`/tmp/vnlf-ui-review/native-article-desktop.png` and `native-article-mobile.png`.
+Remaining visible differences include avatar decoration/initials, global shell
+placement, phone navigation and the website's fixed comment dock. These are
+tracked gaps, not claimed parity. Public content was read without a signed-in
+session and no live writes were made.
+
+The public article retains U+1F427 in its document, but this Linux host resolves
+`fc-match emoji` to DejaVu Sans and the native capture omits that glyph. Emoji
+fallback is therefore an observed distribution/UI gate, not missing server text.
+
+Committed comparison evidence is in
+[the November 6 visual review](docs/visual-audit/2026-11-06/README.md), including
+source/native article screenshots and synthetic native composer screenshots.
+Explicit editor block themes prevent package defaults from restoring larger
+list/quote text or enlarged inline code in headings.

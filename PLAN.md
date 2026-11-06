@@ -2,8 +2,7 @@
 
 This update supersedes the historical phase assignments and unknown-contract
 assumptions below. Codex owns `luank3/vnlf-production-audit` in its isolated
-worktree. Gemini 4 Argon completed a read-only source audit; its terminal is
-closed. Recovered channel/search/voice worker worktrees are preserved and their
+worktree. Gemini 4 Argon completed a read-only source audit; that terminal is closed. One new Argon worker owns the isolated direct-messages slice and runs no local builds or live requests. Recovered channel/search/voice worker worktrees are preserved and their
 changes are being integrated serially; no local worker builds are running.
 
 Authorized: use the owner's account for necessary write checks, remove all test
@@ -22,17 +21,15 @@ tracked files. The recovered live channel/voice/search/weekly-ranking slices hav
 passed full integration tests. The native composer supports rich editing,
 versioned autosave, secure local recovery, stable publish identities, image/video
 uploads, cover/inline images, format conversion and explicit conflict handling.
-340 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
-Its Linux desktop/phone captures use synthetic account data and no server writes.
+362 Flutter tests and 19 release-tool tests pass; analysis and formatting pass.
+Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks.
 
 Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
 `--concurrency=1`. Gradle heap 1536 MB, two workers, no daemon. Full hosted build
 matrix uses native x64/arm64 runners and three Android ABIs, with an artifact
 inventory and checksums. All nine native build targets passed in hosted run
-42072416319 and are preserved in private prerelease `ci-42072416319-1`. Windows
-uses Media Foundation on both architectures. Source-branch release creation hit
-GitHub's workflow-file permission guard; scoped publishing credentials and
-explicit private recovery are documented. Public repository creation failed with organization
+42079702029 at the native-composer checkpoint and were automatically published in private prerelease `ci-42079702029-1`; uploaded sizes and SHA-256 digests match its complete manifest. Windows
+uses Media Foundation on both architectures. Earlier source-branch release creation hit GitHub's workflow-file permission guard; scoped publishing credentials and explicit private recovery remain documented. Public repository creation failed with organization
 HTTP 403; an owner must create it and configure scoped publishing and stable
 signing secrets. User explicitly approved public stable/private CI distribution.
 
