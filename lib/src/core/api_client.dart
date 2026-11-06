@@ -59,6 +59,7 @@ final class ApiSessionScope {
 }
 
 final class ApiClient {
+  static const userAgent = 'vlf-flutter-dev/0.1 (unofficial community client)';
   ApiClient({
     required ApiTransport transport,
     List<ApiInterceptor> interceptors = const [],
@@ -125,7 +126,7 @@ final class ApiClient {
       body: body,
       query: query,
       headers: {
-        'User-Agent': 'vlf-flutter-dev/0.1 (unofficial community client)',
+        'User-Agent': userAgent,
         'Accept': 'application/json',
         if (body != null) 'Content-Type': 'application/json',
         ...headers,
