@@ -15,26 +15,35 @@ final class LiveFeedbackRepository implements FeedbackRepository {
       refresh: refresh,
       decode: (json) => json,
     );
-    return objectList(result['items'], 'feedback.items')
-        .map((item) => _ticket(item, 'feedback.ticket'))
-        .toList(growable: false);
+    return objectList(
+      result['items'],
+      'feedback.items',
+    ).map((item) => _ticket(item, 'feedback.ticket')).toList(growable: false);
   }
 
   @override
-  Future<FeedbackThread> loadThread(String ticketId, {bool refresh = false}) async {
+  Future<FeedbackThread> loadThread(
+    String ticketId, {
+    bool refresh = false,
+  }) async {
     final id = _pathId(ticketId);
     final json = await _client.get<Map<String, dynamic>>(
       '/api/v1/feedback/$id/messages',
       refresh: refresh,
       decode: (value) => value,
     );
-    final ticket = _ticket(objectValue(json['ticket'], 'feedback.ticket') ?? (throw const ParseFailure('feedback.ticket')), 'feedback.ticket');
+    final ticket = _ticket(
+      objectValue(json['ticket'], 'feedback.ticket') ??
+          (throw const ParseFailure('feedback.ticket')),
+      'feedback.ticket',
+    );
     if (ticket.id != id) throw const ParseFailure('feedback.ticket.id');
     return FeedbackThread(
       ticket: ticket,
-      messages: objectList(json['messages'], 'feedback.messages')
-          .map(_message)
-          .toList(growable: false),
+      messages: objectList(
+        json['messages'],
+        'feedback.messages',
+      ).map(_message).toList(growable: false),
     );
   }
 
@@ -47,7 +56,10 @@ final class LiveFeedbackRepository implements FeedbackRepository {
     final id = _pathId(ticketId);
     final clientId = clientMessageId.trim();
     final bodyText = content.trim();
-    if (clientId.length < 8 || clientId.length > 100 || bodyText.isEmpty || bodyText.length > 4000) {
+    if (clientId.length < 8 ||
+        clientId.length > 100 ||
+        bodyText.isEmpty ||
+        bodyText.length > 4000) {
       throw const ParseFailure('feedback.message.input');
     }
     final message = await _client.request<FeedbackMessage>(
@@ -93,7 +105,9 @@ FeedbackTicket _ticket(Map<String, dynamic> json, String path) {
     attachmentCount: intValue(json['attachmentCount'], '$path.attachmentCount'),
     createdAt: _date(json['createdAt'], '$path.createdAt'),
     updatedAt: _date(json['updatedAt'], '$path.updatedAt'),
-    resolvedAt: json['resolvedAt'] == null ? null : _date(json['resolvedAt'], '$path.resolvedAt'),
+    resolvedAt: json['resolvedAt'] == null
+        ? null
+        : _date(json['resolvedAt'], '$path.resolvedAt'),
     messageCount: intValue(json['messageCount'], '$path.messageCount'),
     staffReplied: _requiredBool(json['staffReplied'], '$path.staffReplied'),
   );
@@ -102,9 +116,16 @@ FeedbackTicket _ticket(Map<String, dynamic> json, String path) {
 FeedbackMessage _message(Map<String, dynamic> json) {
   final id = stringValue(json['id'], 'feedback.message.id');
   final content = stringValue(json['content'], 'feedback.message.content');
-  if (id.isEmpty || content.isEmpty) throw const ParseFailure('feedback.message');
+  if (id.isEmpty || content.isEmpty) {
+    throw const ParseFailure('feedback.message');
+  }
   final author = objectValue(json['author'], 'feedback.message.author');
-  final authorName = author == null ? null : stringValue(author['displayName'], 'feedback.message.author.displayName');
+  final authorName = author == null
+      ? null
+      : stringValue(
+          author['displayName'],
+          'feedback.message.author.displayName',
+        );
   return FeedbackMessage(
     id: id,
     staff: _requiredBool(json['staff'], 'feedback.message.staff'),
@@ -124,7 +145,9 @@ DateTime _date(Object? value, String path) {
 
 String _pathId(String value) {
   final id = value.trim();
-  if (!RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id)) throw const ParseFailure('feedback.id');
+  if (!RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id)) {
+    throw const ParseFailure('feedback.id');
+  }
   return Uri.encodeComponent(id);
 }
 

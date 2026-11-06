@@ -15,9 +15,7 @@ class AccountProfileScreen extends ConsumerWidget {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final state = ref.watch(accountProfileControllerProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ'),
-      ),
+      appBar: AppBar(title: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ')),
       body: SafeArea(
         child: switch (state) {
           AccountProfileLoading() => const Center(
@@ -140,7 +138,8 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                 keyboardType: field == ProfileField.website
                     ? TextInputType.url
                     : TextInputType.text,
-                autocorrect: field != ProfileField.username &&
+                autocorrect:
+                    field != ProfileField.username &&
                     field != ProfileField.website,
                 inputFormatters: [Utf16LengthFormatter(_limits[field]!)],
                 decoration: InputDecoration(

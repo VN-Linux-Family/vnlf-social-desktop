@@ -55,30 +55,25 @@ void main() {
   test('display name, bio and website respect UTF-16 limits', () {
     final check = checkProfileDraft(
       _original,
-      _with(
-        displayName: '   ',
-        bio: 'x' * 161,
-        website: 'h' * 501,
-      ),
+      _with(displayName: '   ', bio: 'x' * 161, website: 'h' * 501),
     );
     expect(check.errors, {
       ProfileField.displayName: ProfileFieldError.required,
       ProfileField.bio: ProfileFieldError.tooLong,
       ProfileField.website: ProfileFieldError.tooLong,
     });
-    expect(
-      checkProfileDraft(_original, _with(bio: '😀' * 80)).isValid,
-      isTrue,
-    );
-    expect(
-      checkProfileDraft(_original, _with(bio: '😀' * 81)).errors,
-      {ProfileField.bio: ProfileFieldError.tooLong},
-    );
+    expect(checkProfileDraft(_original, _with(bio: '😀' * 80)).isValid, isTrue);
+    expect(checkProfileDraft(_original, _with(bio: '😀' * 81)).errors, {
+      ProfileField.bio: ProfileFieldError.tooLong,
+    });
   });
 
   test('clearing bio and website is a valid change to empty strings', () {
     final check = checkProfileDraft(_original, _with(bio: '', website: ' '));
-    expect(check.patch.fields, {ProfileField.bio: '', ProfileField.website: ''});
+    expect(check.patch.fields, {
+      ProfileField.bio: '',
+      ProfileField.website: '',
+    });
   });
 
   test('an unchanged legacy value does not block other fields', () {

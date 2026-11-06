@@ -1,4 +1,5 @@
 enum FeedbackKind { feedback, bug, osSupport, driverSupport }
+
 enum FeedbackStatus { open, inReview, resolved, closed, deferred }
 
 final class FeedbackTicket {
@@ -42,8 +43,10 @@ final class FeedbackMessage {
 }
 
 final class FeedbackThread {
-  FeedbackThread({required this.ticket, required List<FeedbackMessage> messages})
-    : messages = List.unmodifiable(messages);
+  FeedbackThread({
+    required this.ticket,
+    required List<FeedbackMessage> messages,
+  }) : messages = List.unmodifiable(messages);
   final FeedbackTicket ticket;
   final List<FeedbackMessage> messages;
 }

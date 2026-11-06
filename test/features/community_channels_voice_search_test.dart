@@ -1,3 +1,6 @@
+import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -13,7 +16,6 @@ import 'channels/live_channels_test.dart' show channelJson, messageJson;
 
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
-import 'package:vnlfsocialapp/src/features/projects/presentation/projects_screen.dart';
 
 void main() {
   testWidgets('desktop feed search button opens global search', (tester) async {
@@ -241,33 +243,26 @@ void main() {
         tester,
         '/projects',
         overrides: [
-          projectsProvider.overrideWith(
-            (ref) async => ProjectsPage(
-              items: const [
-                ProjectItem(
-                  id: 'dart',
-                  name: 'Dart Tool',
-                  repo: {'language': 'Dart'},
-                ),
-                ProjectItem(
-                  id: 'rust',
-                  name: 'Rust Tool',
-                  repo: {'language': 'Rust'},
-                ),
-              ],
-            ),
+          projectDirectoryRepositoryProvider.overrideWithValue(
+            _FilteringProjectRepository(),
           ),
         ],
       );
       expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Rust'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rust (1)').last);
       await tester.pumpAndSettle();
       expect(find.text('Rust Tool'), findsOneWidget);
       expect(find.text('Dart Tool'), findsNothing);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Python'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Python (1)').last);
       await tester.pumpAndSettle();
       expect(find.text('Không có dự án phù hợp'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Tất cả'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tất cả ngôn ngữ').last);
       await tester.pumpAndSettle();
       expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
     },
@@ -341,4 +336,35 @@ Future<GoRouter> _pump(
   );
   await tester.pumpAndSettle();
   return router;
+}
+
+class _FilteringProjectRepository implements ProjectDirectoryRepository {
+  @override
+  Future<ProjectDirectoryPage> fetch(
+    ProjectFilters filters, {
+    String? cursor,
+    bool refresh = false,
+  }) async {
+    const all = [
+      ProjectItem(id: 'dart', name: 'Dart Tool', repo: {'language': 'Dart'}),
+      ProjectItem(id: 'rust', name: 'Rust Tool', repo: {'language': 'Rust'}),
+    ];
+    return ProjectDirectoryPage(
+      page: ProjectsPage(
+        items: all
+            .where(
+              (p) =>
+                  filters.language.isEmpty ||
+                  p.repo?['language'] == filters.language,
+            )
+            .toList(),
+      ),
+      types: const [],
+      languages: const [
+        ProjectFacet('Dart', 1),
+        ProjectFacet('Rust', 1),
+        ProjectFacet('Python', 1),
+      ],
+    );
+  }
 }

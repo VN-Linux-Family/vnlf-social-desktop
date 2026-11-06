@@ -11,19 +11,23 @@ import '../domain/account_profile_repository.dart';
 /// created; once the session changes every call fails with a 401 instead of
 /// reaching the next account.
 final class LiveAccountProfileRepository implements AccountProfileRepository {
-  LiveAccountProfileRepository(this._client)
+  LiveAccountProfileRepository(this._client, {this.expectedUserId})
     : _scope = _client.captureSession();
 
   final ApiClient _client;
+  final String? expectedUserId;
   final ApiSessionScope _scope;
 
   @override
-  Future<AccountProfile> load(String username) {
+  Future<AccountProfile> load(String username) async {
     _scope.ensureCurrent();
     return _client.get(
       '/api/v1/users/${Uri.encodeComponent(username)}',
       refresh: true,
       decode: (json) {
+        if (expectedUserId != null && json['id'] != expectedUserId) {
+          throw const ParseFailure('profile.owner');
+        }
         final name = stringValue(json['username'], 'profile.username');
         if (name.isEmpty) throw const ParseFailure('profile.username');
         return AccountProfile(

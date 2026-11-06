@@ -1,3 +1,5 @@
+import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -150,8 +152,8 @@ Future<void> _openProject(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        projectsProvider.overrideWith(
-          (ref) async => ProjectsPage(items: [item]),
+        projectDirectoryRepositoryProvider.overrideWithValue(
+          _DetailProjectRepository(item),
         ),
       ],
       child: MaterialApp(
@@ -179,4 +181,19 @@ double _contrast(Color a, Color b) {
   return first > second
       ? (first + 0.05) / (second + 0.05)
       : (second + 0.05) / (first + 0.05);
+}
+
+class _DetailProjectRepository implements ProjectDirectoryRepository {
+  _DetailProjectRepository(this.item);
+  final ProjectItem item;
+  @override
+  Future<ProjectDirectoryPage> fetch(
+    ProjectFilters filters, {
+    String? cursor,
+    bool refresh = false,
+  }) async => ProjectDirectoryPage(
+    page: ProjectsPage(items: [item]),
+    types: const [],
+    languages: const [],
+  );
 }

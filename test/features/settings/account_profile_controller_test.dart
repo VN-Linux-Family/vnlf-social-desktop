@@ -125,23 +125,26 @@ void main() {
     expect(state.profile, _server);
   });
 
-  test('an unclear failure is verified by reading, never by resending', () async {
-    final repo = _FakeRepository()..saveError = const TransportFailure();
-    final controller = await _ready(repo);
-    await controller.submit(
-      const AccountProfile(username: 'minh', displayName: 'Mới'),
-    );
-    expect(_editing(controller).outcomeUnknown, isTrue);
+  test(
+    'an unclear failure is verified by reading, never by resending',
+    () async {
+      final repo = _FakeRepository()..saveError = const TransportFailure();
+      final controller = await _ready(repo);
+      await controller.submit(
+        const AccountProfile(username: 'minh', displayName: 'Mới'),
+      );
+      expect(_editing(controller).outcomeUnknown, isTrue);
 
-    // The server did apply the write before the connection dropped.
-    repo.profile = const AccountProfile(username: 'minh', displayName: 'Mới');
-    await controller.verifyAfterUncertainWrite();
-    expect(repo.saved, hasLength(1));
-    final state = _editing(controller);
-    expect(state.outcomeUnknown, isFalse);
-    expect(state.saved, isTrue);
-    expect(state.profile.displayName, 'Mới');
-  });
+      // The server did apply the write before the connection dropped.
+      repo.profile = const AccountProfile(username: 'minh', displayName: 'Mới');
+      await controller.verifyAfterUncertainWrite();
+      expect(repo.saved, hasLength(1));
+      final state = _editing(controller);
+      expect(state.outcomeUnknown, isFalse);
+      expect(state.saved, isTrue);
+      expect(state.profile.displayName, 'Mới');
+    },
+  );
 
   test('verification that finds no change does not claim success', () async {
     final repo = _FakeRepository()..saveError = const HttpFailure(503);

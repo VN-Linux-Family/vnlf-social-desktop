@@ -27,6 +27,21 @@ final _patch = ProfilePatch({
 });
 
 void main() {
+  test('profile reads cannot adopt another account after an uncertain username change', () async {
+    final repository = LiveAccountProfileRepository(
+      _client(
+        [],
+        (_) => _json({
+          'id': 'other-user',
+          'username': 'taken',
+          'displayName': 'Other',
+        }),
+      ),
+      expectedUserId: 'owner',
+    );
+    await expectLater(repository.load('taken'), throwsA(isA<ParseFailure>()));
+  });
+
   test('load reads the public profile by encoded username', () async {
     final log = <ApiRequest>[];
     final repo = LiveAccountProfileRepository(
@@ -102,7 +117,10 @@ void main() {
     final repo = LiveAccountProfileRepository(
       _client(log, (_) => _json({'ok': true})),
     );
-    await expectLater(repo.save(ProfilePatch({})), throwsA(isA<ParseFailure>()));
+    await expectLater(
+      repo.save(ProfilePatch({})),
+      throwsA(isA<ParseFailure>()),
+    );
     expect(log, isEmpty);
   });
 

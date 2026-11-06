@@ -97,9 +97,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(
-                      english ? 'Edit profile' : 'Chỉnh sửa hồ sơ',
-                    ),
+                    label: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ'),
                   ),
                 ],
                 const SizedBox(height: 16),

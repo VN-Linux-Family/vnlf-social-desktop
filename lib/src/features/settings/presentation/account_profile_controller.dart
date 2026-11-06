@@ -43,11 +43,8 @@ final class AccountProfileEditing extends AccountProfileState {
 }
 
 class AccountProfileController extends StateNotifier<AccountProfileState> {
-  AccountProfileController(
-    this._repository,
-    this._username, {
-    this.onSaved,
-  }) : super(const AccountProfileLoading()) {
+  AccountProfileController(this._repository, this._username, {this.onSaved})
+    : super(const AccountProfileLoading()) {
     unawaited(load());
   }
 
@@ -76,7 +73,10 @@ class AccountProfileController extends StateNotifier<AccountProfileState> {
     if (current is! AccountProfileEditing || current.saving) return;
     final check = checkProfileDraft(current.profile, draft);
     if (!check.isValid) {
-      state = AccountProfileEditing(profile: current.profile, errors: check.errors);
+      state = AccountProfileEditing(
+        profile: current.profile,
+        errors: check.errors,
+      );
       return;
     }
     if (check.patch.isEmpty) {
@@ -120,9 +120,10 @@ class AccountProfileController extends StateNotifier<AccountProfileState> {
         if (!mounted) return;
         final applied = _pending == null
             ? false
-            : checkProfileDraft(profile, current.profile.apply(_pending!))
-                  .patch
-                  .isEmpty;
+            : checkProfileDraft(
+                profile,
+                current.profile.apply(_pending!),
+              ).patch.isEmpty;
         _pending = null;
         state = AccountProfileEditing(profile: profile, saved: applied);
         if (applied) onSaved?.call();
@@ -168,8 +169,13 @@ class AccountProfileController extends StateNotifier<AccountProfileState> {
 
 final accountProfileRepositoryProvider =
     Provider.autoDispose<AccountProfileRepository>((ref) {
-      ref.watch(sessionStateProvider.select((session) => session?.userId));
-      return LiveAccountProfileRepository(ref.watch(apiClientProvider));
+      final owner = ref.watch(
+        sessionStateProvider.select((session) => session?.userId),
+      );
+      return LiveAccountProfileRepository(
+        ref.watch(apiClientProvider),
+        expectedUserId: owner,
+      );
     });
 
 /// Rebuilt (and the old controller discarded) whenever the signed-in account
@@ -184,7 +190,8 @@ final accountProfileControllerProvider =
       return AccountProfileController(
         ref.watch(accountProfileRepositoryProvider),
         username,
-        onSaved: () =>
-            unawaited(ref.read(authControllerProvider.notifier).refreshSession()),
+        onSaved: () => unawaited(
+          ref.read(authControllerProvider.notifier).refreshSession(),
+        ),
       );
     });

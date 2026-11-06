@@ -1,3 +1,5 @@
+import '../features/projects/detail/presentation/project_detail_screen.dart';
+import '../features/feedback/feedback.dart';
 import '../features/notifications/presentation/notifications_sheet.dart';
 
 import 'dart:convert';
@@ -133,6 +135,8 @@ GoRouter createMainRouter() {
               communication && state.uri.path.split('/').length > 2;
           final active = communication
               ? VnlfNavDestination.messages
+              : state.uri.path.startsWith('/projects/')
+              ? VnlfNavDestination.projects
               : destinations.entries
                         .where((entry) => entry.value == state.uri.path)
                         .map((entry) => entry.key)
@@ -216,7 +220,10 @@ GoRouter createMainRouter() {
                       '/search',
                     ].contains(state.uri.path) ||
                     state.uri.path.startsWith('/thread/') ||
-                    state.uri.path.startsWith('/profile/'),
+                    state.uri.path.startsWith('/profile/') ||
+                    state.uri.path == '/feedback' ||
+                    state.uri.path.startsWith('/feedback/') ||
+                    state.uri.path.startsWith('/projects/'),
                 rightSidebarChild:
                     state.uri.path.startsWith('/thread/') && !articleDetail
                     ? ThreadSidebar(postId: state.pathParameters['id']!)
@@ -277,6 +284,30 @@ GoRouter createMainRouter() {
             path: '/projects',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProjectsScreen()),
+          ),
+          GoRoute(
+            path: '/projects/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectDetailScreen(slug: state.pathParameters['slug']!),
+            ),
+          ),
+          GoRoute(
+            path: '/feedback',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: FeedbackHistoryScreen(
+                onOpenThread: (id) =>
+                    context.push('/feedback/${Uri.encodeComponent(id)}'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/feedback/:id',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: FeedbackThreadScreen(
+                ticketId: state.pathParameters['id']!,
+                onBack: () => context.go('/feedback'),
+              ),
+            ),
           ),
           GoRoute(
             path: '/thread/:id',
@@ -591,6 +622,20 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                         ),
                       ],
                     ),
+                    if (session != null)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            context.push('/feedback');
+                          },
+                          icon: const Icon(Icons.history),
+                          label: Text(
+                            english ? 'My feedback' : 'Góp ý của tôi',
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 18),
                     Container(
                       padding: const EdgeInsets.all(3),

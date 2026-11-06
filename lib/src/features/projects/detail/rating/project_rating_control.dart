@@ -8,7 +8,12 @@ import '../../../../core/api_client.dart';
 
 /// A server-confirmed rating summary. Distribution is ordered from 1 to 5.
 class ProjectRatingSnapshot {
-  const ProjectRatingSnapshot({required this.average, required this.count, required this.myRating, required this.distribution});
+  const ProjectRatingSnapshot({
+    required this.average,
+    required this.count,
+    required this.myRating,
+    required this.distribution,
+  });
   final double? average;
   final int count;
   final int? myRating;
@@ -41,27 +46,52 @@ class ApiProjectRatingRepository implements ProjectRatingRepository {
   }
 }
 
-ProjectRatingSnapshot _decodeAcknowledgement(Map<String, dynamic> json, int? expected) {
+ProjectRatingSnapshot _decodeAcknowledgement(
+  Map<String, dynamic> json,
+  int? expected,
+) {
   final rating = json['rating'];
   final distribution = json['ratingDistribution'];
   final mine = json['myRating'];
-  if (rating is! Map || !rating.containsKey('average') || !json.containsKey('myRating') || mine != expected || distribution is! List || distribution.length != 5 || distribution.any((v) => v is! int || v < 0)) {
+  if (rating is! Map ||
+      !rating.containsKey('average') ||
+      !json.containsKey('myRating') ||
+      mine != expected ||
+      distribution is! List ||
+      distribution.length != 5 ||
+      distribution.any((v) => v is! int || v < 0)) {
     throw const ParseFailure('rating acknowledgement');
   }
   final average = rating['average'];
   final count = rating['count'];
-  if (count is! int || count < 0 || (average != null && (average is! num || !average.isFinite || average < 1 || average > 5)) || (count == 0) != (average == null)) {
+  if (count is! int ||
+      count < 0 ||
+      (average != null &&
+          (average is! num ||
+              !average.isFinite ||
+              average < 1 ||
+              average > 5)) ||
+      (count == 0) != (average == null)) {
     throw const ParseFailure('rating acknowledgement');
   }
   final values = distribution.cast<int>();
-  if (values.fold<int>(0, (sum, value) => sum + value) != count || (expected != null && values[expected - 1] == 0)) {
-    throw const ParseFailure('rating acknowledgement');
-  }
-  return ProjectRatingSnapshot(average: (average as num?)?.toDouble(), count: count, myRating: expected, distribution: List.unmodifiable(values));
+  // The server reads the aggregate, distribution and viewer rating in separate
+  // queries after the write, so concurrent votes can make their counts differ.
+  return ProjectRatingSnapshot(
+    average: (average as num?)?.toDouble(),
+    count: count,
+    myRating: expected,
+    distribution: List.unmodifiable(values),
+  );
 }
 
 class ProjectRatingState {
-  const ProjectRatingState({required this.data, required this.canRate, this.pending = false, this.error = false});
+  const ProjectRatingState({
+    required this.data,
+    required this.canRate,
+    this.pending = false,
+    this.error = false,
+  });
   final ProjectRatingSnapshot data;
   final bool canRate;
   final bool pending;
@@ -69,12 +99,17 @@ class ProjectRatingState {
 }
 
 class ProjectRatingController extends StateNotifier<ProjectRatingState> {
-  ProjectRatingController(this.repository, this.projectId, ProjectRatingSnapshot initial, bool canRate)
-      : super(ProjectRatingState(data: initial, canRate: canRate));
+  ProjectRatingController(
+    this.repository,
+    this.projectId,
+    ProjectRatingSnapshot initial,
+    bool canRate,
+  ) : super(ProjectRatingState(data: initial, canRate: canRate));
   final ProjectRatingRepository repository;
   final String projectId;
   int _generation = 0;
   bool _invalidated = false;
+  ProjectRatingState get currentState => state;
   bool _changed = false;
 
   /// Initial detail is only accepted before any local operation or session change.
@@ -82,7 +117,11 @@ class ProjectRatingController extends StateNotifier<ProjectRatingState> {
     if (_invalidated || _changed || state.pending) {
       if (!canRate && state.canRate) {
         _generation++;
-        state = ProjectRatingState(data: state.data, canRate: false, error: state.error);
+        state = ProjectRatingState(
+          data: state.data,
+          canRate: false,
+          error: state.error,
+        );
       }
       return;
     }
@@ -93,11 +132,23 @@ class ProjectRatingController extends StateNotifier<ProjectRatingState> {
     _generation++;
     _invalidated = true;
     final old = state.data;
-    state = ProjectRatingState(data: ProjectRatingSnapshot(average: old.average, count: old.count, myRating: null, distribution: old.distribution), canRate: false);
+    state = ProjectRatingState(
+      data: ProjectRatingSnapshot(
+        average: old.average,
+        count: old.count,
+        myRating: null,
+        distribution: old.distribution,
+      ),
+      canRate: false,
+    );
   }
 
   Future<void> save(int? score) async {
-    if (!state.canRate || state.pending || (score != null && (score < 1 || score > 5))) return;
+    if (!state.canRate ||
+        state.pending ||
+        (score != null && (score < 1 || score > 5))) {
+      return;
+    }
     _changed = true;
     final generation = ++_generation;
     final previous = state.data;
@@ -121,23 +172,39 @@ class ProjectRatingController extends StateNotifier<ProjectRatingState> {
 
 /// Remount with a new key after a fresh, session-guarded detail load.
 class ProjectRatingControl extends ConsumerStatefulWidget {
-  const ProjectRatingControl({super.key, required this.projectId, required this.initialAverage, required this.initialCount, required this.initialMyRating, required this.initialDistribution, required this.canRate});
+  const ProjectRatingControl({
+    super.key,
+    required this.projectId,
+    required this.initialAverage,
+    required this.initialCount,
+    required this.initialMyRating,
+    required this.initialDistribution,
+    required this.canRate,
+    this.onRefresh,
+  });
   final String projectId;
   final double? initialAverage;
   final int initialCount;
   final int? initialMyRating;
   final List<int> initialDistribution;
   final bool canRate;
+  final VoidCallback? onRefresh;
 
   @override
-  ConsumerState<ProjectRatingControl> createState() => _ProjectRatingControlState();
+  ConsumerState<ProjectRatingControl> createState() =>
+      _ProjectRatingControlState();
 }
 
 class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
   late ProjectRatingController controller;
   late void Function() stopObserving;
   late void Function() stopListening;
-  ProjectRatingSnapshot get initial => ProjectRatingSnapshot(average: widget.initialAverage, count: widget.initialCount, myRating: widget.initialMyRating, distribution: List.unmodifiable(widget.initialDistribution));
+  ProjectRatingSnapshot get initial => ProjectRatingSnapshot(
+    average: widget.initialAverage,
+    count: widget.initialCount,
+    myRating: widget.initialMyRating,
+    distribution: List.unmodifiable(widget.initialDistribution),
+  );
 
   @override
   void initState() {
@@ -146,9 +213,18 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
   }
 
   void _start() {
-    controller = ProjectRatingController(ref.read(projectRatingRepositoryProvider), widget.projectId, initial, widget.canRate);
-    stopObserving = ref.read(apiClientProvider).observeSessionInvalidation(controller.invalidateSession);
-    stopListening = controller.addListener((_) { if (mounted) setState(() {}); }, fireImmediately: false);
+    controller = ProjectRatingController(
+      ref.read(projectRatingRepositoryProvider),
+      widget.projectId,
+      initial,
+      widget.canRate,
+    );
+    stopObserving = ref
+        .read(apiClientProvider)
+        .observeSessionInvalidation(controller.invalidateSession);
+    stopListening = controller.addListener((_) {
+      if (mounted) setState(() {});
+    }, fireImmediately: false);
   }
 
   @override
@@ -175,27 +251,67 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
   @override
   Widget build(BuildContext context) {
     final en = Localizations.localeOf(context).languageCode == 'en';
-    final state = controller.state;
-        final data = state.data;
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(data.average == null ? (en ? 'No ratings yet' : 'Chưa có đánh giá') : '${data.average!.toStringAsFixed(1)} / 5 · ${data.count} ${en ? 'ratings' : 'đánh giá'}'),
-          if (data.count > 0)
-            for (var score = 5; score >= 1; score--)
-              Text('$score ★  ${data.distribution.length >= score ? data.distribution[score - 1] : 0}'),
-          if (data.myRating != null) Text('${en ? 'Your rating' : 'Đánh giá của bạn'}: ${data.myRating} / 5'),
-          if (state.canRate) ...[
-            Wrap(children: [
+    final state = controller.currentState;
+    final data = state.data;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          data.average == null
+              ? (en ? 'No ratings yet' : 'Chưa có đánh giá')
+              : '${data.average!.toStringAsFixed(1)} / 5 · ${data.count} ${en ? 'ratings' : 'đánh giá'}',
+        ),
+        if (data.count > 0)
+          for (var score = 5; score >= 1; score--)
+            Text(
+              '$score ★  ${data.distribution.length >= score ? data.distribution[score - 1] : 0}',
+            ),
+        if (data.myRating != null)
+          Text(
+            '${en ? 'Your rating' : 'Đánh giá của bạn'}: ${data.myRating} / 5',
+          ),
+        if (state.canRate) ...[
+          Wrap(
+            children: [
               for (var score = 1; score <= 5; score++)
-                Semantics(selected: data.myRating == score, button: true, child: IconButton(
-                  tooltip: en ? '$score stars' : '$score sao',
-                  onPressed: state.pending ? null : () => controller.save(score),
-                  icon: Icon(data.myRating != null && score <= data.myRating! ? Icons.star : Icons.star_border),
-                )),
-            ]),
-            if (data.myRating != null) TextButton(onPressed: state.pending ? null : () => controller.save(null), child: Text(en ? 'Remove rating' : 'Bỏ đánh giá')),
-          ],
-          if (state.pending) Text(en ? 'Saving…' : 'Đang lưu…'),
-          if (state.error) Text(en ? 'Could not save rating. Please try again.' : 'Không thể lưu đánh giá. Vui lòng thử lại.'),
-        ]);
+                Semantics(
+                  selected: data.myRating == score,
+                  button: true,
+                  child: IconButton(
+                    tooltip: en ? '$score stars' : '$score sao',
+                    onPressed: state.pending || state.error
+                        ? null
+                        : () => controller.save(score),
+                    icon: Icon(
+                      data.myRating != null && score <= data.myRating!
+                          ? Icons.star
+                          : Icons.star_border,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (data.myRating != null)
+            TextButton(
+              onPressed: state.pending || state.error
+                  ? null
+                  : () => controller.save(null),
+              child: Text(en ? 'Remove rating' : 'Bỏ đánh giá'),
+            ),
+        ],
+        if (state.pending) Text(en ? 'Saving…' : 'Đang lưu…'),
+        if (state.error)
+          Text(
+            en
+                ? 'Could not confirm the rating. Refresh before trying again.'
+                : 'Chưa xác nhận được đánh giá. Hãy làm mới trước khi thử lại.',
+          ),
+        if (state.error && widget.onRefresh != null)
+          TextButton(
+            onPressed: widget.onRefresh,
+            child: Text(en ? 'Refresh' : 'Làm mới'),
+          ),
+      ],
+    );
   }
 }
