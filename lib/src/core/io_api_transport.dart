@@ -4,7 +4,7 @@ import 'dart:io';
 
 import '../domain/models.dart' show StorageFailure;
 import 'api_client.dart';
-import 'session_storage.dart';
+import 'session_storage_contract.dart';
 
 /// Native HTTP transport with persistent, revision-guarded session cookies.
 final class IoApiTransport {
