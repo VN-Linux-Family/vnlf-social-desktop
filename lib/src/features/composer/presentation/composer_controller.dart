@@ -8,6 +8,7 @@ import '../../../domain/models.dart' show StorageFailure;
 import '../data/composer_recovery.dart';
 import '../domain/composer_validation.dart';
 import '../domain/composer_draft.dart';
+import '../domain/composer_poll.dart';
 
 final class ComposerController extends ChangeNotifier {
   ComposerController({
@@ -150,15 +151,39 @@ final class ComposerController extends ChangeNotifier {
     try {
       final saved = await _repository.save(snapshot);
       _requireActive();
+      final acknowledged = snapshot.pollChanged
+          ? saved.copyWith(pollDraft: snapshot.pollDraft, pollChanged: true)
+          : saved;
       _draft = revision == _revision
-          ? saved
+          ? acknowledged
           : _draft.copyWith(
               version: saved.version,
               status: saved.status,
               slug: saved.slug,
             );
-      dirty = revision != _revision;
       conflictingDraft = null;
+      dirty = revision != _revision || _draft.pollChanged;
+      if (snapshot.pollChanged) {
+        final input = snapshot.pollDraft?.validated;
+        if (snapshot.pollDraft != null && input == null) return;
+        final poll = await _repository.savePoll(snapshot.id, input);
+        _requireActive();
+        final samePoll =
+            snapshot.format == _draft.format &&
+            (snapshot.pollDraft == null
+                ? _draft.pollDraft == null
+                : snapshot.pollDraft!.sameInput(_draft.pollDraft));
+        _draft = samePoll
+            ? _draft.copyWith(
+                poll: poll,
+                pollDraft: poll == null
+                    ? null
+                    : ComposerPollDraft.fromPoll(poll),
+                pollChanged: false,
+              )
+            : _draft.copyWith(poll: poll);
+      }
+      dirty = revision != _revision || _draft.pollChanged;
     } on HttpFailure catch (failure) {
       if (failure.code == 'ARTICLE_VERSION_CONFLICT' && _active) {
         try {
@@ -174,7 +199,7 @@ final class ComposerController extends ChangeNotifier {
   Future<bool> save() async =>
       await _mutate(() async {
         await _save();
-        return true;
+        return !_draft.pollChanged;
       }) ??
       false;
 

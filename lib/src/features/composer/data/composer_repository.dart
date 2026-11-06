@@ -5,12 +5,17 @@ import '../../../core/api_client.dart';
 import '../../../data/field_reader.dart';
 import '../domain/composer_draft.dart';
 import '../domain/composer_validation.dart';
+import '../domain/composer_poll.dart';
+import '../../polls/domain/poll_models.dart';
+import '../../polls/data/poll_dto.dart';
+import '../../polls/data/live_poll_repository.dart';
 
 typedef AssetUpload = Future<void> Function(Uri url, ComposerUpload file);
 
 ComposerDraft draftFromJson(Map<String, dynamic> json) {
   final id = stringValue(json['id'], 'draft.id');
   if (id.isEmpty) throw const ParseFailure('draft.id');
+  final poll = PollDto.optional(json['poll']);
   return ComposerDraft(
     id: id,
     version: intValue(json['version'], 'draft.version'),
@@ -39,6 +44,8 @@ ComposerDraft draftFromJson(Map<String, dynamic> json) {
     coverAlt: stringValue(json['coverAlt'], 'draft.coverAlt'),
     coverUrl: nullableString(json['coverUrl'], 'draft.coverUrl'),
     publishedAt: nullableString(json['publishedAt'], 'draft.publishedAt'),
+    poll: poll,
+    pollDraft: poll == null ? null : ComposerPollDraft.fromPoll(poll),
   );
 }
 
@@ -118,6 +125,18 @@ final class LiveComposerRepository implements ComposerRepository {
       }),
       decode: draftFromJson,
     );
+  }
+
+  @override
+  Future<Poll?> savePoll(String id, PollInput? input) async {
+    final poll = await LivePollRepository(_client).setDraftPoll(id, input);
+    if (poll != null &&
+        (poll.totalVotes != 0 ||
+            poll.viewerOptionId != null ||
+            poll.options.any((option) => option.votes != 0))) {
+      throw const ParseFailure('composer.pollAck');
+    }
+    return poll;
   }
 
   @override

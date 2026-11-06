@@ -5,6 +5,7 @@ import '../domain/composer_draft.dart';
 import 'composer_controller.dart';
 import 'composer_editor.dart';
 import 'composer_metadata.dart';
+import 'composer_poll_editor.dart';
 
 class ComposerWritingPane extends StatelessWidget {
   const ComposerWritingPane({
@@ -92,6 +93,18 @@ class ComposerWritingPane extends StatelessWidget {
                 ],
               ),
             ),
+            if (draft.format == 'POST')
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: ComposerPollEditor(
+                  draft: draft,
+                  disabled: locked,
+                  onChanged: controller.edit,
+                ),
+              ),
             if (draft.media.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(12),

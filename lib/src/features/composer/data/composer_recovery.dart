@@ -1,8 +1,10 @@
 import 'dart:convert';
 
-import '../../../core/session_storage.dart';
+import '../../../core/session_storage_contract.dart';
 import '../../../domain/models.dart';
 import '../domain/composer_draft.dart';
+import '../domain/composer_poll.dart';
+import '../../../data/field_reader.dart';
 import 'composer_repository.dart';
 
 final class RecoveredComposition {
@@ -34,8 +36,23 @@ final class ComposerRecovery {
         ...json,
         'id': json['id'] == '' ? 'local' : json['id'],
       });
+      final rawPoll = objectValue(json['localPoll'], 'recovery.localPoll');
       return RecoveredComposition(
-        draft.copyWith(id: json['id'] as String),
+        draft.copyWith(
+          id: json['id'] as String,
+          pollDraft: json.containsKey('localPoll')
+              ? rawPoll == null
+                    ? null
+                    : ComposerPollDraft(
+                        stringValue(
+                          rawPoll['question'],
+                          'recovery.poll.question',
+                        ),
+                        stringList(rawPoll['options'], 'recovery.poll.options'),
+                      )
+              : draft.pollDraft,
+          pollChanged: json['localPollChanged'] == true,
+        ),
         value['dirty'] == true,
         value['publishKey'] as String?,
       );
@@ -73,6 +90,29 @@ final class ComposerRecovery {
               'coverUrl': value.draft.coverUrl,
               'coverAlt': value.draft.coverAlt,
               'publishedAt': value.draft.publishedAt,
+              'localPoll': value.draft.pollDraft == null
+                  ? null
+                  : {
+                      'question': value.draft.pollDraft!.question,
+                      'options': value.draft.pollDraft!.options,
+                    },
+              'localPollChanged': value.draft.pollChanged,
+              'poll': value.draft.poll == null
+                  ? null
+                  : {
+                      'id': value.draft.poll!.id,
+                      'question': value.draft.poll!.question,
+                      'options': [
+                        for (final option in value.draft.poll!.options)
+                          {
+                            'id': option.id,
+                            'label': option.label,
+                            'votes': option.votes,
+                          },
+                      ],
+                      'totalVotes': value.draft.poll!.totalVotes,
+                      'viewerOptionId': value.draft.poll!.viewerOptionId,
+                    },
               'attachments': value.draft.media.map(_media).toList(),
               'assets': value.draft.assets.values.map(_media).toList(),
             },

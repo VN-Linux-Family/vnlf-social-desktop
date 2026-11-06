@@ -330,6 +330,30 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         );
         return;
       }
+      if (draft.publishedAt == null && draft.pollDraft != null) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(en ? 'Switch to an article?' : 'Chuyển sang Article?'),
+            content: Text(
+              en
+                  ? 'Polls are available in regular posts. Switching removes this draft’s poll.'
+                  : 'Bình chọn chỉ dùng trong bài thường. Chuyển sang Article sẽ gỡ bình chọn của bản nháp.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(en ? 'Cancel' : 'Hủy'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(en ? 'Switch' : 'Chuyển'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !mounted) return;
+      }
       try {
         controller.edit(asArticle(controller.draft));
       } catch (failure) {

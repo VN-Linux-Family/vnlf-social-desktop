@@ -7,6 +7,18 @@ String composerFailureText(Object failure, bool english) {
         'Write some content or add media before publishing.',
         'Viết nội dung hoặc thêm ảnh, video trước khi đăng.',
       ),
+      'composer.pollInvalid': (
+        'Enter a question and at least two distinct choices before publishing.',
+        'Nhập câu hỏi và ít nhất hai lựa chọn khác nhau trước khi đăng.',
+      ),
+      'composer.pollLocked': (
+        'A published post’s poll cannot be replaced or removed.',
+        'Không thể thay hoặc gỡ bình chọn của bài đã đăng.',
+      ),
+      'composer.pollPostOnly': (
+        'Polls are supported in regular posts only.',
+        'Bình chọn chỉ dùng trong bài đăng thường.',
+      ),
       'composer.missingAsset': (
         'Some images need uploading before switching formats. Your article is kept.',
         'Một số ảnh cần được tải lên trước khi đổi định dạng. Bài viết vẫn được giữ.',

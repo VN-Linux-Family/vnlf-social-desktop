@@ -1,3 +1,6 @@
+import '../../polls/domain/poll_models.dart';
+import 'composer_poll.dart';
+
 final class DraftMedia {
   const DraftMedia({
     required this.id,
@@ -64,6 +67,9 @@ final class ComposerDraft {
     this.coverUrl,
     this.assets = const {},
     this.publishedAt,
+    this.poll,
+    this.pollDraft,
+    this.pollChanged = false,
   });
   final String id;
   final int version;
@@ -80,6 +86,9 @@ final class ComposerDraft {
   final String? coverUrl;
   final Map<String, DraftMedia> assets;
   final String? publishedAt;
+  final Poll? poll;
+  final ComposerPollDraft? pollDraft;
+  final bool pollChanged;
 
   ComposerDraft copyWith({
     String? id,
@@ -96,6 +105,9 @@ final class ComposerDraft {
     Map<String, DraftMedia>? assets,
     String? status,
     String? slug,
+    Object? poll = _unchanged,
+    Object? pollDraft = _unchanged,
+    bool? pollChanged,
   }) => ComposerDraft(
     id: id ?? this.id,
     version: version ?? this.version,
@@ -116,6 +128,11 @@ final class ComposerDraft {
     coverAlt: coverAlt ?? this.coverAlt,
     assets: assets ?? this.assets,
     publishedAt: publishedAt,
+    poll: identical(poll, _unchanged) ? this.poll : poll as Poll?,
+    pollDraft: identical(pollDraft, _unchanged)
+        ? this.pollDraft
+        : pollDraft as ComposerPollDraft?,
+    pollChanged: pollChanged ?? this.pollChanged,
   );
 }
 
@@ -124,6 +141,7 @@ abstract interface class ComposerRepository {
   Future<ComposerDraft> load(String id, {bool refresh = false});
   Future<List<ComposerDraft>> drafts();
   Future<ComposerDraft> save(ComposerDraft draft);
+  Future<Poll?> savePoll(String id, PollInput? input);
   Future<ComposerDraft> publish(
     ComposerDraft draft, {
     required String idempotencyKey,

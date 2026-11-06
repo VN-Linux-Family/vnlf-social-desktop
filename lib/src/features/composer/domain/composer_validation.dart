@@ -2,6 +2,18 @@ import '../../../domain/models.dart';
 import 'composer_draft.dart';
 
 void validateDraft(ComposerDraft draft, {bool publishing = false}) {
+  if (draft.pollChanged &&
+      (draft.publishedAt != null || draft.status == 'PUBLISHED')) {
+    throw const ParseFailure('composer.pollLocked');
+  }
+  if (draft.format == 'ARTICLE' && draft.pollDraft != null) {
+    throw const ParseFailure('composer.pollPostOnly');
+  }
+  if (publishing &&
+      draft.pollDraft != null &&
+      draft.pollDraft!.validated == null) {
+    throw const ParseFailure('composer.pollInvalid');
+  }
   if (!const {'POST', 'ARTICLE'}.contains(draft.format)) {
     throw const ParseFailure('composer.format');
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/utf16_length_formatter.dart';
+
 import '../domain/composer_draft.dart';
 
 class ComposerMetadata extends StatelessWidget {
@@ -98,6 +100,7 @@ class ComposerTextField extends StatefulWidget {
     this.maxLength,
     this.maxLines = 1,
     this.disabled = false,
+    this.utf16Limit = false,
   });
   final String label;
   final String value;
@@ -105,6 +108,7 @@ class ComposerTextField extends StatefulWidget {
   final int? maxLength;
   final int maxLines;
   final bool disabled;
+  final bool utf16Limit;
   @override
   State<ComposerTextField> createState() => _ComposerTextFieldState();
 }
@@ -135,6 +139,17 @@ class _ComposerTextFieldState extends State<ComposerTextField> {
     focusNode: _focus,
     readOnly: widget.disabled,
     maxLength: widget.maxLength,
+    inputFormatters: widget.utf16Limit && widget.maxLength != null
+        ? [Utf16LengthFormatter(widget.maxLength!)]
+        : null,
+    buildCounter: widget.utf16Limit
+        ? (
+            context, {
+            required currentLength,
+            required isFocused,
+            required maxLength,
+          }) => Text('${_controller.text.length}/${widget.maxLength}')
+        : null,
     maxLines: widget.maxLines,
     onChanged: widget.onChanged,
     decoration: InputDecoration(

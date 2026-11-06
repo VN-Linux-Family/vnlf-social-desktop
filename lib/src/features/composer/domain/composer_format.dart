@@ -10,6 +10,10 @@ ComposerDraft asArticle(ComposerDraft draft) {
   }
   return draft.copyWith(
     format: 'ARTICLE',
+    pollDraft: null,
+    pollChanged:
+        draft.publishedAt == null &&
+        (draft.pollDraft != null || draft.pollChanged),
     media: const [],
     assets: Map.unmodifiable({
       ...draft.assets,

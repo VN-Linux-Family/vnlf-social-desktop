@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/utf16_length_formatter.dart';
 import '../../../design_system/design_system.dart';
 import '../domain/poll_models.dart';
 import 'poll_feedback.dart';
@@ -101,7 +101,9 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                   PollInput.questionLimit,
                   colors.muted,
                 ),
-                inputFormatters: [_Utf16Limit(PollInput.questionLimit)],
+                inputFormatters: [
+                  Utf16LengthFormatter(PollInput.questionLimit),
+                ],
                 decoration: InputDecoration(
                   labelText: en ? 'Question' : 'Câu hỏi',
                 ),
@@ -122,7 +124,9 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                           PollInput.optionLimit,
                           colors.muted,
                         ),
-                        inputFormatters: [_Utf16Limit(PollInput.optionLimit)],
+                        inputFormatters: [
+                          Utf16LengthFormatter(PollInput.optionLimit),
+                        ],
                         decoration: InputDecoration(
                           labelText: en
                               ? 'Choice ${i + 1}'
@@ -193,33 +197,6 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Utf16Limit extends TextInputFormatter {
-  _Utf16Limit(this.limit);
-  final int limit;
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.length <= limit || !newValue.composing.isCollapsed) {
-      return newValue;
-    }
-    var end = limit;
-    final last = newValue.text.codeUnitAt(end - 1);
-    if (last >= 0xD800 && last <= 0xDBFF) {
-      end--;
-    }
-    return newValue.copyWith(
-      text: newValue.text.substring(0, end),
-      selection: TextSelection(
-        baseOffset: newValue.selection.baseOffset.clamp(0, end),
-        extentOffset: newValue.selection.extentOffset.clamp(0, end),
-      ),
-      composing: TextRange.empty,
     );
   }
 }
