@@ -97,6 +97,7 @@ class PollCard extends ConsumerWidget {
                                 child: Align(
                                   alignment: Alignment.centerLeft,
                                   child: FractionallySizedBox(
+                                    heightFactor: 1,
                                     widthFactor: value.totalVotes == 0
                                         ? 0
                                         : (option.votes / value.totalVotes)

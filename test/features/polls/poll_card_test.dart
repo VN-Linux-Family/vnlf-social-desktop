@@ -18,6 +18,25 @@ import 'poll_state_test.dart' show ControlledPollRepository;
 
 void main() {
   testWidgets(
+    'voted choices draw percentage bars across the actual option height',
+    (tester) async {
+      await _pump(tester, _Repository(), source: PollDto(pollJson).toDomain());
+      final bars = find.descendant(
+        of: find.byType(FractionallySizedBox),
+        matching: find.byType(ColoredBox),
+      );
+      expect(bars, findsNWidgets(2));
+      final option = tester.getSize(
+        find.byKey(const Key('poll-choice-$pollId-$optionA')),
+      );
+      expect(tester.getSize(bars.first).height, closeTo(option.height, 0.1));
+      expect(
+        tester.getSize(bars.first).width,
+        closeTo(option.width * 2 / 3, 0.1),
+      );
+    },
+  );
+  testWidgets(
     'counts appear only after acknowledgment and clicking the selected choice unvotes',
     (tester) async {
       final repo = _Repository();

@@ -70,3 +70,8 @@ Typed peer message merges do not adopt another viewer's choice. Profile data now
 reloads on owner changes as well. Seventy-five focused integration checks and all
 424 Flutter tests pass, with pub get, formatting and analysis clean. Linux poll
 captures, live owner-account writes and composer authoring remain pending.
+
+The first native capture exposed a zero-height percentage fill despite correct
+numeric labels. A geometry regression reproduced 0px versus a 48px option;
+explicit full-height layout fixes it. Twenty focused poll checks and all 425
+Flutter tests pass. Refresh the native capture before recording visual completion.
