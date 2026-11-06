@@ -2,28 +2,28 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../core/external_uri.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import 'vnlf_windows_video.dart';
+import 'vnlf_video_playback.dart';
 
 /// Video resources are allocated only after an explicit play action.
 class VnlfVideo extends StatefulWidget {
-  const VnlfVideo({super.key, required this.media});
+  const VnlfVideo({super.key, required this.media, this.createPlayback});
   final PostMediaData media;
+  final VnlfVideoPlayback Function()? createPlayback;
   @override
   State<VnlfVideo> createState() => _VnlfVideoState();
 }
 
 class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
-  Player? _player;
-  VideoController? _video;
-  StreamSubscription<String>? _errors;
+  VnlfVideoPlayback? _playback;
+  Completer<void>? _released;
   bool _failed = false;
   bool _loading = false;
+  bool _foreground = true;
 
   @override
   void initState() {
@@ -32,36 +32,94 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
   }
 
   @override
+  void didUpdateWidget(covariant VnlfVideo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.media.url != widget.media.url ||
+        oldWidget.media.state != widget.media.state &&
+            (widget.media.state == 'FAILED' ||
+                widget.media.state == 'PROCESSING')) {
+      _release();
+      _failed = _loading = false;
+    }
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) unawaited(_player?.pause());
+    _foreground = state == AppLifecycleState.resumed;
+    final playback = _playback;
+    if (!_foreground && playback != null) {
+      unawaited(_pause(playback));
+    }
+  }
+
+  Future<void> _pause(VnlfVideoPlayback playback) async {
+    try {
+      await playback.pause();
+    } catch (_) {
+      /* Open/disposal can overlap a lifecycle event. */
+    }
+  }
+
+  void _release() {
+    final playback = _playback;
+    _playback = null;
+    _released?.complete();
+    _released = null;
+    if (playback != null) unawaited(_disposePlayback(playback));
+  }
+
+  Future<void> _disposePlayback(VnlfVideoPlayback playback) async {
+    try {
+      await playback.dispose();
+    } catch (_) {
+      /* Detached native cleanup has no active UI. */
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    unawaited(_errors?.cancel());
-    unawaited(_player?.dispose());
+    _release();
     super.dispose();
   }
 
   Future<void> _play() async {
-    if (_loading || externalWebUri(widget.media.url) == null) return;
-    setState(() {
-      _loading = true;
-      _failed = false;
-    });
+    final uri = externalWebUri(widget.media.url);
+    if (_loading || uri == null) return;
+    _release();
+    VnlfVideoPlayback? playback;
     try {
-      MediaKit.ensureInitialized();
-      _player ??= Player();
-      _video ??= VideoController(_player!);
-      _errors ??= _player!.stream.error.listen((_) {
-        if (mounted) setState(() => _failed = true);
+      playback = widget.createPlayback?.call() ?? MediaKitVideoPlayback();
+      final current = playback;
+      final released = Completer<void>();
+      setState(() {
+        _playback = current;
+        _released = released;
+        _loading = true;
+        _failed = false;
       });
-      await _player!.open(Media(widget.media.url));
+      bool owns() => mounted && identical(_playback, current);
+      await Future.any([current.open(uri), released.future])
+          .timeout(const Duration(seconds: 30));
+      if (!owns()) return;
+      await Future.any([current.firstFrame, released.future])
+          .timeout(const Duration(seconds: 20));
+      if (!owns()) return;
+      if (_foreground) {
+        await current.play();
+        if (!owns()) return;
+        // An inactive event can arrive while the native play command is pending.
+        if (!_foreground) await _pause(current);
+      }
+      if (owns()) setState(() => _loading = false);
     } catch (_) {
-      if (mounted) setState(() => _failed = true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && (playback == null || identical(_playback, playback))) {
+        _release();
+        setState(() {
+          _failed = true;
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -83,13 +141,25 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
         ),
       );
     }
-    if (Platform.isWindows) return VnlfWindowsVideo(media: widget.media);
+    if (Platform.isWindows && widget.createPlayback == null) {
+      return VnlfWindowsVideo(media: widget.media);
+    }
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: AspectRatio(
         aspectRatio: widget.media.aspectRatio,
-        child: _video != null && !_failed
-            ? Video(controller: _video!, controls: AdaptiveVideoControls)
+        child: _playback != null && !_failed
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  AbsorbPointer(
+                    absorbing: _loading,
+                    child: _playback!.buildSurface(),
+                  ),
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator()),
+                ],
+              )
             : ColoredBox(
                 color: VnlfColors.of(context).surfaceSoft,
                 child: Stack(
