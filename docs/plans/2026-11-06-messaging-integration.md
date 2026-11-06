@@ -89,3 +89,18 @@ with a stateful synthetic HTTP backend. `flutter pub get`, formatting, analysis
 and all 397 Flutter tests pass (serialized under the shared build lock). Native
 Linux capture and live controlled-recipient checks remain pending. No new live
 messages, posts, comments or reactions were created during this integration.
+
+## Live controlled-recipient verification — 2026-11-06
+
+The first read-only preflight resolved the exact named recipient but found no
+conversation. The user established and accepted it. A subsequent fresh preflight
+confirmed active send/edit/delete access before any test content was sent.
+Using the real native repositories, one message, its edit and a reaction each
+persisted in fresh history reads. The reaction and message were deleted and a
+further read confirmed the test message absent. Existing conversation content
+was preserved; the test session was logged out and its ID-only cleanup registry
+cleared. Credentials/cookies stayed in anonymous stdin and memory.
+
+REST persistence is now live-verified for this path. Realtime delivery, persistent
+DM draft recovery, private attachment device checks and actual native account UI
+writes remain separate work. The current suite has 438 passing Flutter tests.

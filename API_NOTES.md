@@ -2,6 +2,39 @@
 
 All endpoints, payload schemas, and realtime events documented here are derived directly from `vietnamlinuxfamily.net` production client bundles and live network inspection. Never invent endpoints.
 
+## Current live persistence evidence — 2026-11-06
+
+This supplements the pinned source contracts and supersedes historical
+unauthenticated-only assumptions below. Using only the authorized owner account
+and its own newly created content, the production repositories confirmed:
+
+- Draft POST creation, versioned body PATCH, separate poll PUT, then publication.
+  Fresh article reads contained the published body and the poll with two options.
+- Comment creation with a stable client identity, fresh-read persistence, editing,
+  voting and deletion; fresh reads confirmed the edited body, vote and deletion.
+- Poll voting persisted in a fresh article read. The vote was removed afterward.
+- On the named controlled, accepted DM conversation, sending, editing and reacting
+  persisted in fresh history reads. The reaction and message were removed, and
+  a further history read confirmed the test message absent.
+
+Cleanup removed the test comment vote, comment, poll vote and post. The owner
+projection returned status REMOVED and an independent guest GET returned 404.
+Sessions were logged out and fresh session reads were empty. No credentials,
+cookies, private message bodies or response dumps were retained in the repository
+or reports. These checks do not establish desktop keyring persistence or device UI.
+
+Composer poll input is saved through the shared PollRepository adapter, separately
+from the body. The poll PUT does not advance the body version. A failed poll save
+must keep the already acknowledged PATCH version; incomplete poll input stays in
+owner-scoped secure recovery and blocks publishing. Text-only saves must not
+replace a poll, because the server replaces option IDs on draft poll writes.
+
+Pinned source re-check: realtime is raw JSON WebSocket at `/ws/community`, with
+client events such as `channel:join`, `conversation:join`, `presence:heartbeat`
+and `dm:typing`, rather than Socket.IO or dotted `dm.join` frames. Server
+envelopes carry type/eventId/occurredAt/data. The native shared connection is
+still pending; source confirmation alone is not a live socket verification.
+
 ## Public article sharing (2026-11-05)
 
 - [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection

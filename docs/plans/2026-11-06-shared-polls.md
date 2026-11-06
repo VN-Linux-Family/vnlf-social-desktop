@@ -75,3 +75,28 @@ The first native capture exposed a zero-height percentage fill despite correct
 numeric labels. A geometry regression reproduced 0px versus a 48px option;
 explicit full-height layout fixes it. Twenty focused poll checks and all 425
 Flutter tests pass. Refresh the native capture before recording visual completion.
+
+## Authoring, recovery and live evidence
+
+Step 4 is implemented through the existing shared poll adapter. Raw unfinished
+input is recovered per owner without requiring a valid PollInput. A separate
+PUT follows the acknowledged body save, and publication waits for its result.
+Incomplete polls stay local and block publication; failed poll writes retain
+the acknowledged body version. Text-only saves preserve poll/option identities.
+Account changes and later editor revisions cannot apply an old poll acknowledgment.
+Published polls are locked. Converting a draft to ARTICLE confirms and removes
+its poll; the published ARTICLE projection follows the source's poll:null rule.
+
+Thirteen new focused checks cover the repository, partial failures, conversion,
+account/revision races, recovery and native authoring controls. All 438 Flutter
+tests, dependency resolution, formatting, analysis and the headless HTTP fixture
+smoke pass. Desktop/phone native authoring and corrected result-bar captures are
+recorded in `docs/visual-audit/2026-11-06/README.md`; authoring capture transport
+rejects all network calls and uses only synthetic data.
+
+Separately, the real owner-account repositories published a post and poll,
+confirmed them in fresh reads, created/edited/voted a comment and voted the poll.
+Both votes, the comment and post were removed. The owner projection was REMOVED,
+the independent guest read returned 404, and logout/empty session were confirmed.
+No test content or cleanup registry remains. This does not substitute for native
+UI writes, device secure-storage recovery, realtime or physical-device checks.

@@ -31,12 +31,12 @@ server with the authorized account, followed by cleanup.
 | Website surface | Native status / remaining gate |
 | --- | --- |
 | Auth/session | Login/logout/session storage implemented; device and expiry checks remain. |
-| Feed and article detail | Live loading and structured native rendering. Guest Linux captures verify inline images and moving video frames after fixing decoder-fallback handling. Shared typed polls now render, vote and expose author edits before the first vote, with read/session reconciliation tests. More device/media states, link previews, live poll checks and remaining visual differences still need work. |
-| Comments | Persistence verified and test content cleaned; flattened replies and stable retry identity tested. Votes/edit/delete/pin and media display now implemented with failure, permission, acknowledgment and session tests; live checks, media uploads, mention suggestions and sticker packs remain. |
+| Feed and article detail | Live loading and structured native rendering. Guest Linux captures verify inline images and moving video frames after fixing decoder-fallback handling. Shared polls render, vote and expose author edits before the first vote. Owner-account HTTP checks confirm poll publication/votes and cleanup. More device/media states, link previews and visual differences remain. |
+| Comments | Persistence, edits, votes and deletion verified through fresh owner-account reads, with test content and votes removed. Flattened replies and stable retry identity tested. Pinning and media display have failure/permission/acknowledgment/session tests; live pin/media checks, uploads, mention suggestions and sticker packs remain. |
 | Post actions | Vote/bookmark confirmed, rollback and session guards tested; reporting now uses a validated, server-confirmed dialog with retry/error coverage. |
-| Publishing | Native rich composer, versioned autosave, owner-partitioned secure recovery, conflict handling, stable publish identity, images/cover/video processing and format conversion implemented and tested. Live UI write/cleanup checks, poll authoring/recovery and advanced editor features remain. |
+| Publishing | Native rich composer, versioned autosave, secure recovery, conflict handling, stable publish identity, media/format conversion and poll authoring implemented and tested. Raw unfinished poll input survives recovery; partial poll failures preserve the body version. Live repository publication/poll/cleanup checks pass. Native UI writes, device recovery and advanced editing remain. |
 | Channels | REST implementation integrated with tests, including fresh signed media URLs and safe mutation handling; realtime/read sync, uploads/search/context remain incomplete. |
-| Direct messages | Source-derived inbox/requests, lifecycle, history/search/context/media and message actions are integrated into the codebase, with strict acknowledgments and synthetic checks. Combined channel/DM navigation, explicit direct links and image picking are now connected and tested through actual screens. Realtime, persistent draft recovery and live controlled-peer verification remain pending. |
+| Direct messages | Source-derived inbox/requests, lifecycle, history/search/context/media and message actions integrated with strict acknowledgments and synthetic checks. Combined directory, direct links and image picking connected through actual screens. Live controlled-peer send/edit/reaction persisted in fresh reads and test data was removed. Realtime and persistent draft recovery remain pending. |
 | Voice | LiveKit room/join/leave implementation integrated with session/lifecycle tests; real-device audio and room text chat remain. |
 | Search/discover | Live search integrated with debounce/stale-response tests; verify website scope filtering and live discovery. |
 | Rankings/check-in | Weekly archive integrated and tested; check-in and personal activity remain. Do not invent an all-time endpoint. |
@@ -46,7 +46,7 @@ server with the authorized account, followed by cleanup.
 | Projects | Live listing; server filters/pagination, detail, media, ratings and submission lifecycle remain incomplete. |
 | Settings | Local preferences and updater implemented; server account/profile/preferences/blocked-user management remain incomplete. |
 | Accessibility/performance | Responsive fixture tests pass; fresh Linux screenshots, media playback, startup/frame/memory measurements and device checks remain. |
-| Distribution | All nine architectures compile and their release asset digests match. Real-device checks, signing/notarization and public updater distribution remain stable-release gates. |
+| Distribution | Earlier checkpoint be5e59e compiled all nine outputs with verified release digests; current changes have local Linux validation. Source pushes go to both private repositories, Actions only to luank3. Real-device checks, signing/notarization and public updater distribution remain stable-release gates. |
 
 ## Source and asset handling
 
@@ -60,6 +60,9 @@ legal determination.
 
 ## Resource policy
 
-The source-review Argon worker was released. The DM implementation was delivered and independently hardened by Codex. The same Argon worker now reviews coordinator changes; it runs no builds, installs, test jobs, live calls or child agents.
+Argon delivered the DM implementation, independently hardened by Codex. Its later
+review hit the provider quota without a report, and both terminals are closed.
+A bounded read-only Codex review checked the CI and composer changes without
+running local builds, installs, live calls or child agents; that reviewer is idle.
 Recovered worker worktrees remain intact. Codex integrates and verifies serially
 through `tool/with_build_slot.sh`; do not restart parallel local build workers.

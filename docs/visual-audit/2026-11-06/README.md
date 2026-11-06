@@ -28,6 +28,25 @@ full decorations, phone navigation and fixed comment dock, image/caption
 spacing, and emoji font fallback on this Linux host. These images demonstrate
 progress and remaining gaps, not complete feature or visual parity.
 
+## Native poll authoring and result bars
+
+The new authoring captures exercise the actual composer, raw input recovery,
+question/choice limits and phone layout. They use synthetic owner/content data
+with a transport rejecting network calls. The result captures refresh the native
+chat/feed poll surfaces after fixing the zero-height percentage fill. No writes
+were made by these screenshot processes. The separate live HTTP persistence
+checks are documented in API_NOTES.md and are not screenshots of a signed-in UI.
+
+| Surface | Desktop 1440×1000 | Phone 430×1000 |
+| --- | --- | --- |
+| Poll authoring | [Native composer](native-composer-poll-desktop.png) | [Native composer](native-composer-poll-mobile.png) |
+| Poll results | [Native results](native-polls-desktop.png) | [Native results](native-polls-mobile.png) |
+
+Authoring follows the verified POST-only web controls and 200/100 UTF-16 limits;
+native counters preserve emoji and incomplete choices. Source CSS and contracts
+guide this layout, but no authenticated website authoring screenshot was captured
+for this pass, so exact visual parity remains unverified.
+
 ## Native composer
 
 | Desktop | Phone |
