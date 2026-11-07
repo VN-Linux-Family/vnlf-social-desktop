@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -37,6 +38,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
     required this.centerChild,
     this.rightSidebarChild,
     this.centerChildHandlesScroll = false,
+    this.centerPadding,
+    this.centerMaxWidth = 1053,
+    this.showMobileBottomNav = true,
     this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
     this.onDestinationSelected,
@@ -45,6 +49,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onProfileTap,
     this.onSearchTap,
     this.onNotificationsTap,
+    this.onBack,
+    this.backTooltip = '',
+    this.backSemanticLabel,
     this.onSettingsTap,
     this.onLogoutTap,
     this.logoutLabel = '',
@@ -84,6 +91,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.railThemeToggleSemanticLabel,
     this.openDrawerTooltip = '',
     this.openDrawerSemanticLabel,
+    this.titleText,
     this.searchSemanticLabel = '',
     this.notificationsSemanticLabel = '',
     this.profileSemanticLabel,
@@ -100,6 +108,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final bool centerChildHandlesScroll;
   final bool showMobileHeader;
   final Widget? rightSidebarChild;
+  final EdgeInsets? centerPadding;
+  final double centerMaxWidth;
+  final bool showMobileBottomNav;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final ThemeMode themeMode;
@@ -107,6 +118,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onBack;
+  final String backTooltip;
+  final String? backSemanticLabel;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onLogoutTap;
   final String logoutLabel;
@@ -146,6 +160,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String? railThemeToggleSemanticLabel;
   final String openDrawerTooltip;
   final String? openDrawerSemanticLabel;
+  final String? titleText;
   final String searchSemanticLabel;
   final String notificationsSemanticLabel;
   final String? profileSemanticLabel;
@@ -225,13 +240,15 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   ),
                   Expanded(
                     child: _scrollArea(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 20,
-                      ),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 20,
+                          ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1053),
+                          constraints: BoxConstraints(maxWidth: centerMaxWidth),
                           child: Row(
                             crossAxisAlignment: centerChildHandlesScroll
                                 ? CrossAxisAlignment.stretch
@@ -239,8 +256,10 @@ class VnlfAdaptiveShell extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: VnlfDimensions.centerFeedMaxWidth,
+                                  constraints: BoxConstraints(
+                                    maxWidth: centerMaxWidth == double.infinity
+                                        ? double.infinity
+                                        : VnlfDimensions.centerFeedMaxWidth,
                                   ),
                                   child: centerChild,
                                 ),
@@ -292,10 +311,12 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   ),
                   Expanded(
                     child: _scrollArea(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
@@ -407,8 +428,12 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 if (showMobileHeader)
                   VnlfMobileStickyHeader(
                     onProfileTap: onProfileTap,
+                    onBack: onBack,
+                    backTooltip: backTooltip,
+                    backSemanticLabel: backSemanticLabel,
                     openDrawerTooltip: openDrawerTooltip,
                     openDrawerSemanticLabel: openDrawerSemanticLabel,
+                    titleText: titleText,
                     brandTitlePrefix: brandTitlePrefix,
                     brandTitleAccent: brandTitleAccent,
                     brandLogoSemanticLabel: brandLogoSemanticLabel,
@@ -426,20 +451,24 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     top: false,
                     bottom: false,
                     child: _scrollArea(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                      padding:
+                          centerPadding ??
+                          const EdgeInsets.fromLTRB(12, 12, 12, 20),
                       child: centerChild,
                     ),
                   ),
                 ),
               ],
             ),
-            bottomNavigationBar: VnlfMobileBottomNav(
-              activeDestination: activeDestination,
-              onDestinationSelected: onDestinationSelected,
-              destinationLabels: destinationLabels,
-              destinationSemanticLabels: destinationSemanticLabels,
-              semanticLabel: mobileBottomNavSemanticLabel,
-            ),
+            bottomNavigationBar: !showMobileBottomNav
+                ? null
+                : VnlfMobileBottomNav(
+                    activeDestination: activeDestination,
+                    onDestinationSelected: onDestinationSelected,
+                    destinationLabels: destinationLabels,
+                    destinationSemanticLabels: destinationSemanticLabels,
+                    semanticLabel: mobileBottomNavSemanticLabel,
+                  ),
           ),
         };
       },
@@ -495,7 +524,10 @@ class VnlfFeedTabBar extends StatelessWidget {
                   child: InkWell(
                     onTap: onTabSelected == null
                         ? null
-                        : () => onTabSelected!(i),
+                        : () {
+                            HapticFeedback.selectionClick();
+                            onTabSelected!(i);
+                          },
                     child: Container(
                       padding: const EdgeInsets.only(top: 12, bottom: 10),
                       decoration: BoxDecoration(

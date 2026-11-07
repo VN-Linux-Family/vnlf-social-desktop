@@ -186,57 +186,125 @@ class SidebarUtilityTile extends StatelessWidget {
   }
 }
 
-class SocialCircleBadge extends StatelessWidget {
+class SocialCircleBadge extends StatefulWidget {
   const SocialCircleBadge({
     super.key,
     this.label,
     this.icon,
+    this.assetPath,
     this.semanticLabel,
     this.onTap,
+    this.compact = true,
   });
 
   final String? label;
   final IconData? icon;
+  final String? assetPath;
   final String? semanticLabel;
   final VoidCallback? onTap;
+  final bool compact;
 
+  @override
+  State<SocialCircleBadge> createState() => _SocialCircleBadgeState();
+}
+
+class _SocialCircleBadgeState extends State<SocialCircleBadge> {
+  bool _hovered = false;
+  bool _focused = false;
+  bool get _active => _hovered || _focused;
+  static const _grayscale = ColorFilter.matrix([
+    .2126,
+    .7152,
+    .0722,
+    0,
+    0,
+    .2126,
+    .7152,
+    .0722,
+    0,
+    0,
+    .2126,
+    .7152,
+    .0722,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+  ]);
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-
-    Widget badge = Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.socialIconBg,
-        shape: BoxShape.circle,
-      ),
-      child: label != null
-          ? Text(
-              label!,
-              style: TextStyle(
-                fontFamily: VnlfTypography.fontFamily,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: colors.surface,
-                height: 1.0,
-              ),
-            )
-          : Icon(icon, size: 13, color: colors.surface),
-    );
-
-    if (onTap != null) {
-      badge = InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: badge,
+    Widget badge;
+    if (widget.assetPath != null) {
+      final image = ClipOval(
+        child: Image.asset(
+          widget.assetPath!,
+          width: 22,
+          height: 22,
+          fit: BoxFit.cover,
+        ),
+      );
+      badge = AnimatedOpacity(
+        opacity: _active ? 1 : .6,
+        duration: VnlfDimensions.resolveDuration(
+          context,
+          VnlfDimensions.motionFast,
+        ),
+        child: _active
+            ? image
+            : ColorFiltered(colorFilter: _grayscale, child: image),
+      );
+    } else {
+      badge = Container(
+        width: 24,
+        height: 24,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: colors.socialIconBg,
+          shape: BoxShape.circle,
+        ),
+        child: widget.label != null
+            ? Text(
+                widget.label!,
+                style: TextStyle(
+                  fontFamily: VnlfTypography.fontFamily,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.surface,
+                  height: 1,
+                ),
+              )
+            : Icon(widget.icon, size: 13, color: colors.surface),
       );
     }
-
-    if (semanticLabel == null) {
-      return badge;
+    if (!widget.compact) {
+      badge = SizedBox(width: 44, height: 44, child: Center(child: badge));
     }
-    return Semantics(label: semanticLabel, button: true, child: badge);
+    if (widget.onTap != null) {
+      badge = MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) {
+          if (mounted) {
+            setState(() => _hovered = false);
+          }
+        },
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: widget.onTap,
+          onFocusChange: (focused) {
+            if (mounted) {
+              setState(() => _focused = focused);
+            }
+          },
+          child: badge,
+        ),
+      );
+    }
+    return widget.semanticLabel == null
+        ? badge
+        : Semantics(label: widget.semanticLabel, button: true, child: badge);
   }
 }

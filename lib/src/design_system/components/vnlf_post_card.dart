@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/vnlf_navigation_helper.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -8,6 +10,8 @@ import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
 import 'vnlf_code_block.dart';
 import 'vnlf_media_preview.dart';
+import 'vnlf_rich_content.dart';
+import 'vnlf_media_gallery.dart';
 import 'vnlf_skeleton.dart';
 import 'vnlf_state_cards.dart';
 import 'vnlf_vote_capsule.dart';
@@ -102,6 +106,7 @@ class VnlfPostCard extends StatelessWidget {
   const VnlfPostCard({
     super.key,
     this.post,
+    this.poll,
     this.isLoading = false,
     this.isEmpty = false,
     this.controller,
@@ -126,6 +131,7 @@ class VnlfPostCard extends StatelessWidget {
     this.onBookmarkToggle,
     this.onAuthorTap,
     this.onMoreTap,
+    this.onReportTap,
     this.showBottomActions = true,
     this.semanticLabel,
     this.authorAvatarSemanticLabel,
@@ -151,6 +157,7 @@ class VnlfPostCard extends StatelessWidget {
     this.semanticLabel,
     this.loadingSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = true,
        isEmpty = false,
        emptyTitle = '',
@@ -170,6 +177,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
        codeCopyLabel = '',
@@ -193,6 +201,7 @@ class VnlfPostCard extends StatelessWidget {
     this.emptySemanticLabel,
     this.actionSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = false,
        isEmpty = true,
        controller = null,
@@ -210,6 +219,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -233,6 +243,7 @@ class VnlfPostCard extends StatelessWidget {
     this.errorSemanticLabel,
     this.actionSemanticLabel,
   }) : post = null,
+       poll = null,
        isLoading = false,
        isEmpty = false,
        controller = null,
@@ -251,6 +262,7 @@ class VnlfPostCard extends StatelessWidget {
        onBookmarkToggle = null,
        onAuthorTap = null,
        onMoreTap = null,
+       onReportTap = null,
        showBottomActions = true,
        authorAvatarSemanticLabel = null,
        moreOptionsSemanticLabel = null,
@@ -265,6 +277,7 @@ class VnlfPostCard extends StatelessWidget {
        bookmarkSemanticLabel = null;
 
   final PostData? post;
+  final Widget? poll;
   final bool isLoading;
   final bool isEmpty;
   final Animation<double>? controller;
@@ -289,6 +302,7 @@ class VnlfPostCard extends StatelessWidget {
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
   final VoidCallback? onMoreTap;
+  final VoidCallback? onReportTap;
   final bool showBottomActions;
   final String? semanticLabel;
   final String? authorAvatarSemanticLabel;
@@ -339,6 +353,7 @@ class VnlfPostCard extends StatelessWidget {
 
     final loadedPost = post!;
     final colors = VnlfColors.of(context);
+    final isMobile = MediaQuery.sizeOf(context).width <= 840;
 
     final card = Container(
       decoration: BoxDecoration(
@@ -346,7 +361,9 @@ class VnlfPostCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
         border: Border.all(color: colors.line),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+          : const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -420,7 +437,7 @@ class VnlfPostCard extends StatelessWidget {
                                   case 'bookmark':
                                     onBookmarkToggle?.call();
                                   case 'report':
-                                    _showReportNotice(context);
+                                    onReportTap?.call();
                                 }
                               },
                               itemBuilder: (context) => [
@@ -470,6 +487,7 @@ class VnlfPostCard extends StatelessWidget {
                                 ),
                                 PopupMenuItem(
                                   value: 'report',
+                                  enabled: onReportTap != null,
                                   height: 38,
                                   child: Row(
                                     children: [
@@ -499,18 +517,31 @@ class VnlfPostCard extends StatelessWidget {
                   Text(loadedPost.title!, style: VnlfTypography.h2(colors.ink)),
                 ],
                 const SizedBox(height: 6),
-                // Paragraphs
-                for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 8),
-                  Text(
-                    loadedPost.paragraphs[i],
-                    style: VnlfTypography.body(colors.ink),
-                  ),
-                ],
+                if (loadedPost.richContent != null)
+                  VnlfRichContent(
+                    document: loadedPost.richContent!,
+                    showImages: loadedPost.showInlineImages,
+                    selectable: loadedPost.selectableContent,
+                    postStyle: !loadedPost.isArticle,
+                    articleDetail:
+                        loadedPost.isArticle && loadedPost.selectableContent,
+                  )
+                else
+                  for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    _VnlfPostParagraph(
+                      text: loadedPost.paragraphs[i],
+                      style: VnlfTypography.body(colors.ink),
+                      linkColor: colors.brand,
+                    ),
+                  ],
                 // Optional Attachment
                 if (loadedPost.attachment != null) ...[
                   const SizedBox(height: 12),
                   switch (loadedPost.attachment!) {
+                    final MediaGalleryAttachment gallery => VnlfMediaGallery(
+                      items: gallery.items,
+                    ),
                     final ImagePlaceholderAttachment imagePlaceholder =>
                       VnlfImagePlaceholder(
                         imageUrl: imagePlaceholder.imageUrl,
@@ -537,6 +568,15 @@ class VnlfPostCard extends StatelessWidget {
                       VnlfProjectPreviewCard(project: projectPreview.project),
                   },
                 ],
+                ?poll,
+                if (loadedPost.actionError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      loadedPost.actionError!,
+                      style: VnlfTypography.meta(colors.red),
+                    ),
+                  ),
                 // Optional Category Tags
                 if (loadedPost.tags.isNotEmpty) ...[
                   const SizedBox(height: 10),
@@ -572,7 +612,9 @@ class VnlfPostCard extends StatelessWidget {
                     voteState: loadedPost.viewerVote,
                     commentCount: loadedPost.commentCount,
                     isBookmarked: loadedPost.isBookmarked,
-                    onVoteChanged: onVoteChanged,
+                    onVoteChanged: loadedPost.actionPending
+                        ? null
+                        : onVoteChanged,
                     onCommentTap: onCommentTap,
                     onShareTap: onShareTap,
                     onBookmarkToggle: onBookmarkToggle,
@@ -596,12 +638,88 @@ class VnlfPostCard extends StatelessWidget {
     }
     return Semantics(label: semanticLabel, container: true, child: card);
   }
+}
 
-  void _showReportNotice(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('Đã ghi nhận yêu cầu báo cáo bài viết.')),
+class _VnlfPostParagraph extends StatefulWidget {
+  const _VnlfPostParagraph({
+    required this.text,
+    required this.style,
+    required this.linkColor,
+  });
+
+  final String text;
+  final TextStyle style;
+  final Color linkColor;
+
+  @override
+  State<_VnlfPostParagraph> createState() => _VnlfPostParagraphState();
+}
+
+class _VnlfPostParagraphState extends State<_VnlfPostParagraph> {
+  static final _urlRegex = RegExp(r'''(https?://[^\s<]+[^<.,:;"')\]\s])''');
+  final _recognizers = <TapGestureRecognizer>[];
+
+  @override
+  void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
+    final matches = _urlRegex.allMatches(widget.text).toList();
+    if (matches.isEmpty) {
+      return Text(widget.text, style: widget.style);
+    }
+
+    final spans = <InlineSpan>[];
+    var lastIndex = 0;
+
+    for (final match in matches) {
+      if (match.start > lastIndex) {
+        spans.add(
+          TextSpan(
+            text: widget.text.substring(lastIndex, match.start),
+            style: widget.style,
+          ),
+        );
+      }
+
+      final url = match.group(0)!;
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () {
+          openVnlfLink(context, url);
+        };
+      _recognizers.add(recognizer);
+
+      spans.add(
+        TextSpan(
+          text: url,
+          style: widget.style.copyWith(
+            color: widget.linkColor,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer: recognizer,
+        ),
       );
+
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < widget.text.length) {
+      spans.add(
+        TextSpan(text: widget.text.substring(lastIndex), style: widget.style),
+      );
+    }
+
+    return Text.rich(TextSpan(children: spans), style: widget.style);
   }
 }

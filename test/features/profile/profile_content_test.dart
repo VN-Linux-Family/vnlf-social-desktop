@@ -44,6 +44,14 @@ void main() {
     await _select(tester, 'Bình luận');
     expect(repository.requested, ['profile', 'posts', 'comments']);
   });
+  testWidgets('guestbook link opens the guestbook tab directly', (
+    tester,
+  ) async {
+    final repository = _Profiles();
+    await _pump(tester, repository, route: '/profile/fixture?tab=guestbook');
+    expect(repository.requested, ['profile', 'guestbook']);
+    expect(find.text('Lời nhắn đầu'), findsOneWidget);
+  });
   testWidgets(
     'public tabs display scoped data and guestbook pages without wardrobe controls',
     (tester) async {
@@ -125,7 +133,11 @@ Future<void> _select(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _pump(WidgetTester tester, _Profiles repository) async {
+Future<void> _pump(
+  WidgetTester tester,
+  _Profiles repository, {
+  String route = '/profile/fixture',
+}) async {
   tester.platformDispatcher.localesTestValue = const [Locale('vi')];
   tester.view.physicalSize = const Size(390, 1100);
   tester.view.devicePixelRatio = 1;
@@ -144,7 +156,7 @@ Future<void> _pump(WidgetTester tester, _Profiles repository) async {
   final router =
       tester.widget<MaterialApp>(find.byType(MaterialApp)).routerConfig!
           as GoRouter;
-  router.go('/profile/fixture');
+  router.go(route);
   await tester.pumpAndSettle();
 }
 
@@ -210,6 +222,7 @@ class _Profiles implements PublicProfileRepository {
 
   @override
   Future<GuestbookPage> getGuestbook(String username, {String? cursor}) async {
+    requested.add('guestbook');
     this.cursor = cursor;
     return GuestbookPage(
       enabled: true,

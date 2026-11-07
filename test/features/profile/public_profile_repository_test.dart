@@ -106,7 +106,7 @@ void main() {
       'fixture',
       cursor: 'next-page',
     );
-    expect(guestbook.items.map((entry) => entry.id), ['visible']);
+    expect(guestbook.items.map((entry) => entry.id), ['visible', 'hidden']);
     expect(guestbook.nextCursor, 'next');
     expect(paths, hasLength(5));
   });

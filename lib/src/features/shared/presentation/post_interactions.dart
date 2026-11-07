@@ -1,109 +1,145 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../domain/models.dart';
+import '../../feed/presentation/feed_notifier.dart';
+import '../../thread/presentation/thread_post_provider.dart';
+import '../data/post_actions_repository.dart';
+import '../domain/post_actions.dart';
 import 'feature_samples.dart';
 
-/// Session-local reactions shared by every presentation of a post.
+final postActionsRepositoryProvider = Provider<PostActionsRepository>(
+  (ref) => offlineFeatures
+      ? FixturePostActionsRepository()
+      : LivePostActionsRepository(
+          ref.watch(apiClientProvider),
+          hasSession: () => ref.read(sessionStateProvider) != null,
+        ),
+);
+
 final postInteractionsProvider =
     NotifierProvider<PostInteractions, Map<String, PostInteraction>>(
       PostInteractions.new,
     );
 
 class PostInteraction {
-  const PostInteraction({this.vote, this.bookmarked});
-
+  const PostInteraction({
+    this.vote,
+    this.bookmarked,
+    this.pending = false,
+    this.failure,
+  });
   final VoteState? vote;
   final bool? bookmarked;
+  final bool pending;
+  final AppFailure? failure;
 
-  PostData apply(PostData source) => source.copyWith(
+  PostData apply(PostData source, {bool english = false}) => source.copyWith(
     viewerVote: vote,
     voteScore:
         source.voteScore +
         (vote ?? source.viewerVote).value -
         source.viewerVote.value,
     isBookmarked: bookmarked,
+    actionPending: pending,
+    actionError: failure == null
+        ? null
+        : failure is HttpFailure &&
+              [401, 403].contains((failure as HttpFailure).statusCode)
+        ? (english
+              ? 'Sign in to save this change.'
+              : 'Vui lòng đăng nhập để lưu thay đổi.')
+        : (english
+              ? 'Change could not be saved. Please try again.'
+              : 'Không lưu được thay đổi. Vui lòng thử lại.'),
   );
 }
 
 class PostInteractions extends Notifier<Map<String, PostInteraction>> {
+  int _generation = 0;
   @override
-  Map<String, PostInteraction> build() => const {};
+  Map<String, PostInteraction> build() {
+    ref.watch(sessionStateProvider.select((session) => session?.userId));
+    _generation++;
+    ref.onDispose(() => _generation++);
+    return const {};
+  }
 
-  Future<void> vote(String postId, VoteState value) async {
-    final previous = state[postId];
-    final previousVote = previous?.vote;
+  bool _current(int generation) => generation == _generation;
+  void _refresh(String id) {
+    ref.invalidate(feedNotifierProvider);
+    ref.invalidate(feedProvider);
+    ref.invalidate(threadPostProvider(id));
+  }
 
-    // Optimistic local state update
+  Future<void> vote(String id, VoteState value) async {
+    final previous = state[id] ?? const PostInteraction();
+    if (previous.pending || id.isEmpty) return;
+    final generation = _generation;
     state = {
       ...state,
-      postId: PostInteraction(vote: value, bookmarked: previous?.bookmarked),
+      id: PostInteraction(
+        vote: value,
+        bookmarked: previous.bookmarked,
+        pending: true,
+      ),
     };
-
-    if (offlineFeatures ||
-        postId.isEmpty ||
-        postId.startsWith('local-') ||
-        postId.startsWith('fixture-')) {
-      return;
-    }
-
     try {
-      final client = ref.read(apiClientProvider);
-      await client.request<Map<String, dynamic>>(
-        'PUT',
-        '/api/v1/articles/$postId/vote',
-        body: jsonEncode({'value': value.value}),
-        decode: (json) => json,
-      );
-    } catch (_) {
-      // Rollback to previous vote if server request fails
+      final result = await ref
+          .read(postActionsRepositoryProvider)
+          .setVote(id, value.value);
+      if (!_current(generation)) return;
       state = {
         ...state,
-        postId: PostInteraction(
-          vote: previousVote,
-          bookmarked: state[postId]?.bookmarked,
+        id: PostInteraction(
+          vote: switch (result) {
+            1 => VoteState.upvoted,
+            -1 => VoteState.downvoted,
+            _ => VoteState.neutral,
+          },
+          bookmarked: previous.bookmarked,
+        ),
+      };
+      _refresh(id);
+    } catch (error) {
+      if (!_current(generation)) return;
+      state = {
+        ...state,
+        id: PostInteraction(
+          vote: previous.vote,
+          bookmarked: previous.bookmarked,
+          failure: error is AppFailure ? error : const TransportFailure(),
         ),
       };
     }
   }
 
-  Future<void> toggleBookmark(
-    String postId, {
-    required bool initialValue,
-  }) async {
-    final current = state[postId];
-    final currentBookmarked = current?.bookmarked ?? initialValue;
-    final nextBookmarked = !currentBookmarked;
-
-    // Optimistic local state update
+  Future<void> toggleBookmark(String id, {required bool initialValue}) async {
+    final previous = state[id] ?? const PostInteraction();
+    if (previous.pending || id.isEmpty) return;
+    final generation = _generation;
+    final next = !(previous.bookmarked ?? initialValue);
     state = {
       ...state,
-      postId: PostInteraction(vote: current?.vote, bookmarked: nextBookmarked),
+      id: PostInteraction(vote: previous.vote, bookmarked: next, pending: true),
     };
-
-    if (offlineFeatures ||
-        postId.isEmpty ||
-        postId.startsWith('local-') ||
-        postId.startsWith('fixture-')) {
-      return;
-    }
-
     try {
-      final client = ref.read(apiClientProvider);
-      await client.request<Map<String, dynamic>>(
-        'POST',
-        '/api/v1/articles/$postId/bookmark',
-        decode: (json) => json,
-      );
-    } catch (_) {
-      // Rollback to previous bookmark state if server request fails
+      await ref.read(postActionsRepositoryProvider).toggleBookmark(id);
+      if (!_current(generation)) return;
       state = {
         ...state,
-        postId: PostInteraction(
-          vote: state[postId]?.vote,
-          bookmarked: currentBookmarked,
+        id: PostInteraction(vote: previous.vote, bookmarked: next),
+      };
+      _refresh(id);
+    } catch (error) {
+      if (!_current(generation)) return;
+      state = {
+        ...state,
+        id: PostInteraction(
+          vote: previous.vote,
+          bookmarked: previous.bookmarked,
+          failure: error is AppFailure ? error : const TransportFailure(),
         ),
       };
     }

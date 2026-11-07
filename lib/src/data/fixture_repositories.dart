@@ -311,9 +311,9 @@ final class FixtureFeedRepository implements FeedRepository {
     String? type,
     bool refresh = false,
   }) {
-    if (refresh) _client.clearCache();
     return _client.get(
       '/api/v1/feed',
+      refresh: refresh,
       query: {'cursor': ?cursor, 'type': ?type},
       decode: (json) => FeedPageDto.fromJson(json).toDomain(),
     );

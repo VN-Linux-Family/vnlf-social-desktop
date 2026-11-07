@@ -15,8 +15,68 @@ import '../data/live_post_repository.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
 
-/// Null follows the system locale; set a locale to override it for this session.
-final localeProvider = StateProvider<Locale?>((ref) => null);
+final localeStorageFailureProvider = StateProvider<StorageFailure?>(
+  (ref) => null,
+);
+
+final localeProvider = StateNotifierProvider<LocaleController, Locale?>(
+  (ref) => LocaleController(ref.watch(preferencesStorageProvider), (failure) {
+    ref.read(localeStorageFailureProvider.notifier).state = failure;
+  }),
+);
+
+class LocaleController extends StateNotifier<Locale?> {
+  LocaleController(this._storage, [this._onStorageFailure, Locale? initial])
+    : super(initial) {
+    restored = _restore();
+  }
+
+  static const _storageKey = 'vnlf_locale';
+  final PreferencesStorage _storage;
+  final void Function(StorageFailure?)? _onStorageFailure;
+  late final Future<void> restored;
+  Future<void> _writes = Future.value();
+  int _revision = 0;
+
+  Future<void> _restore() async {
+    final revision = _revision;
+    try {
+      final value = await _storage.read(_storageKey);
+      if (!mounted || revision != _revision) return;
+      if (value != null && value.isNotEmpty && value != 'system') {
+        super.state = Locale(value);
+      }
+    } catch (_) {
+      if (mounted && revision == _revision) {
+        _onStorageFailure?.call(const StorageFailure());
+      }
+    }
+  }
+
+  Future<void> setLocale(Locale? locale) {
+    final revision = ++_revision;
+    super.state = locale;
+    return _writes = _writes.then((_) async {
+      try {
+        if (locale == null) {
+          await _storage.write(_storageKey, 'system');
+        } else {
+          await _storage.write(_storageKey, locale.languageCode);
+        }
+        if (mounted && revision == _revision) _onStorageFailure?.call(null);
+      } catch (_) {
+        if (mounted && revision == _revision) {
+          _onStorageFailure?.call(const StorageFailure());
+        }
+      }
+    });
+  }
+
+  @override
+  set state(Locale? value) {
+    setLocale(value);
+  }
+}
 
 final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),
@@ -118,15 +178,25 @@ final ioTransportProvider = Provider<IoApiTransport?>((ref) {
 /// Live requests to vietnamlinuxfamily.net are enabled by default for app execution.
 final apiClientProvider = Provider<ApiClient>((ref) {
   final transport = ref.watch(ioTransportProvider);
+  final ApiClient client;
   if (transport == null) {
-    return ApiClient(
+    client = ApiClient(
       transport: fixtureTransport,
       throttleInterval: Duration.zero,
       // A fixture client owns its queue, including the widget test clock.
       hostKey: Object(),
     );
+  } else {
+    client = ApiClient(transport: transport.call);
   }
-  return ApiClient(transport: transport.call);
+  ref.listen(sessionStateProvider.select((session) => session?.userId), (
+    before,
+    after,
+  ) {
+    if (before != after) client.invalidateSession();
+  });
+  ref.onDispose(client.invalidateSession);
+  return client;
 });
 
 final sessionStateProvider = StateProvider<Session?>((ref) => null);

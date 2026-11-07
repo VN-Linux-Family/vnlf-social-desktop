@@ -50,6 +50,15 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
                     decor?['guestbookEnabled'],
                     'profile.decor.guestbookEnabled',
                   ),
+            followedByViewer: json['followedByViewer'] == null
+                ? null
+                : boolValue(
+                    json['followedByViewer'],
+                    'profile.followedByViewer',
+                  ),
+            blockedByViewer: json['blockedByViewer'] == null
+                ? null
+                : boolValue(json['blockedByViewer'], 'profile.blockedByViewer'),
           );
         },
       );
@@ -106,8 +115,10 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
       enabled: boolValue(json['enabled'], 'guestbook.enabled'),
       total: intValue(json['total'], 'guestbook.total'),
       nextCursor: nullableString(json['nextCursor'], 'guestbook.nextCursor'),
+      blockedReason: json.containsKey('blockedReason')
+          ? nullableString(json['blockedReason'], 'guestbook.blockedReason')
+          : 'UNKNOWN',
       items: objectList(json['items'], 'guestbook.items')
-          .where((item) => item['status'] == 'VISIBLE')
           .map(
             (item) => GuestbookEntry(
               id: stringValue(item['id'], 'guestbook.entry.id'),
@@ -116,6 +127,12 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
                     const {},
               ).toDomain(),
               content: stringValue(item['content'], 'guestbook.entry.content'),
+              status: switch (item['status']) {
+                'VISIBLE' => GuestbookStatus.visible,
+                'HIDDEN' => GuestbookStatus.hidden,
+                _ => throw const ParseFailure('guestbook.entry.status'),
+              },
+              mine: boolValue(item['mine'], 'guestbook.entry.mine'),
               createdAt: dateValue(
                 item['createdAt'],
                 'guestbook.entry.createdAt',

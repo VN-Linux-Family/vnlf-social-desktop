@@ -1,12 +1,21 @@
+import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
+import 'package:vnlfsocialapp/src/app/providers.dart';
+import 'package:vnlfsocialapp/src/core/api_client.dart';
+
+import 'channels/live_channels_test.dart' show channelJson, messageJson;
+
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
-import 'package:vnlfsocialapp/src/features/projects/presentation/projects_screen.dart';
 
 void main() {
   testWidgets('desktop feed search button opens global search', (tester) async {
@@ -17,41 +26,97 @@ void main() {
     expect(find.byKey(const Key('search-input')), findsOneWidget);
   });
 
-  testWidgets('channel switch isolates messages and retains local sends', (
-    tester,
-  ) async {
-    await _pump(tester, '/channels');
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#hoi-dap-linux'));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const Key('chat-input')),
-      'Tiếng Việt: ặ ữ ờ ẫ ệ',
-    );
-    await tester.pump();
-    await tester.tap(find.byTooltip('Gửi tin nhắn'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const Key('chat-input')))
-          .controller!
-          .text,
-      isEmpty,
-    );
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#chung'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsNothing);
-    await tester.tap(find.byTooltip('Chọn kênh'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('#hoi-dap-linux'));
-    await tester.pumpAndSettle();
-    expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'channel routes isolate history and retain acknowledged server sends',
+    (tester) async {
+      const owner = Session(userId: 'me', displayName: 'Một', role: 'MEMBER');
+      final saved = <Map<String, dynamic>>[];
+      var sends = 0;
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        cacheDuration: Duration.zero,
+        transport: (request) async {
+          Object data = {'items': <Object?>[], 'nextCursor': null};
+          if (request.path == '/api/v1/channels') {
+            data = {
+              'items': [
+                {
+                  ...channelJson,
+                  'id': 'channel-1',
+                  'slug': 'chung',
+                  'name': 'Chung',
+                  'minRoleToPost': 'MEMBER',
+                },
+                {
+                  ...channelJson,
+                  'id': 'channel-2',
+                  'slug': 'hoi-dap-linux',
+                  'name': 'Hỏi đáp Linux',
+                  'minRoleToPost': 'MEMBER',
+                },
+              ],
+            };
+          } else if (request.path == '/api/v1/channels/channel-2/messages') {
+            if (request.method == 'POST') {
+              sends++;
+              final body = jsonDecode(request.body!) as Map<String, dynamic>;
+              saved.add({
+                ...messageJson,
+                'id': 'created-1',
+                'content': body['content'],
+                'clientMessageId': body['clientMessageId'],
+              });
+              data = saved.last;
+            } else {
+              data = {'items': saved, 'nextCursor': null};
+            }
+          }
+          return ApiResponse(statusCode: 200, body: jsonEncode(data));
+        },
+      );
+      final router = await _pump(
+        tester,
+        '/channels',
+        overrides: [
+          sessionStateProvider.overrideWith((ref) => owner),
+          sessionProvider.overrideWithValue(const AsyncData(owner)),
+          apiClientProvider.overrideWithValue(client),
+        ],
+      );
+      await tester.tap(
+        find.byKey(const Key('communication-channel-channel-2')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('chat-input')),
+        'Tiếng Việt: ặ ữ ờ ẫ ệ',
+      );
+      await tester.pump();
+      await tester.tap(find.byTooltip('Gửi tin nhắn'));
+      await tester.pumpAndSettle();
+      expect(sends, 1);
+      expect(saved.single['content'], 'Tiếng Việt: ặ ữ ờ ẫ ệ');
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('chat-input')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      router.go('/channels/chung');
+      await tester.pumpAndSettle();
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsNothing);
+      router.go('/channels/hoi-dap-linux');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Làm mới tin nhắn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(sends, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('voice join enables mute, deafen, share and leave controls', (
     tester,
@@ -113,6 +178,7 @@ void main() {
         find.byKey(const Key('search-input')),
         '  VNLF-CLI  ',
       );
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(find.text('vnlf-cli'), findsOneWidget);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Bài viết'));
@@ -126,6 +192,7 @@ void main() {
       expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Thành viên'));
       await tester.enterText(find.byKey(const Key('search-input')), 'hoangnam');
+      await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
       expect(find.text('Hoàng Nam'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -138,25 +205,29 @@ void main() {
     final router = await _pump(tester, '/');
     PostData post() =>
         tester.widget<VnlfPostCard>(find.byType(VnlfPostCard)).post!;
+    Finder postAction(String label) => find.descendant(
+      of: find.byType(VnlfPostCard),
+      matching: find.bySemanticsLabel(label),
+    );
     expect(post().voteScore, 3);
-    await tester.tap(find.bySemanticsLabel('Ủng hộ'));
+    await tester.tap(postAction('Ủng hộ'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 2);
     expect(post().viewerVote, VoteState.neutral);
-    await tester.tap(find.bySemanticsLabel('Phản đối'));
+    await tester.tap(postAction('Phản đối'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 1);
-    await tester.tap(find.bySemanticsLabel('Ủng hộ'));
+    await tester.tap(postAction('Ủng hộ'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 3);
-    await tester.tap(find.bySemanticsLabel('Lưu bài viết'));
+    await tester.tap(postAction('Lưu bài viết'));
     await tester.pumpAndSettle();
     expect(post().isBookmarked, isTrue);
     router.go('/thread/fixture-post-1');
     await tester.pumpAndSettle();
     expect(post().voteScore, 3);
     expect(post().isBookmarked, isTrue);
-    await tester.tap(find.bySemanticsLabel('Phản đối'));
+    await tester.tap(postAction('Phản đối'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 1);
     router.go('/');
@@ -172,71 +243,51 @@ void main() {
         tester,
         '/projects',
         overrides: [
-          projectsProvider.overrideWith(
-            (ref) async => ProjectsPage(
-              items: const [
-                ProjectItem(
-                  id: 'dart',
-                  name: 'Dart Tool',
-                  repo: {'language': 'Dart'},
-                ),
-                ProjectItem(
-                  id: 'rust',
-                  name: 'Rust Tool',
-                  repo: {'language': 'Rust'},
-                ),
-              ],
-            ),
+          projectDirectoryRepositoryProvider.overrideWithValue(
+            _FilteringProjectRepository(),
           ),
         ],
       );
       expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Rust'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rust (1)').last);
       await tester.pumpAndSettle();
       expect(find.text('Rust Tool'), findsOneWidget);
       expect(find.text('Dart Tool'), findsNothing);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Python'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Python (1)').last);
       await tester.pumpAndSettle();
       expect(find.text('Không có dự án phù hợp'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Tất cả'));
+      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tất cả ngôn ngữ').last);
       await tester.pumpAndSettle();
       expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
     },
   );
 
-  testWidgets('leaderboard periods change points and ranking order', (
+  testWidgets('leaderboard weekly archive can return to current rankings', (
     tester,
   ) async {
     await _pump(tester, '/leaderboard');
     expect(find.text('450'), findsOneWidget);
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tháng này'));
+    await tester.tap(find.byTooltip('Tuần trước'));
     await tester.pumpAndSettle();
-    expect(find.text('1280'), findsOneWidget);
     expect(find.text('450'), findsNothing);
-    expect(
-      tester
-          .widget<VnlfLeaderboardCard>(find.byType(VnlfLeaderboardCard))
-          .entries
-          .first
-          .author
-          .username,
-      'minhtri',
-    );
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tất cả'));
-    await tester.pumpAndSettle();
-    expect(find.text('8640'), findsOneWidget);
-    expect(
-      tester
-          .widget<VnlfLeaderboardCard>(find.byType(VnlfLeaderboardCard))
-          .entries
-          .first
-          .author
-          .username,
-      'hoangnam',
-    );
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tuần này'));
+    expect(find.text('Chưa có xếp hạng'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Tuần này'));
     await tester.pumpAndSettle();
     expect(find.text('450'), findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.chevron_right),
+          )
+          .onPressed,
+      isNull,
+    );
   });
 
   for (final width in [390.0, 900.0, 1440.0]) {
@@ -246,7 +297,7 @@ void main() {
         expect(find.text('Màn hình này chưa có nội dung.'), findsNothing);
         expect(tester.takeException(), isNull);
         if (route == '/channels' && width == 1440) {
-          expect(find.text('Đang hoạt động'), findsOneWidget);
+          expect(find.text('Đăng nhập để xem kênh cộng đồng'), findsOneWidget);
         }
       });
     }
@@ -285,4 +336,35 @@ Future<GoRouter> _pump(
   );
   await tester.pumpAndSettle();
   return router;
+}
+
+class _FilteringProjectRepository implements ProjectDirectoryRepository {
+  @override
+  Future<ProjectDirectoryPage> fetch(
+    ProjectFilters filters, {
+    String? cursor,
+    bool refresh = false,
+  }) async {
+    const all = [
+      ProjectItem(id: 'dart', name: 'Dart Tool', repo: {'language': 'Dart'}),
+      ProjectItem(id: 'rust', name: 'Rust Tool', repo: {'language': 'Rust'}),
+    ];
+    return ProjectDirectoryPage(
+      page: ProjectsPage(
+        items: all
+            .where(
+              (p) =>
+                  filters.language.isEmpty ||
+                  p.repo?['language'] == filters.language,
+            )
+            .toList(),
+      ),
+      types: const [],
+      languages: const [
+        ProjectFacet('Dart', 1),
+        ProjectFacet('Rust', 1),
+        ProjectFacet('Python', 1),
+      ],
+    );
+  }
 }

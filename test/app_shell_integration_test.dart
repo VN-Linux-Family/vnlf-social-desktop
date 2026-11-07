@@ -28,7 +28,7 @@ void main() {
       expect(find.byType(route.screen), findsOneWidget, reason: route.path);
       expect(
         find.descendant(
-          of: find.byType(VnlfCenterPageHeader),
+          of: find.byType(route.screen),
           matching: find.text(route.vietnamese),
         ),
         findsOneWidget,
@@ -112,14 +112,14 @@ const _communityRoutes =
       ),
       (
         path: '/channels',
-        vietnamese: 'Kênh & trò chuyện',
-        english: 'Channels & chat',
+        vietnamese: 'Đăng nhập để xem kênh cộng đồng',
+        english: 'Sign in to view community channels',
         screen: ChannelsScreen,
       ),
       (
         path: '/voice',
-        vietnamese: 'Phòng Voice',
-        english: 'Voice rooms',
+        vietnamese: 'Kênh thoại',
+        english: 'Voice',
         screen: VoiceScreen,
       ),
     ];
@@ -131,7 +131,15 @@ Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {
   addTearDown(tester.view.resetDevicePixelRatio);
 
   final container = ProviderContainer(
-    overrides: [localeProvider.overrideWith((ref) => const Locale('vi'))],
+    overrides: [
+      localeProvider.overrideWith(
+        (ref) => LocaleController(
+          ref.watch(preferencesStorageProvider),
+          null,
+          const Locale('vi'),
+        ),
+      ),
+    ],
   );
   final router = createMainRouter();
   await tester.pumpWidget(
@@ -152,10 +160,7 @@ Finder _permanentDesktopSidebar() => find.byWidgetPredicate(
 void _expectScreenTitle(Type screen, String title) {
   expect(find.byType(screen), findsOneWidget);
   expect(
-    find.descendant(
-      of: find.byType(VnlfCenterPageHeader),
-      matching: find.text(title),
-    ),
+    find.descendant(of: find.byType(screen), matching: find.text(title)),
     findsOneWidget,
   );
 }

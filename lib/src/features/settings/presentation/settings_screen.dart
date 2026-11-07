@@ -8,6 +8,12 @@ import '../../../domain/models.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../../updates/presentation/update_panel.dart';
+import 'account_profile_screen.dart';
+import '../blocked/presentation/blocked_people_panel.dart';
+import '../preferences/preferences_panel.dart';
+import '../text_size/text_size.dart';
+import 'security_sessions_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
 
@@ -21,6 +27,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final themeStorageFailure = ref.watch(themeStorageFailureProvider);
+    final localeStorageFailure = ref.watch(localeStorageFailureProvider);
     final sessionStorageFailure = ref.watch(sessionStorageFailureProvider);
     final signingOut = ref.watch(authControllerProvider).isLoading;
     final language =
@@ -35,6 +42,8 @@ class SettingsScreen extends ConsumerWidget {
           title: english ? 'Settings' : 'Cài đặt',
           showSettings: false,
         ),
+        const SizedBox(height: 12),
+        const AppUpdatePanel(),
         const SizedBox(height: 12),
         FeatureSurface(
           child: Column(
@@ -81,6 +90,21 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (!offlineFeatures) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AccountProfileScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ'),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -141,6 +165,16 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
+        if (session != null && !offlineFeatures) ...[
+          const SizedBox(height: 16),
+          const SecuritySessionsPanel(),
+        ],
+        if (ref.watch(sessionStateProvider) != null && !offlineFeatures) ...[
+          const SizedBox(height: 16),
+          const BlockedPeoplePanel(),
+          const SizedBox(height: 16),
+          const FeatureSurface(child: PreferencesPanel()),
+        ],
         const SizedBox(height: 16),
         FeatureSurface(
           child: Column(
@@ -210,6 +244,17 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
+              if (localeStorageFailure != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  english
+                      ? 'Could not save language. Please select it again to retry.'
+                      : 'Không thể lưu ngôn ngữ. Vui lòng chọn lại để thử lại.',
+                  style: VnlfTypography.meta(colors.red),
+                ),
+              ],
+              const SizedBox(height: 24),
+              const TextSizeSettings(),
               const SizedBox(height: 24),
               Text(
                 english ? 'About the app' : 'Thông tin ứng dụng',

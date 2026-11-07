@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
@@ -82,13 +83,17 @@ class VnlfVoteCapsule extends StatelessWidget {
                 onTap: onVoteChanged == null
                     ? null
                     : () {
+                        HapticFeedback.lightImpact();
                         final next = voteState == VoteState.upvoted
                             ? VoteState.neutral
                             : VoteState.upvoted;
                         onVoteChanged!(next);
                       },
                 child: Padding(
-                  padding: const EdgeInsets.all(3),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 4 : 6,
+                    vertical: compact ? 3 : 4,
+                  ),
                   child: CustomPaint(
                     size: const Size(13, 13),
                     painter: _HollowVoteArrowPainter(
@@ -101,7 +106,7 @@ class VnlfVoteCapsule extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 8),
+              padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6),
               child: Text(
                 '$score',
                 style: VnlfTypography.meta(
@@ -118,13 +123,17 @@ class VnlfVoteCapsule extends StatelessWidget {
                 onTap: onVoteChanged == null
                     ? null
                     : () {
+                        HapticFeedback.lightImpact();
                         final next = voteState == VoteState.downvoted
                             ? VoteState.neutral
                             : VoteState.downvoted;
                         onVoteChanged!(next);
                       },
                 child: Padding(
-                  padding: const EdgeInsets.all(3),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 4 : 6,
+                    vertical: compact ? 3 : 4,
+                  ),
                   child: CustomPaint(
                     size: const Size(13, 13),
                     painter: _HollowVoteArrowPainter(
@@ -202,9 +211,14 @@ class VnlfPostInteractionBar extends StatelessWidget {
           label: commentSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onCommentTap,
+            onTap: onCommentTap == null
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    onCommentTap!();
+                  },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -228,9 +242,14 @@ class VnlfPostInteractionBar extends StatelessWidget {
           label: shareSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onShareTap,
+            onTap: onShareTap == null
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    onShareTap!();
+                  },
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
             ),
           ),
@@ -240,9 +259,14 @@ class VnlfPostInteractionBar extends StatelessWidget {
           label: bookmarkSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onBookmarkToggle,
+            onTap: onBookmarkToggle == null
+                ? null
+                : () {
+                    HapticFeedback.lightImpact();
+                    onBookmarkToggle!();
+                  },
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               child: Icon(
                 isBookmarked
                     ? Icons.bookmark_rounded

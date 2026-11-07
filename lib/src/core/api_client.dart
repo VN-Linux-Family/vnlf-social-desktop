@@ -47,7 +47,19 @@ typedef ApiTransport = Future<ApiResponse> Function(ApiRequest request);
 typedef ApiInterceptor = Future<ApiRequest> Function(ApiRequest request);
 typedef RetryDelay = Future<void> Function(Duration delay);
 
+/// Keeps all stages of an operation bound to the account that started it.
+final class ApiSessionScope {
+  ApiSessionScope._(this._client, this._generation);
+  final ApiClient _client;
+  final int _generation;
+
+  void ensureCurrent() {
+    if (_generation != _client._sessionRevision) throw const HttpFailure(401);
+  }
+}
+
 final class ApiClient {
+  static const userAgent = 'vlf-flutter-dev/0.1 (unofficial community client)';
   ApiClient({
     required ApiTransport transport,
     List<ApiInterceptor> interceptors = const [],
@@ -74,6 +86,25 @@ final class ApiClient {
   final Duration cacheDuration;
   final _cache = <String, (DateTime, String)>{};
   int _cacheRevision = 0;
+  int _sessionRevision = 0;
+  final _sessionListeners = <void Function()>{};
+
+  /// Returns an unsubscribe callback for owner-bound long-lived transports.
+  void Function() observeSessionInvalidation(void Function() listener) {
+    _sessionListeners.add(listener);
+    return () => _sessionListeners.remove(listener);
+  }
+
+  ApiSessionScope captureSession() => ApiSessionScope._(this, _sessionRevision);
+
+  /// Reject queued work from the previous account before it reaches transport.
+  void invalidateSession() {
+    _sessionRevision++;
+    clearCache();
+    for (final listener in _sessionListeners.toList()) {
+      listener();
+    }
+  }
 
   void clearCache() {
     _cacheRevision++;
@@ -83,17 +114,52 @@ final class ApiClient {
   Future<T> get<T>(
     String path, {
     Map<String, String> query = const {},
+    bool refresh = false,
     T Function(Map<String, dynamic>)? decode,
-  }) => request<T>('GET', path, query: query, decode: decode);
+  }) => request<T>('GET', path, query: query, refresh: refresh, decode: decode);
+
+  /// Reads an endpoint whose successful response may be an object or JSON null.
+  Future<Map<String, dynamic>?> getNullableObject(
+    String path, {
+    bool refresh = false,
+  }) => _request<Map<String, dynamic>?>(
+    'GET',
+    path,
+    refresh: refresh,
+    allowNull: true,
+    decode: (value) => value,
+  );
 
   Future<T> request<T>(
     String method,
     String path, {
     Map<String, String> query = const {},
     String? body,
+    Map<String, String> headers = const {},
+    bool refresh = false,
     T Function(Map<String, dynamic>)? decode,
+  }) => _request<T>(
+    method,
+    path,
+    query: query,
+    body: body,
+    headers: headers,
+    refresh: refresh,
+    decode: (value) => decode != null ? decode(value!) : value as T,
+  );
+
+  Future<T> _request<T>(
+    String method,
+    String path, {
+    Map<String, String> query = const {},
+    String? body,
+    Map<String, String> headers = const {},
+    bool refresh = false,
+    bool allowNull = false,
+    required T Function(Map<String, dynamic>?) decode,
   }) async {
     final cacheRevision = _cacheRevision;
+    final sessionRevision = _sessionRevision;
     final normalizedMethod = method.toUpperCase();
     var request = ApiRequest(
       path,
@@ -101,15 +167,17 @@ final class ApiClient {
       body: body,
       query: query,
       headers: {
-        'User-Agent': 'vlf-flutter-dev/0.1 (unofficial community client)',
+        'User-Agent': userAgent,
         'Accept': 'application/json',
         if (body != null) 'Content-Type': 'application/json',
+        ...headers,
       },
     );
     try {
       for (final interceptor in _interceptors) {
         request = await interceptor(request);
       }
+      if (sessionRevision != _sessionRevision) throw const HttpFailure(401);
       final isGet = request.method == 'GET';
       final key = jsonEncode([
         request.path,
@@ -122,11 +190,11 @@ final class ApiClient {
             ..sort((a, b) => a.key.compareTo(b.key)),
         ),
       ]);
-      final cached = isGet ? _cache[key] : null;
+      final cached = isGet && !refresh ? _cache[key] : null;
       if (cached != null &&
           DateTime.now().difference(cached.$1) < cacheDuration) {
-        final value = _decode(cached.$2);
-        return decode != null ? decode(value) : value as T;
+        final value = _decode(cached.$2, allowNull: allowNull);
+        return decode(value);
       }
       if (isGet) _cache.remove(key);
       final canRetry =
@@ -138,7 +206,13 @@ final class ApiClient {
         try {
           await _host.acquire(throttleInterval);
           try {
+            if (sessionRevision != _sessionRevision) {
+              throw const HttpFailure(401);
+            }
             response = await _transport(request);
+            if (sessionRevision != _sessionRevision) {
+              throw const HttpFailure(401);
+            }
             _host.record(response.statusCode);
           } finally {
             _host.release();
@@ -153,15 +227,29 @@ final class ApiClient {
               response.statusCode == 429 ||
               (response.statusCode >= 500 && response.statusCode <= 599);
           if (!canRetry || !transient || attempt >= 2) {
-            throw HttpFailure(response.statusCode);
+            String? code;
+            try {
+              final error = jsonDecode(response.body);
+              final value = error is Map ? error['code'] : null;
+              if (value is String &&
+                  RegExp(r'^[A-Z][A-Z0-9_]{0,79}$').hasMatch(value)) {
+                code = value;
+              }
+            } catch (_) {
+              // Proxy errors may be HTML. Preserve the HTTP status either way.
+            }
+            throw HttpFailure(response.statusCode, code: code);
           }
           await _retryDelay(
             _retryAfter(response.headers['retry-after']) ?? _backoff(attempt),
           );
           continue;
         }
-        final value = _decode(response.body);
-        final result = decode != null ? decode(value) : value as T;
+        if (!isGet) clearCache();
+        final value = (response.statusCode == 204 || response.statusCode == 205)
+            ? <String, dynamic>{}
+            : _decode(response.body, allowNull: allowNull);
+        final result = decode(value);
         if (isGet &&
             cacheDuration > Duration.zero &&
             cacheRevision == _cacheRevision) {
@@ -177,9 +265,10 @@ final class ApiClient {
     }
   }
 
-  Map<String, dynamic> _decode(String body) {
+  Map<String, dynamic>? _decode(String body, {bool allowNull = false}) {
     try {
       final decoded = jsonDecode(body);
+      if (allowNull && decoded == null) return null;
       if (decoded is! Map<String, dynamic>) throw const FormatException();
       return decoded;
     } on FormatException {

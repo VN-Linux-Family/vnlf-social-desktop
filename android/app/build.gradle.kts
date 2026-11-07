@@ -16,7 +16,16 @@ val keyPropsFile = when {
     else -> null
 }
 if (keyPropsFile != null) {
-    keystoreProperties.load(FileInputStream(keyPropsFile))
+    FileInputStream(keyPropsFile).use { keystoreProperties.load(it) }
+}
+
+val signingKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+val hasReleaseSigning = keyPropsFile != null && signingKeys.all {
+    !keystoreProperties.getProperty(it).isNullOrBlank()
+}
+val releaseRequested = gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }
+if (releaseRequested && !hasReleaseSigning) {
+    throw GradleException("Release signing requires an ignored key.properties file with storeFile, storePassword, keyAlias, and keyPassword.")
 }
 
 android {
@@ -38,31 +47,30 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val storePath = keystoreProperties.getProperty("storeFile") ?: "release.keystore"
-            val resolvedStore = project.file(storePath).takeIf { it.exists() }
-                ?: rootProject.file(storePath).takeIf { it.exists() }
-                ?: project.file("release.keystore").takeIf { it.exists() }
-
-            if (resolvedStore != null && resolvedStore.exists()) {
-                keyAlias = keystoreProperties.getProperty("keyAlias") ?: "vnlf"
-                keyPassword = keystoreProperties.getProperty("keyPassword") ?: "vnlfsocialapp"
-                storeFile = resolvedStore
-                storePassword = keystoreProperties.getProperty("storePassword") ?: "vnlfsocialapp"
+        if (hasReleaseSigning) {
+            create("release") {
+                val storePath = keystoreProperties.getProperty("storeFile")
+                val configuredStore = project.file(storePath).takeIf { it.exists() }
+                    ?: rootProject.file(storePath).takeIf { it.exists() }
+                if (configuredStore == null) {
+                    throw GradleException("The configured release keystore does not exist.")
+                }
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = configuredStore
+                storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
     }
 
     buildTypes {
         release {
-            val relConfig = signingConfigs.getByName("release")
-            signingConfig = if (relConfig.storeFile?.exists() == true) {
-                relConfig
-            } else {
-                signingConfigs.getByName("debug")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
+
 }
 
 kotlin {

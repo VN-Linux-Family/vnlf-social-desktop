@@ -1,3 +1,106 @@
+# Current production audit — 2026-11-06
+
+This update supersedes the historical phase assignments and unknown-contract
+assumptions below. Codex owns `luank3/vnlf-production-audit` in its isolated
+worktree. Gemini 4 Argon completed a read-only source audit; that terminal is closed. Argon delivered the direct-messages slice, which Codex independently hardened and verified; the follow-up review stopped at the provider quota limit without a report, and its terminal is closed. Recovered channel/search/voice worker worktrees are preserved and their
+changes are being integrated serially; no local worker builds are running.
+
+Authorized: use the owner's account for necessary write checks, remove all test
+content afterward, read the private GitLab source through glab, store CI binaries
+privately, and publish stable binaries in a public release-only repository.
+Source is a contract/design reference only and must not be copied into the app.
+Previously created test posts/comments were removed and fresh reads confirmed
+cleanup before reboot. Credentials and session tokens are never recorded here.
+
+Completed and checked so far: UTF-8 transport and query preservation; confirmed
+comment persistence with flattened replies and stable retry identity; post
+vote/bookmark failure handling; native article/media rendering and processing
+states; feedback validation and honest error handling; visible public-release
+update checks; bounded local build resources and removal of signing material from
+tracked files. The recovered live channel/voice/search/weekly-ranking slices have
+passed full integration tests. The native composer supports rich editing,
+versioned autosave, secure local recovery, stable publish identities, image/video
+uploads, cover/inline images, format conversion and explicit conflict handling.
+553 Flutter tests and 37 release-tool tests pass for the current integrated
+projects, profile and feedback changes. Analysis, formatting, all three
+workflow definitions, and the plain Dart HTTP/auth fixture smoke check pass.
+Its Linux desktop/phone composer captures use synthetic account data and no server writes. Comment voting, editing, deletion, pinning and media display now use verified server contracts with acknowledgment, failure and account-change tests. Shared request guards reject stale queued work across login/logout/account changes. Channels and DMs now share the source-defined searchable directory and explicit routes; the fixture-only channel screen is removed. Phone detail views hide global navigation, direct links never fall back to another conversation, and image selection streams through the owner-bound upload pipeline. Article detail now follows live computed typography, collapsed block margins and a dedicated reading layout; these are covered by geometry and integration checks. Fresh Linux guest captures verify an inline-image article and moving video frames; a recoverable hardware-decoder fallback had incorrectly hidden video and is now fixed with bounded first-frame startup and lifecycle tests.
+
+Build policy: one local job via `tool/with_build_slot.sh`; Flutter tests use
+`--concurrency=1`. Gradle heap 1536 MB, two workers, no daemon. Full hosted build
+matrix uses native x64/arm64 runners and three Android ABIs, with an artifact
+inventory and checksums. Source is pushed to both private repositories, but all
+workflow jobs are restricted to `luank3/vnlfsocialapp`; the organization's two
+registered workflows remain manually disabled. Feature PR checks run once;
+packaging runs on explicit dispatch (Linux x64 by default, optional Android/all)
+or release tags (all nine). The CI timing review separates matrix queueing,
+execution and estimated allowance usage in `docs/ci-cost-audit-2026-11-06.md`.
+The runner mirror-list omission is reproduced and fixed locally; the corrected
+x64 dependency install still requires hosted validation. No new full matrix is
+dispatched for this migration. All nine native build targets passed in hosted run
+42163419636 at the messaging checkpoint and were automatically published in private prerelease `ci-42163419636-1`; uploaded sizes and SHA-256 digests match its complete manifest. Windows
+uses Media Foundation on both architectures. Earlier source-branch release creation hit GitHub's workflow-file permission guard; scoped publishing credentials and explicit private recovery remain documented. Public repository creation failed with organization
+HTTP 403; an owner must create it and configure scoped publishing and stable
+signing secrets. User explicitly approved public stable/private CI distribution.
+
+Native poll authoring uses the separate confirmed draft-poll route, preserves
+unfinished question/choices in owner-scoped recovery, and saves before publishing.
+Partial poll failures retain the acknowledged body version and editable input;
+late acknowledgments cannot replace newer input. Published polls are locked and
+draft format conversion removes polls explicitly. A shared UTF-16 formatter keeps
+both poll editors within server limits without splitting emoji.
+
+Live production repositories confirmed post/poll publication, fresh comment
+reads, comment edits/votes and poll votes. All test votes/comments/posts were
+removed; owner reads confirmed REMOVED and public reads returned 404. The named
+controlled DM conversation was established and accepted by the user; one message,
+edit and reaction persisted through fresh history reads, then the reaction and
+message were deleted and absence confirmed. Both sessions were logged out and
+cleanup registries cleared. These are HTTP/repository checks; persistent keyring
+storage, physical-device UI and realtime delivery are separate checks.
+
+Project listing filters, sorting, facets and pagination now use the source-defined
+server query. Account profile editing and member feedback history/conversation
+have native screens and synthetic coverage, including account changes and uncertain
+writes. Owner-authenticated read-only checks confirmed the profile, feedback
+history, project listing/facets and one project detail, then logged out. The
+native detail route renders the project's introduction, media and a rating
+control with synthetic tests. Live rating, project submission, profile and
+feedback writes, and complete visual parity remain unverified or incomplete.
+
+The native shared realtime connection is now wired to visible channel and DM
+routes, with owner invalidation, event routing, bounded reconnects, and catch-up
+that preserves events racing history reads. Topic-less typing/read events remain
+unattributed. A production owner probe reached the active controlled conversation,
+but Cloudflare returned HTTP 403 to the authenticated upgrade in this environment;
+no test message was sent, the socket closed, logout succeeded, and cleanup was
+clear. Live delivery, the cause of the 403, and runtime visual parity remain open.
+
+Remaining work is tracked in `docs/source-parity-audit.md` and
+`docs/BUILD_AND_RELEASE.md`. Production readiness is **not** established: composer
+live UI checks, notification/report runtime checks, recovery and live realtime verification, fuller profile/settings/projects/chat support,
+remaining device media/voice, visual parity/performance and signing
+remain release gates. Do not replace these with simulated success states.
+
+The pinned server records attendance when issuing login and session responses,
+so the authorized test logins may have recorded it even though no explicit
+check-in request was made. No removal endpoint is known. The automatic
+celebration now uses an account/session-bound lifecycle coordinator that shares
+the manual check-in lease and durable uncertainty marker, respects visibility,
+dialogs and the composer, handles Vietnam-local day rollover and never
+automatically repeats an uncertain write. Synthetic tests cover these paths;
+live behavior and visual device verification remain outstanding.
+
+Live owner verification: production HTTP/auth repositories authenticated the
+authorized owner, confirmed the matching session, logged out and confirmed an
+empty session afterward. Credentials and cookies stayed in anonymous stdin and
+memory; that authentication-only probe posted no content. Desktop keyring
+persistence remains unverified. The HTTP SessionStorage interface is now
+independent of Flutter platform plugins so that this verification also runs in
+plain Dart; secure native storage remains the application's implementation.
+
+---
+
 # VNLF Flutter Client: Architectural Master Plan & Execution Graph
 
 ---

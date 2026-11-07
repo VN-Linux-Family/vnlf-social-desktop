@@ -133,6 +133,39 @@ final class ImagePlaceholderAttachment extends PostAttachment {
   final String? semanticLabel;
 }
 
+@immutable
+final class MediaGalleryAttachment extends PostAttachment {
+  const MediaGalleryAttachment(this.items);
+  final List<PostMediaData> items;
+}
+
+@immutable
+final class PostMediaData {
+  const PostMediaData({
+    required this.url,
+    this.mime = '',
+    this.alt = '',
+    this.width,
+    this.height,
+    this.posterUrl,
+    this.durationMs,
+    this.state,
+  });
+  final String url;
+  final String mime;
+  final String alt;
+  final int? width;
+  final int? height;
+  final String? posterUrl;
+  final int? durationMs;
+  final String? state;
+  bool get isVideo => mime.startsWith('video/');
+  double get aspectRatio =>
+      width != null && width! > 0 && height != null && height! > 0
+      ? width! / height!
+      : 16 / 9;
+}
+
 /// Renders a dark forest-green terminal code snippet with a copy action pill.
 @immutable
 final class CodeBlockAttachment extends PostAttachment {
@@ -179,8 +212,18 @@ class PostData {
     this.commentCount = 0,
     this.isBookmarked = false,
     this.isArticle = false,
+    this.richContent,
+    this.showInlineImages = false,
+    this.selectableContent = false,
+    this.actionPending = false,
+    this.actionError,
   });
 
+  final Map<String, dynamic>? richContent;
+  final bool showInlineImages;
+  final bool selectableContent;
+  final bool actionPending;
+  final String? actionError;
   final String id;
   final AuthorData author;
   final String relativeTime;
@@ -198,6 +241,8 @@ class PostData {
     int? voteScore,
     VoteState? viewerVote,
     bool? isBookmarked,
+    bool? actionPending,
+    String? actionError,
   }) {
     return PostData(
       id: id,
@@ -212,6 +257,11 @@ class PostData {
       commentCount: commentCount,
       isBookmarked: isBookmarked ?? this.isBookmarked,
       isArticle: isArticle,
+      richContent: richContent,
+      showInlineImages: showInlineImages,
+      selectableContent: selectableContent,
+      actionPending: actionPending ?? this.actionPending,
+      actionError: actionError,
     );
   }
 }
@@ -242,6 +292,16 @@ class CommentNodeData {
     this.voteScore = 0,
     this.viewerVote = VoteState.neutral,
     this.replies = const [],
+    this.canEdit = false,
+    this.canDelete = false,
+    this.canPin = false,
+    this.pinned = false,
+    this.edited = false,
+    this.pending = false,
+    this.hiddenSticker = false,
+    this.actionError,
+    this.media = const [],
+    this.gif,
   });
 
   final String id;
@@ -252,6 +312,10 @@ class CommentNodeData {
   final int voteScore;
   final VoteState viewerVote;
   final List<CommentNodeData> replies;
+  final bool canEdit, canDelete, canPin, pinned, edited, pending, hiddenSticker;
+  final String? actionError;
+  final List<PostMediaData> media;
+  final PostMediaData? gif;
 }
 
 /// Community project showcase item (`Dự án`).

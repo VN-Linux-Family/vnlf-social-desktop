@@ -13,7 +13,7 @@ void main() {
       ..['PORT'] = '0'
       ..['FAKE_SERVER_PORT'] = '0';
     final process = await Process.start('dart', [
-      'run',
+      '--packages=.dart_tool/package_config.json',
       'test/fixtures/fake_server.dart',
     ], environment: environment);
     addTearDown(() => process.kill());
@@ -28,7 +28,10 @@ void main() {
       await probe.close();
       final process = await Process.start(
         'dart',
-        ['run', 'test/fixtures/fake_server.dart'],
+        [
+          '--packages=.dart_tool/package_config.json',
+          'test/fixtures/fake_server.dart',
+        ],
         environment: {
           ...Platform.environment,
           'VNLF_FAKE_SERVER_PORT': '$port',

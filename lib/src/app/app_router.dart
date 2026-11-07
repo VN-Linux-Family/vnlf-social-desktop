@@ -1,3 +1,9 @@
+import '../features/projects/detail/presentation/project_detail_screen.dart';
+import '../features/projects/submission/project_submission_screen.dart';
+import '../features/feedback/feedback.dart';
+import '../features/feedback/presentation/feedback_attachment_dialog.dart';
+import '../features/notifications/presentation/notifications_sheet.dart';
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,9 +12,13 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../design_system/design_system.dart';
+import '../core/api_client.dart';
+import '../core/request_identity.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/activity/presentation/activity_page.dart';
+import '../features/composer/presentation/composer_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
-import '../features/channels/presentation/channel_directory.dart';
+import '../features/direct_messages/presentation/direct_messages_screen.dart';
 import '../features/discover/presentation/discover_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
@@ -29,6 +39,9 @@ const _paths = <VnlfNavDestination, String>{
   VnlfNavDestination.voice: '/voice',
   VnlfNavDestination.projects: '/projects',
 };
+
+const composeRouteName = 'compose';
+const editComposeRouteName = 'edit-compose';
 
 /// Feature screens are supplied by the application composition root.
 GoRouter createAppRouter({
@@ -78,7 +91,11 @@ GoRouter createAppRouter({
 }
 
 /// Public feature routes use repository-backed native screens.
-GoRouter createMainRouter() {
+GoRouter createMainRouter({
+  GlobalKey<NavigatorState>? navigatorKey,
+  List<NavigatorObserver>? rootObservers,
+  List<NavigatorObserver>? shellObservers,
+}) {
   const destinations = <VnlfNavDestination, String>{
     VnlfNavDestination.feed: '/',
     VnlfNavDestination.explore: '/discover',
@@ -87,13 +104,27 @@ GoRouter createMainRouter() {
     VnlfNavDestination.projects: '/projects',
   };
   return GoRouter(
+    navigatorKey: navigatorKey,
+    observers: rootObservers,
     routes: [
       GoRoute(
         path: '/gallery',
         builder: (context, state) => const GalleryPage(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/compose',
+        name: composeRouteName,
+        builder: (context, state) => const ComposerScreen(),
+      ),
+      GoRoute(
+        path: '/compose/:id',
+        name: editComposeRouteName,
+        builder: (context, state) =>
+            ComposerScreen(draftId: state.pathParameters['id']!),
+      ),
       ShellRoute(
+        observers: shellObservers,
         builder: (context, state, child) {
           final english = Localizations.localeOf(context).languageCode == 'en';
           final labels = english
@@ -111,24 +142,96 @@ GoRouter createMainRouter() {
                   VnlfNavDestination.voice: 'Voice',
                   VnlfNavDestination.projects: 'Dự án',
                 };
-          final active =
-              destinations.entries
-                  .where((entry) => entry.value == state.uri.path)
-                  .map((entry) => entry.key)
-                  .firstOrNull ??
-              VnlfNavDestination.feed;
+          final communication =
+              state.uri.path == '/channels' ||
+              state.uri.path.startsWith('/channels/') ||
+              state.uri.path == '/messages' ||
+              state.uri.path.startsWith('/messages/');
+          final communicationDetail =
+              communication && state.uri.path.split('/').length > 2;
+          final active = communication
+              ? VnlfNavDestination.messages
+              : state.uri.path.startsWith('/projects/')
+              ? VnlfNavDestination.projects
+              : destinations.entries
+                        .where((entry) => entry.value == state.uri.path)
+                        .map((entry) => entry.key)
+                        .firstOrNull ??
+                    VnlfNavDestination.feed;
           return Consumer(
             builder: (context, ref, _) {
               final session =
                   ref.watch(sessionProvider).valueOrNull ??
                   ref.watch(sessionStateProvider);
+              final isArticleOrThread =
+                  state.uri.path.startsWith('/thread/') ||
+                  state.uri.path.startsWith('/a/') ||
+                  state.uri.path.startsWith('/article/') ||
+                  state.uri.path.startsWith('/articles/') ||
+                  state.uri.path.startsWith('/posts/') ||
+                  state.uri.path.startsWith('/post/');
+              final threadId = isArticleOrThread
+                  ? state.pathParameters['id']
+                  : null;
+              final articleDetail =
+                  threadId != null &&
+                  ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
+                      'ARTICLE';
+              final isDetailRoute =
+                  threadId != null ||
+                  state.uri.path.startsWith('/projects/') ||
+                  state.uri.path.startsWith('/project/') ||
+                  state.uri.path == '/settings' ||
+                  state.uri.path.startsWith('/profile/') ||
+                  state.uri.path.startsWith('/user/') ||
+                  state.uri.path.startsWith('/users/') ||
+                  state.uri.path.startsWith('/u/') ||
+                  state.uri.path.startsWith('/feedback/') ||
+                  state.uri.path == '/search';
+              final titleText = threadId != null
+                  ? (english ? 'Post' : 'Bài viết')
+                  : state.uri.path == '/settings'
+                  ? (english ? 'Settings' : 'Cài đặt')
+                  : state.uri.path.startsWith('/profile/') ||
+                        state.uri.path.startsWith('/user/') ||
+                        state.uri.path.startsWith('/users/') ||
+                        state.uri.path.startsWith('/u/')
+                  ? (english ? 'Profile' : 'Hồ sơ')
+                  : state.uri.path == '/search'
+                  ? (english ? 'Search' : 'Tìm kiếm')
+                  : null;
               return VnlfAdaptiveShell(
+                centerMaxWidth: communication ? double.infinity : 1053,
+                showMobileBottomNav: !communicationDetail,
+                titleText: titleText,
+                centerPadding:
+                    communication ||
+                        threadId != null &&
+                            MediaQuery.sizeOf(context).width <= 840
+                    ? EdgeInsets.zero
+                    : null,
                 themeMode: ref.watch(themeModeProvider),
                 onThemeModeChanged: (mode) =>
                     ref.read(themeModeProvider.notifier).setThemeMode(mode),
                 activeDestination: active,
                 onDestinationSelected: (destination) =>
                     context.go(destinations[destination]!),
+                onBack: !isDetailRoute
+                    ? null
+                    : () {
+                        final router = GoRouter.maybeOf(context);
+                        if (router?.canPop() == true) {
+                          router!.pop();
+                        } else if (state.uri.path.startsWith('/feedback/')) {
+                          router?.go('/feedback');
+                        } else if (state.uri.path.startsWith('/projects/') ||
+                            state.uri.path.startsWith('/project/')) {
+                          router?.go('/projects');
+                        } else {
+                          router?.go('/');
+                        }
+                      },
+                backTooltip: english ? 'Back' : 'Quay lại',
                 onSearchTap: () => context.push('/search'),
                 onNotificationsTap: () => _showNotificationsModal(context, ref),
                 onSettingsTap: () => context.push('/settings'),
@@ -137,7 +240,7 @@ GoRouter createMainRouter() {
                     : () => logoutWithFeedback(context, ref),
                 logoutLabel: english ? 'Log out' : 'Đăng xuất',
                 onHelpTap: () => _showHelpDialog(context),
-                onFeedbackTap: () => _showFeedbackDialog(context, ref),
+                onFeedbackTap: () => showFeedbackDialog(context, ref),
                 onSupportTap: () =>
                     _launchWeb('https://vietnamlinuxfamily.net/caramos'),
                 onFacebookTap: () => _launchWeb(
@@ -156,33 +259,35 @@ GoRouter createMainRouter() {
                     context.push('/login');
                   }
                 },
-                showMobileHeader: const [
-                  '/',
-                  '/leaderboard',
-                  '/projects',
-                  '/discover',
-                  '/channels',
-                  '/voice',
-                ].contains(state.uri.path),
+                showMobileHeader:
+                    !communicationDetail &&
+                    !state.uri.path.startsWith('/feedback'),
                 centerChildHandlesScroll:
+                    communication ||
                     const [
                       '/',
                       '/leaderboard',
+                      '/activity',
                       '/projects',
                       '/settings',
                       '/discover',
+                      '/explore',
                       '/channels',
                       '/voice',
                       '/search',
                     ].contains(state.uri.path) ||
-                    state.uri.path.startsWith('/thread/') ||
-                    state.uri.path.startsWith('/profile/'),
-                rightSidebarChild: state.uri.path.startsWith('/thread/')
-                    ? ThreadSidebar(postId: state.pathParameters['id']!)
+                    threadId != null ||
+                    state.uri.path.startsWith('/profile/') ||
+                    state.uri.path.startsWith('/user/') ||
+                    state.uri.path.startsWith('/users/') ||
+                    state.uri.path.startsWith('/u/') ||
+                    state.uri.path == '/feedback' ||
+                    state.uri.path.startsWith('/feedback/') ||
+                    state.uri.path.startsWith('/projects/'),
+                rightSidebarChild: threadId != null && !articleDetail
+                    ? ThreadSidebar(postId: threadId)
                     : state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
-                    : state.uri.path == '/channels'
-                    ? const ActiveCommunityMembers()
                     : null,
                 destinationLabels: labels,
                 brandTitlePrefix: 'VNLF ',
@@ -235,9 +340,46 @@ GoRouter createMainRouter() {
                 const NoTransitionPage(child: LeaderboardScreen()),
           ),
           GoRoute(
+            path: '/activity',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ActivityPage()),
+          ),
+          GoRoute(
             path: '/projects',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProjectsScreen()),
+          ),
+          GoRoute(
+            path: '/projects/submit',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectSubmissionScreen(
+                onSubmitted: (slug) => context.go('/projects/$slug'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/projects/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectDetailScreen(slug: state.pathParameters['slug']!),
+            ),
+          ),
+          GoRoute(
+            path: '/feedback',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: FeedbackHistoryScreen(
+                onOpenThread: (id) =>
+                    context.push('/feedback/${Uri.encodeComponent(id)}'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/feedback/:id',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: FeedbackThreadScreen(
+                ticketId: state.pathParameters['id']!,
+                onBack: () => context.go('/feedback'),
+              ),
+            ),
           ),
           GoRoute(
             path: '/thread/:id',
@@ -245,11 +387,50 @@ GoRouter createMainRouter() {
               child: ThreadScreen(postId: state.pathParameters['id']!),
             ),
           ),
+          for (final prefix in const [
+            '/a',
+            '/article',
+            '/articles',
+            '/posts',
+            '/post',
+          ])
+            GoRoute(
+              path: '$prefix/:id',
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: ThreadScreen(postId: state.pathParameters['id']!),
+              ),
+            ),
           GoRoute(
             path: '/profile/:id',
             pageBuilder: (context, state) => NoTransitionPage(
-              child: ProfileScreen(username: state.pathParameters['id']!),
+              child: ProfileScreen(
+                username: state.pathParameters['id']!,
+                initialGuestbook:
+                    state.uri.queryParameters['tab'] == 'guestbook',
+              ),
             ),
+          ),
+          for (final prefix in const ['/user', '/users', '/u'])
+            GoRoute(
+              path: '$prefix/:id',
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: ProfileScreen(
+                  username: state.pathParameters['id']!,
+                  initialGuestbook:
+                      state.uri.queryParameters['tab'] == 'guestbook',
+                ),
+              ),
+            ),
+          GoRoute(
+            path: '/project/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectDetailScreen(slug: state.pathParameters['slug']!),
+            ),
+          ),
+          GoRoute(
+            path: '/explore',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DiscoverScreen()),
           ),
           GoRoute(
             path: '/settings',
@@ -270,6 +451,25 @@ GoRouter createMainRouter() {
             path: '/channels',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ChannelsScreen()),
+          ),
+          GoRoute(
+            path: '/channels/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ChannelsScreen(channelSlug: state.pathParameters['slug']),
+            ),
+          ),
+          GoRoute(
+            path: '/messages',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DirectMessagesScreen()),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: DirectMessagesScreen(
+                conversationId: state.pathParameters['id'],
+              ),
+            ),
           ),
           GoRoute(
             path: '/voice',
@@ -388,15 +588,47 @@ void _showHelpDialog(BuildContext context) {
   );
 }
 
-void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
+bool _feedbackDialogOpen = false;
+
+void showFeedbackDialog(BuildContext context, WidgetRef ref) {
+  if (_feedbackDialogOpen) return;
+  _feedbackDialogOpen = true;
+  final account = ref.read(sessionStateProvider);
+  if (account != null) {
+    final pagePath =
+        GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
+        '/';
+    showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => FeedbackAttachmentDialog(
+            ownerId: account.userId,
+            pagePath: pagePath,
+          ),
+        )
+        .then((openHistory) {
+          if (openHistory == true && context.mounted) context.push('/feedback');
+        })
+        .whenComplete(() => _feedbackDialogOpen = false);
+    return;
+  }
   final english = Localizations.localeOf(context).languageCode == 'en';
   final colors = VnlfColors.of(context);
   final session =
       ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
   final contentController = TextEditingController();
   final contactController = TextEditingController();
+  final client = ref.read(apiClientProvider);
+  final sessionScope = client.captureSession();
+  final pagePath =
+      GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ?? '/';
   var tabIndex = 0; // 0 = feedback, 1 = bug
   var submitted = false;
+  var submitting = false;
+  var uncertain = false;
+  String? error;
+  String? draftSignature;
+  String? submissionId;
 
   showDialog<void>(
     context: context,
@@ -529,6 +761,20 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                         ),
                       ],
                     ),
+                    if (session != null)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                            context.push('/feedback');
+                          },
+                          icon: const Icon(Icons.history),
+                          label: Text(
+                            english ? 'My feedback' : 'Góp ý của tôi',
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 18),
                     Container(
                       padding: const EdgeInsets.all(3),
@@ -546,7 +792,9 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               borderRadius: BorderRadius.circular(
                                 VnlfDimensions.radiusSm,
                               ),
-                              onTap: () => setDialogState(() => tabIndex = 0),
+                              onTap: submitting || uncertain
+                                  ? null
+                                  : () => setDialogState(() => tabIndex = 0),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -578,7 +826,9 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               borderRadius: BorderRadius.circular(
                                 VnlfDimensions.radiusSm,
                               ),
-                              onTap: () => setDialogState(() => tabIndex = 1),
+                              onTap: submitting || uncertain
+                                  ? null
+                                  : () => setDialogState(() => tabIndex = 1),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -655,16 +905,18 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     const SizedBox(height: 6),
                     TextField(
                       controller: contentController,
+                      enabled: !submitting && !uncertain,
                       maxLines: 4,
+                      maxLength: 4000,
                       style: TextStyle(color: colors.ink, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: tabIndex == 0
                             ? (english
-                                  ? 'Tell us what could be improved (minimum 10 characters)...'
-                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (tối thiểu 10 ký tự)...')
+                                  ? 'Tell us what could be improved (20–4000 characters)...'
+                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (20–4000 ký tự)...')
                             : (english
-                                  ? 'Steps to reproduce the bug (minimum 10 characters)...'
-                                  : 'Các bước để tái hiện lỗi (tối thiểu 10 ký tự)...'),
+                                  ? 'Steps to reproduce the bug (20–4000 characters)...'
+                                  : 'Các bước để tái hiện lỗi (20–4000 ký tự)...'),
                         hintStyle: TextStyle(color: colors.muted, fontSize: 13),
                         filled: true,
                         fillColor: colors.surfaceSoft,
@@ -702,6 +954,7 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     const SizedBox(height: 6),
                     TextField(
                       controller: contactController,
+                      enabled: !submitting && !uncertain,
                       style: TextStyle(color: colors.ink, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: 'example@domain.com',
@@ -735,6 +988,14 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                         ),
                       ),
                     ),
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          error!,
+                          style: VnlfTypography.meta(colors.red),
+                        ),
+                      ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -761,30 +1022,92 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               ),
                             ),
                           ),
-                          onPressed: () async {
-                            final detail = contentController.text.trim();
-                            if (detail.length < 5) return;
-                            try {
-                              final client = ref.read(apiClientProvider);
-                              await client.request<Map<String, dynamic>>(
-                                'POST',
-                                '/api/v1/feedback',
-                                body: jsonEncode({
-                                  'clientSubmissionId': DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  'detail': detail,
-                                  'pagePath': '/',
-                                  if (session == null &&
-                                      contactController.text.trim().isNotEmpty)
-                                    'contactEmail': contactController.text
-                                        .trim(),
-                                  'assetIds': const <String>[],
-                                }),
-                              );
-                            } catch (_) {}
-                            setDialogState(() => submitted = true);
-                          },
+                          onPressed: submitting
+                              ? null
+                              : () async {
+                                  final detail = contentController.text.trim();
+                                  final contact = contactController.text.trim();
+                                  if (detail.length < 20 ||
+                                      detail.length > 4000) {
+                                    setDialogState(
+                                      () => error = english
+                                          ? 'Enter 20–4000 characters.'
+                                          : 'Vui lòng nhập 20–4000 ký tự.',
+                                    );
+                                    return;
+                                  }
+                                  final signature =
+                                      '$tabIndex\u0000$detail\u0000$contact';
+                                  if (draftSignature != signature) {
+                                    draftSignature = signature;
+                                    submissionId = newRequestIdentity();
+                                  }
+                                  setDialogState(() {
+                                    submitting = true;
+                                    error = null;
+                                  });
+                                  try {
+                                    sessionScope.ensureCurrent();
+                                    final acknowledgment = await client
+                                        .request<Map<String, dynamic>>(
+                                          'POST',
+                                          '/api/v1/feedback',
+                                          body: jsonEncode({
+                                            'clientSubmissionId': submissionId,
+                                            'kind': tabIndex == 0
+                                                ? 'FEEDBACK'
+                                                : 'BUG',
+                                            'detail': detail,
+                                            'pagePath': pagePath,
+                                            if (session == null &&
+                                                contact.isNotEmpty)
+                                              'contactEmail': contact,
+                                            'assetIds': const <String>[],
+                                          }),
+                                        );
+                                    sessionScope.ensureCurrent();
+                                    if (acknowledgment['submissionId']
+                                            is! String ||
+                                        (acknowledgment['submissionId']
+                                                as String)
+                                            .isEmpty ||
+                                        acknowledgment['reference']
+                                            is! String ||
+                                        (acknowledgment['reference'] as String)
+                                            .isEmpty ||
+                                        acknowledgment['rewardQueued']
+                                            is! bool ||
+                                        acknowledgment['duplicate'] is! bool) {
+                                      throw const ParseFailure(
+                                        'feedback.acknowledgment',
+                                      );
+                                    }
+                                    if (ctx.mounted) {
+                                      setDialogState(() => submitted = true);
+                                    }
+                                  } catch (failure) {
+                                    if (ctx.mounted) {
+                                      final ambiguous =
+                                          failure is! HttpFailure ||
+                                          failure.statusCode == 408 ||
+                                          failure.statusCode >= 500;
+                                      setDialogState(() {
+                                        uncertain = uncertain || ambiguous;
+                                        error = uncertain
+                                            ? (english
+                                                  ? 'The result is unconfirmed. Retry this unchanged feedback to check.'
+                                                  : 'Chưa xác nhận được kết quả. Hãy gửi lại góp ý không thay đổi để kiểm tra.')
+                                            : (english
+                                                  ? 'Could not send feedback. Your draft is kept; try again.'
+                                                  : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.');
+                                      });
+                                    }
+                                  } finally {
+                                    if (ctx.mounted) {
+                                      setDialogState(() => submitting = false);
+                                    }
+                                  }
+                                },
                           icon: const Icon(Icons.send_rounded, size: 16),
                           label: Text(
                             english ? 'Send Feedback' : 'Gửi cho VNLF',
@@ -801,152 +1124,17 @@ void _showFeedbackDialog(BuildContext context, WidgetRef ref) {
         );
       },
     ),
-  );
+  ).then((_) {
+    _feedbackDialogOpen = false;
+    contentController.dispose();
+    contactController.dispose();
+  });
 }
 
 void _showNotificationsModal(BuildContext context, WidgetRef ref) {
-  final english = Localizations.localeOf(context).languageCode == 'en';
-  final colors = VnlfColors.of(context);
-  final session =
-      ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
-
   showModalBottomSheet<void>(
     context: context,
-    backgroundColor: colors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(VnlfDimensions.radiusLg),
-      ),
-    ),
-    builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.notifications_active_rounded,
-                      color: colors.brand,
-                      size: 22,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      english ? 'Notifications' : 'Thông báo',
-                      style: VnlfTypography.h2(colors.ink)
-                          .copyWith(fontSize: 18),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ],
-            ),
-            const Divider(height: 20),
-            if (session != null) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundColor: colors.brandSoft,
-                  child: Icon(
-                    Icons.forum_rounded,
-                    color: colors.brand,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  english
-                      ? 'Welcome to VNLF Social!'
-                      : 'Chào mừng bạn đến với VNLF Social!',
-                  style: VnlfTypography.control(
-                    colors.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                subtitle: Text(
-                  english
-                      ? 'You are signed in as @${session.username}. Community alerts and replies will be listed here.'
-                      : 'Bạn đã đăng nhập với tài khoản @${session.username}. Bạn sẽ nhận thông báo khi có người tương tác với bài viết của bạn.',
-                  style: VnlfTypography.meta(colors.muted),
-                ),
-                trailing: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: colors.brand,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: Text(
-                  english
-                      ? 'You have caught up with all notifications.'
-                      : 'Bạn đã xem hết các thông báo mới.',
-                  style: VnlfTypography.caption(colors.muted),
-                ),
-              ),
-            ] else ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.bg,
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                  border: Border.all(color: colors.line),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.mark_email_unread_outlined,
-                      size: 40,
-                      color: colors.brand,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      english
-                          ? 'Sign in to see notifications'
-                          : 'Đăng nhập để xem thông báo',
-                      style: VnlfTypography.control(
-                        colors.ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      english
-                          ? 'Get real-time updates when someone replies, likes your posts, or mentions you.'
-                          : 'Nhận thông báo tức thì khi có người bình luận, thích bài viết hoặc nhắc tên bạn.',
-                      textAlign: TextAlign.center,
-                      style: VnlfTypography.body(colors.muted),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colors.brand,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        context.push('/login');
-                      },
-                      child: Text(english ? 'Sign In Now' : 'Đăng nhập ngay'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    ),
+    isScrollControlled: true,
+    builder: (_) => const NotificationsSheet(),
   );
 }

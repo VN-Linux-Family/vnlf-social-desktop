@@ -198,6 +198,21 @@ ApiResponse _page(
             ...template,
             'id': '$id-$i',
             'excerpt': count == 1 ? excerpt : '$excerpt $i',
+            'contentText': count == 1 ? excerpt : '$excerpt $i',
+            'contentJson': {
+              'type': 'doc',
+              'content': [
+                {
+                  'type': 'paragraph',
+                  'content': [
+                    {
+                      'type': 'text',
+                      'text': count == 1 ? excerpt : '$excerpt $i',
+                    },
+                  ],
+                },
+              ],
+            },
           },
       ],
       'nextCursor': nextCursor,

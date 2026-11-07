@@ -2,13 +2,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../domain/models.dart';
 import 'api_client.dart';
-
-/// Opaque session data only; the server's cookie and CSRF contracts are unknown.
-abstract interface class SessionStorage {
-  Future<String?> read(String key);
-  Future<void> write(String key, String value);
-  Future<void> delete(String key);
-}
+import 'session_storage_contract.dart';
+export 'session_storage_contract.dart';
 
 final class SecureSessionStorage implements SessionStorage {
   const SecureSessionStorage([this._storage = const FlutterSecureStorage()]);

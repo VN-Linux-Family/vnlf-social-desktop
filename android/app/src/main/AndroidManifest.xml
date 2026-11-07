@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
     <application
         android:label="Vietnam Linux Family"
         android:name="${applicationName}"
@@ -24,6 +29,23 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Deep linking for vietnamlinuxfamily.net website links -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="vietnamlinuxfamily.net"/>
+                <data android:scheme="https" android:host="www.vietnamlinuxfamily.net"/>
+                <data android:scheme="http" android:host="vietnamlinuxfamily.net"/>
+                <data android:scheme="http" android:host="www.vietnamlinuxfamily.net"/>
+            </intent-filter>
+            <!-- Internal custom scheme deep linking -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="vnlf"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

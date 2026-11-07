@@ -1,11 +1,14 @@
+import '../features/polls/domain/poll_models.dart';
+
 /// Failures are explicit at repository boundaries and do not expose response bodies.
 sealed class AppFailure implements Exception {
   const AppFailure();
 }
 
 final class HttpFailure extends AppFailure {
-  const HttpFailure(this.statusCode);
+  const HttpFailure(this.statusCode, {this.code});
   final int statusCode;
+  final String? code;
 }
 
 final class RateLimited extends AppFailure {
@@ -110,6 +113,7 @@ final class FeedPost {
     this.tagSlugs = const [],
     this.tags = const [],
     this.attachments = const [],
+    this.poll,
     this.publishedAt,
     this.updatedAt,
   });
@@ -138,6 +142,7 @@ final class FeedPost {
   final List<String> tagSlugs;
   final List<String> tags;
   final List<ArticleAttachment> attachments;
+  final Poll? poll;
   final DateTime? publishedAt;
   final DateTime? updatedAt;
 }
@@ -150,6 +155,9 @@ final class ArticleAttachment {
     this.alt = '',
     this.width,
     this.height,
+    this.posterUrl,
+    this.durationMs,
+    this.state,
   });
 
   final String id;
@@ -158,6 +166,9 @@ final class ArticleAttachment {
   final String alt;
   final int? width;
   final int? height;
+  final String? posterUrl;
+  final int? durationMs;
+  final String? state;
 }
 
 final class LeaderboardItem {

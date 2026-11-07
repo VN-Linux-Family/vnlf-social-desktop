@@ -2,26 +2,36 @@ import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../shared/presentation/author_mapper.dart';
 
-PostData presentPost(FeedPost post, {required bool english}) {
+PostData presentPost(
+  FeedPost post, {
+  required bool english,
+  bool fullContent = false,
+}) {
+  final article = post.format.toUpperCase() == 'ARTICLE';
   PostAttachment? attachment;
   if (post.attachments.isNotEmpty) {
-    final first = post.attachments.first;
-    double aspect = 16 / 9;
-    if (first.width != null && first.height != null && first.height! > 0) {
-      aspect = (first.width! / first.height!).clamp(0.75, 2.4);
-    }
-    attachment = ImagePlaceholderAttachment(
-      imageUrl: first.url,
-      aspectRatio: aspect,
-      label: first.alt.isNotEmpty ? first.alt : (post.title ?? ''),
-      semanticLabel: first.alt.isNotEmpty ? first.alt : (post.title ?? ''),
+    attachment = MediaGalleryAttachment(
+      List.unmodifiable(
+        post.attachments.map(
+          (item) => PostMediaData(
+            url: item.url,
+            mime: item.mime,
+            alt: item.alt,
+            width: item.width,
+            height: item.height,
+            posterUrl: item.posterUrl,
+            durationMs: item.durationMs,
+            state: item.state,
+          ),
+        ),
+      ),
     );
-  } else if (post.coverUrl != null && post.coverUrl!.isNotEmpty) {
+  } else if (post.coverUrl != null &&
+      post.coverUrl!.isNotEmpty &&
+      !fullContent) {
     attachment = ImagePlaceholderAttachment(
       imageUrl: post.coverUrl,
-      semanticLabel: post.coverAlt.isNotEmpty
-          ? post.coverAlt
-          : (post.title ?? ''),
+      semanticLabel: post.coverAlt,
     );
   }
 
@@ -29,7 +39,14 @@ PostData presentPost(FeedPost post, {required bool english}) {
     id: post.id,
     author: presentAuthor(post.author),
     relativeTime: _timestamp(post.publishedAt, english),
-    paragraphs: [post.excerpt.isEmpty ? post.contentText : post.excerpt],
+    paragraphs: [
+      (fullContent || !article) && post.contentText.isNotEmpty
+          ? post.contentText
+          : post.excerpt,
+    ],
+    richContent: (!article || fullContent) ? post.contentJson : null,
+    showInlineImages: article && fullContent,
+    selectableContent: fullContent,
     title: post.title,
     tags: post.tags,
     voteScore: post.voteScore,

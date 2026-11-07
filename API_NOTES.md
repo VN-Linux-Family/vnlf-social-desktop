@@ -2,6 +2,84 @@
 
 All endpoints, payload schemas, and realtime events documented here are derived directly from `vietnamlinuxfamily.net` production client bundles and live network inspection. Never invent endpoints.
 
+## Current live persistence evidence — 2026-11-06
+
+This supplements the pinned source contracts and supersedes historical
+unauthenticated-only assumptions below. Using only the authorized owner account
+and its own newly created content, the production repositories confirmed:
+
+- Draft POST creation, versioned body PATCH, separate poll PUT, then publication.
+  Fresh article reads contained the published body and the poll with two options.
+- Comment creation with a stable client identity, fresh-read persistence, editing,
+  voting and deletion; fresh reads confirmed the edited body, vote and deletion.
+- Poll voting persisted in a fresh article read. The vote was removed afterward.
+- On the named controlled, accepted DM conversation, sending, editing and reacting
+  persisted in fresh history reads. The reaction and message were removed, and
+  a further history read confirmed the test message absent.
+
+Cleanup removed the test comment vote, comment, poll vote and post. The owner
+projection returned status REMOVED and an independent guest GET returned 404.
+Sessions were logged out and fresh session reads were empty. No credentials,
+cookies, private message bodies or response dumps were retained in the repository
+or reports. These checks do not establish desktop keyring persistence or device UI.
+
+Composer poll input is saved through the shared PollRepository adapter, separately
+from the body. The poll PUT does not advance the body version. A failed poll save
+must keep the already acknowledged PATCH version; incomplete poll input stays in
+owner-scoped secure recovery and blocks publishing. Text-only saves must not
+replace a poll, because the server replaces option IDs on draft poll writes.
+
+Pinned source re-check: realtime is raw JSON WebSocket at `/ws/community`, with
+client events such as `channel:join`, `conversation:join`, `presence:heartbeat`
+and `dm:typing`, rather than Socket.IO or dotted `dm.join` frames. Server
+envelopes carry type/eventId/occurredAt/data. Native channel and DM views now use
+an owner-bound shared connection with topic leases and reconnect catch-up. Its
+synthetic tests cover routing, duplicate events, viewer-specific reactions and
+polls, lifecycle, and in-flight history reconciliation. Source confirmation is
+not live socket verification: on 2026-11-06 an authenticated owner probe received
+HTTP 403 from Cloudflare for the WebSocket upgrade in this environment. No test
+message was sent; the connection closed, logout succeeded, and cleanup was clear.
+Whether this response is specific to this network or configuration remains unknown.
+
+## Projects, account profile and member feedback (pinned source)
+
+The following contracts were checked against upstream commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3` and implemented with synthetic tests;
+no live account or feedback writes were made in this pass. An owner-authenticated
+read-only probe successfully loaded the matching owner profile, feedback history,
+and the public projects listing with facets, then logged out successfully.
+
+- `GET /api/v1/projects` supports `type`, `language`, `seeking`, `q`, `sort`,
+  and an opaque `cursor`. The first response includes global type/language
+  facets and `nextCursor`; subsequent pages are deduplicated by project ID.
+  `GET /api/v1/projects/:slug` returns the detail, media and viewer rating
+  projection. A real project detail was read successfully from the deployed API;
+  no rating, project edit or other project write was performed. The native rating
+  control uses the source-confirmed `PUT /api/v1/projects/:id/rating` with a
+  1–5 `score` and `DELETE` to remove a rating. It requires the returned viewer
+  score and summary, handles uncertain outcomes with a fresh read, and never
+  automatically retries a write. Concurrent server queries can return a rating
+  distribution that temporarily differs from the aggregate count.
+- `GET /api/v1/users/:username` supplies profile fields.
+  `PATCH /api/v1/me/profile` accepts optional username, displayName, bio and
+  website and acknowledges with `ok: true`. For uncertain writes, the app
+  verifies through a read rather than automatically resending. It checks that
+  the returned profile ID matches the authenticated owner.
+- `GET /api/v1/feedback/mine` lists the signed-in member's tickets,
+  `GET /api/v1/feedback/:id/messages` reads an owned ticket and its messages,
+  and `POST` to the same messages route submits a message with a stable
+  `clientMessageId`. The source enforces ticket ownership.
+
+## Notifications (pinned source and live read)
+
+The upstream web notification center uses `GET /api/v1/notifications` with
+`limit`, `filter`, `kind` (all/like/comment/follow/system), and an optional
+cursor. The native sheet passes both filters to the server. Its API responds to
+`POST /api/v1/notifications/seen` and `/read` with `{ok: true}`. The native
+client now requires that acknowledgment before considering either write
+confirmed. An owner-authenticated read-only notification-list probe succeeded
+and logged out; it did not mark any notification read or seen.
+
 ## Public article sharing (2026-11-05)
 
 - [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection
@@ -244,6 +322,9 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 wss://vietnamlinuxfamily.net/ws/community
 ```
 Connection uses HTTP upgrade with existing session cookies.
+- [CONFIRMED] Handshake Origin validation: The server (Caddy / Cloudflare) returns `HTTP 403 Forbidden` if the `Origin` header is absent during WebSocket handshake upgrade. Native clients must pass `Origin: https://vietnamlinuxfamily.net` (matching the origin of `baseUri`).
+- [CONFIRMED] Unauthenticated closure: The server immediately closes unauthenticated WebSocket connections with close code `4401` ("Authentication required").
+- [CONFIRMED from production chunk `03vhpiw_fgmse.js`]: Realtime provider module `8808` (`RealtimeProvider`) performs an initial `presence:heartbeat` frame upon open, and triggers invalidation / refetching for `dm-conversations`, `dm-messages`, `channels`, and `voice-rooms`.
 
 > [!NOTE]
 > **Observation Audit**: The page's live `/ws/community` WebSocket connection was **NOT observed**, and its live frames were **NOT captured**. All endpoint strings, event names, and protocol patterns below were inferred solely by string-matching static JavaScript bundle `2bvq-3i0lg1dx.js`. All sample frames shown below are purely synthetic/invented.
@@ -317,3 +398,297 @@ were made. The web client's profile visit POST is deliberately not reproduced.
   non-90-degree gradients, profile visit counter and full decor fidelity remain
   unverified/unimplemented. Existing tinted nameplate alpha is retained pending
   confirmation of the client's computed plate-color variables.
+
+
+## Article/comment verification (2026-11-05)
+
+- Owner explicitly authorized their named test account and requires deleting all
+  temporary posts/comments/reactions after verification. No credentials or
+  authenticated response values are retained here.
+- Current web chunks `03vhpiw_fgmse.js`, `0i3jl-zoc5vug.js`, and
+  `2k5v3l48k2d3c.js` confirm article detail, draft creation (POST without body),
+  versioned PATCH, publish POST with idempotency-key, DELETE, comment creation,
+  comment PATCH/DELETE, article/comment vote PUT, and bookmark POST.
+- Root comment payload MUST omit parentId. Live isolated test: null parent
+  returns 422 INPUT_INVALID; omitted parent returns 200 and a complete comment
+  record. A fresh comments GET confirms persistence. Reply parentId is a string.
+- Comment response is a flat `{items}` list with parentId, content, author,
+  createdAt, voteScore/viewerVote, canEdit/canDelete, attachments, gif, mentions,
+  and pin/edit metadata. Parent links define the native tree.
+- Detail uses the same article projection as feed, including structured
+  contentJson, attachments, assets, viewer interactions, and timestamps.
+- TipTap document nodes observed/supported by current web renderer: paragraph,
+  heading (h2/h3), blockquote, bulletList, orderedList, listItem, codeBlock,
+  horizontalRule, image, text, hardBreak. Marks: bold, italic, strike, code, link.
+  Article image nodes resolve attrs.assetId against assets[].id/url; POST rich
+  text filters inline images and renders attachments in a separate gallery.
+- Media attachments have id, mime, size, width, height, url, alt; videos can add
+  posterUrl and durationMs. Do not treat video URLs as image URLs.
+- Current menu uses social image paths /social/facebook.webp,
+  /social/telegram.webp, /social/discord.webp; Discord invite unchanged.
+
+- Native JSON request bodies must be UTF-8 bytes with the byte content length.
+  `HttpClientRequest.write` with the default encoding throws on Vietnamese before
+  any HTTP request is sent. Root and reply writes verified with the corrected
+  actual native transport and typed repository, followed by a fresh GET.
+- Vote PUT response: voteScore, viewerVote, likeCount, viewerLiked. Bookmark POST
+  returns `{ok: true}`; refreshed article projection supplies viewerBookmarked.
+  Successful writes invalidate cached GET responses; mutation requests never retry.
+
+## Authoritative source access (2026-11-05)
+
+The owner granted read-only GitLab access through `glab` to
+`realfox99/vnlf-social`, project 86991275. Source review is pinned to commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3`. Relevant files are fetched selectively
+outside this repository; no upstream source is copied into the native client.
+Source HEAD and the deployed web bundle may differ: observed live behavior takes
+precedence when documenting a production-server discrepancy. Contract changes
+must be verified against both where practical.
+
+Native draft foundation now follows the observed versioned article lifecycle:
+create with POST `/api/v1/articles` (no body), PATCH `/api/v1/articles/:id`
+with version/format/title/excerpt/tags/cover/contentJson/attachments, then POST
+`/publish` with an idempotency-key header. The API client accepts per-request
+headers without changing write retry policy. Native Markdown input is converted
+to structured document nodes, never inserted as raw HTML. Draft and upload UI
+wiring remains incomplete and must not be represented as a finished editor.
+
+
+## Source review corrections — 2026-11-05
+
+Pinned source: `ab23799bf66ecec2176b89fa0c7e1151bf5782d3`.
+`apps/api/src/modules/articles.ts` permits only root-parent comment replies.
+The native UI now flattens reply-to-reply to that root and prefills the recipient
+mention. `clientCommentId` is 1–100 characters in the pinned contract and is
+preserved for a manual retry of an unchanged draft. Native writes are never
+automatically retried. Root `parentId` remains omitted because deployed testing
+rejected explicit null, although the pinned source schema permits null.
+
+`packages/contracts/src/feedback.ts` requires a UUID `clientSubmissionId`, detail
+20–4000 characters, and pagePath. Kind is optional (FEEDBACK default); the native
+form sends its selected kind and retains the draft/error on failure. The feedback
+write is considered successful only after a successful server response.
+
+Recovered channels use confirmed REST directory/history/send/edit/delete and
+reaction POST/DELETE. Pinned `chat-message.ts` returns attachment `url: null`
+with an authenticated `downloadPath`; the native adapter now requests this scoped JSON envelope and reads its signed
+`downloadUrl`. It never forwards the session cookie to the media host. Private
+media rendering and device playback still require runtime verification. Realtime contracts
+use JSON envelopes over the community WebSocket, not an assumed Socket.IO stack.
+
+Recovered voice uses LiveKit only after a confirmed join grant, starts muted,
+and releases audio on leave/account change. Tests use injected room/audio
+boundaries; no production audio call or real-device microphone check has yet
+been performed. Weekly rankings use the observed Vietnam-time Monday anchor;
+do not invent an all-time endpoint from old fixture labels.
+
+## Native composer validation (2026-11-05)
+
+Opening a new composition is read-only. The first save/upload/publish creates its
+server draft. Edits debounce saves by two seconds; failed writes are never
+retried automatically. Acknowledged versions advance without discarding newer
+local edits. Version conflicts retain local and fresh server copies for an
+explicit choice. HTTP failures retain a bounded server error code.
+
+Recovery stores draft content and a pending publish UUID in platform secure
+storage, partitioned by owner and composition slot. Credentials and presigned
+upload URLs are excluded. The publish identity is stored before sending; lost
+acknowledgment blocks further editing and manual retry reuses the identity.
+Account changes stop subsequent mutations; corrupt recovery is not overwritten.
+
+Images are limited to 10 MiB and videos to 200 MiB. Video completion can return
+PENDING without a URL; the UI shows processing and offers a fresh status check.
+Publishing waits for ready media. POST permits attachments and one video;
+ARTICLE permits inline/cover images and rejects video. Format conversion moves
+resolvable image IDs into attachments and stops on unresolved images.
+
+A separate TipTap/Delta codec is tested through the actual Parchment model for
+known marks, lists, headings, code, hard breaks and image attributes. Unsupported
+blocks/marks and complex list structures remain preserved embeds. Poll editing,
+advanced editor shortcuts/paste, new composer live-account writes/cleanup and
+real-device file/media checks remain incomplete or unverified.
+
+## Comment mutation and media contract — 2026-11-05
+
+Pinned source `apps/api/src/modules/articles.ts:93` returns `pinned` (not
+`isPinned`), canPin, editedAt, attachments and gif. Native DTOs now retain these.
+Hidden VNLF stickers render a placeholder without fetching their image. Other
+GIF/sticker media and photo attachments render through native media widgets.
+Sticker pack browsing, media upload and mention suggestions remain separate gates.
+
+- `PUT /api/v1/comments/:id/vote`: `{value:-1|0|1}`, acknowledgment must contain
+  integer voteScore and valid viewerVote. Native callbacks were previously absent.
+- `PATCH /api/v1/comments/:id`: `{content}`, maximum 4000 UTF-16 code units;
+  server returns a full comment. Existing media remains, so empty text is valid
+  when media is present. Emptying a text-only comment uses confirmed deletion,
+  following the website's behavior.
+- `DELETE /api/v1/comments/:id`: require `{ok:true}`. Replies remain; a deleted
+  root's surviving replies are presented as roots rather than hidden.
+- `PUT /api/v1/articles/:id/pinned-comment`: `{commentId:UUID|null}`; require a
+  matching pinnedCommentId acknowledgment. Only canPin root comments expose it;
+  only the acknowledged root leads the discussion, with its replies.
+
+Requests serialize per comment, errors remain visible, failed edit text is kept,
+account changes discard pending UI results, and delete requires confirmation.
+New checks use synthetic transport data; these new actions have not yet been
+verified with live owner-account writes. No test content was created this turn.
+
+## Account request isolation — 2026-11-05
+
+Reproduced two request-layer races with a synthetic transport and a loopback HTTP
+server: clearing cached reads did not cancel an older queued write, and a write
+waiting on secure-cookie restoration could still leave after logout. ApiClient
+now tracks session generations, rejects stale queued requests before transport
+and stale results after transport, and clears session-scoped cache on changes.
+Login/register/logout and owner-state changes advance this generation. Native
+transport snapshots cookies and checks cleanup revisions after restoration and
+connection setup, so an older request cannot acquire the next account's cookie.
+Already-sent server writes cannot be undone by local cancellation; their late
+responses are ignored. Automatic write retry remains disabled.
+
+Fresh comment reads started after a mutation replace its temporary acknowledged
+UI state. A read begun before a later mutation cannot erase that newer result.
+This prevents an acknowledgment overlay from permanently overriding later server
+edits or vote totals. Replies whose parent was deleted become root comments with
+the recipient mention, since the verified API accepts only active root targets.
+The upstream comments list is capped at 100 oldest active rows without a cursor;
+viewing later comments needs an upstream contract change, not invented pagination.
+
+## Upload operation account boundaries — 2026-11-06
+
+Synthetic transfer tests reproduced a second-stage account race in both public
+article and private DM uploads: a raw PUT could finish after login/logout and
+then start its completion request with the next account. ApiClient now provides
+an operation-wide session scope. Uploads check it before raw transfer, on each
+file chunk and before completion; disposing the app's client also invalidates
+its scopes. Already-transmitted bytes cannot be recalled. No automatic retry is
+introduced. Completion must identify the presigned asset, and article completion
+must carry an explicit supported processing status instead of implicit success.
+
+The account-change and malformed-completion regressions pass, along with the
+relevant authentication/request and DM tests. These checks use synthetic data;
+no live upload was submitted. The owner named a controlled DM recipient for a
+later live check; only created test content may be cleaned up.
+
+## Poll contracts verified from pinned source — 2026-11-06
+
+Reference: project 86991275, commit
+`ab23799bf66ecec2176b89fa0c7e1151bf5782d3`, contracts `polls.ts`, API modules
+`polls.ts` and `articles.ts`, API library `polls.ts`, and web poll card.
+
+- Poll DTO: id, question, options(id/label/votes), totalVotes, nullable
+  viewerOptionId. Article and chat DTOs contain an optional nullable poll.
+- POST `/api/v1/polls/:id/vote`: `{optionId: UUID|null}`; full Poll DTO acknowledgment.
+  Voting for a different option changes the choice; null removes it.
+- PUT `/api/v1/polls/:id`: `{question, options: string[]}`; full Poll DTO.
+  Author only, before any votes; `POLL_HAS_VOTES` rejects an edit after voting.
+  Editing replaces option identities. This route also works on published posts.
+- PUT `/api/v1/articles/:id/poll`: `{poll: PollInput|null}`; acknowledgment
+  `{poll: PollDto|null}`. The owner may set/remove it only when publishedAt is
+  absent. `POLL_LOCKED` rejects an article that has previously been published.
+- Input limits: question 200 UTF-16 units, choices 100 each, two to six choices.
+  Source cleanup collapses whitespace, trims, removes empty choices and
+  de-duplicates case-sensitively. Native inputs validate before sending.
+- Percentages are visible after this viewer votes; total votes remain visible.
+  Peer realtime DTOs retain this viewer's selection rather than adopting the
+  broadcaster's viewerOptionId.
+
+Typed native repository/state checks use synthetic data only. Live poll mutation
+behavior, composer integration and native visual parity are not yet verified.
+
+## Profile relationships and feedback media — 2026-11-06
+
+At source commit `ab23799bf66ecec2176b89fa0c7e1151bf5782d3`, profile
+relationships use `POST`/`DELETE /api/v1/users/:id/follow` and
+`POST`/`DELETE /api/v1/users/:id/block`, with an explicit `ok: true`
+acknowledgment. A fresh profile read supplies `followedByViewer` and
+`blockedByViewer`; missing values are unknown, not proof of a cleared state.
+Server errors or interrupted writes are reconciled once and reported as
+unconfirmed. Synthetic tests cover these paths; no live relationship write was
+performed. Blocking also affects feeds and messaging, and an already-open DM
+timeline may require a refresh.
+
+The same source's feedback module allows up to five private media assets per
+submission. Image MIME types are JPEG, PNG, WebP and GIF up to 10 MiB; MP4 and
+WebM video may be up to 50 MiB. Presigning uses
+`POST /api/v1/feedback/assets/presign`, a raw upload to the returned URL, and
+`POST /api/v1/feedback/assets/:assetId/complete`; an unsubmitted asset can be
+removed with `DELETE /api/v1/feedback/assets/:assetId`. Both the submission UUID
+and feedback kind bind the asset to the submission. The authenticated native
+dialog now selects, uploads, removes and submits attachments, and stores
+owner-scoped draft metadata and uncertain outcomes without signed URLs. The
+end-to-end flow has synthetic coverage only; no live upload was performed.
+Guest attachment uploads and visual previews remain unimplemented. A process
+termination inside the short edit debounce can lose the most recent text.
+
+The guestbook source uses `GET` and `POST /api/v1/profiles/:username/guestbook`,
+`PATCH` and `DELETE /api/v1/guestbook/:id`; write eligibility and visible/hidden
+entries come from the server. Native write, hide, show, delete, block and report
+controls have synthetic account and failure coverage; live writes remain
+unverified. A guestbook notification opens the native profile's guestbook tab.
+
+The personal activity screen reads `GET /api/v1/me/activity-calendar` with
+inclusive `from` and `to` dates; the pinned source returns each date in the
+requested range, Vietnam-local `today`, point totals, and streak information.
+The screen and owner/session guards have synthetic coverage, including date
+rollover. A read-only owner-account calendar request passed against the deployed
+server and the test session was logged out. The native client now calls the
+source-confirmed check-in endpoint automatically for a confirmed live session;
+it coordinates with manual requests, app visibility, dialogs and the composer,
+uses Vietnam-local days, and does not automatically repeat an uncertain write.
+An unconfirmed result is reported with a link to activity. The automatic flow
+has synthetic coverage only; device visual verification and live behavior remain
+outstanding.
+The pinned auth source also calls `recordAttendance` while creating a login or
+session response. Consequently, the authorized test logins and session reads may
+have recorded attendance even though no explicit check-in request was made. No
+confirmed endpoint for removing that attendance is known.
+
+The pinned website reads `GET /api/v1/me/preferences`, which may return JSON
+`null`, and saves partial changes with `PATCH` to the same path. Native privacy,
+notification and reduced-motion settings use the website's defaults, invert
+`leaderboardOptOut` for display, and require an `ok: true` acknowledgment.
+Only changed fields are sent. An uncertain save requires a fresh read before
+another attempt. The reduced-motion setting combines with the device's own
+accessibility setting. These flows have synthetic coverage only; no live
+preference changes were made. Other website display and decoration preferences
+are not yet implemented. The message-sound preference syncs to the website;
+native message sound playback is not implemented.
+
+The website also keeps its text-size choice on the device, independently of
+the account: an integer from 12 through 18, default 13. The native setting is
+stored locally and composes its scale with the operating system's text scaler;
+its proportional mapping approximates the website's fixed heading offsets.
+Synthetic tests cover storage races and keyboard use; visual device comparison
+remains outstanding. Restoring a saved size is asynchronous and may change
+text after the first frame.
+
+## Comment photos, mentions and session management — 2026-11-07
+
+At the pinned source revision, comment photos use
+`POST /api/v1/articles/:id/comment-assets/presign`, a raw signed upload, and
+`POST /api/v1/articles/:id/comment-assets/:assetId/complete`. Up to ten JPEG,
+PNG, WebP or GIF images of at most 10 MiB each may be included as
+`attachmentIds` when creating a comment. The native composer has synthetic
+upload, account-change, retry and recovery coverage. The server stores these
+uploads publicly when selected; its audited comment-media module has no
+delete route. No live comment-photo upload was performed. Thumbnail previews,
+GIF/sticker selection and device verification remain open.
+
+Authenticated mention suggestions use
+`GET /api/v1/articles/:id/mention-candidates?q=...`. The source accepts a query
+of at most 30 characters and returns up to eight candidates. Native input uses
+debouncing, account-bound cancellation, keyboard selection and input-method
+composition guards; this has synthetic coverage only.
+
+The account session list uses `GET /api/v1/auth/sessions`; non-current
+sessions may be revoked with `DELETE /api/v1/auth/sessions/:id`, and other
+sessions collectively with `POST /api/v1/auth/logout-others`. A read-only
+owner-account list check succeeded and the temporary test session was logged
+out. Revocation paths have synthetic coverage and were not exercised live.
+
+The account's blocked-people list uses `GET /api/v1/me/blocks`; unblocking uses
+`DELETE /api/v1/users/:id/block` and requires an explicit `ok: true` response.
+The native panel refreshes related profile, feed and inbox state after a possible
+change. An owner-account list read succeeded and its temporary session was
+logged out; unblock behavior has synthetic coverage and was not exercised live.

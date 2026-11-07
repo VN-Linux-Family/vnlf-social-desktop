@@ -79,7 +79,11 @@ void main() {
     tester,
   ) async {
     final router = await _pumpApp(tester);
-    await tester.tap(find.text('Chào cộng đồng! Tiếng Việt: ặ ữ ờ ẫ ệ'));
+    await tester.tap(
+      find.text(
+        'Vietnam Linux Family là nơi chia sẻ kiến thức. Tiếng Việt: ặ ữ ờ ẫ ệ.',
+      ),
+    );
     await tester.pumpAndSettle();
     expect(
       router.routerDelegate.currentConfiguration.last.matchedLocation,

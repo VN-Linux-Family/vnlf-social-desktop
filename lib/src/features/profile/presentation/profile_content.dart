@@ -1,3 +1,5 @@
+import '../../polls/presentation/poll_card.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +37,9 @@ class ProfileContent extends ConsumerWidget {
                 onTap: () =>
                     context.push('/thread/${Uri.encodeComponent(post.id)}'),
                 child: VnlfPostCard(
+                  poll: post.poll == null
+                      ? null
+                      : PollCard(poll: post.poll!, authorId: post.author.id),
                   post: presentPost(post, english: english),
                   onCommentTap: () =>
                       context.push('/thread/${Uri.encodeComponent(post.id)}'),

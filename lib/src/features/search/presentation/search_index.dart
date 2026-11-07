@@ -5,6 +5,7 @@ import '../../../domain/models.dart';
 import '../../leaderboard/presentation/leaderboard_screen.dart';
 import '../../projects/presentation/projects_screen.dart';
 import '../../shared/presentation/feature_samples.dart';
+import '../domain/search_results.dart';
 
 final searchIndexProvider = FutureProvider.autoDispose<SearchIndex>((
   ref,
@@ -41,58 +42,8 @@ final searchIndexProvider = FutureProvider.autoDispose<SearchIndex>((
     posts: allPosts,
     projects: projectItems,
     users: users.values.toList(),
+    topics: const [SearchTopic(name: 'Wayland', slug: 'wayland')],
   );
 });
 
-class SearchIndex {
-  SearchIndex({
-    required List<FeedPost> posts,
-    required List<ProjectItem> projects,
-    required List<Author> users,
-  }) : posts = List.unmodifiable(posts),
-       projects = List.unmodifiable(projects),
-       users = List.unmodifiable(users);
-
-  final List<FeedPost> posts;
-  final List<ProjectItem> projects;
-  final List<Author> users;
-
-  SearchIndex matching(String query) {
-    final normalized = query.trim().toLowerCase();
-    bool contains(Iterable<String> values) =>
-        values.any((value) => value.toLowerCase().contains(normalized));
-    return SearchIndex(
-      posts: posts
-          .where(
-            (post) => contains([
-              post.title ?? '',
-              post.excerpt,
-              post.contentText,
-              ...post.tags,
-              post.author.displayName,
-              post.author.username,
-            ]),
-          )
-          .toList(),
-      projects: projects
-          .where(
-            (project) => contains([
-              project.name,
-              project.tagline,
-              project.type,
-              project.repo?['language'] as String? ?? '',
-            ]),
-          )
-          .toList(),
-      users: users
-          .where(
-            (user) => contains([
-              user.username,
-              user.displayName,
-              user.style?.distroBadge ?? '',
-            ]),
-          )
-          .toList(),
-    );
-  }
-}
+typedef SearchIndex = SearchResults;
