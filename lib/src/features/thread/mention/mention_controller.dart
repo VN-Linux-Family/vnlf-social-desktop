@@ -26,13 +26,15 @@ MentionToken? mentionToken(String text, int caret) {
 /// Owns suggestions for one input and one authenticated article context.
 /// Dispose it with the input. The caller must provide the current session state.
 final class MentionController extends ChangeNotifier {
-  MentionController({required this.input, required this.repository, required ApiClient client, required String articleId, required bool authenticated})
+  MentionController({required this.input, required this.repository, required ApiClient client, required String articleId, required bool authenticated, this.focusNode})
       : _articleId = articleId, _authenticated = authenticated {
     _unsubscribe = client.observeSessionInvalidation(_sessionInvalidated);
     input.addListener(_follow);
+    focusNode?.addListener(_focusChanged);
     _follow();
   }
   final TextEditingController input;
+  final FocusNode? focusNode;
   final MentionCandidatesRepository repository;
   late final void Function() _unsubscribe;
   String _articleId;
@@ -76,9 +78,18 @@ final class MentionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _focusChanged() {
+    if (focusNode?.hasFocus == false) {
+      dismiss();
+    } else {
+      _token = null;
+      _follow();
+    }
+  }
+
   void _follow() {
     final selection = input.selection;
-    final token = _authenticated && selection.isValid && selection.isCollapsed
+    final token = _authenticated && (focusNode?.hasFocus ?? true) && selection.isValid && selection.isCollapsed
         ? mentionToken(input.text, selection.baseOffset) : null;
     final oldKey = _key(_token);
     final key = _key(token);
@@ -133,7 +144,7 @@ final class MentionController extends ChangeNotifier {
   void pick(MentionCandidate candidate) {
     final token = _token;
     final caret = input.selection.baseOffset;
-    if (token == null || _dismissed == _key(token) || !items.contains(candidate) || caret < token.start || caret > input.text.length) return;
+    if (!input.value.composing.isCollapsed || !(focusNode?.hasFocus ?? true) || token == null || _dismissed == _key(token) || !items.contains(candidate) || caret < token.start || caret > input.text.length) return;
     final insert = '@${candidate.username} ';
     final text = input.text.replaceRange(token.start, caret, insert);
     final position = token.start + insert.length;
@@ -164,6 +175,7 @@ final class MentionController extends ChangeNotifier {
     _timer?.cancel();
     _unsubscribe();
     input.removeListener(_follow);
+    focusNode?.removeListener(_focusChanged);
     super.dispose();
   }
 }
