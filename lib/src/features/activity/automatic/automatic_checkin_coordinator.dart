@@ -34,7 +34,7 @@ final class AutomaticCheckInCoordinator {
     required this.storage,
     DateTime Function()? clock,
   }) : clock = clock ?? DateTime.now {
-    if (service.uncertainty?.ownerId != ownerId) {
+    if (ownerId.isEmpty || service.uncertainty?.ownerId != ownerId) {
       throw ArgumentError('An uncertainty marker for the owner is required');
     }
   }
@@ -59,7 +59,8 @@ final class AutomaticCheckInCoordinator {
   Future<void> update(AutomaticCheckInContext context) async {
     if (_cleared) return;
     final previous = _context;
-    if (previous == null || previous.ownerId != context.ownerId ||
+    if (previous == null ||
+        previous.ownerId != context.ownerId ||
         previous.sessionGeneration != context.sessionGeneration ||
         previous.confirmed != context.confirmed) {
       _revision++;
@@ -80,8 +81,11 @@ final class AutomaticCheckInCoordinator {
       context.ownerId == ownerId && context.confirmed && context.visible;
 
   bool _current(int revision, String day) =>
-      !_cleared && _revision == revision && _context != null &&
-      _context!.ownerId == ownerId && _context!.confirmed &&
+      !_cleared &&
+      _revision == revision &&
+      _context != null &&
+      _context!.ownerId == ownerId &&
+      _context!.confirmed &&
       activityDayString(clock()) == day;
 
   Future<void> _run() async {
@@ -102,17 +106,21 @@ final class AutomaticCheckInCoordinator {
       }
       if (!_current(revision, day) || !_context!.visible) return;
       // Unknown or malformed persisted data fails closed.
-      if (phase != null && !RegExp(r'^\d{4}-\d{2}-\d{2}:(pending|recorded|done)$').hasMatch(phase)) {
+      if (phase != null &&
+          !RegExp(r'^\d{4}-\d{2}-\d{2}:(pending|recorded|done)$')
+              .hasMatch(phase)) {
         _status = AutomaticCheckInStatus.blocked;
         return;
       }
       final todayPhase = phase != null && phase.startsWith('$day:')
-          ? phase.substring(day.length + 1) : null;
+          ? phase.substring(day.length + 1)
+          : null;
       if (todayPhase == 'pending') {
         _status = AutomaticCheckInStatus.uncertain;
         return;
       }
-      if (todayPhase == 'done' || (todayPhase == 'recorded' && _context!.modalOpen)) {
+      if (todayPhase == 'done' ||
+          (todayPhase == 'recorded' && _context!.modalOpen)) {
         _status = AutomaticCheckInStatus.recorded;
         return;
       }
@@ -149,11 +157,14 @@ final class AutomaticCheckInCoordinator {
     } finally {
       uncertainty.release();
     }
-    if (_current(revision, day) && _context!.visible && !_context!.modalOpen &&
+    if (_current(revision, day) &&
+        _context!.visible &&
+        !_context!.modalOpen &&
         _celebration == null) {
       // Only a confirmed false claim leaves this phase; all other phases stop.
       try {
-        if (await storage.read(_key) == '$day:recorded' && _current(revision, day)) {
+        if (await storage.read(_key) == '$day:recorded' &&
+            _current(revision, day)) {
           await _run();
         }
       } catch (_) {
@@ -165,8 +176,13 @@ final class AutomaticCheckInCoordinator {
   /// Consumes a pending acknowledgment only while presenting it is safe.
   CheckInAcknowledgment? takeCelebration() {
     final context = _context;
-    if (_cleared || context == null || !_eligible(context) || context.modalOpen ||
-        _celebrationDay != activityDayString(clock())) return null;
+    if (_cleared ||
+        context == null ||
+        !_eligible(context) ||
+        context.modalOpen ||
+        _celebrationDay != activityDayString(clock())) {
+      return null;
+    }
     final result = _celebration;
     _celebration = null;
     _celebrationDay = null;
