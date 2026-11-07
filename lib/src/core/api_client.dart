@@ -177,6 +177,7 @@ final class ApiClient {
       for (final interceptor in _interceptors) {
         request = await interceptor(request);
       }
+      if (sessionRevision != _sessionRevision) throw const HttpFailure(401);
       final isGet = request.method == 'GET';
       final key = jsonEncode([
         request.path,

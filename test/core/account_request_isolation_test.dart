@@ -8,6 +8,39 @@ import 'package:vnlfsocialapp/src/core/session_storage.dart';
 
 void main() {
   test(
+    'a delayed old-session read cannot consume the new session cache',
+    () async {
+      final entered = Completer<void>();
+      final resume = Completer<void>();
+      var interceptorCalls = 0;
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        interceptors: [
+          (request) async {
+            if (++interceptorCalls == 1) {
+              entered.complete();
+              await resume.future;
+            }
+            return request;
+          },
+        ],
+        transport: (_) async =>
+            ApiResponse(statusCode: 200, body: '{"owner":"new"}'),
+      );
+      final oldRead = client.get<Map<String, dynamic>>('/private');
+      final oldReadCheck = expectLater(oldRead, throwsA(isA<HttpFailure>()));
+      await entered.future;
+      client.invalidateSession();
+      expect(await client.get<Map<String, dynamic>>('/private'), {
+        'owner': 'new',
+      });
+      resume.complete();
+      await oldReadCheck;
+    },
+  );
+
+  test(
     'queued writes and old reads are rejected when the session changes',
     () async {
       final entered = Completer<void>();

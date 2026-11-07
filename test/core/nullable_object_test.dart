@@ -47,6 +47,24 @@ void main() {
     }
   });
 
+  test('refresh bypasses a cached null', () async {
+    var requests = 0;
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (_) async => ApiResponse(
+        statusCode: 200,
+        body: ++requests == 1 ? 'null' : '{"enabled":true}',
+      ),
+    );
+    expect(await client.getNullableObject('/preferences'), isNull);
+    expect(await client.getNullableObject('/preferences', refresh: true), {
+      'enabled': true,
+    });
+    expect(await client.getNullableObject('/preferences'), {'enabled': true});
+    expect(requests, 2);
+  });
+
   test(
     'nullable object read rejects a response from a previous session',
     () async {
