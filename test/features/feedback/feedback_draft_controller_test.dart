@@ -19,6 +19,30 @@ FeedbackMediaFile file() => FeedbackMediaFile(
 );
 
 void main() {
+  test('definite first rejection unlocks but rejection of a retry does not', () async {
+    var ambiguous = false;
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,
+      transport: (_) async {
+        if (ambiguous) throw const TransportFailure();
+        return ApiResponse(statusCode: 400, body: '{}');
+      });
+    final store = FeedbackDraftStore(_Memory());
+    final media = FeedbackMediaRepository(client);
+    Future<FeedbackDraftController> open() => FeedbackDraftController.open(
+      store: store, media: media, client: client, currentOwner: () => 'owner', initial: initial(),
+    );
+    final first = await open();
+    await expectLater(first.submit(), throwsA(isA<HttpFailure>()));
+    expect((await store.read('owner'))!.submissionUncertain, isFalse);
+    await first.edit(kind: 'BUG', detail: 'A corrected report long enough.', contact: '', pagePath: '/');
+    ambiguous = true;
+    await expectLater(first.submit(), throwsA(isA<TransportFailure>()));
+    ambiguous = false;
+    final recovered = await open();
+    await expectLater(recovered.submit(), throwsA(isA<HttpFailure>()));
+    expect((await store.read('owner'))!.submissionUncertain, isTrue);
+  });
+
   test('lost presign remains locked after reopening', () async {
     var calls = 0;
     final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,

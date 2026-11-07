@@ -6,9 +6,36 @@ import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/core/session_storage_contract.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/feedback/data/feedback_media_repository.dart';
+import 'package:vnlfsocialapp/src/features/feedback/data/feedback_draft_store.dart';
 import 'package:vnlfsocialapp/src/features/feedback/presentation/feedback_attachment_dialog.dart';
 
 void main() {
+  testWidgets('switching accounts hides and preserves a pending edit', (tester) async {
+    final storage = _Memory();
+    final client = ApiClient(hostKey: Object(), transport: (_) async =>
+      ApiResponse(statusCode: 200, body: '{}'));
+    final container = ProviderContainer(overrides: [
+      sessionStateProvider.overrideWith((ref) => const Session(userId: 'owner', displayName: 'Owner')),
+      sessionStorageProvider.overrideWithValue(storage),
+      apiClientProvider.overrideWithValue(client),
+    ]);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(UncontrolledProviderScope(container: container,
+      child: const MaterialApp(locale: Locale('vi'), supportedLocales: [Locale('vi')],
+        home: Scaffold(body: FeedbackAttachmentDialog(ownerId: 'owner', pagePath: '/')))));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Nội dung riêng của chủ tài khoản');
+    container.read(sessionStateProvider.notifier).state =
+      const Session(userId: 'other', displayName: 'Other');
+    await tester.pump();
+    expect(find.text('Nội dung riêng của chủ tài khoản'), findsNothing);
+    expect(find.text('Tài khoản đã thay đổi'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect((await FeedbackDraftStore(storage).read('owner'))!.detail,
+      'Nội dung riêng của chủ tài khoản');
+    expect(await FeedbackDraftStore(storage).read('other'), isNull);
+  });
+
   testWidgets('debounced text survives reopening the dialog', (tester) async {
     final storage = _Memory();
     final client = ApiClient(hostKey: Object(), transport: (_) async =>

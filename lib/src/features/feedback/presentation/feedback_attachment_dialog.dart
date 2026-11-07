@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/api_client.dart';
 import '../../../core/request_identity.dart';
 import '../data/feedback_draft_controller.dart';
 import '../data/feedback_draft_store.dart';
@@ -50,10 +51,14 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   Timer? _saveTimer;
   Future<void> _saveTail = Future.value();
   bool _saveFailed = false;
+  int _editRevision = 0;
+  int _savedRevision = 0;
+  Future<void>? _preserveFuture;
+  bool _ownerChanged = false;
   bool get _en => Localizations.localeOf(context).languageCode == 'en';
   String _text(String vi, String en) => _en ? en : vi;
 
-  String? _owner() => (ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull)?.userId;
+  String? _owner() => ref.read(sessionStateProvider)?.userId;
 
   @override
   void initState() {
@@ -90,22 +95,51 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     final kind = _kind;
     final detail = _detail.text;
     final contact = _contact.text;
+    final revision = _editRevision;
     _saveTail = _saveTail.then((_) async {
       if (!controller.draft.submissionUncertain && !controller.draft.uploadUncertain) {
         await controller.edit(kind: kind, detail: detail,
           contact: contact, pagePath: controller.draft.pagePath);
+        _savedRevision = revision;
       }
     });
     return _saveTail;
   }
 
   void _scheduleSave() {
+    _editRevision++;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), () {
       _enqueueSave().then<void>((_) {}, onError: (Object _, StackTrace __) {
         if (mounted) setState(() => _saveFailed = true);
       });
     });
+  }
+
+  void _preserveOriginalOwner() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    final controller = _controller;
+    if (controller == null || _editRevision == _savedRevision) return;
+    final detail = _detail.text;
+    final contact = _contact.text;
+    final kind = _kind;
+    final store = FeedbackDraftStore(ref.read(sessionStorageProvider));
+    _preserveFuture = () async {
+      try {
+        try { await _saveTail; } catch (_) { /* Preserve the captured edit below. */ }
+        final old = controller.draft;
+        if (old.uploadUncertain || old.submissionUncertain) return;
+        await store.write(widget.ownerId, FeedbackDraft(
+          ownerId: old.ownerId, submissionId: old.submissionId, kind: kind,
+          detail: detail, contact: contact, pagePath: old.pagePath,
+          assetIds: old.assetIds, assetNames: old.assetNames,
+          uploadUncertain: false, submissionUncertain: false,
+        ));
+      } catch (_) {
+        if (mounted) setState(() => _saveFailed = true);
+      }
+    }();
   }
 
   Future<void> _save() async {
@@ -130,7 +164,11 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
         ? (failure.message == 'detail'
           ? _text('Vui lòng nhập 20–4000 ký tự.', 'Enter 20–4000 characters.')
           : _text('Tệp không hợp lệ hoặc vượt quá giới hạn kích thước.',
-              'The file is unsupported or exceeds the size limit.')) : _text(
+              'The file is unsupported or exceeds the size limit.'))
+        : failure is HttpFailure && failure.statusCode >= 400 && failure.statusCode < 500 &&
+            failure.statusCode != 408 && _controller?.draft.submissionUncertain == false
+          ? _text('Máy chủ từ chối yêu cầu. Hãy kiểm tra nội dung và thử lại.',
+              'The server rejected the request. Check the content and try again.') : _text(
         'Thao tác chưa được xác nhận. Bản nháp được giữ; kiểm tra trạng thái bên dưới.',
         'The operation was not confirmed. The draft is kept; check its status below.');
     } finally {
@@ -152,7 +190,8 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
 
   Future<void> _close() async {
     if (_busy) return;
-    if (_controller != null && !_done && !_saveFailed && _owner() == widget.ownerId) {
+    await _preserveFuture;
+    if (_controller != null && !_done && !_saveFailed && !_ownerChanged && _owner() == widget.ownerId) {
       await _run(_save);
       if (_error != null) return;
     }
@@ -187,9 +226,29 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   @override
   Widget build(BuildContext context) {
     ref.watch(sessionStateProvider);
+    ref.listen(sessionStateProvider, (previous, next) {
+      if (previous?.userId == widget.ownerId && next?.userId != widget.ownerId) {
+        _ownerChanged = true;
+        _preserveOriginalOwner();
+      }
+    });
     final draft = _controller?.draft;
     final locked = draft == null || draft.uploadUncertain || draft.submissionUncertain;
-    final sessionChanged = _owner() != widget.ownerId;
+    final sessionChanged = _ownerChanged || _owner() != widget.ownerId;
+    if (sessionChanged) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) { if (!didPop) _close(); },
+        child: AlertDialog(
+          title: Text(_text('Tài khoản đã thay đổi', 'Account changed')),
+          content: Text(_saveFailed
+            ? _text('Không thể lưu thay đổi của tài khoản trước vào bộ nhớ bảo mật.',
+                'Could not save the previous account’s changes to secure storage.')
+            : _text('Đóng và đăng nhập lại để tiếp tục.', 'Close and sign in again to continue.')),
+          actions: [TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close')))],
+        ),
+      );
+    }
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) { if (!didPop) _close(); },

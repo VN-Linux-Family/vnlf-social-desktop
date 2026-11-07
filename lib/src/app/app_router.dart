@@ -496,7 +496,7 @@ bool _feedbackDialogOpen = false;
 void showFeedbackDialog(BuildContext context, WidgetRef ref) {
   if (_feedbackDialogOpen) return;
   _feedbackDialogOpen = true;
-  final account = ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
+  final account = ref.read(sessionStateProvider);
   if (account != null) {
     final pagePath = GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ?? '/';
     showDialog<void>(

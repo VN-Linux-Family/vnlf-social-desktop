@@ -200,9 +200,12 @@ final class FeedbackDraftController {
       throw StateError('Feedback draft cannot be submitted');
     }
     // The persisted fields constitute the immutable retry payload.
-    if (!draft.submissionUncertain) await _save(_copy(submissionUncertain: true));
+    final wasUncertain = draft.submissionUncertain;
+    if (!wasUncertain) await _save(_copy(submissionUncertain: true));
     _check();
-    final response = await _client.request<Map<String, dynamic>>(
+    Map<String, dynamic> response;
+    try {
+      response = await _client.request<Map<String, dynamic>>(
       'POST', '/api/v1/feedback', body: jsonEncode({
         'clientSubmissionId': draft.submissionId,
         'kind': draft.kind,
@@ -210,7 +213,16 @@ final class FeedbackDraftController {
         'pagePath': draft.pagePath,
         'assetIds': draft.assetIds,
       }),
-    );
+      );
+    } on HttpFailure catch (failure) {
+      // A later rejection cannot resolve an earlier uncertain attempt.
+      if (!wasUncertain && failure.statusCode >= 400 &&
+          failure.statusCode < 500 && failure.statusCode != 408) {
+        _check();
+        await _save(_copy(submissionUncertain: false));
+      }
+      rethrow;
+    }
     _check();
     if (response['submissionId'] is! String ||
         (response['submissionId'] as String).isEmpty ||
