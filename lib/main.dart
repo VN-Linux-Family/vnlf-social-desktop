@@ -86,6 +86,39 @@ class _AppState extends ConsumerState<_App> {
             onViewActivity: () => _router.go('/activity'),
             onAcknowledged: (owner) =>
                 ref.invalidate(activityServiceProvider(owner)),
+            onProblem: (owner) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted || !identical(ref.read(sessionProvider), auth)) {
+                  return;
+                }
+                final context = _navigatorKey.currentContext;
+                if (context == null) return;
+                final messenger = ScaffoldMessenger.maybeOf(context);
+                if (messenger == null) return;
+                final english =
+                    Localizations.localeOf(context).languageCode == 'en';
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      english
+                          ? 'Could not complete or confirm daily check-in.'
+                          : 'Không thể hoàn tất hoặc xác nhận điểm danh hôm nay.',
+                    ),
+                    action: SnackBarAction(
+                      label: english ? 'Activity' : 'Hoạt động',
+                      onPressed: () {
+                        final current = ref.read(sessionProvider);
+                        if (identical(current, auth) &&
+                            current.valueOrNull?.userId == owner) {
+                          _router.go('/activity');
+                        }
+                      },
+                    ),
+                  ),
+                );
+              });
+              WidgetsBinding.instance.ensureVisualUpdate();
+            },
             child: CommunityAppBinding(
               child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
             ),

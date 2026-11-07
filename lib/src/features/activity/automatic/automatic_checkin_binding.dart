@@ -68,6 +68,7 @@ class AutomaticCheckInBinding extends StatefulWidget {
     required this.onViewActivity,
     required this.child,
     this.onAcknowledged,
+    this.onProblem,
     this.clock,
   });
 
@@ -80,6 +81,7 @@ class AutomaticCheckInBinding extends StatefulWidget {
   final bool live;
   final VoidCallback onViewActivity;
   final ValueChanged<String>? onAcknowledged;
+  final ValueChanged<String>? onProblem;
   final Widget child;
   final DateTime Function()? clock;
 
@@ -98,13 +100,13 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
   NavigatorState? _dialogNavigator;
   Object? _invalidConfirmation;
   int _generation = 0;
-  int _acknowledgedWrites = 0;
   bool _visible = false;
   bool _running = false;
   AutomaticCheckInCoordinator? _activeCoordinator;
   bool _dirty = false;
   bool _frameQueued = false;
   String? _day;
+  String? _reportedProblemDay;
 
   DateTime get _now => widget.clock?.call() ?? DateTime.now();
   bool get _valid {
@@ -135,7 +137,8 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       final day = activityDayString(_now);
       if (day != _day ||
-          _coordinator?.status == AutomaticCheckInStatus.blocked) {
+          _coordinator?.status == AutomaticCheckInStatus.blocked ||
+          _coordinator?.status == AutomaticCheckInStatus.failed) {
         _changed();
       }
     });
@@ -154,7 +157,7 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     _generation++;
     _coordinator?.clear();
     _coordinator = null;
-    _acknowledgedWrites = 0;
+    _reportedProblemDay = null;
     _closeDialog();
     _dirty = false;
   }
@@ -193,7 +196,8 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
       return;
     }
     final owner = widget.ownerId!;
-    final coordinator = _coordinator ??= AutomaticCheckInCoordinator(
+    late final AutomaticCheckInCoordinator coordinator;
+    coordinator = _coordinator ??= AutomaticCheckInCoordinator(
       ownerId: owner,
       service: ActivityService(
         LiveActivityRepository(
@@ -205,6 +209,11 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
       ),
       storage: widget.storage,
       clock: () => _now,
+      onAcknowledged: () {
+        if (mounted && _valid && identical(_coordinator, coordinator)) {
+          widget.onAcknowledged?.call(owner);
+        }
+      },
     );
     final context = AutomaticCheckInContext(
       ownerId: owner,
@@ -229,12 +238,16 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
       _running = false;
       _activeCoordinator = null;
       if (!mounted) return;
+      final status = coordinator.status;
+      final today = activityDayString(_now);
       if (generation == _generation &&
           _valid &&
           identical(_coordinator, coordinator) &&
-          coordinator.acknowledgedWrites > _acknowledgedWrites) {
-        _acknowledgedWrites = coordinator.acknowledgedWrites;
-        widget.onAcknowledged?.call(owner);
+          (status == AutomaticCheckInStatus.uncertain ||
+              status == AutomaticCheckInStatus.failed) &&
+          _reportedProblemDay != today) {
+        _reportedProblemDay = today;
+        widget.onProblem?.call(owner);
       }
       if (generation != _generation || _dirty) {
         _dirty = false;

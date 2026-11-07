@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../core/session_storage_contract.dart';
 import '../domain/activity_models.dart';
 import '../domain/activity_service.dart';
@@ -33,6 +35,7 @@ final class AutomaticCheckInCoordinator {
     required this.service,
     required this.storage,
     DateTime Function()? clock,
+    this.onAcknowledged,
   }) : clock = clock ?? DateTime.now {
     if (ownerId.isEmpty || service.uncertainty?.ownerId != ownerId) {
       throw ArgumentError('An uncertainty marker for the owner is required');
@@ -43,6 +46,7 @@ final class AutomaticCheckInCoordinator {
   final ActivityService service;
   final SessionStorage storage;
   final DateTime Function() clock;
+  final void Function()? onAcknowledged;
   String get _key => 'vnlf.activity.automatic.${Uri.encodeComponent(ownerId)}';
 
   AutomaticCheckInContext? _context;
@@ -51,8 +55,6 @@ final class AutomaticCheckInCoordinator {
   bool _running = false;
   bool _cleared = false;
   int _revision = 0;
-  int _acknowledgedWrites = 0;
-  int get acknowledgedWrites => _acknowledgedWrites;
   AutomaticCheckInStatus _status = AutomaticCheckInStatus.idle;
   AutomaticCheckInStatus get status => _status;
 
@@ -127,19 +129,40 @@ final class AutomaticCheckInCoordinator {
         return;
       }
       final claim = !_context!.modalOpen;
-      await storage.write(_key, '$day:pending');
-      await uncertainty.mark();
-      if (!_current(revision, day) ||
-          !_context!.visible ||
-          claim != !_context!.modalOpen) {
-        // No request has left the device. Restore the prior phase while the
-        // owner lease is held so a later eligible update may proceed safely.
+      Future<void> restoreUnsent() async {
         if (phase == null) {
           await storage.delete(_key);
         } else {
           await storage.write(_key, phase);
         }
         await uncertainty.clear();
+      }
+
+      await storage.write(_key, '$day:pending');
+      try {
+        await uncertainty.mark();
+      } catch (_) {
+        try {
+          await restoreUnsent();
+          if (_current(revision, day)) _status = AutomaticCheckInStatus.failed;
+        } catch (_) {
+          // A failed cleanup may leave local state incomplete. Preserve a
+          // visible uncertainty marker when storage will accept one.
+          try {
+            await uncertainty.mark();
+          } catch (_) {}
+          if (_current(revision, day)) {
+            _status = AutomaticCheckInStatus.uncertain;
+          }
+        }
+        return;
+      }
+      if (!_current(revision, day) ||
+          !_context!.visible ||
+          claim != !_context!.modalOpen) {
+        // No request has left the device. Restore the prior phase while the
+        // owner lease is held so a later eligible update may proceed safely.
+        await restoreUnsent();
         if (_current(revision, day)) _status = AutomaticCheckInStatus.idle;
         return;
       }
@@ -156,12 +179,13 @@ final class AutomaticCheckInCoordinator {
         await uncertainty.mark();
         return;
       }
-      _acknowledgedWrites++;
       _status = AutomaticCheckInStatus.recorded;
       if (result.showCelebration) {
         _celebration = result;
         _celebrationDay = day;
       }
+      final notify = onAcknowledged;
+      if (notify != null) scheduleMicrotask(notify);
       // A false claim may have completed while the modal closed. Release the
       // lease first; the follow-up acquires it and persists its own intent.
     } catch (_) {

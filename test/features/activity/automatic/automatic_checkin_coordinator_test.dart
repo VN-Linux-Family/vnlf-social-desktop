@@ -44,6 +44,54 @@ void main() {
     expect(coordinator.status, AutomaticCheckInStatus.uncertain);
   });
 
+  test('a failed uncertainty marker restores the prior unsent phase', () async {
+    final storage = _Storage()..failMarkerWrite = true;
+    final repo = _Repository();
+    final coordinator = _coordinator(storage, repo);
+    await coordinator.update(_state());
+    expect(repo.claims, isEmpty);
+    expect(storage.values, isEmpty);
+    expect(coordinator.status, AutomaticCheckInStatus.failed);
+    storage.failMarkerWrite = false;
+    await coordinator.update(_state());
+    expect(repo.claims, [true]);
+  });
+
+  test(
+    'a marker failure after persistence is cleaned up before retry',
+    () async {
+      final storage = _Storage()..failMarkerAfterWrite = true;
+      final repo = _Repository();
+      final coordinator = _coordinator(storage, repo);
+      await coordinator.update(_state());
+      expect(repo.claims, isEmpty);
+      expect(storage.values, isEmpty);
+      expect(coordinator.status, AutomaticCheckInStatus.failed);
+      storage.failMarkerAfterWrite = false;
+      await coordinator.update(_state());
+      expect(repo.claims, [true]);
+    },
+  );
+
+  test(
+    'a failed marker preserves a prior confirmed attendance record',
+    () async {
+      final storage = _Storage()..failMarkerWrite = true;
+      storage.values['vnlf.activity.automatic.owner'] = '2026-11-07:recorded';
+      final repo = _Repository();
+      final coordinator = _coordinator(storage, repo);
+      await coordinator.update(_state());
+      expect(repo.claims, isEmpty);
+      expect(
+        storage.values['vnlf.activity.automatic.owner'],
+        '2026-11-07:recorded',
+      );
+      storage.failMarkerWrite = false;
+      await coordinator.update(_state());
+      expect(repo.claims, [true]);
+    },
+  );
+
   test('backgrounding before transport restores the unsent intent', () async {
     final storage = _DelayedMarkerStorage();
     final repo = _Repository();
@@ -227,6 +275,8 @@ CheckInAcknowledgment _ack() => CheckInAcknowledgment(
 final class _Storage implements SessionStorage {
   final values = <String, String>{};
   bool failWrite = false;
+  bool failMarkerWrite = false;
+  bool failMarkerAfterWrite = false;
   @override
   Future<void> delete(String key) async {
     values.remove(key);
@@ -237,7 +287,13 @@ final class _Storage implements SessionStorage {
   @override
   Future<void> write(String key, String value) async {
     if (failWrite) throw StateError('storage failure');
+    if (failMarkerWrite && key.startsWith('vnlf.activity.checkin.')) {
+      throw StateError('marker write failed');
+    }
     values[key] = value;
+    if (failMarkerAfterWrite && key.startsWith('vnlf.activity.checkin.')) {
+      throw StateError('marker failed after persistence');
+    }
   }
 }
 

@@ -19,6 +19,128 @@ class MemoryStorage implements SessionStorage {
 }
 
 void main() {
+  testWidgets('an unconfirmed write is reported once and not retried', (
+    tester,
+  ) async {
+    var calls = 0;
+    var problems = 0;
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (_) async {
+        calls++;
+        return ApiResponse(statusCode: 500, body: '{}');
+      },
+    );
+    final tracker = AutomaticModalTracker();
+    final key = GlobalKey<NavigatorState>();
+    final storage = MemoryStorage();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [tracker.observer()],
+        builder: (_, child) => AutomaticCheckInBinding(
+          client: client,
+          storage: storage,
+          tracker: tracker,
+          navigatorKey: key,
+          ownerId: 'owner',
+          confirmation: Object(),
+          live: true,
+          clock: () => DateTime.utc(2026, 11, 7),
+          onViewActivity: () {},
+          onProblem: (_) => problems++,
+          child: child!,
+        ),
+        home: const Text('home'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(calls, 1);
+    expect(problems, 1);
+    await tester.pump(const Duration(minutes: 2));
+    await tester.pump();
+    expect(calls, 1);
+    expect(problems, 1);
+    await tester.pumpWidget(const SizedBox());
+    tracker.dispose();
+  });
+
+  testWidgets(
+    'each confirmed check-in refreshes activity even if the next claim is delayed',
+    (tester) async {
+      final first = Completer<ApiResponse>();
+      final second = Completer<ApiResponse>();
+      final claims = <bool>[];
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        transport: (request) {
+          final claim = jsonDecode(request.body!)['claimCelebration'] as bool;
+          claims.add(claim);
+          return claim ? second.future : first.future;
+        },
+      );
+      final tracker = AutomaticModalTracker();
+      final key = GlobalKey<NavigatorState>();
+      final storage = MemoryStorage();
+      final confirmation = Object();
+      var refreshes = 0;
+      Widget app(bool live) => MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [tracker.observer()],
+        builder: (_, child) => AutomaticCheckInBinding(
+          client: client,
+          storage: storage,
+          tracker: tracker,
+          navigatorKey: key,
+          ownerId: 'owner',
+          confirmation: confirmation,
+          live: live,
+          clock: () => DateTime.utc(2026, 11, 7),
+          onViewActivity: () {},
+          onAcknowledged: (_) => refreshes++,
+          child: child!,
+        ),
+        home: const Text('home'),
+      );
+      ApiResponse ack(bool celebrate) => ApiResponse(
+        statusCode: 200,
+        body: jsonEncode({
+          'date': '2026-11-07',
+          'currentStreak': 1,
+          'longestStreak': 1,
+          'showCelebration': celebrate,
+          'checkins': [
+            {'date': '2026-11-07', 'streakDay': 1},
+          ],
+        }),
+      );
+      await tester.pumpWidget(app(false));
+      key.currentState!.push(
+        DialogRoute<void>(
+          context: key.currentContext!,
+          builder: (_) => const AlertDialog(title: Text('dialog')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(app(true));
+      await tester.pump();
+      expect(claims, [false]);
+      key.currentState!.pop();
+      await tester.pumpAndSettle();
+      first.complete(ack(false));
+      await tester.pumpAndSettle();
+      expect(claims, [false, true]);
+      expect(refreshes, 1);
+      second.complete(ack(true));
+      await tester.pumpAndSettle();
+      expect(refreshes, 2);
+      await tester.pumpWidget(const SizedBox());
+      tracker.dispose();
+    },
+  );
+
   testWidgets(
     'a backgrounded app presents the confirmed celebration after resume',
     (tester) async {
