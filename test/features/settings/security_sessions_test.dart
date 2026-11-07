@@ -60,6 +60,48 @@ void main() {
     expect(repository.writes, 0);
   });
 
+  testWidgets('session list reloads under the new account after a switch', (
+    tester,
+  ) async {
+    var reads = 0;
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (_) async {
+        reads++;
+        return ApiResponse(
+          statusCode: 200,
+          body: '{"items":[{"id":"current","current":true}]}',
+        );
+      },
+    );
+    final container = ProviderContainer(
+      overrides: [
+        apiClientProvider.overrideWithValue(client),
+        sessionStateProvider.overrideWith(
+          (_) => const Session(userId: 'first', displayName: 'First'),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: Scaffold(body: SecuritySessionsPanel())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(reads, 1);
+    client.invalidateSession();
+    container.read(sessionStateProvider.notifier).state = const Session(
+      userId: 'second',
+      displayName: 'Second',
+    );
+    await tester.pumpAndSettle();
+    expect(reads, 2);
+    expect(find.text('Could not load sessions.'), findsNothing);
+  });
+
   test(
     'requires a current session and explicit revoke acknowledgment',
     () async {

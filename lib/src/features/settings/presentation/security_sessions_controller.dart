@@ -90,7 +90,10 @@ final class SecuritySessionsController
 }
 
 final securitySessionsRepositoryProvider = Provider<SecuritySessionsRepository>(
-  (ref) => LiveSecuritySessionsRepository(ref.watch(apiClientProvider)),
+  (ref) {
+    ref.watch(sessionStateProvider.select((session) => session?.userId));
+    return LiveSecuritySessionsRepository(ref.watch(apiClientProvider));
+  },
 );
 
 final securitySessionsControllerProvider =
