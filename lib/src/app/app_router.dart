@@ -259,7 +259,9 @@ GoRouter createMainRouter({
                     context.push('/login');
                   }
                 },
-                showMobileHeader: !communicationDetail,
+                showMobileHeader:
+                    !communicationDetail &&
+                    !state.uri.path.startsWith('/feedback'),
                 centerChildHandlesScroll:
                     communication ||
                     const [
