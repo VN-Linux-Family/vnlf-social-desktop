@@ -44,11 +44,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
+    final mobile = MediaQuery.sizeOf(context).width < 840;
     final profile = ref.watch(profileProvider(widget.username));
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        if (context.canPop()) ...[
+        if (!mobile && context.canPop()) ...[
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(

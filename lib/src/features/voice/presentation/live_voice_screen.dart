@@ -57,8 +57,6 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(title: english ? 'Voice' : 'Kênh thoại'),
-        const SizedBox(height: 12),
         if (account == null)
           FeatureSurface(
             child: Column(

@@ -319,14 +319,17 @@ class _FeedbackPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final mobile = MediaQuery.sizeOf(context).width < 840;
     return Scaffold(
       backgroundColor: colors.bg,
-      appBar: AppBar(
-        title: Text(title),
-        leading: leading,
-        backgroundColor: colors.paper,
-        foregroundColor: colors.ink,
-      ),
+      appBar: mobile
+          ? null
+          : AppBar(
+              title: Text(title),
+              leading: leading,
+              backgroundColor: colors.paper,
+              foregroundColor: colors.ink,
+            ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),

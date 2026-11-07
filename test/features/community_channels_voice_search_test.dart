@@ -290,6 +290,27 @@ void main() {
     );
   });
 
+  testWidgets('search page on mobile has exactly one back button', (
+    tester,
+  ) async {
+    await _pump(tester, '/search', width: 390);
+    final backButtons = find.byWidgetPredicate(
+      (widget) =>
+          widget is IconButton &&
+          widget.icon is Icon &&
+          ((widget.icon as Icon).icon == Icons.arrow_back_rounded ||
+              (widget.icon as Icon).icon == Icons.arrow_back),
+    );
+    expect(backButtons, findsOneWidget);
+  });
+
+  testWidgets('voice room page does not contain Kenh thoai header', (
+    tester,
+  ) async {
+    await _pump(tester, '/voice', width: 390);
+    expect(find.text('Kênh thoại'), findsNothing);
+  });
+
   for (final width in [390.0, 900.0, 1440.0]) {
     for (final route in ['/channels', '/voice', '/search']) {
       testWidgets('$route fits width $width with scaled text', (tester) async {

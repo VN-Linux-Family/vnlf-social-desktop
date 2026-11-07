@@ -71,6 +71,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
+    final mobile = MediaQuery.sizeOf(context).width < 840;
     final colors = VnlfColors.of(context);
     final labels = english
         ? ['All', 'Posts', 'Projects', 'Users', 'Topics']
@@ -84,7 +85,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       children: [
         VnlfCenterPageHeader(
           title: english ? 'Search' : 'Tìm kiếm',
-          leading: context.canPop()
+          leading: !mobile && context.canPop()
               ? IconButton(
                   tooltip: english ? 'Back' : 'Quay lại',
                   icon: const Icon(Icons.arrow_back_rounded),

@@ -78,8 +78,6 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(title: english ? 'Voice' : 'Kênh thoại'),
-        const SizedBox(height: 12),
         if (session == null)
           Container(
             margin: const EdgeInsets.only(bottom: 12),
@@ -100,8 +98,8 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                 Expanded(
                   child: Text(
                     english
-                        ? 'Sign in to connect Voice SFU with your VNLF profile'
-                        : 'Đăng nhập để kết nối Voice SFU và đàm thoại thời gian thực cùng thành viên',
+                        ? 'Sign in to join Voice'
+                        : 'Đăng nhập để tham gia Voice',
                     style: VnlfTypography.meta(colors.brand),
                   ),
                 ),
