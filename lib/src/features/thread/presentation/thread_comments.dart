@@ -282,6 +282,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                 border: const OutlineInputBorder(),
               ),
             ),
+            Text(
+              english
+                  ? 'Selected photos upload immediately and may remain on the server after removal.'
+                  : 'Ảnh được tải lên ngay khi chọn và có thể vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.',
+              style: VnlfTypography.meta(colors.muted),
+            ),
             Wrap(
               spacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,

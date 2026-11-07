@@ -44,6 +44,7 @@ void main() {
       home: Scaffold(body: SingleChildScrollView(child: ThreadComments(focusNode: focus, postId: 'article'))),
     )));
     await tester.pumpAndSettle();
+    expect(find.text('Ảnh được tải lên ngay khi chọn và có thể vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('comment-add-photos')));
     await tester.pumpAndSettle();
     expect(find.text('anh.png'), findsOneWidget);
