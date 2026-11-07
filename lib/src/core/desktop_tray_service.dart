@@ -37,14 +37,18 @@ class DesktopSettingNotifier extends StateNotifier<bool> {
   final String key;
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(key) ?? state;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(key) ?? state;
+    } catch (_) {}
   }
 
   Future<void> toggle(bool value) async {
     state = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(key, value);
+    } catch (_) {}
   }
 }
 
@@ -54,14 +58,18 @@ class DesktopAutostartNotifier extends StateNotifier<bool> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool(kPrefAutostart) ?? false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getBool(kPrefAutostart) ?? false;
+    } catch (_) {}
   }
 
   Future<void> setAutostart(bool enabled) async {
     state = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(kPrefAutostart, enabled);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(kPrefAutostart, enabled);
+    } catch (_) {}
 
     if (kIsWeb) return;
 
