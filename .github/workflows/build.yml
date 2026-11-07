@@ -25,7 +25,7 @@ env:
 
 jobs:
   metadata:
-    if: github.repository == 'luank3/vnlfsocialapp'
+    if: (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop')
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -64,7 +64,7 @@ jobs:
           retention-days: 35
 
   quality:
-    if: github.repository == 'luank3/vnlfsocialapp'
+    if: (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop')
     runs-on: ubuntu-24.04
     needs: metadata
     timeout-minutes: 20
@@ -85,7 +85,7 @@ jobs:
       - run: python3 -m unittest discover -s test/tool -p '*_test.py'
 
   desktop:
-    if: github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.build_desktop == 'true'
+    if: (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.build_desktop == 'true'
     name: ${{ matrix.platform }}-${{ matrix.arch }}
     needs: [metadata, quality]
     runs-on: ${{ matrix.runner }}
@@ -232,7 +232,7 @@ jobs:
           retention-days: 3
 
   android:
-    if: github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.build_android == 'true'
+    if: (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.build_android == 'true'
     name: Android armv7, arm64 and x64
     needs: [metadata, quality]
     runs-on: ubuntu-24.04
@@ -288,7 +288,7 @@ jobs:
 
   publish-private:
     name: Store every build in private releases
-    if: ${{ always() && !cancelled() && github.repository == 'luank3/vnlfsocialapp' && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
+    if: ${{ always() && !cancelled() && (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
     needs: [metadata, quality, desktop, android]
     runs-on: ubuntu-24.04
     permissions:
@@ -347,7 +347,7 @@ jobs:
   publish-public:
     name: Publish complete stable binaries for app updates
     needs: [metadata, publish-private]
-    if: ${{ github.repository == 'luank3/vnlfsocialapp' && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
+    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}

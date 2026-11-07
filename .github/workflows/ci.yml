@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    if: github.repository == 'luank3/vnlfsocialapp'
+    if: (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
