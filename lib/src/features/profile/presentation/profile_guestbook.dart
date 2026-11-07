@@ -95,6 +95,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
     final generation = ++_generation;
     setState(() { _busy = true; _error = null; });
     final actions = LiveGuestbookActions(ref.read(apiClientProvider));
+    var acknowledged = false;
     try {
       switch (action) {
         case 'write':
@@ -108,15 +109,20 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
         case 'block':
           await actions.block(entry!.author.id);
       }
+      acknowledged = true;
       if (!_current(generation, viewer)) return;
       if (action == 'write' && _draft.text.trim() == text) _draft.clear();
       if (action == 'block') _refreshAfterBlock();
       await _refresh(generation, viewer);
     } catch (_) {
       if (!_current(generation, viewer)) return;
-      if (action == 'block') _refreshAfterBlock();
-      try { await _refresh(generation, viewer); } catch (_) { /* Keep the original uncertainty visible. */ }
-      if (_current(generation, viewer)) setState(() => _error = english ? 'Could not confirm this action. Check the guestbook before trying again.' : 'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.');
+      if (!acknowledged) {
+        if (action == 'block') _refreshAfterBlock();
+        try { await _refresh(generation, viewer); } catch (_) { /* Keep the original uncertainty visible. */ }
+      }
+      if (_current(generation, viewer)) setState(() => _error = acknowledged
+          ? (english ? 'Action confirmed, but the guestbook could not be refreshed.' : 'Đã xác nhận thao tác, nhưng không tải lại được sổ lưu bút.')
+          : (english ? 'Could not confirm this action. Check the guestbook before trying again.' : 'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.'));
     } finally {
       if (_current(generation, viewer)) setState(() => _busy = false);
     }
@@ -137,7 +143,11 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
     final owner = viewer != null && viewer == widget.ownerId;
     return ref.watch(profileGuestbookProvider(widget.username)).when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => FeatureLoadError(onRetry: () => ref.invalidate(profileGuestbookProvider(widget.username))),
+      error: (error, stack) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (_error != null) Text(_error!, style: TextStyle(color: colors.red)),
+        if (_draft.text.isNotEmpty) TextField(controller: _draft, readOnly: true, minLines: 2, maxLines: 4, decoration: InputDecoration(labelText: english ? 'Saved draft' : 'Bản nháp đã giữ')),
+        FeatureLoadError(onRetry: () => ref.invalidate(profileGuestbookProvider(widget.username))),
+      ]),
       data: (page) {
         final entries = {...{for (final e in page.items) e.id: e}, ...{for (final e in _more) e.id: e}}.values;
         final cursor = _paged ? _cursor : page.nextCursor;
@@ -160,6 +170,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
             }),
             if (reason == 'SIGN_IN') TextButton(onPressed: () => context.push('/login'), child: Text(english ? 'Sign in' : 'Đăng nhập')),
           ],
+          if (reason != null && _draft.text.isNotEmpty) TextField(controller: _draft, readOnly: true, minLines: 2, maxLines: 4, decoration: InputDecoration(labelText: english ? 'Saved draft' : 'Bản nháp đã giữ')),
           if (_error != null) Text(_error!, style: TextStyle(color: colors.red)),
           if (entries.isEmpty) Text(english ? 'No messages yet' : 'Chưa có lời nhắn'),
           for (final entry in entries) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

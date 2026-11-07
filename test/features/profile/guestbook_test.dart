@@ -27,9 +27,13 @@ class Profiles implements PublicProfileRepository {
   int reads = 0;
   bool mine = false;
   String? blockedReason = 'GUESTBOOK_OWN';
+  String? reasonAfterFirstRead;
+  bool failAfterFirstRead = false;
   @override
   Future<GuestbookPage> getGuestbook(String username, {String? cursor}) async {
     reads++;
+    if (reads > 1 && failAfterFirstRead) throw StateError('read failed');
+    if (reads > 1 && reasonAfterFirstRead != null) blockedReason = reasonAfterFirstRead;
     return GuestbookPage(items: [GuestbookEntry(id: entry.id, author: entry.author, content: entry.content, status: entry.status, mine: mine)], enabled: true, total: 1, blockedReason: blockedReason);
   }
   @override
@@ -157,6 +161,43 @@ void main() {
     expect(profiles.reads, greaterThan(1));
     expect(find.text('A synthetic greeting'), findsOneWidget);
     expect(find.textContaining('Could not confirm'), findsOneWidget);
+  });
+
+  testWidgets('failed reconciliation still shows uncertainty and draft', (tester) async {
+    final client = clientFor((request) async => throw StateError('write failed'));
+    final profiles = Profiles()..blockedReason = null..failAfterFirstRead = true;
+    await pumpGuestbook(tester, other, profiles, client);
+    await tester.enterText(find.byType(TextField), 'Keep this draft');
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep this draft'), findsOneWidget);
+    expect(find.textContaining('Could not confirm'), findsOneWidget);
+  });
+
+  testWidgets('uncertain submission followed by daily limit keeps a copyable draft', (tester) async {
+    final client = clientFor((request) async => throw StateError('write failed'));
+    final profiles = Profiles()..blockedReason = null..reasonAfterFirstRead = 'GUESTBOOK_DAILY_LIMIT';
+    await pumpGuestbook(tester, other, profiles, client);
+    await tester.enterText(find.byType(TextField), 'Keep this draft');
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep this draft'), findsOneWidget);
+    expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
+    expect(find.textContaining('Could not confirm'), findsOneWidget);
+  });
+
+  testWidgets('acknowledged submission with failed refresh is reported accurately', (tester) async {
+    final client = clientFor((request) async => ApiResponse(statusCode: 201, body: jsonEncode({
+      'id': 'new-entry', 'author': {'id': 'other', 'username': 'other', 'displayName': 'Other'},
+      'content': 'Hello', 'status': 'VISIBLE', 'mine': true, 'createdAt': '2026-11-07T00:00:00Z',
+    })));
+    final profiles = Profiles()..blockedReason = null..failAfterFirstRead = true;
+    await pumpGuestbook(tester, other, profiles, client);
+    await tester.enterText(find.byType(TextField), 'Hello');
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Action confirmed'), findsOneWidget);
+    expect(find.textContaining('Could not confirm'), findsNothing);
   });
 
 }
