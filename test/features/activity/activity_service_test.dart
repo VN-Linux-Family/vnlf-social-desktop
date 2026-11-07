@@ -106,6 +106,21 @@ void main() {
       },
     );
 
+    test('rejects check-in acknowledgment after owner changes', () async {
+      var owner = 'owner-a';
+      final response = Completer<ApiResponse>();
+      var writes = 0;
+      final repository = _repository((request) {
+        writes++;
+        return response.future;
+      }, currentOwnerId: () => owner);
+      final result = repository.checkIn(claimCelebration: true);
+      owner = 'owner-b';
+      response.complete(ApiResponse(statusCode: 200, body: jsonEncode(_checkInPayload())));
+      await expectLater(result, throwsA(isA<HttpFailure>()));
+      expect(writes, 1);
+    });
+
     test(
       'rejects queued or completed work after owner/session changes',
       () async {

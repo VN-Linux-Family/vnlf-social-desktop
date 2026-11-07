@@ -109,12 +109,83 @@ class _ActivityScreenState extends State<ActivityScreen>
   String? _selectedDate;
   late Future<ActivityCalendarData> _calendar;
   int _loadRevision = 0;
+  bool _checkingIn = false;
+  bool _unconfirmed = false;
+  bool _refreshingCheckIn = false;
+  String? _checkInMessage;
+
+  Future<void> _checkIn() async {
+    if (_checkingIn || _unconfirmed || _refreshingCheckIn) return;
+    final service = widget.service;
+    setState(() {
+      _checkingIn = true;
+      _checkInMessage = null;
+    });
+    try {
+      final acknowledgment = await service.checkIn(claimCelebration: true);
+      if (!mounted || service != widget.service) return;
+      setState(() {
+        _checkInMessage = 'confirmed';
+        _loadRevision++;
+        _calendar = service.loadMonth(_year, _month);
+      });
+      if (acknowledgment.showCelebration) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => ActivityCheckInCelebration(
+            acknowledgment: acknowledgment,
+          ),
+        );
+      }
+    } catch (_) {
+      if (!mounted || service != widget.service) return;
+      setState(() {
+        _unconfirmed = true;
+        _checkInMessage = 'unconfirmed';
+      });
+    } finally {
+      if (mounted && service == widget.service) {
+        setState(() => _checkingIn = false);
+      }
+    }
+  }
+
+  Future<void> _refreshCheckIn() async {
+    if (_refreshingCheckIn || _checkingIn) return;
+    final service = widget.service;
+    final year = _today.year;
+    final month = _today.month;
+    setState(() => _refreshingCheckIn = true);
+    try {
+      final data = await service.loadMonth(year, month);
+      if (!mounted || service != widget.service) return;
+      setState(() {
+        _year = year;
+        _month = month;
+        _selectedDate = null;
+        _loadRevision++;
+        _calendar = Future.value(data);
+        _unconfirmed = false;
+        _checkInMessage = 'refreshed';
+      });
+    } catch (_) {
+      // Keep the unconfirmed state until a fresh owner-bound read succeeds.
+    } finally {
+      if (mounted && service == widget.service) {
+        setState(() => _refreshingCheckIn = false);
+      }
+    }
+  }
 
   @override
   void didUpdateWidget(covariant ActivityScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.service != widget.service) {
       _loadRevision++;
+      _checkingIn = false;
+      _unconfirmed = false;
+      _refreshingCheckIn = false;
+      _checkInMessage = null;
       _calendar = widget.service.loadMonth(_year, _month);
     }
   }
@@ -217,6 +288,30 @@ class _ActivityScreenState extends State<ActivityScreen>
                     english: english,
                     colors: colors,
                   ),
+                  const SizedBox(height: 12),
+                ],
+                if (_unconfirmed) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(english
+                        ? 'Check-in could not be confirmed. Refresh activity before trying again.'
+                        : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.'),
+                  ),
+                  OutlinedButton(
+                    onPressed: _refreshingCheckIn ? null : _refreshCheckIn,
+                    child: Text(english ? 'Refresh activity' : 'Làm mới hoạt động'),
+                  ),
+                  const SizedBox(height: 12),
+                ] else if (data != null && !snapshot.hasError && isCurrentMonth) ...[
+                  FilledButton(
+                    onPressed: _checkingIn || data.days.any((day) => day.date == data.today && day.checkedIn)
+                        ? null : _checkIn,
+                    child: Text(_checkingIn
+                        ? (english ? 'Checking in…' : 'Đang điểm danh…')
+                        : (english ? 'Check in today' : 'Điểm danh hôm nay')),
+                  ),
+                  if (_checkInMessage == 'confirmed')
+                    Semantics(liveRegion: true, child: Text(english ? 'Check-in confirmed.' : 'Đã xác nhận điểm danh.')),
                   const SizedBox(height: 12),
                 ],
                 _ActivityPanel(
