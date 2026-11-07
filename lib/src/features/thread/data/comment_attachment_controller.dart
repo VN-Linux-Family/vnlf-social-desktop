@@ -113,6 +113,7 @@ final class CommentAttachmentController {
     if (_signature != null && _signature != signature) {
       throw StateError('Resolve the pending submission before changing the draft');
     }
+    final hadUncertainAttempt = _signature != null;
     _signature ??= signature;
     _identity ??= newRequestIdentity();
     _submitting = true;
@@ -123,6 +124,17 @@ final class CommentAttachmentController {
       _signature = null;
       _identity = null;
       return result;
+    } on HttpFailure catch (error) {
+      // These source-defined errors happen before the comment transaction.
+      final rejected = (error.statusCode == 400 && const {
+        'COMMENT_EMPTY', 'COMMENT_ATTACHMENTS_INVALID', 'COMMENT_REPLY_DEPTH',
+      }.contains(error.code)) ||
+          (error.statusCode == 404 && error.code == 'ARTICLE_NOT_FOUND');
+      if (!hadUncertainAttempt && rejected) {
+        _signature = null;
+        _identity = null;
+      }
+      rethrow;
     } finally {
       _submitting = false;
     }

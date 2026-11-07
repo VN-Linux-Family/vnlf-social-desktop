@@ -75,4 +75,22 @@ void main() {
     expect(draft.submissionPending, isFalse);
   });
 
+  test('a first source-confirmed rejection unlocks, but a later one does not', () async {
+    var attempt = 0;
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (_) async {
+      attempt++;
+      if (attempt == 2) return ApiResponse(statusCode: 500, body: '{}');
+      return ApiResponse(statusCode: 400, body: '{"code":"COMMENT_REPLY_DEPTH"}');
+    });
+    final draft = CommentAttachmentController('article', CommentMediaRepository(client), LiveCommentsRepository(client), client);
+    await expectLater(draft.submit('first'), throwsA(isA<HttpFailure>()));
+    expect(draft.submissionPending, isFalse);
+    await expectLater(draft.submit('changed'), throwsA(isA<HttpFailure>()));
+    expect(draft.submissionPending, isTrue);
+    await expectLater(draft.submit('changed'), throwsA(isA<HttpFailure>()));
+    expect(draft.submissionPending, isTrue);
+    await expectLater(draft.submit('different'), throwsStateError);
+    expect(attempt, 3);
+  });
+
 }
