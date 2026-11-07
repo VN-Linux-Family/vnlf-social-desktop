@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../app/providers.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/public_profile.dart';
 import 'profile_actions.dart';
@@ -81,10 +82,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : 'Nội dung hồ sơ',
                   ),
                   const SizedBox(height: 12),
-                  if (_tab == 3 && value.guestbookEnabled)
+                  if (_tab == 3 && (value.guestbookEnabled || ref.watch(sessionStateProvider)?.userId == value.author.id))
                     ProfileGuestbook(
-                      key: ValueKey(value.author.username),
+                      key: ValueKey('${value.author.username}:${ref.watch(sessionStateProvider)?.userId}'),
                       username: value.author.username,
+                      ownerId: value.author.id,
                     )
                   else
                     ProfileContent(
@@ -102,7 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       english ? 'Posts' : 'Bài viết',
       english ? 'Comments' : 'Bình luận',
       english ? 'Projects' : 'Dự án',
-      if (profile.guestbookEnabled) english ? 'Guestbook' : 'Sổ lưu bút',
+      if (profile.guestbookEnabled || ref.watch(sessionStateProvider)?.userId == profile.author.id) english ? 'Guestbook' : 'Sổ lưu bút',
     ];
   }
 }

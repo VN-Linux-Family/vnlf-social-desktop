@@ -59,12 +59,18 @@ final class GuestbookEntry {
     required this.author,
     required this.content,
     this.createdAt,
+    this.status = GuestbookStatus.visible,
+    this.mine = false,
   });
   final String id;
   final Author author;
   final String content;
   final DateTime? createdAt;
+  final GuestbookStatus status;
+  final bool mine;
 }
+
+enum GuestbookStatus { visible, hidden }
 
 final class GuestbookPage {
   GuestbookPage({
@@ -72,7 +78,9 @@ final class GuestbookPage {
     required this.enabled,
     required this.total,
     this.nextCursor,
+    this.blockedReason,
   }) : items = List.unmodifiable(items);
+  final String? blockedReason;
   final List<GuestbookEntry> items;
   final bool enabled;
   final int total;
