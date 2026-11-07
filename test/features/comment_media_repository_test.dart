@@ -16,7 +16,7 @@ void main() {
         transport: (request) async {
       requests.add(request);
       return ApiResponse(statusCode: 200, body: requests.length == 1
-          ? '{"assetId":"asset-1","uploadUrl":"https://storage.example/put","headers":{"content-type":"image/png","cookie":"secret"}}'
+          ? '{"assetId":"asset-1","uploadUrl":"https://storage.example/put","headers":{"content-type":"image/png"}}'
           : '{"assetId":"asset-1","status":"READY"}');
     });
     final repo = CommentMediaRepository(client, upload: (uri, file, headers) async {
@@ -59,4 +59,25 @@ void main() {
         attachmentIds: ['asset-1'], clientCommentId: 'identity');
     expect(jsonDecode(sent.body!), {'content': '', 'attachmentIds': ['asset-1'], 'clientCommentId': 'identity'});
   });
+  test('rejects unsafe signed headers before sending bytes', () async {
+    for (final headers in [
+      {'Cookie': 'secret'},
+      {'Host': 'other.example'},
+      {'Content-Length': '1'},
+      {'Bad Name': 'value'},
+      {'x-example': 'value\r\ninjected: yes'},
+      {'Authorization': 'secret'},
+    ]) {
+      var sent = false;
+      final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,
+          transport: (_) async => ApiResponse(statusCode: 200, body: jsonEncode({
+            'assetId': 'asset', 'uploadUrl': 'https://storage.example/put', 'headers': headers,
+          })));
+      final transfer = CommentMediaRepository(client, upload: (_, _, _) async { sent = true; }).begin('article', file);
+      await expectLater(transfer.presign(), throwsA(isA<ParseFailure>()));
+      expect(transfer.assetId, 'asset');
+      expect(sent, isFalse);
+    }
+  });
+
 }

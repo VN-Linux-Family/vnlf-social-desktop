@@ -30,12 +30,14 @@ final class CommentAttachmentController {
   String? _signature;
   String? _identity;
 
+  bool get submissionPending => _signature != null;
+
   List<CommentAttachment> get attachments => List.unmodifiable(_items);
   List<String> get readyIds => List.unmodifiable(_items.where((item) => item.state == CommentAttachmentState.ready).map((item) => item.assetId!));
 
   CommentAttachment add(CommentUploadFile file) {
     _session.ensureCurrent();
-    if (_submitting || _items.length >= 10) throw StateError('Attachment limit or submission in progress');
+    if (_submitting || submissionPending || _items.length >= 10) throw StateError('Attachment limit or submission in progress');
     final item = CommentAttachment._(file, _media.begin(articleId, file));
     _items.add(item);
     return item;
@@ -43,7 +45,7 @@ final class CommentAttachmentController {
 
   void remove(CommentAttachment item) {
     _session.ensureCurrent();
-    if (_submitting || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing) {
+    if (_submitting || submissionPending || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing) {
       throw StateError('Operation in progress');
     }
     if (!_items.remove(item)) throw StateError('Unknown attachment');
@@ -97,7 +99,7 @@ final class CommentAttachmentController {
 
   void _check(CommentAttachment item, CommentAttachmentState state) {
     _session.ensureCurrent();
-    if (_submitting || !_items.contains(item) || item.state != state) throw StateError('Attachment unavailable');
+    if (_submitting || submissionPending || !_items.contains(item) || item.state != state) throw StateError('Attachment unavailable');
   }
 
   /// The same payload keeps the same identity after an uncertain response.
@@ -108,10 +110,11 @@ final class CommentAttachmentController {
     final ids = readyIds;
     if ((text.isEmpty && ids.isEmpty) || text.length > 4000) throw const ParseFailure('comment.content');
     final signature = jsonEncode([text, parentId, ids]);
-    if (_signature != signature) {
-      _signature = signature;
-      _identity = newRequestIdentity();
+    if (_signature != null && _signature != signature) {
+      throw StateError('Resolve the pending submission before changing the draft');
     }
+    _signature ??= signature;
+    _identity ??= newRequestIdentity();
     _submitting = true;
     try {
       final result = await _comments.create(articleId, text, parentId: parentId, attachmentIds: ids, clientCommentId: _identity);

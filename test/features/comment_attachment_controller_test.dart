@@ -57,4 +57,22 @@ void main() {
     client.invalidateSession();
     expect(() => controller.remove(controller.attachments.first), throwsA(isA<HttpFailure>()));
   });
+  test('uncertain creation freezes the original payload and identity', () async {
+    final bodies = <Map<String, dynamic>>[];
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (request) async {
+      bodies.add(jsonDecode(request.body!) as Map<String, dynamic>);
+      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200,
+          body: bodies.length == 1 ? '{}' : '{"id":"comment","content":"first","author":{}}');
+    });
+    final draft = CommentAttachmentController('article', CommentMediaRepository(client), LiveCommentsRepository(client), client);
+    await expectLater(draft.submit('first'), throwsA(isA<AppFailure>()));
+    expect(draft.submissionPending, isTrue);
+    expect(() => draft.add(file), throwsStateError);
+    await expectLater(draft.submit('changed'), throwsStateError);
+    expect(bodies, hasLength(1));
+    await draft.submit('first');
+    expect(bodies[0]['clientCommentId'], bodies[1]['clientCommentId']);
+    expect(draft.submissionPending, isFalse);
+  });
+
 }

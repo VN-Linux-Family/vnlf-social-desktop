@@ -263,7 +263,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                   ),
                   IconButton(
                     tooltip: english ? 'Cancel reply' : 'Hủy trả lời',
-                    onPressed: () => setState(() => _replyTo = null),
+                    onPressed: draft.submissionPending || _submitting ? null : () => setState(() => _replyTo = null),
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -271,6 +271,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             TextField(
               key: const ValueKey('comment-input'),
               controller: _input,
+              readOnly: draft.submissionPending || _submitting,
               focusNode: widget.focusNode,
               minLines: 2,
               maxLines: 5,
@@ -287,7 +288,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               children: [
                 OutlinedButton.icon(
                   key: const ValueKey('comment-add-photos'),
-                  onPressed: _selecting || _submitting || draft.attachments.length >= 10 ? null : _pickAttachments,
+                  onPressed: _selecting || _submitting || draft.submissionPending || draft.attachments.length >= 10 ? null : _pickAttachments,
                   icon: const Icon(Icons.add_photo_alternate_outlined),
                   label: Text(english ? 'Add photos' : 'Thêm ảnh'),
                 ),
@@ -319,10 +320,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                   if (item.state == CommentAttachmentState.completeFailed)
                     IconButton(tooltip: english ? 'Retry confirmation' : 'Thử xác nhận lại', onPressed: _submitting ? null : () => _retryAttachment(item), icon: const Icon(Icons.refresh)),
                   IconButton(tooltip: english ? 'Remove photo' : 'Xóa ảnh',
-                    onPressed: _submitting || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing ? null : () => setState(() => draft.remove(item)),
+                    onPressed: _submitting || draft.submissionPending || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing ? null : () => setState(() => draft.remove(item)),
                     icon: const Icon(Icons.close)),
                 ]),
               ),
+            if (draft.submissionPending && !_submitting)
+              Text(english ? 'The previous submission may have been sent. Retry it unchanged to confirm.' : 'Bình luận trước có thể đã được gửi. Hãy thử lại nguyên nội dung để xác nhận.', style: VnlfTypography.meta(colors.muted)),
             if (_failure != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -415,7 +418,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                     .pin(items[id]!),
               ),
               onReply: (id) {
-                if (!_authorized()) return;
+                if (draft.submissionPending || _submitting || !_authorized()) return;
                 setState(() {
                   _replyTo = items[id];
                   if (_replyTo != null) {

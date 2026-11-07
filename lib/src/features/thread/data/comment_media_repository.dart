@@ -26,6 +26,7 @@ final class CommentMediaRepository {
     : _upload = upload ?? _uploadNative;
 
   static final RegExp _safeAssetIdPattern = RegExp(r'^[a-zA-Z0-9_-]{1,128}$');
+  static final RegExp _headerName = RegExp(r"^[!#\$%&'*+.^_`|~0-9A-Za-z-]+$");
 
   final ApiClient _client;
   final CommentAssetUpload _upload;
@@ -95,27 +96,25 @@ final class CommentMediaTransfer {
         !uploadUri.hasScheme ||
         uploadUri.scheme != 'https' ||
         uploadUri.host.isEmpty ||
-        uploadUri.userInfo.isNotEmpty) {
+        uploadUri.userInfo.isNotEmpty ||
+        uploadUri.hasFragment) {
       throw const ParseFailure('upload.presign');
     }
 
-    final rawHeaders =
-        objectValue(presign['headers'], 'upload.headers') ??
-        const <String, dynamic>{};
+    final rawHeaders = objectValue(presign['headers'], 'upload.headers') ?? const <String, dynamic>{};
     final uploadHeaders = <String, String>{};
     for (final entry in rawHeaders.entries) {
-      final key = entry.key.trim();
-      final lower = key.toLowerCase();
-      // Never forward session cookies, authorization, or CSRF tokens to CDN/S3.
-      if (lower == 'cookie' ||
-          lower == 'authorization' ||
-          lower == 'x-csrf-token') {
-        continue;
+      final name = entry.key;
+      final lower = name.toLowerCase();
+      final value = entry.value;
+      if (!CommentMediaRepository._headerName.hasMatch(name) ||
+          value is! String || value.contains('\r') || value.contains('\n') ||
+          lower == 'cookie' || lower == 'authorization' ||
+          lower == 'proxy-authorization' || lower == 'x-csrf-token' ||
+          lower == 'host' || lower == 'content-length') {
+        throw const ParseFailure('upload.headers');
       }
-      final val = entry.value;
-      if (val is String && val.isNotEmpty) {
-        uploadHeaders[key] = val;
-      }
+      uploadHeaders[name] = value;
     }
 
     _uploadUri = uploadUri;
