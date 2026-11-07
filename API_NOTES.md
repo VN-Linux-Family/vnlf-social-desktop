@@ -644,14 +644,16 @@ Only changed fields are sent. An uncertain save requires a fresh read before
 another attempt. The reduced-motion setting combines with the device's own
 accessibility setting. These flows have synthetic coverage only; no live
 preference changes were made. Other website display and decoration preferences
-are not yet implemented.
+are not yet implemented. The message-sound preference syncs to the website;
+native message sound playback is not implemented.
 
 The website also keeps its text-size choice on the device, independently of
 the account: an integer from 12 through 18, default 13. The native setting is
 stored locally and composes its scale with the operating system's text scaler;
 its proportional mapping approximates the website's fixed heading offsets.
 Synthetic tests cover storage races and keyboard use; visual device comparison
-remains outstanding.
+remains outstanding. Restoring a saved size is asynchronous and may change
+text after the first frame.
 
 ## Comment photos, mentions and session management — 2026-11-07
 

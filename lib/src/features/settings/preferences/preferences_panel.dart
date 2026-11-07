@@ -88,7 +88,9 @@ final class PreferencesPanel extends ConsumerWidget {
           (value) => draft.copyWith(messageNotifications: value),
         ),
         toggle(
-          english ? 'Message sound' : 'Âm báo tin nhắn',
+          english
+              ? 'Message sound on the website'
+              : 'Âm báo tin nhắn trên trang web',
           draft.messageSoundEnabled,
           (value) => draft.copyWith(messageSoundEnabled: value),
         ),

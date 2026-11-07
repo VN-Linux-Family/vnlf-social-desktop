@@ -82,6 +82,15 @@ live UI checks, notification/report runtime checks, recovery and live realtime v
 remaining device media/voice, visual parity/performance and signing
 remain release gates. Do not replace these with simulated success states.
 
+The pinned server records attendance when issuing login and session responses,
+so the authorized test logins may have recorded it even though no explicit
+check-in request was made. No removal endpoint is known. Automatic celebration
+still needs an account/session-bound lifecycle coordinator that shares the
+manual check-in lease and durable uncertainty marker, respects visibility and
+open dialogs, handles Vietnam-local day rollover and never automatically repeats
+an uncertain write. Validate races and cleanup with synthetic tests before any
+live use.
+
 Live owner verification: production HTTP/auth repositories authenticated the
 authorized owner, confirmed the matching session, logged out and confirmed an
 empty session afterward. Credentials and cookies stayed in anonymous stdin and
