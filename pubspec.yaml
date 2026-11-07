@@ -35,6 +35,9 @@ dependencies:
   file_selector: ^1.1.0
   # Native rich editing; the server document schema uses a separate lossless codec.
   fleather: ^1.28.0
+  flutter_local_notifications: ^23.0.0
+  tray_manager: ^0.8.3
+  window_manager: ^0.6.0
 
 dev_dependencies:
   flutter_test:

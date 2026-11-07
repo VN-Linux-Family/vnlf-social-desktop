@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../domain/models.dart';
+import '../../notifications/data/local_notification_service.dart';
 import '../data/community_chat_update.dart';
 import '../data/community_socket_client.dart';
 import '../domain/community_event.dart';
@@ -26,6 +27,7 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
     with WidgetsBindingObserver {
   CommunitySocketClient? _client;
   StreamSubscription<CommunitySocketStatus>? _status;
+  StreamSubscription<CommunityEvent>? _eventsSub;
   @override
   void initState() {
     super.initState();
@@ -48,6 +50,7 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
   void _bind(CommunitySocketClient? client) {
     if (identical(client, _client)) return;
     unawaited(_status?.cancel());
+    unawaited(_eventsSub?.cancel());
     _client = client;
     _status = client?.statuses.listen((status) {
       if (mounted &&
@@ -56,11 +59,68 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
         unawaited(ref.read(authControllerProvider.notifier).refreshSession());
       }
     });
+    _eventsSub = client?.events.listen((event) {
+      if (!_foreground) {
+        _dispatchNotification(event);
+      }
+    });
     if (client != null) {
       unawaited(() async {
         await client.setForeground(_foreground);
         await client.start();
       }());
+    }
+  }
+
+  void _dispatchNotification(CommunityEvent event) {
+    final data = event.data;
+    if (data is! Map<String, dynamic>) return;
+
+    final notifService = ref.read(localNotificationServiceProvider);
+    final id = event.eventId.hashCode;
+
+    if (event.type == 'dm:message') {
+      final author = data['author'];
+      final authorName = author is Map<String, dynamic>
+          ? (author['displayName'] ?? author['username'] ?? 'Tin nhắn mới')
+          : 'Tin nhắn mới';
+      final content = data['content'] ?? 'Bạn có tin nhắn mới';
+      final convId = (data['conversationId'] ?? '').toString();
+      unawaited(
+        notifService.showNotification(
+          id: id,
+          title: authorName.toString(),
+          body: content.toString(),
+          payload: convId.isNotEmpty ? '/messages/$convId' : '/messages',
+        ),
+      );
+    } else if (event.type == 'message:created') {
+      final author = data['author'];
+      final authorName = author is Map<String, dynamic>
+          ? (author['displayName'] ?? 'Kênh chat')
+          : 'Kênh chat';
+      final content = data['content'] ?? 'Có tin nhắn mới trong kênh';
+      final channelId = (data['channelId'] ?? '').toString();
+      unawaited(
+        notifService.showNotification(
+          id: id,
+          title: authorName.toString(),
+          body: content.toString(),
+          payload: channelId.isNotEmpty ? '/channels/$channelId' : '/channels',
+        ),
+      );
+    } else if (event.type.startsWith('notification:')) {
+      final title = data['title'] ?? 'VNLF Social';
+      final body =
+          data['body'] ?? 'Bạn có hoạt động mới trên Vietnam Linux Family.';
+      unawaited(
+        notifService.showNotification(
+          id: id,
+          title: title.toString(),
+          body: body.toString(),
+          payload: '/notifications',
+        ),
+      );
     }
   }
 
@@ -74,6 +134,7 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_status?.cancel());
+    unawaited(_eventsSub?.cancel());
     super.dispose();
   }
 }

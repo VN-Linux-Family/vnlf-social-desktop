@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../shared/presentation/author_mapper.dart';
@@ -320,6 +321,54 @@ class SettingsScreen extends ConsumerWidget {
                     : 'Giao diện được lưu trên thiết bị. Ngôn ngữ áp dụng trong phiên ứng dụng này.',
                 style: VnlfTypography.meta(colors.muted),
               ),
+              if (DesktopTrayService.isDesktop) ...[
+                const SizedBox(height: 16),
+                Text(
+                  english
+                      ? 'Desktop & System Tray'
+                      : 'Máy tính & Khay hệ thống',
+                  style: VnlfTypography.h2(colors.ink),
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  activeThumbColor: colors.brand,
+                  title: Text(
+                    english
+                        ? 'Minimize to system tray on close'
+                        : 'Thu nhỏ vào khay hệ thống khi đóng',
+                    style: VnlfTypography.body(colors.ink),
+                  ),
+                  subtitle: Text(
+                    english
+                        ? 'Keep running in the background to receive instant notifications'
+                        : 'Tiếp tục chạy ngầm để nhận thông báo tức thì',
+                    style: VnlfTypography.meta(colors.muted),
+                  ),
+                  value: ref.watch(desktopMinimizeToTrayProvider),
+                  onChanged: (val) => ref
+                      .read(desktopMinimizeToTrayProvider.notifier)
+                      .toggle(val),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  activeThumbColor: colors.brand,
+                  title: Text(
+                    english ? 'Start with system' : 'Khởi động cùng hệ thống',
+                    style: VnlfTypography.body(colors.ink),
+                  ),
+                  subtitle: Text(
+                    english
+                        ? 'Automatically launch minimized when starting your computer'
+                        : 'Tự động mở thu nhỏ khi khởi động máy tính',
+                    style: VnlfTypography.meta(colors.muted),
+                  ),
+                  value: ref.watch(desktopAutostartProvider),
+                  onChanged: (val) => ref
+                      .read(desktopAutostartProvider.notifier)
+                      .setAutostart(val),
+                ),
+              ],
             ],
           ),
         ),
