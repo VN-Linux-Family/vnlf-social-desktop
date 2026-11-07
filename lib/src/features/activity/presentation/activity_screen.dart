@@ -125,14 +125,27 @@ class _ActivityScreenState extends State<ActivityScreen>
   Future<void> _checkIn() async {
     if (_checkingIn || _unconfirmed || _refreshingCheckIn) return;
     final service = widget.service;
+    final uncertainty = service.uncertainty;
+    if (uncertainty == null) {
+      setState(() => _storageError = true);
+      return;
+    }
+    if (!uncertainty.tryAcquire()) {
+      setState(() => _unconfirmed = true);
+      return;
+    }
     setState(() {
       _checkingIn = true;
       _checkInMessage = null;
     });
     try {
-      final uncertainty = service.uncertainty;
-      if (uncertainty == null) throw StateError('Storage unavailable');
       try {
+        if (await uncertainty.read()) {
+          if (mounted && service == widget.service) {
+            setState(() => _unconfirmed = true);
+          }
+          return;
+        }
         await uncertainty.mark();
       } catch (_) {
         if (mounted && service == widget.service) {
@@ -147,7 +160,7 @@ class _ActivityScreenState extends State<ActivityScreen>
       setState(() {
         _checkInMessage = 'confirmed';
       });
-      await _refreshCheckIn(afterAcknowledgment: true);
+      await _refreshCheckIn(afterAcknowledgment: true, leaseHeld: true);
       if (!mounted || service != widget.service) return;
       if (acknowledgment.showCelebration) {
         await showDialog<void>(
@@ -165,28 +178,41 @@ class _ActivityScreenState extends State<ActivityScreen>
         }
       });
     } finally {
+      uncertainty.release();
       if (mounted && service == widget.service) {
         setState(() => _checkingIn = false);
       }
     }
   }
 
-  Future<void> _refreshCheckIn({bool afterAcknowledgment = false}) async {
+  Future<void> _refreshCheckIn({bool afterAcknowledgment = false, bool leaseHeld = false}) async {
     if (_refreshingCheckIn || (_checkingIn && !afterAcknowledgment)) return;
     final service = widget.service;
     final year = _today.year;
     final month = _today.month;
+    final day = activityDayString(widget.clock?.call() ?? DateTime.now());
+    final revision = _loadRevision;
+    final uncertainty = service.uncertainty;
+    if (uncertainty == null) {
+      setState(() => _storageError = true);
+      return;
+    }
+    if (!leaseHeld && !uncertainty.tryAcquire()) return;
+    bool isCurrent() => mounted && service == widget.service &&
+        revision == _loadRevision &&
+        day == activityDayString(widget.clock?.call() ?? DateTime.now());
     setState(() => _refreshingCheckIn = true);
     try {
       final data = await service.loadMonth(year, month);
-      if (!mounted || service != widget.service) return;
-      if (!data.days.any((day) => day.date == data.today)) {
+      if (!isCurrent()) return;
+      if (data.today != day || !data.days.any((item) => item.date == day)) {
         throw StateError('Calendar does not include today');
       }
-      final uncertainty = service.uncertainty;
-      if (uncertainty == null) throw StateError('Storage unavailable');
       await uncertainty.clear();
-      if (!mounted || service != widget.service) return;
+      if (!isCurrent()) {
+        await uncertainty.mark();
+        return;
+      }
       setState(() {
         _year = year;
         _month = month;
@@ -200,6 +226,7 @@ class _ActivityScreenState extends State<ActivityScreen>
     } catch (_) {
       // Keep the unconfirmed state until a fresh owner-bound read succeeds.
     } finally {
+      if (!leaseHeld) uncertainty.release();
       if (mounted && service == widget.service) {
         setState(() => _refreshingCheckIn = false);
       }
