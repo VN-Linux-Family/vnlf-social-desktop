@@ -75,6 +75,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libx11-dev libxi-dev
       - run: flutter pub get
       - run: flutter gen-l10n
       - run: git diff --exit-code
@@ -257,6 +261,10 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libx11-dev libxi-dev
       - run: flutter pub get
       - run: flutter gen-l10n
       - name: Prepare explicit release or development signing
