@@ -118,8 +118,8 @@ const _communityRoutes =
       ),
       (
         path: '/voice',
-        vietnamese: 'Phòng Voice',
-        english: 'Voice rooms',
+        vietnamese: 'Kênh thoại',
+        english: 'Voice',
         screen: VoiceScreen,
       ),
     ];

@@ -57,7 +57,7 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(title: english ? 'Voice rooms' : 'Phòng Voice'),
+        VnlfCenterPageHeader(title: english ? 'Voice' : 'Kênh thoại'),
         const SizedBox(height: 12),
         if (account == null)
           FeatureSurface(
@@ -90,7 +90,7 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                     Text(
                       english
                           ? 'Unable to load voice rooms.'
-                          : 'Không tải được danh sách phòng Voice.',
+                          : 'Không tải được danh sách kênh thoại.',
                       style: VnlfTypography.body(colors.muted),
                     ),
                     const SizedBox(height: 8),
@@ -106,7 +106,7 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                       child: Text(
                         english
                             ? 'No voice rooms available.'
-                            : 'Chưa có phòng Voice khả dụng.',
+                            : 'Chưa có kênh thoại nào khả dụng.',
                         style: VnlfTypography.body(colors.muted),
                       ),
                     )

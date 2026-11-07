@@ -15,8 +15,6 @@ import '../../shared/presentation/post_interactions.dart';
 import 'thread_comments.dart';
 import 'thread_post_provider.dart';
 import 'article_detail_card.dart';
-import 'thread_mobile_header.dart';
-import '../../notifications/presentation/notifications_sheet.dart';
 
 export 'thread_post_provider.dart' show threadPostProvider;
 
@@ -31,44 +29,44 @@ class ThreadScreen extends ConsumerWidget {
     final post = ref.watch(threadPostProvider(postId));
     final article = post.valueOrNull?.format == 'ARTICLE';
     final mobile = MediaQuery.sizeOf(context).width <= 840;
-    final list = ListView(
+    return ListView(
       padding: const EdgeInsets.only(bottom: 20),
       children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: article ? 780 : double.infinity,
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                constraints: BoxConstraints(minHeight: mobile ? 44 : 0),
-                width: mobile ? double.infinity : null,
+        if (!mobile)
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: article ? 780 : double.infinity,
+              ),
+              child: Align(
                 alignment: Alignment.centerLeft,
-                color: mobile ? VnlfColors.of(context).surface : null,
-                child: Tooltip(
-                  message: english ? 'Back' : 'Quay lại',
-                  child: TextButton.icon(
-                    onPressed: () {
-                      final router = GoRouter.maybeOf(context);
-                      if (router?.canPop() == true) {
-                        router!.pop();
-                      } else {
-                        router?.go('/');
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back, size: 16),
-                    label: Text(english ? 'Back to feed' : 'Quay lại bảng tin'),
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  child: Tooltip(
+                    message: english ? 'Back' : 'Quay lại',
+                    child: TextButton.icon(
+                      onPressed: () {
+                        final router = GoRouter.maybeOf(context);
+                        if (router?.canPop() == true) {
+                          router!.pop();
+                        } else {
+                          router?.go('/');
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back, size: 16),
+                      label: Text(
+                        english ? 'Back to feed' : 'Quay lại bảng tin',
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
         if (!article && !mobile)
           FeatureHeader(title: english ? 'Thread' : 'Bài viết'),
-        SizedBox(height: mobile ? 16 : 10),
+        SizedBox(height: mobile ? 12 : 10),
         post.when(
           loading: () =>
               const VnlfLoadingShimmer(child: VnlfPostCard.loading()),
@@ -90,23 +88,6 @@ class ThreadScreen extends ConsumerWidget {
                   post: value,
                 ),
         ),
-      ],
-    );
-    if (!mobile) return list;
-    return Column(
-      children: [
-        ThreadMobileHeader(
-          onCompose: () => GoRouter.maybeOf(context)?.push(
-            ref.read(sessionStateProvider) == null ? '/login' : '/compose',
-          ),
-          onSearch: () => GoRouter.maybeOf(context)?.push('/search'),
-          onNotifications: () => showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (_) => const NotificationsSheet(),
-          ),
-        ),
-        Expanded(child: list),
       ],
     );
   }

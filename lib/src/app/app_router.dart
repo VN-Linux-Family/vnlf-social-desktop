@@ -177,9 +177,33 @@ GoRouter createMainRouter({
                   threadId != null &&
                   ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
                       'ARTICLE';
+              final isDetailRoute =
+                  threadId != null ||
+                  state.uri.path.startsWith('/projects/') ||
+                  state.uri.path.startsWith('/project/') ||
+                  state.uri.path == '/settings' ||
+                  state.uri.path.startsWith('/profile/') ||
+                  state.uri.path.startsWith('/user/') ||
+                  state.uri.path.startsWith('/users/') ||
+                  state.uri.path.startsWith('/u/') ||
+                  state.uri.path.startsWith('/feedback/') ||
+                  state.uri.path == '/search';
+              final titleText = threadId != null
+                  ? (english ? 'Post' : 'Bài viết')
+                  : state.uri.path == '/settings'
+                  ? (english ? 'Settings' : 'Cài đặt')
+                  : state.uri.path.startsWith('/profile/') ||
+                        state.uri.path.startsWith('/user/') ||
+                        state.uri.path.startsWith('/users/') ||
+                        state.uri.path.startsWith('/u/')
+                  ? (english ? 'Profile' : 'Hồ sơ')
+                  : state.uri.path == '/search'
+                  ? (english ? 'Search' : 'Tìm kiếm')
+                  : null;
               return VnlfAdaptiveShell(
                 centerMaxWidth: communication ? double.infinity : 1053,
                 showMobileBottomNav: !communicationDetail,
+                titleText: titleText,
                 centerPadding:
                     communication ||
                         threadId != null &&
@@ -192,6 +216,22 @@ GoRouter createMainRouter({
                 activeDestination: active,
                 onDestinationSelected: (destination) =>
                     context.go(destinations[destination]!),
+                onBack: !isDetailRoute
+                    ? null
+                    : () {
+                        final router = GoRouter.maybeOf(context);
+                        if (router?.canPop() == true) {
+                          router!.pop();
+                        } else if (state.uri.path.startsWith('/feedback/')) {
+                          router?.go('/feedback');
+                        } else if (state.uri.path.startsWith('/projects/') ||
+                            state.uri.path.startsWith('/project/')) {
+                          router?.go('/projects');
+                        } else {
+                          router?.go('/');
+                        }
+                      },
+                backTooltip: english ? 'Back' : 'Quay lại',
                 onSearchTap: () => context.push('/search'),
                 onNotificationsTap: () => _showNotificationsModal(context, ref),
                 onSettingsTap: () => context.push('/settings'),
@@ -219,18 +259,7 @@ GoRouter createMainRouter({
                     context.push('/login');
                   }
                 },
-                showMobileHeader:
-                    !communicationDetail &&
-                    const [
-                      '/',
-                      '/leaderboard',
-                      '/activity',
-                      '/projects',
-                      '/discover',
-                      '/channels',
-                      '/messages',
-                      '/voice',
-                    ].contains(state.uri.path),
+                showMobileHeader: !communicationDetail,
                 centerChildHandlesScroll:
                     communication ||
                     const [

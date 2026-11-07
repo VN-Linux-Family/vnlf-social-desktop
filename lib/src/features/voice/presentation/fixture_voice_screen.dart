@@ -11,7 +11,7 @@ import 'voice_participant.dart';
 
 const _rooms = [
   (
-    'Phòng Voice Chung',
+    'Kênh đàm thoại chung',
     'General voice room',
     'Cùng gặp gỡ và trò chuyện cùng cộng đồng Linux Việt Nam.',
     'Meet and chat with the Vietnamese Linux community.',
@@ -23,7 +23,7 @@ const _rooms = [
     'Conversations after work, tech experiences and ideas.',
   ),
   (
-    'Phòng Code & Học tập',
+    'Kênh Code & Học tập',
     'Code & study room',
     'Tập trung, học hỏi và cùng nhau viết mã nguồn mở.',
     'Focus, learn and code open source together.',
@@ -78,7 +78,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(title: english ? 'Voice rooms' : 'Phòng Voice'),
+        VnlfCenterPageHeader(title: english ? 'Voice' : 'Kênh thoại'),
         const SizedBox(height: 12),
         if (session == null)
           Container(

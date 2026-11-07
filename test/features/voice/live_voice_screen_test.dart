@@ -18,6 +18,7 @@ void main() {
     (tester) async {
       final repository = _Repository();
       await _pump(tester, repository, null);
+      expect(find.text('Kênh đàm thoại chung'), findsNothing);
       expect(find.text('Phòng Voice Chung'), findsNothing);
       expect(find.text('Đăng nhập để tham gia Voice'), findsOneWidget);
       expect(repository.reads, 0);

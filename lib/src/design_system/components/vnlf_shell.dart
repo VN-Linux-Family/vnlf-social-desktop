@@ -49,6 +49,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onProfileTap,
     this.onSearchTap,
     this.onNotificationsTap,
+    this.onBack,
+    this.backTooltip = '',
+    this.backSemanticLabel,
     this.onSettingsTap,
     this.onLogoutTap,
     this.logoutLabel = '',
@@ -88,6 +91,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.railThemeToggleSemanticLabel,
     this.openDrawerTooltip = '',
     this.openDrawerSemanticLabel,
+    this.titleText,
     this.searchSemanticLabel = '',
     this.notificationsSemanticLabel = '',
     this.profileSemanticLabel,
@@ -114,6 +118,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onBack;
+  final String backTooltip;
+  final String? backSemanticLabel;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onLogoutTap;
   final String logoutLabel;
@@ -153,6 +160,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String? railThemeToggleSemanticLabel;
   final String openDrawerTooltip;
   final String? openDrawerSemanticLabel;
+  final String? titleText;
   final String searchSemanticLabel;
   final String notificationsSemanticLabel;
   final String? profileSemanticLabel;
@@ -420,8 +428,12 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 if (showMobileHeader)
                   VnlfMobileStickyHeader(
                     onProfileTap: onProfileTap,
+                    onBack: onBack,
+                    backTooltip: backTooltip,
+                    backSemanticLabel: backSemanticLabel,
                     openDrawerTooltip: openDrawerTooltip,
                     openDrawerSemanticLabel: openDrawerSemanticLabel,
+                    titleText: titleText,
                     brandTitlePrefix: brandTitlePrefix,
                     brandTitleAccent: brandTitleAccent,
                     brandLogoSemanticLabel: brandLogoSemanticLabel,
