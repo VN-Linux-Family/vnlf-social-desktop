@@ -79,9 +79,9 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             ..._confirmed,
           }.values,
         );
-    final parentId = draft.pending?.parentId ?? (_replyTo == null
-        ? null
-        : commentReplyParent(_replyTo!, visible));
+    final parentId = draft.pending != null
+        ? draft.pending!.parentId
+        : (_replyTo == null ? null : commentReplyParent(_replyTo!, visible));
     setState(() {
       _submitting = true;
       _failure = null;
@@ -438,7 +438,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                     .pin(items[id]!),
               ),
               onReply: (id) {
-                if (draft.submissionPending || _submitting || !_authorized()) return;
+                if (recovery.isLoading || recovery.hasError || draft.submissionPending || _submitting || !_authorized()) return;
                 setState(() {
                   _replyTo = items[id];
                   if (_replyTo != null) {

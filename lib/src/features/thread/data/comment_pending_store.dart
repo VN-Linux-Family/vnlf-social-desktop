@@ -51,18 +51,33 @@ final class CommentPendingStore {
     }
   }
 
+  String _encode(PendingComment pending) => jsonEncode({
+    'schema': 1, 'identity': pending.identity, 'content': pending.content,
+    'parentId': pending.parentId, 'attachmentIds': pending.attachmentIds,
+  });
+
   Future<void> write(String owner, String article, PendingComment pending) {
     final key = _key(owner, article);
     return _serial(key, () async {
-      if (await _storage.read(key) != null) throw const ParseFailure('comment.pending.exists');
-      await _storage.write(key, jsonEncode({
-        'schema': 1, 'identity': pending.identity, 'content': pending.content,
-        'parentId': pending.parentId, 'attachmentIds': pending.attachmentIds,
-      }));
+      final existing = await _storage.read(key);
+      final encoded = _encode(pending);
+      if (existing != null && existing != encoded) throw const ParseFailure('comment.pending.exists');
+      if (existing == null) await _storage.write(key, encoded);
+      if (await _storage.read(key) != encoded) throw const ParseFailure('comment.pending.reservation');
     });
   }
-  Future<void> clear(String owner, String article) {
+
+  Future<void> verify(String owner, String article, PendingComment pending) {
     final key = _key(owner, article);
-    return _serial(key, () => _storage.delete(key));
+    return _serial(key, () async {
+      if (await _storage.read(key) != _encode(pending)) throw const ParseFailure('comment.pending.reservation');
+    });
+  }
+  Future<void> clear(String owner, String article, PendingComment pending) {
+    final key = _key(owner, article);
+    return _serial(key, () async {
+      if (await _storage.read(key) != _encode(pending)) throw const ParseFailure('comment.pending.reservation');
+      await _storage.delete(key);
+    });
   }
 }

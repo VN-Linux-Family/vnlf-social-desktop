@@ -36,6 +36,8 @@ final class CommentAttachmentController {
     if (pending != null) {
       _signature = jsonEncode([pending.content, pending.parentId, pending.attachmentIds]);
       _identity = pending.identity;
+      _reserved = true;
+      _attempted = true;
     }
   }
   final String articleId;
@@ -44,6 +46,8 @@ final class CommentAttachmentController {
   final ApiSessionScope _session;
   final List<CommentAttachment> _items = [];
   bool _submitting = false;
+  bool _reserved = false;
+  bool _attempted = false;
   String? _signature;
   String? _identity;
 
@@ -131,26 +135,33 @@ final class CommentAttachmentController {
     if (_signature != null && _signature != signature) {
       throw StateError('Resolve the pending submission before changing the draft');
     }
-    final hadUncertainAttempt = _signature != null;
+    final hadUncertainAttempt = _attempted;
     _signature ??= signature;
     _identity ??= newRequestIdentity();
     _submitting = true;
     final payload = PendingComment(identity: _identity!, content: text, parentId: parentId, attachmentIds: ids);
     try {
-      if (_store != null && !hadUncertainAttempt) {
-        await _store.write(_ownerId!, articleId, payload);
+      if (_store != null) {
+        if (!_reserved) {
+          await _store.write(_ownerId!, articleId, payload);
+          _reserved = true;
+        }
+        await _store.verify(_ownerId!, articleId, payload);
         _session.ensureCurrent();
       }
       _pending = payload;
+      _attempted = true;
       final result = await _comments.create(articleId, text, parentId: parentId, attachmentIds: ids, clientCommentId: _identity);
       _session.ensureCurrent();
       if (result.content != text || result.parentId != parentId ||
           jsonEncode(result.attachments.map((item) => item.id).toList()) != jsonEncode(ids)) {
         throw const ParseFailure('comment.createAck');
       }
-      if (_store != null) await _store.clear(_ownerId!, articleId);
+      if (_store != null) await _store.clear(_ownerId!, articleId, payload);
       _session.ensureCurrent();
       _pending = null;
+      _reserved = false;
+      _attempted = false;
       _items.clear();
       _signature = null;
       _identity = null;
@@ -162,8 +173,10 @@ final class CommentAttachmentController {
       }.contains(error.code)) ||
           (error.statusCode == 404 && error.code == 'ARTICLE_NOT_FOUND');
       if (!hadUncertainAttempt && rejected) {
-        if (_store != null) await _store.clear(_ownerId!, articleId);
+        if (_store != null) await _store.clear(_ownerId!, articleId, payload);
         _pending = null;
+        _reserved = false;
+        _attempted = false;
         _signature = null;
         _identity = null;
       }

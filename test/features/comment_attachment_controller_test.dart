@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -111,10 +112,60 @@ void main() {
     final restored = make('owner');
     await restored.initialize();
     expect(restored.pending!.content, 'first');
+    expect(restored.pending!.parentId, isNull);
     await expectLater(restored.submit('different'), throwsStateError);
     await restored.submit('first');
     expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
     expect(await CommentPendingStore(storage).read('owner', 'article'), isNull);
+  });
+
+  test('failed storage write cannot lead to an unreserved POST', () async {
+    final storage = _FailingStorage();
+    var sends = 0;
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (_) async {
+      sends++;
+      return ApiResponse(statusCode: 200, body: '{"id":"c","content":"first","author":{}}');
+    });
+    final draft = CommentAttachmentController('article', CommentMediaRepository(client), LiveCommentsRepository(client), client, store: CommentPendingStore(storage), ownerId: 'owner');
+    await expectLater(draft.submit('first'), throwsA(isA<StateError>()));
+    await expectLater(draft.submit('first'), throwsA(isA<StateError>()));
+    expect(sends, 0);
+    storage.fail = false;
+    await draft.submit('first');
+    expect(sends, 1);
+  });
+
+  test('competing controllers reserve at most one payload', () async {
+    final storage = _Storage();
+    final started = Completer<void>();
+    final reply = Completer<ApiResponse>();
+    var sends = 0;
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (_) {
+      sends++;
+      started.complete();
+      return reply.future;
+    });
+    CommentAttachmentController make() => CommentAttachmentController('article', CommentMediaRepository(client), LiveCommentsRepository(client), client, store: CommentPendingStore(storage), ownerId: 'owner');
+    final first = make();
+    final second = make();
+    await Future.wait([first.initialize(), second.initialize()]);
+    final pending = first.submit('first');
+    await started.future;
+    await expectLater(second.submit('second'), throwsA(isA<ParseFailure>()));
+    expect(sends, 1);
+    reply.complete(ApiResponse(statusCode: 200, body: '{"id":"c","content":"first","author":{}}'));
+    await pending;
+  });
+
+  test('late acknowledgment cannot clear a newer reservation', () async {
+    final store = CommentPendingStore(_Storage());
+    const a = PendingComment(identity: 'a', content: 'first', parentId: null, attachmentIds: []);
+    const c = PendingComment(identity: 'c', content: 'new', parentId: null, attachmentIds: []);
+    await store.write('owner', 'article', a);
+    await store.clear('owner', 'article', a);
+    await store.write('owner', 'article', c);
+    await expectLater(store.clear('owner', 'article', a), throwsA(isA<ParseFailure>()));
+    expect((await store.read('owner', 'article'))!.identity, 'c');
   });
 
 }
@@ -126,6 +177,20 @@ final class _Storage implements SessionStorage {
   Future<String?> read(String key) async => values[key];
   @override
   Future<void> write(String key, String value) async { values[key] = value; }
+  @override
+  Future<void> delete(String key) async { values.remove(key); }
+}
+
+final class _FailingStorage implements SessionStorage {
+  final values = <String, String>{};
+  bool fail = true;
+  @override
+  Future<String?> read(String key) async => values[key];
+  @override
+  Future<void> write(String key, String value) async {
+    if (fail) throw StateError('storage unavailable');
+    values[key] = value;
+  }
   @override
   Future<void> delete(String key) async { values.remove(key); }
 }
