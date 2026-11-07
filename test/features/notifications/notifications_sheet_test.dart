@@ -20,6 +20,7 @@ void main() {
       'conversation',
     ),
     ('PROJECT', 'project-1', '/projects/community-tool', 'project'),
+    ('GUESTBOOK', 'owner-1', '/u/synthetic?tab=guestbook', 'guestbook'),
   ]) {
     testWidgets('notification opens the native ${example.$4} route', (
       tester,
@@ -73,6 +74,12 @@ void main() {
           GoRoute(
             path: '/projects/:slug',
             builder: (_, _) => const Scaffold(body: Text('project')),
+          ),
+          GoRoute(
+            path: '/profile/:id',
+            builder: (_, state) => Scaffold(
+              body: Text(state.uri.queryParameters['tab'] ?? 'profile'),
+            ),
           ),
         ],
       );

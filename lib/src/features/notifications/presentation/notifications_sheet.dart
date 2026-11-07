@@ -284,6 +284,17 @@ String? _route(CommunityNotice item) {
     return '/feedback/${Uri.encodeComponent(item.targetId)}';
   }
   final href = Uri.tryParse(item.href);
+  if (item.targetType == 'GUESTBOOK' &&
+      href != null &&
+      !href.hasScheme &&
+      !href.hasAuthority &&
+      href.path.startsWith('/') &&
+      href.pathSegments.length == 2 &&
+      href.pathSegments.first == 'u' &&
+      href.pathSegments.last.isNotEmpty &&
+      href.queryParameters['tab'] == 'guestbook') {
+    return '/profile/${Uri.encodeComponent(href.pathSegments.last)}?tab=guestbook';
+  }
   if (href != null &&
       !href.hasScheme &&
       !href.hasAuthority &&
@@ -305,5 +316,7 @@ String _action(String type, bool english) => switch (type) {
   'comment-replied' =>
     english ? 'Replied to your comment' : 'Đã trả lời bình luận của bạn',
   'user-followed' => english ? 'Started following you' : 'Đã theo dõi bạn',
+  'guestbook-signed' =>
+    english ? 'Signed your guestbook' : 'Đã viết vào sổ lưu bút của bạn',
   _ => english ? 'Community update' : 'Cập nhật cộng đồng',
 };

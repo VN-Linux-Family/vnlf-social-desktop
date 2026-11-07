@@ -327,7 +327,11 @@ GoRouter createMainRouter() {
           GoRoute(
             path: '/profile/:id',
             pageBuilder: (context, state) => NoTransitionPage(
-              child: ProfileScreen(username: state.pathParameters['id']!),
+              child: ProfileScreen(
+                username: state.pathParameters['id']!,
+                initialGuestbook:
+                    state.uri.queryParameters['tab'] == 'guestbook',
+              ),
             ),
           ),
           GoRoute(

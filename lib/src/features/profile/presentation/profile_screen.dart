@@ -13,8 +13,13 @@ import 'profile_guestbook.dart';
 import 'profile_header.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key, required this.username});
+  const ProfileScreen({
+    super.key,
+    required this.username,
+    this.initialGuestbook = false,
+  });
   final String username;
+  final bool initialGuestbook;
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -22,9 +27,18 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _tab = 0;
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialGuestbook) _tab = 3;
+  }
+
+  @override
   void didUpdateWidget(covariant ProfileScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.username != widget.username) _tab = 0;
+    if (oldWidget.username != widget.username ||
+        oldWidget.initialGuestbook != widget.initialGuestbook) {
+      _tab = widget.initialGuestbook ? 3 : 0;
+    }
   }
 
   @override
@@ -75,7 +89,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 12),
                   VnlfFeedTabBar(
                     tabs: _tabs(value, english),
-                    selectedIndex: _tab,
+                    selectedIndex: value.guestbookEnabled
+                        ? _tab
+                        : _tab.clamp(0, 2),
                     onTabSelected: (index) => setState(() => _tab = index),
                     semanticLabel: english
                         ? 'Profile content'
