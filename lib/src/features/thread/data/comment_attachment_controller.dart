@@ -7,7 +7,16 @@ import '../domain/comment_upload.dart';
 import 'comment_media_repository.dart';
 import 'comment_pending_store.dart';
 
-enum CommentAttachmentState { selected, presigning, presignFailed, uploading, uploadFailed, completing, completeFailed, ready }
+enum CommentAttachmentState {
+  selected,
+  presigning,
+  presignFailed,
+  uploading,
+  uploadFailed,
+  completing,
+  completeFailed,
+  ready,
+}
 
 final class CommentAttachment {
   CommentAttachment._(this.file, this.transfer);
@@ -20,8 +29,19 @@ final class CommentAttachment {
 
 /// A draft belongs to one article and the session active when it was created.
 final class CommentAttachmentController {
-  CommentAttachmentController(this.articleId, this._media, this._comments, ApiClient client, {CommentPendingStore? store, String? ownerId})
-      : _session = client.captureSession(), _store = store, _ownerId = ownerId;
+  CommentAttachmentController(
+    this.articleId,
+    this._media,
+    this._comments,
+    ApiClient client, {
+    CommentPendingStore? store,
+    String? ownerId,
+  }) : _session = client.captureSession(),
+       // Public argument names differ from the private fields.
+       // ignore: prefer_initializing_formals
+       _store = store,
+       // ignore: prefer_initializing_formals
+       _ownerId = ownerId;
   final CommentPendingStore? _store;
   final String? _ownerId;
   Future<void>? _initialization;
@@ -34,12 +54,17 @@ final class CommentAttachmentController {
     _session.ensureCurrent();
     _pending = pending;
     if (pending != null) {
-      _signature = jsonEncode([pending.content, pending.parentId, pending.attachmentIds]);
+      _signature = jsonEncode([
+        pending.content,
+        pending.parentId,
+        pending.attachmentIds,
+      ]);
       _identity = pending.identity;
       _reserved = true;
       _attempted = true;
     }
   }
+
   final String articleId;
   final CommentMediaRepository _media;
   final CommentsRepository _comments;
@@ -57,7 +82,9 @@ final class CommentAttachmentController {
   Future<void> dismissConfirmation() async {
     _session.ensureCurrent();
     final receipt = _pending;
-    if (receipt?.confirmedCommentId == null || _submitting) throw StateError('No confirmation to dismiss');
+    if (receipt?.confirmedCommentId == null || _submitting) {
+      throw StateError('No confirmation to dismiss');
+    }
     if (_store != null) await _store.clear(_ownerId!, articleId, receipt!);
     _session.ensureCurrent();
     _pending = null;
@@ -69,11 +96,19 @@ final class CommentAttachmentController {
   }
 
   List<CommentAttachment> get attachments => List.unmodifiable(_items);
-  List<String> get readyIds => _pending?.attachmentIds ?? List.unmodifiable(_items.where((item) => item.state == CommentAttachmentState.ready).map((item) => item.assetId!));
+  List<String> get readyIds =>
+      _pending?.attachmentIds ??
+      List.unmodifiable(
+        _items
+            .where((item) => item.state == CommentAttachmentState.ready)
+            .map((item) => item.assetId!),
+      );
 
   CommentAttachment add(CommentUploadFile file) {
     _session.ensureCurrent();
-    if (_submitting || submissionPending || _items.length >= 10) throw StateError('Attachment limit or submission in progress');
+    if (_submitting || submissionPending || _items.length >= 10) {
+      throw StateError('Attachment limit or submission in progress');
+    }
     final item = CommentAttachment._(file, _media.begin(articleId, file));
     _items.add(item);
     return item;
@@ -81,13 +116,20 @@ final class CommentAttachmentController {
 
   void remove(CommentAttachment item) {
     _session.ensureCurrent();
-    if (_submitting || submissionPending || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing) {
+    if (_submitting ||
+        submissionPending ||
+        item.state == CommentAttachmentState.presigning ||
+        item.state == CommentAttachmentState.uploading ||
+        item.state == CommentAttachmentState.completing) {
       throw StateError('Operation in progress');
     }
     if (!_items.remove(item)) throw StateError('Unknown attachment');
   }
 
-  Future<void> upload(CommentAttachment item, {void Function()? onChange}) async {
+  Future<void> upload(
+    CommentAttachment item, {
+    void Function()? onChange,
+  }) async {
     _check(item, CommentAttachmentState.selected);
     item.state = CommentAttachmentState.presigning;
     onChange?.call();
@@ -112,12 +154,18 @@ final class CommentAttachmentController {
     await _complete(item, onChange);
   }
 
-  Future<void> retryCompletion(CommentAttachment item, {void Function()? onChange}) async {
+  Future<void> retryCompletion(
+    CommentAttachment item, {
+    void Function()? onChange,
+  }) async {
     _check(item, CommentAttachmentState.completeFailed);
     await _complete(item, onChange);
   }
 
-  Future<void> _complete(CommentAttachment item, void Function()? onChange) async {
+  Future<void> _complete(
+    CommentAttachment item,
+    void Function()? onChange,
+  ) async {
     item.state = CommentAttachmentState.completing;
     onChange?.call();
     item.error = null;
@@ -135,7 +183,12 @@ final class CommentAttachmentController {
 
   void _check(CommentAttachment item, CommentAttachmentState state) {
     _session.ensureCurrent();
-    if (_submitting || submissionPending || !_items.contains(item) || item.state != state) throw StateError('Attachment unavailable');
+    if (_submitting ||
+        submissionPending ||
+        !_items.contains(item) ||
+        item.state != state) {
+      throw StateError('Attachment unavailable');
+    }
   }
 
   /// The same payload keeps the same identity after an uncertain response.
@@ -143,19 +196,31 @@ final class CommentAttachmentController {
     await initialize();
     _session.ensureCurrent();
     if (confirmed) throw StateError('Dismiss the confirmed submission first');
-    if (_submitting || _items.any((item) => item.state != CommentAttachmentState.ready)) throw StateError('Attachments not ready');
+    if (_submitting ||
+        _items.any((item) => item.state != CommentAttachmentState.ready)) {
+      throw StateError('Attachments not ready');
+    }
     final text = content.trim();
     final ids = readyIds;
-    if ((text.isEmpty && ids.isEmpty) || text.length > 4000) throw const ParseFailure('comment.content');
+    if ((text.isEmpty && ids.isEmpty) || text.length > 4000) {
+      throw const ParseFailure('comment.content');
+    }
     final signature = jsonEncode([text, parentId, ids]);
     if (_signature != null && _signature != signature) {
-      throw StateError('Resolve the pending submission before changing the draft');
+      throw StateError(
+        'Resolve the pending submission before changing the draft',
+      );
     }
     final hadUncertainAttempt = _attempted;
     _signature ??= signature;
     _identity ??= newRequestIdentity();
     _submitting = true;
-    final payload = PendingComment(identity: _identity!, content: text, parentId: parentId, attachmentIds: ids);
+    final payload = PendingComment(
+      identity: _identity!,
+      content: text,
+      parentId: parentId,
+      attachmentIds: ids,
+    );
     try {
       if (_store != null) {
         if (!_reserved) {
@@ -167,13 +232,27 @@ final class CommentAttachmentController {
       }
       _pending = payload;
       _attempted = true;
-      final result = await _comments.create(articleId, text, parentId: parentId, attachmentIds: ids, clientCommentId: _identity);
-      if (result.id.isEmpty || result.content != text || result.parentId != parentId ||
-          jsonEncode(result.attachments.map((item) => item.id).toList()) != jsonEncode(ids)) {
+      final result = await _comments.create(
+        articleId,
+        text,
+        parentId: parentId,
+        attachmentIds: ids,
+        clientCommentId: _identity,
+      );
+      if (result.id.isEmpty ||
+          result.content != text ||
+          result.parentId != parentId ||
+          jsonEncode(result.attachments.map((item) => item.id).toList()) !=
+              jsonEncode(ids)) {
         throw const ParseFailure('comment.createAck');
       }
       if (_store != null) {
-        _pending = await _store.confirm(_ownerId!, articleId, payload, result.id);
+        _pending = await _store.confirm(
+          _ownerId!,
+          articleId,
+          payload,
+          result.id,
+        );
         _session.ensureCurrent();
         return result;
       }
@@ -187,9 +266,13 @@ final class CommentAttachmentController {
       return result;
     } on HttpFailure catch (error) {
       // These source-defined errors happen before the comment transaction.
-      final rejected = (error.statusCode == 400 && const {
-        'COMMENT_EMPTY', 'COMMENT_ATTACHMENTS_INVALID', 'COMMENT_REPLY_DEPTH',
-      }.contains(error.code)) ||
+      final rejected =
+          (error.statusCode == 400 &&
+              const {
+                'COMMENT_EMPTY',
+                'COMMENT_ATTACHMENTS_INVALID',
+                'COMMENT_REPLY_DEPTH',
+              }.contains(error.code)) ||
           (error.statusCode == 404 && error.code == 'ARTICLE_NOT_FOUND');
       if (!hadUncertainAttempt && rejected) {
         if (_store != null) await _store.clear(_ownerId!, articleId, payload);
