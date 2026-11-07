@@ -26,10 +26,11 @@ const entry = GuestbookEntry(
 class Profiles implements PublicProfileRepository {
   int reads = 0;
   bool mine = false;
+  String? blockedReason = 'GUESTBOOK_OWN';
   @override
   Future<GuestbookPage> getGuestbook(String username, {String? cursor}) async {
     reads++;
-    return GuestbookPage(items: [GuestbookEntry(id: entry.id, author: entry.author, content: entry.content, status: entry.status, mine: mine)], enabled: true, total: 1, blockedReason: 'GUESTBOOK_OWN');
+    return GuestbookPage(items: [GuestbookEntry(id: entry.id, author: entry.author, content: entry.content, status: entry.status, mine: mine)], enabled: true, total: 1, blockedReason: blockedReason);
   }
   @override
   Future<PublicProfile?> getProfile(String username) => throw UnimplementedError();
@@ -138,6 +139,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(writes, 1);
     expect(profiles.reads, greaterThan(1));
+    expect(find.textContaining('Could not confirm'), findsOneWidget);
+  });
+
+  testWidgets('uncertain submission preserves the draft and refreshes', (tester) async {
+    var writes = 0;
+    final client = clientFor((request) async {
+      writes++;
+      throw StateError('connection lost');
+    });
+    final profiles = Profiles()..blockedReason = null;
+    await pumpGuestbook(tester, other, profiles, client);
+    await tester.enterText(find.byType(TextField), 'A synthetic greeting');
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+    expect(writes, 1);
+    expect(profiles.reads, greaterThan(1));
+    expect(find.text('A synthetic greeting'), findsOneWidget);
     expect(find.textContaining('Could not confirm'), findsOneWidget);
   });
 
