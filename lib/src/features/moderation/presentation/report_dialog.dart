@@ -51,8 +51,16 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
   }
 
   bool _isOpeningSession() {
-    if (_openingUserId == null || ref.read(sessionStateProvider)?.userId != _openingUserId) return false;
-    try { _openingSession.ensureCurrent(); return true; } catch (_) { return false; }
+    if (_openingUserId == null ||
+        ref.read(sessionStateProvider)?.userId != _openingUserId) {
+      return false;
+    }
+    try {
+      _openingSession.ensureCurrent();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   final _reason = TextEditingController();
@@ -70,7 +78,11 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
   Future<void> _submit(bool english) async {
     if (_busy) return;
     if (!_isOpeningSession()) {
-      setState(() => _error = english ? 'Your account changed. Close this report and open it again.' : 'Tài khoản đã thay đổi. Hãy đóng và mở lại báo cáo.');
+      setState(
+        () => _error = english
+            ? 'Your account changed. Close this report and open it again.'
+            : 'Tài khoản đã thay đổi. Hãy đóng và mở lại báo cáo.',
+      );
       return;
     }
     if (_reason.text.trim().isEmpty) {
@@ -93,7 +105,9 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             reason: _reason.text,
             detail: _detail.text,
           );
-      if (mounted && ref.read(sessionStateProvider)?.userId == account && _isOpeningSession()) {
+      if (mounted &&
+          ref.read(sessionStateProvider)?.userId == account &&
+          _isOpeningSession()) {
         setState(() => _confirmed = true);
       }
     } catch (_) {

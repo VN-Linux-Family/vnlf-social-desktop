@@ -82,9 +82,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : 'Nội dung hồ sơ',
                   ),
                   const SizedBox(height: 12),
-                  if (_tab == 3 && (value.guestbookEnabled || ref.watch(sessionStateProvider)?.userId == value.author.id))
+                  if (_tab == 3 &&
+                      (value.guestbookEnabled ||
+                          ref.watch(sessionStateProvider)?.userId ==
+                              value.author.id))
                     ProfileGuestbook(
-                      key: ValueKey('${value.author.username}:${ref.watch(sessionStateProvider)?.userId}'),
+                      key: ValueKey(
+                        '${value.author.username}:${ref.watch(sessionStateProvider)?.userId}',
+                      ),
                       username: value.author.username,
                       ownerId: value.author.id,
                     )
@@ -104,7 +109,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       english ? 'Posts' : 'Bài viết',
       english ? 'Comments' : 'Bình luận',
       english ? 'Projects' : 'Dự án',
-      if (profile.guestbookEnabled || ref.watch(sessionStateProvider)?.userId == profile.author.id) english ? 'Guestbook' : 'Sổ lưu bút',
+      if (profile.guestbookEnabled ||
+          ref.watch(sessionStateProvider)?.userId == profile.author.id)
+        english ? 'Guestbook' : 'Sổ lưu bút',
     ];
   }
 }
