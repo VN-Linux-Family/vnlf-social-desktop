@@ -618,5 +618,6 @@ The personal activity screen reads `GET /api/v1/me/activity-calendar` with
 inclusive `from` and `to` dates; the pinned source returns each date in the
 requested range, Vietnam-local `today`, point totals, and streak information.
 The screen and owner/session guards have synthetic coverage, including date
-rollover. The check-in endpoint is not called automatically. A read-only live
-activity-calendar check and device visual verification remain outstanding.
+rollover. A read-only owner-account calendar request passed against the deployed
+server and the test session was logged out. The check-in endpoint is not called
+automatically; device visual verification remains outstanding.
