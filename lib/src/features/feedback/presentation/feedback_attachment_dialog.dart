@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,6 +47,9 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   String? _error;
   bool _busy = true;
   bool _done = false;
+  Timer? _saveTimer;
+  Future<void> _saveTail = Future.value();
+  bool _saveFailed = false;
   bool get _en => Localizations.localeOf(context).languageCode == 'en';
   String _text(String vi, String en) => _en ? en : vi;
 
@@ -80,11 +85,38 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     }
   }
 
-  Future<void> _save() async {
+  Future<void> _enqueueSave() {
     final controller = _controller!;
-    if (!controller.draft.submissionUncertain && !controller.draft.uploadUncertain) {
-      await controller.edit(kind: _kind, detail: _detail.text,
-        contact: _contact.text, pagePath: controller.draft.pagePath);
+    final kind = _kind;
+    final detail = _detail.text;
+    final contact = _contact.text;
+    _saveTail = _saveTail.then((_) async {
+      if (!controller.draft.submissionUncertain && !controller.draft.uploadUncertain) {
+        await controller.edit(kind: kind, detail: detail,
+          contact: contact, pagePath: controller.draft.pagePath);
+      }
+    });
+    return _saveTail;
+  }
+
+  void _scheduleSave() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 400), () {
+      _enqueueSave().then<void>((_) {}, onError: (Object _, StackTrace __) {
+        if (mounted) setState(() => _saveFailed = true);
+      });
+    });
+  }
+
+  Future<void> _save() async {
+    _saveTimer?.cancel();
+    _saveTimer = null;
+    if (_saveFailed) throw StateError('Draft save failed');
+    try {
+      await _enqueueSave();
+    } catch (_) {
+      _saveFailed = true;
+      rethrow;
     }
   }
 
@@ -120,7 +152,7 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
 
   Future<void> _close() async {
     if (_busy) return;
-    if (_controller != null && !_done && _owner() == widget.ownerId) {
+    if (_controller != null && !_done && !_saveFailed && _owner() == widget.ownerId) {
       await _run(_save);
       if (_error != null) return;
     }
@@ -138,11 +170,15 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
         FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_text('Bắt đầu lại', 'Start again'))),
       ],
     ));
-    if (confirmed == true && mounted) await _run(() => _controller!.restartAfterUnknownPresign());
+    if (confirmed == true && mounted) await _run(() async {
+      await _save();
+      await _controller!.restartAfterUnknownPresign();
+    });
   }
 
   @override
   void dispose() {
+    _saveTimer?.cancel();
     _detail.dispose();
     _contact.dispose();
     super.dispose();
@@ -167,13 +203,14 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
               if (sessionChanged) Text(_text('Tài khoản đã thay đổi. Đóng và đăng nhập lại để tiếp tục.',
                 'The account changed. Close and sign in again to continue.')),
               DropdownButton<String>(value: _kind, isExpanded: true,
-                onChanged: _busy || locked || sessionChanged || (draft?.assetIds.isNotEmpty ?? false)
-                  ? null : (value) => setState(() => _kind = value!),
+                onChanged: _busy || _saveFailed || locked || sessionChanged || (draft?.assetIds.isNotEmpty ?? false)
+                  ? null : (value) { setState(() => _kind = value!); _scheduleSave(); },
                 items: [
                   DropdownMenuItem(value: 'FEEDBACK', child: Text(_text('Góp ý', 'Feedback'))),
                   DropdownMenuItem(value: 'BUG', child: Text(_text('Báo lỗi', 'Bug report'))),
                 ]),
-              TextField(controller: _detail, enabled: !_busy && !locked && !sessionChanged,
+              TextField(controller: _detail, readOnly: _busy || locked || sessionChanged || _saveFailed,
+                onChanged: (_) => _scheduleSave(),
                 maxLines: 4, maxLength: 4000,
                 decoration: InputDecoration(labelText: _text('Mô tả (20–4000 ký tự)', 'Description (20–4000 characters)'))),
               const SizedBox(height: 12),
@@ -182,35 +219,39 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
                 'Up to 5 files. Images: 10 MiB; MP4/WebM video: 50 MiB.')),
               if (draft != null) for (final id in draft.assetIds)
                 ListTile(contentPadding: EdgeInsets.zero,
-                  title: Text(id),
+                  title: Text(draft.assetNames[id] ?? _text('Tệp đính kèm', 'Attachment')),
                   subtitle: draft.pendingAssetId == id
                     ? Text(_text('Chưa xác nhận; hãy xóa tệp này.', 'Unconfirmed; delete this attachment.')) : null,
                   trailing: IconButton(tooltip: _text('Xóa tệp', 'Delete attachment'),
-                    onPressed: _busy || sessionChanged || draft.submissionUncertain ||
+                    onPressed: _busy || _saveFailed || sessionChanged || draft.submissionUncertain ||
                       (draft.uploadUncertain && draft.pendingAssetId != null && draft.pendingAssetId != id)
-                      ? null : () => _run(() => _controller!.deleteAsset(id)),
+                      ? null : () => _run(() async { await _save(); await _controller!.deleteAsset(id); }),
                     icon: const Icon(Icons.delete_outline))),
               if (draft?.uploadUncertain == true && draft?.pendingAssetId == null)
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(_text('Không xác nhận được yêu cầu tải lên. Một vị trí có thể đã được dùng; hãy xóa các tệp đã biết trước khi bắt đầu lại.',
                     'The upload request is unconfirmed. One slot may be used; delete known attachments before starting again.')),
-                  TextButton(onPressed: _busy || sessionChanged || draft!.assetIds.isNotEmpty ? null : _restart,
+                  TextButton(onPressed: _busy || _saveFailed || sessionChanged || draft!.assetIds.isNotEmpty ? null : _restart,
                     child: Text(_text('Bắt đầu bản nháp mới', 'Start a new draft'))),
                 ]),
               if (draft?.submissionUncertain == true)
                 Text(_text('Chưa xác nhận được kết quả gửi. Chỉ có thể gửi lại nội dung không thay đổi.',
                   'The submission result is unconfirmed. Only the unchanged submission can be retried.')),
-              OutlinedButton.icon(onPressed: _busy || locked || sessionChanged || (draft?.assetIds.length ?? 5) >= 5
+              OutlinedButton.icon(onPressed: _busy || _saveFailed || locked || sessionChanged || (draft?.assetIds.length ?? 5) >= 5
                 ? null : _add, icon: const Icon(Icons.attach_file),
                 label: Text(_text('Thêm tệp', 'Add attachment'))),
               if (_busy) const LinearProgressIndicator(),
+              if (_saveFailed) Text(_text(
+                'Không lưu được bản nháp vào bộ nhớ bảo mật. Không thể tiếp tục gửi; sao chép nội dung trước khi đóng.',
+                'The draft could not be saved to secure storage. Sending is disabled; copy your text before closing.'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
               if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
           ],
         ))),
         actions: [
           TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close'))),
-          if (!_done) FilledButton(onPressed: _busy || draft == null || draft.uploadUncertain || sessionChanged
+          if (!_done) FilledButton(onPressed: _busy || _saveFailed || draft == null || draft.uploadUncertain || sessionChanged
             ? null : () => _run(() async {
               if (_detail.text.trim().length < 20 || _detail.text.trim().length > 4000) {
                 throw const FormatException('detail');

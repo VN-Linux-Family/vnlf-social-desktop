@@ -14,6 +14,7 @@ FeedbackDraft draft(String owner, {bool uncertain = false}) => FeedbackDraft(
   contact: 'contact',
   pagePath: '/feed',
   assetIds: ['asset-1'],
+  assetNames: {'asset-1': 'ảnh.png'},
   uploadUncertain: uncertain,
   submissionUncertain: uncertain,
 );
@@ -27,6 +28,7 @@ void main() {
     final recovered = (await store.read('account/a'))!;
     expect(recovered.detail, 'Tiếng Việt: ặ ữ ờ ẫ ệ');
     expect(recovered.assetIds, ['asset-1']);
+    expect(recovered.assetNames['asset-1'], 'ảnh.png');
     expect(recovered.uploadUncertain, isTrue);
     expect(recovered.submissionUncertain, isTrue);
     expect((await store.read('account'))!.uploadUncertain, isFalse);

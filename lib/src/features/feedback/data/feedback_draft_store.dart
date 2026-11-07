@@ -28,6 +28,8 @@ final class FeedbackDraftStore {
         draft.assetIds.length > 5 ||
         draft.assetIds.toSet().length != draft.assetIds.length ||
         draft.assetIds.any((id) => !_assetId.hasMatch(id)) ||
+        draft.assetNames.entries.any((entry) =>
+            !draft.assetIds.contains(entry.key) || entry.value.isEmpty || entry.value.length > 255) ||
         (draft.pendingAssetId != null &&
             (!draft.uploadUncertain ||
                 !draft.assetIds.contains(draft.pendingAssetId))) ||
@@ -51,6 +53,8 @@ final class FeedbackDraftStore {
         contact: value['contact'] as String,
         pagePath: value['pagePath'] as String,
         assetIds: (value['assetIds'] as List).cast<String>(),
+        assetNames: value['assetNames'] == null ? const {} :
+            (value['assetNames'] as Map).cast<String, String>(),
         uploadUncertain: value['uploadUncertain'] as bool,
         submissionUncertain: value['submissionUncertain'] as bool,
         pendingAssetId: value['pendingAssetId'] as String?,
@@ -74,6 +78,7 @@ final class FeedbackDraftStore {
       'contact': draft.contact,
       'pagePath': draft.pagePath,
       'assetIds': draft.assetIds,
+      'assetNames': draft.assetNames,
       'uploadUncertain': draft.uploadUncertain,
       'submissionUncertain': draft.submissionUncertain,
       'pendingAssetId': draft.pendingAssetId,

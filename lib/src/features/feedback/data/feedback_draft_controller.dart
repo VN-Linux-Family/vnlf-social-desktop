@@ -90,6 +90,7 @@ final class FeedbackDraftController {
     String? contact,
     String? pagePath,
     List<String>? assetIds,
+    Map<String, String>? assetNames,
     bool? uploadUncertain,
     bool? submissionUncertain,
     String? pendingAssetId,
@@ -102,6 +103,7 @@ final class FeedbackDraftController {
     contact: contact ?? draft.contact,
     pagePath: pagePath ?? draft.pagePath,
     assetIds: assetIds ?? draft.assetIds,
+    assetNames: assetNames ?? draft.assetNames,
     uploadUncertain: uploadUncertain ?? draft.uploadUncertain,
     submissionUncertain: submissionUncertain ?? draft.submissionUncertain,
     pendingAssetId: clearPending ? null : pendingAssetId ?? draft.pendingAssetId,
@@ -138,7 +140,9 @@ final class FeedbackDraftController {
     _pending = pending;
     _check();
     await _save(_copy(
-      assetIds: [...draft.assetIds, pending.assetId], pendingAssetId: pending.assetId,
+      assetIds: [...draft.assetIds, pending.assetId],
+      assetNames: {...draft.assetNames, pending.assetId: file.name},
+      pendingAssetId: pending.assetId,
     ));
     _check();
     await _media.upload(pending);
@@ -171,6 +175,7 @@ final class FeedbackDraftController {
     _check();
     await _save(_copy(
       assetIds: draft.assetIds.where((id) => id != assetId).toList(),
+      assetNames: Map.of(draft.assetNames)..remove(assetId),
       uploadUncertain: unknownPresign, clearPending: true,
     ));
     _pending = null;

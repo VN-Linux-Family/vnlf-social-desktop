@@ -12,7 +12,9 @@ final class FeedbackDraft {
     required this.uploadUncertain,
     required this.submissionUncertain,
     this.pendingAssetId,
-  }) : assetIds = List.unmodifiable(assetIds);
+    Map<String, String> assetNames = const {},
+  }) : assetIds = List.unmodifiable(assetIds),
+       assetNames = Map.unmodifiable(assetNames);
 
   final String ownerId;
   final String submissionId;
@@ -21,6 +23,7 @@ final class FeedbackDraft {
   final String contact;
   final String pagePath;
   final List<String> assetIds;
+  final Map<String, String> assetNames;
   final bool uploadUncertain;
   final bool submissionUncertain;
   /// Known asset whose upload, completion, or deletion needs reconciliation.
