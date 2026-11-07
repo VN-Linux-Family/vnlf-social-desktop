@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/features/activity/domain/activity_models.dart';
+import 'package:vnlfsocialapp/src/features/activity/domain/activity_uncertainty.dart';
+import 'package:vnlfsocialapp/src/core/session_storage_contract.dart';
 import 'package:vnlfsocialapp/src/features/activity/domain/activity_repository.dart';
 import 'package:vnlfsocialapp/src/features/activity/domain/activity_service.dart';
 import 'package:vnlfsocialapp/src/features/activity/presentation/activity_screen.dart';
@@ -30,7 +32,7 @@ void main() {
   testWidgets('check-in is explicit, single flight, and reconciles failure', (tester) async {
     final repository = _CheckInRepository();
     await tester.pumpWidget(MaterialApp(home: ActivityScreen(
-      service: ActivityService(repository),
+      service: ActivityService(repository, uncertainty: ActivityUncertainty(_Storage(), 'owner-a')),
       clock: () => DateTime.utc(2026, 11, 6),
     )));
     await tester.pump();
@@ -59,7 +61,7 @@ void main() {
   testWidgets('acknowledgment shows celebration and refreshes calendar', (tester) async {
     final repository = _CheckInRepository();
     await tester.pumpWidget(MaterialApp(home: ActivityScreen(
-      service: ActivityService(repository),
+      service: ActivityService(repository, uncertainty: ActivityUncertainty(_Storage(), 'owner-a')),
       clock: () => DateTime.utc(2026, 11, 6),
     )));
     await tester.pump();
@@ -74,6 +76,43 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(ActivityCheckInCelebration), findsOneWidget);
     expect(repository.reads, 2);
+  });
+
+  testWidgets('pending outcome survives screen recreation and is owner scoped', (tester) async {
+    final storage = _Storage();
+    final repository = _CheckInRepository();
+    Widget screen(String owner) => MaterialApp(home: ActivityScreen(
+      key: ValueKey(owner),
+      service: ActivityService(repository, uncertainty: ActivityUncertainty(storage, owner)),
+      clock: () => DateTime.utc(2026, 11, 6),
+    ));
+    await tester.pumpWidget(screen('owner-a'));
+    await tester.pump();
+    await tester.tap(find.text('Check in today'));
+    await tester.pump();
+    expect(repository.writes, 1);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(screen('owner-a'));
+    await tester.pump();
+    expect(find.textContaining('could not be confirmed'), findsOneWidget);
+    await tester.pumpWidget(screen('owner-b'));
+    await tester.pump();
+    expect(find.text('Check in today'), findsOneWidget);
+    expect(find.textContaining('could not be confirmed'), findsNothing);
+  });
+
+  testWidgets('storage failure prevents check-in', (tester) async {
+    final storage = _Storage()..failWrites = true;
+    final repository = _CheckInRepository();
+    await tester.pumpWidget(MaterialApp(home: ActivityScreen(
+      service: ActivityService(repository, uncertainty: ActivityUncertainty(storage, 'owner-a')),
+      clock: () => DateTime.utc(2026, 11, 6),
+    )));
+    await tester.pump();
+    await tester.tap(find.text('Check in today'));
+    await tester.pump();
+    expect(repository.writes, 0);
+    expect(find.textContaining('storage is unavailable'), findsOneWidget);
   });
 
   testWidgets('resume advances the current Vietnam month and reloads', (
@@ -139,4 +178,18 @@ final class _CheckInRepository implements ActivityRepository {
     writes++;
     return write.future;
   }
+}
+
+final class _Storage implements SessionStorage {
+  final values = <String, String>{};
+  bool failWrites = false;
+  @override
+  Future<String?> read(String key) async => values[key];
+  @override
+  Future<void> write(String key, String value) async {
+    if (failWrites) throw Exception('storage unavailable');
+    values[key] = value;
+  }
+  @override
+  Future<void> delete(String key) async { values.remove(key); }
 }

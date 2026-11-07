@@ -1,11 +1,13 @@
+import 'activity_uncertainty.dart';
 import 'activity_models.dart';
 import 'activity_repository.dart';
 
 /// Small application service shared by the stats screen and session lifecycle.
 final class ActivityService {
-  const ActivityService(this._repository);
+  const ActivityService(this._repository, {this.uncertainty});
 
   final ActivityRepository _repository;
+  final ActivityUncertainty? uncertainty;
 
   Future<ActivityCalendarData> loadMonth(int year, int month) {
     final range = activityMonthRange(year, month);

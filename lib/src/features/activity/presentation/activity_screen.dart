@@ -110,6 +110,8 @@ class _ActivityScreenState extends State<ActivityScreen>
   late Future<ActivityCalendarData> _calendar;
   int _loadRevision = 0;
   bool _checkingIn = false;
+  bool _loadingUncertainty = true;
+  bool _storageError = false;
   bool _unconfirmed = false;
   bool _refreshingCheckIn = false;
   String? _checkInMessage;
@@ -122,13 +124,25 @@ class _ActivityScreenState extends State<ActivityScreen>
       _checkInMessage = null;
     });
     try {
+      final uncertainty = service.uncertainty;
+      if (uncertainty == null) throw StateError('Storage unavailable');
+      try {
+        await uncertainty.mark();
+      } catch (_) {
+        if (mounted && service == widget.service) {
+          setState(() => _storageError = true);
+        }
+        return;
+      }
+      if (!mounted || service != widget.service) return;
+      setState(() => _unconfirmed = true);
       final acknowledgment = await service.checkIn(claimCelebration: true);
       if (!mounted || service != widget.service) return;
       setState(() {
         _checkInMessage = 'confirmed';
-        _loadRevision++;
-        _calendar = service.loadMonth(_year, _month);
       });
+      await _refreshCheckIn(afterAcknowledgment: true);
+      if (!mounted || service != widget.service) return;
       if (acknowledgment.showCelebration) {
         await showDialog<void>(
           context: context,
@@ -150,14 +164,21 @@ class _ActivityScreenState extends State<ActivityScreen>
     }
   }
 
-  Future<void> _refreshCheckIn() async {
-    if (_refreshingCheckIn || _checkingIn) return;
+  Future<void> _refreshCheckIn({bool afterAcknowledgment = false}) async {
+    if (_refreshingCheckIn || (_checkingIn && !afterAcknowledgment)) return;
     final service = widget.service;
     final year = _today.year;
     final month = _today.month;
     setState(() => _refreshingCheckIn = true);
     try {
       final data = await service.loadMonth(year, month);
+      if (!mounted || service != widget.service) return;
+      if (!data.days.any((day) => day.date == data.today)) {
+        throw StateError('Calendar does not include today');
+      }
+      final uncertainty = service.uncertainty;
+      if (uncertainty == null) throw StateError('Storage unavailable');
+      await uncertainty.clear();
       if (!mounted || service != widget.service) return;
       setState(() {
         _year = year;
@@ -166,7 +187,8 @@ class _ActivityScreenState extends State<ActivityScreen>
         _loadRevision++;
         _calendar = Future.value(data);
         _unconfirmed = false;
-        _checkInMessage = 'refreshed';
+        _checkInMessage = afterAcknowledgment ? 'confirmed' : 'refreshed';
+        _storageError = false;
       });
     } catch (_) {
       // Keep the unconfirmed state until a fresh owner-bound read succeeds.
@@ -186,6 +208,9 @@ class _ActivityScreenState extends State<ActivityScreen>
       _unconfirmed = false;
       _refreshingCheckIn = false;
       _checkInMessage = null;
+      _loadingUncertainty = true;
+      _storageError = false;
+      _loadUncertainty();
       _calendar = widget.service.loadMonth(_year, _month);
     }
   }
@@ -200,6 +225,28 @@ class _ActivityScreenState extends State<ActivityScreen>
     _month = now.month;
     _calendar = widget.service.loadMonth(_year, _month);
     _scheduleDayChange();
+    _loadUncertainty();
+  }
+
+  Future<void> _loadUncertainty() async {
+    final service = widget.service;
+    try {
+      final uncertainty = service.uncertainty;
+      if (uncertainty == null) throw StateError('Storage unavailable');
+      final pending = await uncertainty.read();
+      if (!mounted || service != widget.service) return;
+      setState(() {
+        _unconfirmed = pending;
+        _loadingUncertainty = false;
+        _storageError = false;
+      });
+    } catch (_) {
+      if (!mounted || service != widget.service) return;
+      setState(() {
+        _loadingUncertainty = false;
+        _storageError = true;
+      });
+    }
   }
 
   DateTime _vietnamNow() => (widget.clock?.call() ?? DateTime.now())
@@ -290,7 +337,13 @@ class _ActivityScreenState extends State<ActivityScreen>
                   ),
                   const SizedBox(height: 12),
                 ],
-                if (_unconfirmed) ...[
+                if (_storageError) ...[
+                  Semantics(liveRegion: true, child: Text(english
+                      ? 'Check-in storage is unavailable. Try again.'
+                      : 'Không thể lưu trạng thái điểm danh. Hãy thử lại.')),
+                  OutlinedButton(onPressed: _loadUncertainty, child: Text(english ? 'Retry storage' : 'Thử lại lưu trữ')),
+                  const SizedBox(height: 12),
+                ] else if (_unconfirmed) ...[
                   Semantics(
                     liveRegion: true,
                     child: Text(english
@@ -298,11 +351,11 @@ class _ActivityScreenState extends State<ActivityScreen>
                         : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.'),
                   ),
                   OutlinedButton(
-                    onPressed: _refreshingCheckIn ? null : _refreshCheckIn,
+                    onPressed: _refreshingCheckIn || _checkingIn ? null : () => _refreshCheckIn(),
                     child: Text(english ? 'Refresh activity' : 'Làm mới hoạt động'),
                   ),
                   const SizedBox(height: 12),
-                ] else if (data != null && !snapshot.hasError && isCurrentMonth) ...[
+                ] else if (!_loadingUncertainty && data != null && !snapshot.hasError && isCurrentMonth) ...[
                   FilledButton(
                     onPressed: _checkingIn || data.days.any((day) => day.date == data.today && day.checkedIn)
                         ? null : _checkIn,

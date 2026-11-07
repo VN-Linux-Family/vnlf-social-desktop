@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../data/live_activity_repository.dart';
+import '../domain/activity_uncertainty.dart';
 import '../domain/activity_service.dart';
 import 'activity_screen.dart';
 
@@ -15,6 +16,7 @@ final _activityServiceProvider = Provider.autoDispose
           ownerId: ownerId,
           currentOwnerId: () => ref.read(sessionStateProvider)?.userId,
         ),
+        uncertainty: ActivityUncertainty(ref.watch(sessionStorageProvider), ownerId),
       );
     });
 
