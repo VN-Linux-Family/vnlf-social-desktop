@@ -233,22 +233,41 @@ class VnlfMobileBottomNav extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         AnimatedScale(
-                          scale: dest == activeDestination ? 1.1 : 1.0,
+                          scale: dest == activeDestination ? 1.05 : 1.0,
                           duration: VnlfDimensions.resolveDuration(
                             context,
                             VnlfDimensions.motionFast,
                           ),
                           curve: Curves.easeOutCubic,
-                          child: Icon(
-                            dest.icon,
-                            size: 20,
-                            color: dest == activeDestination
-                                ? colors.brand
-                                : colors.muted,
+                          child: AnimatedContainer(
+                            duration: VnlfDimensions.resolveDuration(
+                              context,
+                              VnlfDimensions.motionFast,
+                            ),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: dest == activeDestination
+                                  ? colors.brandSoft
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(
+                                VnlfDimensions.radiusFull,
+                              ),
+                            ),
+                            child: Icon(
+                              dest.icon,
+                              size: 20,
+                              color: dest == activeDestination
+                                  ? colors.brand
+                                  : colors.muted,
+                            ),
                           ),
                         ),
                         if ((destinationLabels[dest] ?? '').isNotEmpty) ...[
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 2),
                           AnimatedDefaultTextStyle(
                             duration: VnlfDimensions.resolveDuration(
                               context,

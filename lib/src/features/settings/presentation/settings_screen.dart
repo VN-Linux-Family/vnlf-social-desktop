@@ -27,6 +27,7 @@ class SettingsScreen extends ConsumerWidget {
     final theme = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final themeStorageFailure = ref.watch(themeStorageFailureProvider);
+    final localeStorageFailure = ref.watch(localeStorageFailureProvider);
     final sessionStorageFailure = ref.watch(sessionStorageFailureProvider);
     final signingOut = ref.watch(authControllerProvider).isLoading;
     final language =
@@ -243,6 +244,15 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
+              if (localeStorageFailure != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  english
+                      ? 'Could not save language. Please select it again to retry.'
+                      : 'Không thể lưu ngôn ngữ. Vui lòng chọn lại để thử lại.',
+                  style: VnlfTypography.meta(colors.red),
+                ),
+              ],
               const SizedBox(height: 24),
               const TextSizeSettings(),
               const SizedBox(height: 24),

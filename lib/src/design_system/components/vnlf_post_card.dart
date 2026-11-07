@@ -1,5 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/vnlf_navigation_helper.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -351,6 +353,7 @@ class VnlfPostCard extends StatelessWidget {
 
     final loadedPost = post!;
     final colors = VnlfColors.of(context);
+    final isMobile = MediaQuery.sizeOf(context).width <= 840;
 
     final card = Container(
       decoration: BoxDecoration(
@@ -358,7 +361,9 @@ class VnlfPostCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
         border: Border.all(color: colors.line),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
+          : const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -524,9 +529,10 @@ class VnlfPostCard extends StatelessWidget {
                 else
                   for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
                     if (i > 0) const SizedBox(height: 8),
-                    Text(
-                      loadedPost.paragraphs[i],
+                    _VnlfPostParagraph(
+                      text: loadedPost.paragraphs[i],
                       style: VnlfTypography.body(colors.ink),
+                      linkColor: colors.brand,
                     ),
                   ],
                 // Optional Attachment
@@ -631,5 +637,89 @@ class VnlfPostCard extends StatelessWidget {
       return card;
     }
     return Semantics(label: semanticLabel, container: true, child: card);
+  }
+}
+
+class _VnlfPostParagraph extends StatefulWidget {
+  const _VnlfPostParagraph({
+    required this.text,
+    required this.style,
+    required this.linkColor,
+  });
+
+  final String text;
+  final TextStyle style;
+  final Color linkColor;
+
+  @override
+  State<_VnlfPostParagraph> createState() => _VnlfPostParagraphState();
+}
+
+class _VnlfPostParagraphState extends State<_VnlfPostParagraph> {
+  static final _urlRegex = RegExp(r'''(https?://[^\s<]+[^<.,:;"')\]\s])''');
+  final _recognizers = <TapGestureRecognizer>[];
+
+  @override
+  void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
+    final matches = _urlRegex.allMatches(widget.text).toList();
+    if (matches.isEmpty) {
+      return Text(widget.text, style: widget.style);
+    }
+
+    final spans = <InlineSpan>[];
+    var lastIndex = 0;
+
+    for (final match in matches) {
+      if (match.start > lastIndex) {
+        spans.add(
+          TextSpan(
+            text: widget.text.substring(lastIndex, match.start),
+            style: widget.style,
+          ),
+        );
+      }
+
+      final url = match.group(0)!;
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () {
+          openVnlfLink(context, url);
+        };
+      _recognizers.add(recognizer);
+
+      spans.add(
+        TextSpan(
+          text: url,
+          style: widget.style.copyWith(
+            color: widget.linkColor,
+            decoration: TextDecoration.underline,
+          ),
+          recognizer: recognizer,
+        ),
+      );
+
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < widget.text.length) {
+      spans.add(
+        TextSpan(text: widget.text.substring(lastIndex), style: widget.style),
+      );
+    }
+
+    return Text.rich(TextSpan(children: spans), style: widget.style);
   }
 }

@@ -2,12 +2,12 @@ import '../rating/project_rating_control.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/providers.dart';
 import '../../../composer/domain/compose_document.dart';
 import '../../../../design_system/components/vnlf_rich_content.dart';
 import '../../../../core/external_uri.dart';
+import '../../../../core/vnlf_navigation_helper.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../../design_system/components/vnlf_media_gallery.dart';
 import '../../../../domain/models.dart';
@@ -371,7 +371,7 @@ class _Link extends StatelessWidget {
       onPressed: () async {
         var opened = false;
         try {
-          opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          opened = await openVnlfLink(context, url);
         } catch (_) {}
         if (!opened && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

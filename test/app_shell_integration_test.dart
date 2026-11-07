@@ -131,7 +131,15 @@ Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {
   addTearDown(tester.view.resetDevicePixelRatio);
 
   final container = ProviderContainer(
-    overrides: [localeProvider.overrideWith((ref) => const Locale('vi'))],
+    overrides: [
+      localeProvider.overrideWith(
+        (ref) => LocaleController(
+          ref.watch(preferencesStorageProvider),
+          null,
+          const Locale('vi'),
+        ),
+      ),
+    ],
   );
   final router = createMainRouter();
   await tester.pumpWidget(

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/vnlf_navigation_helper.dart';
 import '../../../design_system/design_system.dart';
 import '../domain/notifications_repository.dart';
 import 'notifications_controller.dart';
@@ -230,31 +230,22 @@ class NotificationsSheet extends ConsumerWidget {
                                         router.push(route);
                                         return;
                                       }
-                                      final href = Uri.tryParse(item.href);
-                                      if (href == null) return;
-                                      final uri = Uri.parse(
-                                        'https://vietnamlinuxfamily.net',
-                                      ).resolveUri(href);
-                                      if (uri.scheme == 'https' &&
-                                          uri.host ==
-                                              'vietnamlinuxfamily.net') {
-                                        final opened = await launchUrl(
-                                          uri,
-                                          mode: LaunchMode.externalApplication,
-                                        );
-                                        if (!opened && context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                english
-                                                    ? 'Could not open notification'
-                                                    : 'Không mở được thông báo',
-                                              ),
+                                      final opened = await openVnlfLink(
+                                        context,
+                                        item.href,
+                                      );
+                                      if (!opened && context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              english
+                                                  ? 'Could not open notification'
+                                                  : 'Không mở được thông báo',
                                             ),
-                                          );
-                                        }
+                                          ),
+                                        );
                                       }
                                     },
                             );

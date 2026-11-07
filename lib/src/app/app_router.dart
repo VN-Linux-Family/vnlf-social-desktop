@@ -163,7 +163,14 @@ GoRouter createMainRouter({
               final session =
                   ref.watch(sessionProvider).valueOrNull ??
                   ref.watch(sessionStateProvider);
-              final threadId = state.uri.path.startsWith('/thread/')
+              final isArticleOrThread =
+                  state.uri.path.startsWith('/thread/') ||
+                  state.uri.path.startsWith('/a/') ||
+                  state.uri.path.startsWith('/article/') ||
+                  state.uri.path.startsWith('/articles/') ||
+                  state.uri.path.startsWith('/posts/') ||
+                  state.uri.path.startsWith('/post/');
+              final threadId = isArticleOrThread
                   ? state.pathParameters['id']
                   : null;
               final articleDetail =
@@ -233,18 +240,21 @@ GoRouter createMainRouter({
                       '/projects',
                       '/settings',
                       '/discover',
+                      '/explore',
                       '/channels',
                       '/voice',
                       '/search',
                     ].contains(state.uri.path) ||
-                    state.uri.path.startsWith('/thread/') ||
+                    threadId != null ||
                     state.uri.path.startsWith('/profile/') ||
+                    state.uri.path.startsWith('/user/') ||
+                    state.uri.path.startsWith('/users/') ||
+                    state.uri.path.startsWith('/u/') ||
                     state.uri.path == '/feedback' ||
                     state.uri.path.startsWith('/feedback/') ||
                     state.uri.path.startsWith('/projects/'),
-                rightSidebarChild:
-                    state.uri.path.startsWith('/thread/') && !articleDetail
-                    ? ThreadSidebar(postId: state.pathParameters['id']!)
+                rightSidebarChild: threadId != null && !articleDetail
+                    ? ThreadSidebar(postId: threadId)
                     : state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
                     : null,
@@ -346,6 +356,19 @@ GoRouter createMainRouter({
               child: ThreadScreen(postId: state.pathParameters['id']!),
             ),
           ),
+          for (final prefix in const [
+            '/a',
+            '/article',
+            '/articles',
+            '/posts',
+            '/post',
+          ])
+            GoRoute(
+              path: '$prefix/:id',
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: ThreadScreen(postId: state.pathParameters['id']!),
+              ),
+            ),
           GoRoute(
             path: '/profile/:id',
             pageBuilder: (context, state) => NoTransitionPage(
@@ -355,6 +378,28 @@ GoRouter createMainRouter({
                     state.uri.queryParameters['tab'] == 'guestbook',
               ),
             ),
+          ),
+          for (final prefix in const ['/user', '/users', '/u'])
+            GoRoute(
+              path: '$prefix/:id',
+              pageBuilder: (context, state) => NoTransitionPage(
+                child: ProfileScreen(
+                  username: state.pathParameters['id']!,
+                  initialGuestbook:
+                      state.uri.queryParameters['tab'] == 'guestbook',
+                ),
+              ),
+            ),
+          GoRoute(
+            path: '/project/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectDetailScreen(slug: state.pathParameters['slug']!),
+            ),
+          ),
+          GoRoute(
+            path: '/explore',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DiscoverScreen()),
           ),
           GoRoute(
             path: '/settings',

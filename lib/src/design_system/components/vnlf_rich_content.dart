@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/external_uri.dart';
+import '../../core/vnlf_navigation_helper.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_typography.dart';
 import 'vnlf_code_block.dart';
@@ -55,7 +55,7 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
 
   Future<void> _open(Uri uri) async {
     try {
-      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+      if (await openVnlfLink(context, uri.toString())) return;
     } catch (_) {
       /* A visible message below covers platform launcher failures. */
     }
