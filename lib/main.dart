@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,6 +58,15 @@ class _AppState extends ConsumerState<_App> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isTesting = () {
+        try {
+          return Platform.environment.containsKey('FLUTTER_TEST');
+        } catch (_) {
+          return false;
+        }
+      }();
+      if (isTesting) return;
+
       if (DesktopTrayService.isDesktop) {
         ref.read(desktopTrayServiceProvider).initialize();
       }

@@ -78,14 +78,14 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libx11-dev libxi-dev
+          sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libx11-dev libxi-dev xvfb
       - run: flutter pub get
       - run: flutter gen-l10n
       - run: git diff --exit-code
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: dart run test/core/io_transport_headless_smoke.dart
-      - run: flutter test --concurrency=2
+      - run: xvfb-run --auto-servernum flutter test --concurrency=2
       - run: python3 -m unittest discover -s test/tool -p '*_test.py'
 
   desktop:

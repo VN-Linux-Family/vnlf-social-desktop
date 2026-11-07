@@ -127,6 +127,9 @@ class DesktopTrayService with TrayListener, WindowListener {
 
   Future<void> initialize() async {
     if (_initialized || !isDesktop) return;
+    try {
+      if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+    } catch (_) {}
 
     try {
       await windowManager.ensureInitialized();

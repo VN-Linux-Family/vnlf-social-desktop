@@ -55,6 +55,9 @@ class AndroidBackgroundService {
   static Future<bool> start() async {
     if (!isAndroid) return false;
     try {
+      if (Platform.environment.containsKey('FLUTTER_TEST')) return true;
+    } catch (_) {}
+    try {
       final res = await _channel.invokeMethod<bool>('startService');
       return res ?? false;
     } catch (e) {

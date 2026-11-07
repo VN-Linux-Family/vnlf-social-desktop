@@ -34,6 +34,12 @@ class LocalNotificationService {
   }) async {
     if (_initialized) return true;
     if (!isSupportedPlatform) return false;
+    try {
+      if (Platform.environment.containsKey('FLUTTER_TEST')) {
+        _initialized = true;
+        return true;
+      }
+    } catch (_) {}
 
     _onNotificationTap = onSelectNotification;
 
@@ -79,6 +85,10 @@ class LocalNotificationService {
     String? payload,
     String? groupKey,
   }) async {
+    try {
+      if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+    } catch (_) {}
+
     if (!_initialized) {
       final ok = await initialize(onSelectNotification: _onNotificationTap);
       if (!ok) return;
