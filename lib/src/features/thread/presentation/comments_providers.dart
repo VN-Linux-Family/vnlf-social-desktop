@@ -22,14 +22,28 @@ final commentMediaRepositoryProvider = Provider<CommentMediaRepository>(
   (ref) => CommentMediaRepository(ref.watch(apiClientProvider)),
 );
 
-final commentAttachmentControllerProvider = Provider.autoDispose.family<CommentAttachmentController, String>((ref, id) {
-  final owner = ref.watch(sessionStateProvider.select((session) => session?.userId));
-  return CommentAttachmentController(id, ref.watch(commentMediaRepositoryProvider), ref.watch(commentsRepositoryProvider), ref.watch(apiClientProvider),
-    store: owner == null ? null : CommentPendingStore(ref.watch(sessionStorageProvider)), ownerId: owner);
-});
+final commentAttachmentControllerProvider = Provider.autoDispose
+    .family<CommentAttachmentController, String>((ref, id) {
+      final owner = ref.watch(
+        sessionStateProvider.select((session) => session?.userId),
+      );
+      return CommentAttachmentController(
+        id,
+        ref.watch(commentMediaRepositoryProvider),
+        ref.watch(commentsRepositoryProvider),
+        ref.watch(apiClientProvider),
+        store: owner == null
+            ? null
+            : CommentPendingStore(ref.watch(sessionStorageProvider)),
+        ownerId: owner,
+      );
+    });
 
-final commentAttachmentRecoveryProvider = FutureProvider.autoDispose.family<void, String>((ref, id) =>
-    ref.watch(commentAttachmentControllerProvider(id)).initialize());
+final commentAttachmentRecoveryProvider = FutureProvider.autoDispose
+    .family<void, String>(
+      (ref, id) =>
+          ref.watch(commentAttachmentControllerProvider(id)).initialize(),
+    );
 
 final articleCommentsProvider = FutureProvider.autoDispose
     .family<List<ArticleComment>, String>((ref, id) async {

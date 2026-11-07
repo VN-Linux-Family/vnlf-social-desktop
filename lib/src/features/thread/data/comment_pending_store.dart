@@ -5,7 +5,12 @@ import '../../../core/session_storage_contract.dart';
 import '../../../core/api_client.dart';
 
 final class PendingComment {
-  const PendingComment({required this.identity, required this.content, required this.parentId, required this.attachmentIds});
+  const PendingComment({
+    required this.identity,
+    required this.content,
+    required this.parentId,
+    required this.attachmentIds,
+  });
   final String identity;
   final String content;
   final String? parentId;
@@ -29,8 +34,11 @@ final class CommentPendingStore {
       done.complete();
     }
   }
+
   String _key(String owner, String article) {
-    if (owner.isEmpty || article.isEmpty) throw const ParseFailure('comment.pending.scope');
+    if (owner.isEmpty || article.isEmpty) {
+      throw const ParseFailure('comment.pending.scope');
+    }
     return 'vnlf.comment.pending.${Uri.encodeComponent(owner)}.${Uri.encodeComponent(article)}';
   }
 
@@ -44,16 +52,31 @@ final class CommentPendingStore {
       final content = json['content'] as String;
       final parent = json['parentId'] as String?;
       final ids = (json['attachmentIds'] as List).cast<String>();
-      if (json['schema'] != 1 || identity.isEmpty || content.length > 4000 || ids.length > 10 || ids.any((id) => id.isEmpty) || (content.isEmpty && ids.isEmpty)) throw const FormatException();
-      return PendingComment(identity: identity, content: content, parentId: parent, attachmentIds: List.unmodifiable(ids));
+      if (json['schema'] != 1 ||
+          identity.isEmpty ||
+          content.length > 4000 ||
+          ids.length > 10 ||
+          ids.any((id) => id.isEmpty) ||
+          (content.isEmpty && ids.isEmpty)) {
+        throw const FormatException();
+      }
+      return PendingComment(
+        identity: identity,
+        content: content,
+        parentId: parent,
+        attachmentIds: List.unmodifiable(ids),
+      );
     } catch (_) {
       throw const ParseFailure('comment.pending');
     }
   }
 
   String _encode(PendingComment pending) => jsonEncode({
-    'schema': 1, 'identity': pending.identity, 'content': pending.content,
-    'parentId': pending.parentId, 'attachmentIds': pending.attachmentIds,
+    'schema': 1,
+    'identity': pending.identity,
+    'content': pending.content,
+    'parentId': pending.parentId,
+    'attachmentIds': pending.attachmentIds,
   });
 
   Future<void> write(String owner, String article, PendingComment pending) {
@@ -61,22 +84,31 @@ final class CommentPendingStore {
     return _serial(key, () async {
       final existing = await _storage.read(key);
       final encoded = _encode(pending);
-      if (existing != null && existing != encoded) throw const ParseFailure('comment.pending.exists');
+      if (existing != null && existing != encoded) {
+        throw const ParseFailure('comment.pending.exists');
+      }
       if (existing == null) await _storage.write(key, encoded);
-      if (await _storage.read(key) != encoded) throw const ParseFailure('comment.pending.reservation');
+      if (await _storage.read(key) != encoded) {
+        throw const ParseFailure('comment.pending.reservation');
+      }
     });
   }
 
   Future<void> verify(String owner, String article, PendingComment pending) {
     final key = _key(owner, article);
     return _serial(key, () async {
-      if (await _storage.read(key) != _encode(pending)) throw const ParseFailure('comment.pending.reservation');
+      if (await _storage.read(key) != _encode(pending)) {
+        throw const ParseFailure('comment.pending.reservation');
+      }
     });
   }
+
   Future<void> clear(String owner, String article, PendingComment pending) {
     final key = _key(owner, article);
     return _serial(key, () async {
-      if (await _storage.read(key) != _encode(pending)) throw const ParseFailure('comment.pending.reservation');
+      if (await _storage.read(key) != _encode(pending)) {
+        throw const ParseFailure('comment.pending.reservation');
+      }
       await _storage.delete(key);
     });
   }
