@@ -631,3 +631,27 @@ The screen and owner/session guards have synthetic coverage, including date
 rollover. A read-only owner-account calendar request passed against the deployed
 server and the test session was logged out. The check-in endpoint is not called
 automatically; device visual verification remains outstanding.
+
+## Comment photos, mentions and session management — 2026-11-07
+
+At the pinned source revision, comment photos use
+`POST /api/v1/articles/:id/comment-assets/presign`, a raw signed upload, and
+`POST /api/v1/articles/:id/comment-assets/:assetId/complete`. Up to ten JPEG,
+PNG, WebP or GIF images of at most 10 MiB each may be included as
+`attachmentIds` when creating a comment. The native composer has synthetic
+upload, account-change, retry and recovery coverage. The server stores these
+uploads publicly when selected; its audited comment-media module has no
+delete route. No live comment-photo upload was performed. Thumbnail previews,
+GIF/sticker selection and device verification remain open.
+
+Authenticated mention suggestions use
+`GET /api/v1/articles/:id/mention-candidates?q=...`. The source accepts a query
+of at most 30 characters and returns up to eight candidates. Native input uses
+debouncing, account-bound cancellation, keyboard selection and input-method
+composition guards; this has synthetic coverage only.
+
+The account session list uses `GET /api/v1/auth/sessions`; non-current
+sessions may be revoked with `DELETE /api/v1/auth/sessions/:id`, and other
+sessions collectively with `POST /api/v1/auth/logout-others`. A read-only
+owner-account list check succeeded and the temporary test session was logged
+out. Revocation paths have synthetic coverage and were not exercised live.

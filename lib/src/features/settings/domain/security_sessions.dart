@@ -1,5 +1,11 @@
 final class SecuritySession {
-  const SecuritySession({required this.id, required this.current, this.deviceName, this.userAgent, this.lastSeenAt});
+  const SecuritySession({
+    required this.id,
+    required this.current,
+    this.deviceName,
+    this.userAgent,
+    this.lastSeenAt,
+  });
   final String id;
   final bool current;
   final String? deviceName;
