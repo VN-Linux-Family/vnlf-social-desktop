@@ -155,7 +155,9 @@ class _ActivityScreenState extends State<ActivityScreen>
       if (!mounted || service != widget.service) return;
       setState(() {
         _unconfirmed = true;
-        _checkInMessage = 'unconfirmed';
+        if (_checkInMessage != 'confirmed') {
+          _checkInMessage = 'unconfirmed';
+        }
       });
     } finally {
       if (mounted && service == widget.service) {
@@ -346,9 +348,13 @@ class _ActivityScreenState extends State<ActivityScreen>
                 ] else if (_unconfirmed) ...[
                   Semantics(
                     liveRegion: true,
-                    child: Text(english
-                        ? 'Check-in could not be confirmed. Refresh activity before trying again.'
-                        : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.'),
+                    child: Text(_checkInMessage == 'confirmed'
+                        ? (english
+                            ? 'Check-in confirmed. Refresh activity to update the calendar.'
+                            : 'Đã xác nhận điểm danh. Hãy làm mới hoạt động để cập nhật lịch.')
+                        : (english
+                            ? 'Check-in could not be confirmed. Refresh activity before trying again.'
+                            : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.')),
                   ),
                   OutlinedButton(
                     onPressed: _refreshingCheckIn || _checkingIn ? null : () => _refreshCheckIn(),

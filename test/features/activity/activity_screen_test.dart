@@ -78,6 +78,35 @@ void main() {
     expect(repository.reads, 2);
   });
 
+  testWidgets('acknowledgment remains confirmed when calendar refresh fails', (tester) async {
+    final storage = _Storage();
+    final repository = _CheckInRepository();
+    await tester.pumpWidget(MaterialApp(home: ActivityScreen(
+      service: ActivityService(repository, uncertainty: ActivityUncertainty(storage, 'owner-a')),
+      clock: () => DateTime.utc(2026, 11, 6),
+    )));
+    await tester.pump();
+    await tester.tap(find.text('Check in today'));
+    repository.failReads = true;
+    repository.write.complete(CheckInAcknowledgment(
+      date: '2026-11-06', currentStreak: 1, longestStreak: 1,
+      showCelebration: false,
+      checkins: [const CheckInDay(date: '2026-11-06', streakDay: 1)],
+    ));
+    await tester.pump();
+    await tester.pump();
+    expect(find.textContaining('Check-in confirmed. Refresh activity'), findsOneWidget);
+    expect(find.textContaining('could not be confirmed'), findsNothing);
+    expect(find.text('Check in today'), findsNothing);
+    expect(repository.writes, 1);
+    repository.failReads = false;
+    repository.checkedIn = true;
+    await tester.tap(find.text('Refresh activity'));
+    await tester.pump();
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Check in today')).onPressed, isNull);
+    expect(repository.writes, 1);
+  });
+
   testWidgets('pending outcome survives screen recreation and is owner scoped', (tester) async {
     final storage = _Storage();
     final repository = _CheckInRepository();
