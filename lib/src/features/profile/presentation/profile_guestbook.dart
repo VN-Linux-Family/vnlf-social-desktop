@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +8,16 @@ import 'package:intl/intl.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../moderation/presentation/report_dialog.dart';
+import '../../direct_messages/presentation/direct_message_state.dart';
+import '../../feed/presentation/feed_notifier.dart';
+import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../data/live_guestbook_actions.dart';
 import '../domain/public_profile.dart';
 import 'profile_data.dart';
+
+final guestbookActionsEnabledProvider = Provider<bool>((ref) => !offlineFeatures);
 
 class ProfileGuestbook extends ConsumerStatefulWidget {
   const ProfileGuestbook({super.key, required this.username, required this.ownerId});
@@ -38,10 +45,20 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
 
   bool _current(int generation, String? viewer) => mounted && generation == _generation && ref.read(sessionStateProvider)?.userId == viewer;
 
-  Future<void> _refresh() async {
+  void _refreshAfterBlock() {
+    ref.read(apiClientProvider).clearCache();
+    ref.invalidate(feedProvider);
+    ref.invalidate(feedNotifierProvider);
+    ref.invalidate(profileProvider(widget.username));
+    if (ref.exists(dmInboxProvider)) {
+      unawaited(ref.read(dmInboxProvider.notifier).load(refresh: true));
+    }
+  }
+
+  Future<void> _refresh(int generation, String? viewer) async {
     ref.read(apiClientProvider).clearCache();
     await ref.refresh(profileGuestbookProvider(widget.username).future);
-    if (mounted) setState(() { _more.clear(); _paged = false; _cursor = null; });
+    if (_current(generation, viewer)) setState(() { _more.clear(); _paged = false; _cursor = null; });
   }
 
   Future<void> _loadMore(String cursor) async {
@@ -54,7 +71,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
       if (!_current(generation, viewer)) return;
       setState(() { _more.addAll(page.items); _cursor = page.nextCursor; _paged = true; });
     } catch (_) {
-      if (_current(generation, viewer)) setState(() => _error = 'Không tải được lời nhắn tiếp theo.');
+      if (_current(generation, viewer)) setState(() => _error = Localizations.localeOf(context).languageCode == 'en' ? 'Could not load more messages.' : 'Không tải được lời nhắn tiếp theo.');
     } finally {
       if (_current(generation, viewer)) setState(() => _busy = false);
     }
@@ -62,16 +79,19 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
 
   Future<void> _act(String action, {GuestbookEntry? entry}) async {
     final viewer = ref.read(sessionStateProvider)?.userId;
-    if (_busy || viewer == null || offlineFeatures) return;
+    if (_busy || viewer == null || !ref.read(guestbookActionsEnabledProvider)) return;
     final text = _draft.text.trim();
     if (action == 'write' && (text.isEmpty || text.length > 200 || viewer == widget.ownerId)) return;
+    final english = Localizations.localeOf(context).languageCode == 'en';
+    final scope = ref.read(apiClientProvider).captureSession();
     if (action == 'delete') {
       final confirm = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
-        title: const Text('Xóa lời nhắn?'),
-        actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa'))],
+        title: Text(english ? 'Delete this message?' : 'Xóa lời nhắn?'),
+        actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: Text(english ? 'Cancel' : 'Hủy')), TextButton(onPressed: () => Navigator.pop(context, true), child: Text(english ? 'Delete' : 'Xóa'))],
       ));
       if (confirm != true || !mounted || ref.read(sessionStateProvider)?.userId != viewer || _busy) return;
     }
+    try { scope.ensureCurrent(); } catch (_) { return; }
     final generation = ++_generation;
     setState(() { _busy = true; _error = null; });
     final actions = LiveGuestbookActions(ref.read(apiClientProvider));
@@ -90,11 +110,13 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
       }
       if (!_current(generation, viewer)) return;
       if (action == 'write' && _draft.text.trim() == text) _draft.clear();
-      await _refresh();
+      if (action == 'block') _refreshAfterBlock();
+      await _refresh(generation, viewer);
     } catch (_) {
       if (!_current(generation, viewer)) return;
-      try { await _refresh(); } catch (_) { /* Keep the original uncertainty visible. */ }
-      if (_current(generation, viewer)) setState(() => _error = 'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.');
+      if (action == 'block') _refreshAfterBlock();
+      try { await _refresh(generation, viewer); } catch (_) { /* Keep the original uncertainty visible. */ }
+      if (_current(generation, viewer)) setState(() => _error = english ? 'Could not confirm this action. Check the guestbook before trying again.' : 'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.');
     } finally {
       if (_current(generation, viewer)) setState(() => _busy = false);
     }
@@ -102,6 +124,13 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(sessionStateProvider.select((session) => session?.userId), (previous, next) {
+      if (previous != next) {
+        _generation++;
+        _draft.clear();
+        setState(() { _busy = false; _error = null; _more.clear(); _cursor = null; _paged = false; });
+      }
+    });
     final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final viewer = ref.watch(sessionStateProvider)?.userId;
@@ -117,7 +146,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
           Text(english ? 'Guestbook' : 'Sổ lưu bút', style: VnlfTypography.h2(colors.ink)),
           const SizedBox(height: 12),
           Text(english ? '${page.total} messages' : '${page.total} lời nhắn'),
-          if (reason == null && viewer != null && !owner && page.enabled && !offlineFeatures) ...[
+          if (reason == null && viewer != null && !owner && page.enabled && ref.watch(guestbookActionsEnabledProvider)) ...[
             TextField(controller: _draft, maxLength: 200, minLines: 2, maxLines: 4, enabled: !_busy, decoration: InputDecoration(labelText: english ? 'Write a message' : 'Viết lời nhắn')),
             Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _busy ? null : () => _act('write'), child: Text(english ? 'Send' : 'Gửi lời nhắn'))),
           ] else if (reason != null) ...[
@@ -142,7 +171,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
               if (entry.status == GuestbookStatus.hidden) Text(english ? 'Hidden' : 'Đang ẩn'),
               const SizedBox(height: 6), Text(entry.content, style: VnlfTypography.body(colors.ink)),
             ])),
-            if (viewer != null && !offlineFeatures && (owner || entry.mine || viewer != entry.author.id)) PopupMenuButton<String>(
+            if (viewer != null && ref.watch(guestbookActionsEnabledProvider) && (owner || entry.mine || viewer != entry.author.id)) PopupMenuButton<String>(
               enabled: !_busy,
               onSelected: (action) {
                 if (action == 'report') {
@@ -150,10 +179,10 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                 } else { _act(action, entry: entry); }
               },
               itemBuilder: (_) => [
-                if (owner) PopupMenuItem(value: entry.status == GuestbookStatus.hidden ? 'show' : 'hide', child: Text(entry.status == GuestbookStatus.hidden ? 'Hiện lại' : 'Ẩn')),
-                if (owner || entry.mine) const PopupMenuItem(value: 'delete', child: Text('Xóa')),
-                if (owner && !entry.mine) const PopupMenuItem(value: 'block', child: Text('Chặn người này')),
-                if (!entry.mine && viewer != entry.author.id) const PopupMenuItem(value: 'report', child: Text('Báo cáo lời nhắn')),
+                if (owner) PopupMenuItem(value: entry.status == GuestbookStatus.hidden ? 'show' : 'hide', child: Text(entry.status == GuestbookStatus.hidden ? (english ? 'Show' : 'Hiện lại') : (english ? 'Hide' : 'Ẩn'))),
+                if (owner || entry.mine) PopupMenuItem(value: 'delete', child: Text(english ? 'Delete' : 'Xóa')),
+                if (owner && !entry.mine) PopupMenuItem(value: 'block', child: Text(english ? 'Block this person' : 'Chặn người này')),
+                if (!entry.mine && viewer != entry.author.id) PopupMenuItem(value: 'report', child: Text(english ? 'Report message' : 'Báo cáo lời nhắn')),
               ],
             ),
           ])),
