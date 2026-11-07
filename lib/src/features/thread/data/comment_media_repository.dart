@@ -30,8 +30,38 @@ final class CommentMediaRepository {
   final ApiClient _client;
   final CommentAssetUpload _upload;
 
+  CommentMediaTransfer begin(String articleId, CommentUploadFile file) =>
+      CommentMediaTransfer._(this, articleId, file, _client.captureSession());
+
   Future<CommentUploadedAsset> upload(String articleId, CommentUploadFile file) async {
-    final session = _client.captureSession();
+    final transfer = begin(articleId, file);
+    await transfer.presign();
+    await transfer.put();
+    return transfer.complete();
+  }
+}
+
+/// One owner-bound transfer. Every write must be explicitly initiated by the caller.
+final class CommentMediaTransfer {
+  CommentMediaTransfer._(this._repository, this.articleId, this.file, this._session);
+  final CommentMediaRepository _repository;
+  final String articleId;
+  final CommentUploadFile file;
+  final ApiSessionScope _session;
+  void ensureCurrent() => _session.ensureCurrent();
+  String? _assetId;
+  String? get assetId => _assetId;
+  bool _completed = false;
+  Uri? _uploadUri;
+  Map<String, String>? _uploadHeaders;
+  bool _presignAttempted = false;
+  bool _putAttempted = false;
+  bool _putAcknowledged = false;
+  bool _busy = false;
+
+  Future<void> presign() async {
+    if (_presignAttempted || _busy) throw StateError('Presign already attempted');
+    _session.ensureCurrent();
     final name = file.name.trim();
     final mime = file.mime.trim().toLowerCase();
     if (name.isEmpty || name.length > 255) {
@@ -44,7 +74,10 @@ final class CommentMediaRepository {
       throw const ParseFailure('upload.size');
     }
 
-    final presign = await _client.request<Map<String, dynamic>>(
+    _presignAttempted = true;
+    _busy = true;
+    try {
+    final presign = await _repository._client.request<Map<String, dynamic>>(
       'POST',
       '/api/v1/articles/${Uri.encodeComponent(articleId)}/comment-assets/presign',
       body: jsonEncode(<String, Object?>{
@@ -53,10 +86,11 @@ final class CommentMediaRepository {
         'size': file.length,
       }),
     );
-    final assetId = stringValue(presign['assetId'], 'upload.assetId');
+    final id = stringValue(presign['assetId'], 'upload.assetId');
+    if (_safeId(id)) _assetId = id;
     final uploadUrl = stringValue(presign['uploadUrl'], 'upload.uploadUrl');
     final uploadUri = Uri.tryParse(uploadUrl);
-    if (!_safeAssetIdPattern.hasMatch(assetId) ||
+    if (assetId == null ||
         uploadUri == null ||
         !uploadUri.hasScheme ||
         uploadUri.scheme != 'https' ||
@@ -84,21 +118,47 @@ final class CommentMediaRepository {
       }
     }
 
-    session.ensureCurrent();
+    _uploadUri = uploadUri;
+    _uploadHeaders = Map.unmodifiable(uploadHeaders);
+    _session.ensureCurrent();
+    } finally {
+      _busy = false;
+    }
+  }
+
+  bool _safeId(String id) => CommentMediaRepository._safeAssetIdPattern.hasMatch(id);
+
+  Future<void> put() async {
+    if (_busy || _putAttempted || _uploadUri == null) throw StateError('Upload unavailable');
+    _session.ensureCurrent();
+    _putAttempted = true;
+    _busy = true;
+    try {
     final guardedFile = CommentUploadFile(
       name: file.name,
       mime: file.mime,
       length: file.length,
       openRead: () => file.openRead().map((chunk) {
-        session.ensureCurrent();
+        _session.ensureCurrent();
         return chunk;
       }),
     );
-    await _upload(uploadUri, guardedFile, Map.unmodifiable(uploadHeaders));
-    session.ensureCurrent();
+    await _repository._upload(_uploadUri!, guardedFile, _uploadHeaders!);
+    _session.ensureCurrent();
+    _putAcknowledged = true;
+    } finally {
+      _busy = false;
+    }
+  }
 
-    final encodedAssetId = Uri.encodeComponent(assetId);
-    final completed = await _client.request<Map<String, dynamic>>(
+  /// Explicit retries are allowed only for completion after a confirmed PUT.
+  Future<CommentUploadedAsset> complete() async {
+    if (_busy || _completed || !_putAcknowledged || assetId == null) throw StateError('Completion unavailable');
+    _session.ensureCurrent();
+    _busy = true;
+    try {
+    final encodedAssetId = Uri.encodeComponent(assetId!);
+    final completed = await _repository._client.request<Map<String, dynamic>>(
       'POST',
       '/api/v1/articles/${Uri.encodeComponent(articleId)}/comment-assets/$encodedAssetId/complete',
       body: jsonEncode(const <String, Object?>{}),
@@ -109,14 +169,18 @@ final class CommentMediaRepository {
       throw const ParseFailure('upload.complete');
     }
 
-    session.ensureCurrent();
+    _session.ensureCurrent();
+    _completed = true;
     return CommentUploadedAsset(
       assetId: completedId,
-      fileName: name,
+      fileName: file.name.trim(),
       status: status,
-      mime: mime,
+      mime: file.mime.trim().toLowerCase(),
       size: file.length,
     );
+    } finally {
+      _busy = false;
+    }
   }
 }
 
