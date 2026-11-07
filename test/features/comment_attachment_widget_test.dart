@@ -118,6 +118,12 @@ void main() {
     expect(bodies, hasLength(2));
     expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
     expect(bodies.last['attachmentIds'], ['asset']);
+    expect(find.byKey(const ValueKey('comment-confirmed')), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Thêm bình luận')).onPressed, isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('comment-confirmation-dismiss')));
+    await tester.tap(find.byKey(const ValueKey('comment-confirmation-dismiss')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('comment-confirmed')), findsNothing);
     expect(find.text('anh.png'), findsNothing);
   });
 }
