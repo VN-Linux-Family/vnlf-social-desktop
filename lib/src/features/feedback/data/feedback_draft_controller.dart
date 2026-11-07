@@ -7,6 +7,11 @@ import '../domain/feedback_draft.dart';
 import 'feedback_draft_store.dart';
 import 'feedback_media_repository.dart';
 
+/// The server accepted the submission, but local recovery cleanup failed.
+final class FeedbackConfirmedCleanupFailure implements Exception {
+  const FeedbackConfirmedCleanupFailure();
+}
+
 /// Coordinates a single authenticated draft. The caller supplies the current
 /// account ID, and must discard this instance when its session changes.
 final class FeedbackDraftController {
@@ -93,6 +98,7 @@ final class FeedbackDraftController {
     Map<String, String>? assetNames,
     bool? uploadUncertain,
     bool? submissionUncertain,
+    bool? submissionConfirmed,
     String? pendingAssetId,
     bool clearPending = false,
   }) => FeedbackDraft(
@@ -106,6 +112,7 @@ final class FeedbackDraftController {
     assetNames: assetNames ?? draft.assetNames,
     uploadUncertain: uploadUncertain ?? draft.uploadUncertain,
     submissionUncertain: submissionUncertain ?? draft.submissionUncertain,
+    submissionConfirmed: submissionConfirmed ?? draft.submissionConfirmed,
     pendingAssetId: clearPending ? null : pendingAssetId ?? draft.pendingAssetId,
   );
 
@@ -134,9 +141,26 @@ final class FeedbackDraftController {
     // Written before presign: an interrupted response may have allocated a slot.
     await _save(_copy(uploadUncertain: true));
     _check();
-    final pending = await _media.presign(
-      submissionId: draft.submissionId, kind: draft.kind, file: file,
-    );
+    PendingFeedbackMedia pending;
+    try {
+      pending = await _media.presign(
+        submissionId: draft.submissionId, kind: draft.kind, file: file,
+      );
+    } on HttpFailure catch (failure) {
+      // These source-defined errors occur before the asset insert. Unknown
+      // responses, including gateway errors, cannot prove that no row exists.
+      const preAllocation = {
+        'FEEDBACK_MEDIA_TYPE_INVALID': 400,
+        'FEEDBACK_MEDIA_TOO_LARGE': 400,
+        'FEEDBACK_SUBMISSION_CLOSED': 409,
+        'FEEDBACK_MEDIA_LIMIT': 409,
+      };
+      if (preAllocation[failure.code] == failure.statusCode) {
+        _check();
+        await _save(_copy(uploadUncertain: false));
+      }
+      rethrow;
+    }
     _pending = pending;
     _check();
     await _save(_copy(
@@ -195,7 +219,7 @@ final class FeedbackDraftController {
   });
 
   Future<void> submit() => _exclusive(() async {
-    if (draft.uploadUncertain || draft.detail.trim().length < 20 ||
+    if (draft.submissionConfirmed || draft.uploadUncertain || draft.detail.trim().length < 20 ||
         draft.detail.trim().length > 4000) {
       throw StateError('Feedback draft cannot be submitted');
     }
@@ -231,12 +255,22 @@ final class FeedbackDraftController {
       throw const ParseFailure('feedback.acknowledgment');
     }
     try {
+      // Preserve proof of success before attempting cleanup. If even this
+      // write fails, the previous uncertain record still retains the same ID.
+      await _save(_copy(submissionConfirmed: true));
       await _store.clear(draft.ownerId);
+      _check();
+      _done = true;
     } catch (_) {
-      _storageFailed = true;
-      rethrow;
+      _done = true;
+      throw const FeedbackConfirmedCleanupFailure();
     }
-    _check();
-    _done = true;
   });
+
+  Future<void> clearConfirmed() async {
+    if (!draft.submissionConfirmed) return;
+    _scope.ensureCurrent();
+    if (_currentOwner() != draft.ownerId) throw const HttpFailure(401);
+    await _store.clear(draft.ownerId);
+  }
 }

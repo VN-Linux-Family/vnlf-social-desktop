@@ -55,6 +55,7 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   int _savedRevision = 0;
   Future<void>? _preserveFuture;
   bool _ownerChanged = false;
+  bool _preserving = false;
   bool get _en => Localizations.localeOf(context).languageCode == 'en';
   String _text(String vi, String en) => _en ? en : vi;
 
@@ -82,6 +83,7 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
       _detail.text = controller.draft.detail;
       _contact.text = controller.draft.contact;
       _kind = controller.draft.kind;
+      _done = controller.draft.submissionConfirmed;
     } catch (_) {
       if (mounted) _error = _text('Không thể khôi phục bản nháp. Hãy kiểm tra tài khoản và bộ nhớ bảo mật.',
         'Could not restore the draft. Check your account and secure storage.');
@@ -117,10 +119,12 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   }
 
   void _preserveOriginalOwner() {
+    if (_preserving) return;
     _saveTimer?.cancel();
     _saveTimer = null;
     final controller = _controller;
     if (controller == null || _editRevision == _savedRevision) return;
+    _preserving = true;
     final detail = _detail.text;
     final contact = _contact.text;
     final kind = _kind;
@@ -136,8 +140,12 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
           assetIds: old.assetIds, assetNames: old.assetNames,
           uploadUncertain: false, submissionUncertain: false,
         ));
+        if (mounted) setState(() => _saveFailed = false);
       } catch (_) {
         if (mounted) setState(() => _saveFailed = true);
+      } finally {
+        _preserving = false;
+        if (mounted) setState(() {});
       }
     }();
   }
@@ -160,7 +168,11 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     try {
       await action();
     } catch (failure) {
-      if (mounted) _error = failure is FormatException
+      if (mounted && failure is FeedbackConfirmedCleanupFailure) {
+        _done = true;
+        _error = _text('Đã gửi thành công, nhưng chưa dọn được bản nháp trên thiết bị.',
+          'Feedback was sent, but the local draft could not be cleared.');
+      } else if (mounted) _error = failure is FormatException
         ? (failure.message == 'detail'
           ? _text('Vui lòng nhập 20–4000 ký tự.', 'Enter 20–4000 characters.')
           : _text('Tệp không hợp lệ hoặc vượt quá giới hạn kích thước.',
@@ -191,6 +203,9 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   Future<void> _close() async {
     if (_busy) return;
     await _preserveFuture;
+    if (_done && _controller != null && !_ownerChanged && _owner() == widget.ownerId) {
+      try { await _controller!.clearConfirmed(); } catch (_) { /* Keep the recovery marker. */ }
+    }
     if (_controller != null && !_done && !_saveFailed && !_ownerChanged && _owner() == widget.ownerId) {
       await _run(_save);
       if (_error != null) return;
@@ -245,7 +260,12 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
             ? _text('Không thể lưu thay đổi của tài khoản trước vào bộ nhớ bảo mật.',
                 'Could not save the previous account’s changes to secure storage.')
             : _text('Đóng và đăng nhập lại để tiếp tục.', 'Close and sign in again to continue.')),
-          actions: [TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close')))],
+          actions: [
+            if (_saveFailed && _owner() == widget.ownerId)
+              TextButton(onPressed: _preserving ? null : _preserveOriginalOwner,
+                child: Text(_text('Thử lưu lại', 'Retry saving'))),
+            TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close'))),
+          ],
         ),
       );
     }
@@ -257,7 +277,10 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
         content: SizedBox(width: 460, child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_done) Text(_text('Đã ghi nhận phản hồi!', 'Feedback received!'))
+            if (_done) ...[
+              Text(_text('Đã ghi nhận phản hồi!', 'Feedback received!')),
+              if (_error != null) Text(_error!),
+            ]
             else ...[
               if (sessionChanged) Text(_text('Tài khoản đã thay đổi. Đóng và đăng nhập lại để tiếp tục.',
                 'The account changed. Close and sign in again to continue.')),

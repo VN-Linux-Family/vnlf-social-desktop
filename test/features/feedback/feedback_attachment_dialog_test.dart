@@ -10,6 +10,34 @@ import 'package:vnlfsocialapp/src/features/feedback/data/feedback_draft_store.da
 import 'package:vnlfsocialapp/src/features/feedback/presentation/feedback_attachment_dialog.dart';
 
 void main() {
+  testWidgets('failed owner preservation stays redacted and can be retried by owner', (tester) async {
+    final storage = _Memory();
+    final client = ApiClient(hostKey: Object(), transport: (_) async => ApiResponse(statusCode: 200, body: '{}'));
+    final container = ProviderContainer(overrides: [
+      sessionStateProvider.overrideWith((ref) => const Session(userId: 'owner', displayName: 'Owner')),
+      sessionStorageProvider.overrideWithValue(storage), apiClientProvider.overrideWithValue(client),
+    ]);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(UncontrolledProviderScope(container: container,
+      child: const MaterialApp(locale: Locale('vi'), supportedLocales: [Locale('vi')],
+        home: Scaffold(body: FeedbackAttachmentDialog(ownerId: 'owner', pagePath: '/')))));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Nội dung riêng cần lưu');
+    storage.failWrites = true;
+    container.read(sessionStateProvider.notifier).state = const Session(userId: 'other', displayName: 'Other');
+    await tester.pumpAndSettle();
+    expect(find.text('Nội dung riêng cần lưu'), findsNothing);
+    expect(find.textContaining('Không thể lưu thay đổi'), findsOneWidget);
+    expect(find.text('Thử lưu lại'), findsNothing);
+    storage.failWrites = false;
+    container.read(sessionStateProvider.notifier).state = const Session(userId: 'owner', displayName: 'Owner');
+    await tester.pump();
+    await tester.tap(find.text('Thử lưu lại'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nội dung riêng cần lưu'), findsNothing);
+    expect((await FeedbackDraftStore(storage).read('owner'))!.detail, 'Nội dung riêng cần lưu');
+  });
+
   testWidgets('switching accounts hides and preserves a pending edit', (tester) async {
     final storage = _Memory();
     final client = ApiClient(hostKey: Object(), transport: (_) async =>

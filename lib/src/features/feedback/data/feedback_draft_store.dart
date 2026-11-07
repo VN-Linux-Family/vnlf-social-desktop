@@ -30,6 +30,7 @@ final class FeedbackDraftStore {
         draft.assetIds.any((id) => !_assetId.hasMatch(id)) ||
         draft.assetNames.entries.any((entry) =>
             !draft.assetIds.contains(entry.key) || entry.value.isEmpty || entry.value.length > 255) ||
+        (draft.submissionConfirmed && !draft.submissionUncertain) ||
         (draft.pendingAssetId != null &&
             (!draft.uploadUncertain ||
                 !draft.assetIds.contains(draft.pendingAssetId))) ||
@@ -57,6 +58,7 @@ final class FeedbackDraftStore {
             (value['assetNames'] as Map).cast<String, String>(),
         uploadUncertain: value['uploadUncertain'] as bool,
         submissionUncertain: value['submissionUncertain'] as bool,
+        submissionConfirmed: value['submissionConfirmed'] == null ? false : value['submissionConfirmed'] as bool,
         pendingAssetId: value['pendingAssetId'] as String?,
       );
       _validate(draft, ownerId);
@@ -81,6 +83,7 @@ final class FeedbackDraftStore {
       'assetNames': draft.assetNames,
       'uploadUncertain': draft.uploadUncertain,
       'submissionUncertain': draft.submissionUncertain,
+      'submissionConfirmed': draft.submissionConfirmed,
       'pendingAssetId': draft.pendingAssetId,
     }));
   }

@@ -12,6 +12,7 @@ final class FeedbackDraft {
     required this.uploadUncertain,
     required this.submissionUncertain,
     this.pendingAssetId,
+    this.submissionConfirmed = false,
     Map<String, String> assetNames = const {},
   }) : assetIds = List.unmodifiable(assetIds),
        assetNames = Map.unmodifiable(assetNames);
@@ -26,6 +27,7 @@ final class FeedbackDraft {
   final Map<String, String> assetNames;
   final bool uploadUncertain;
   final bool submissionUncertain;
+  final bool submissionConfirmed;
   /// Known asset whose upload, completion, or deletion needs reconciliation.
   /// Null with uploadUncertain means the presign result itself is unknown.
   final String? pendingAssetId;

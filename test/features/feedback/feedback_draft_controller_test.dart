@@ -19,6 +19,46 @@ FeedbackMediaFile file() => FeedbackMediaFile(
 );
 
 void main() {
+  test('typed preallocation rejection unlocks while unknown responses stay uncertain', () async {
+    var status = 409;
+    var code = 'FEEDBACK_MEDIA_LIMIT';
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,
+      transport: (_) async => ApiResponse(statusCode: status, body: jsonEncode({'code': code})));
+    final store = FeedbackDraftStore(_Memory());
+    final media = FeedbackMediaRepository(client);
+    final seeded = FeedbackDraft(ownerId: 'owner', submissionId: initial().submissionId,
+      kind: 'BUG', detail: initial().detail, contact: '', pagePath: '/',
+      assetIds: ['old-asset'], assetNames: {'old-asset': 'old.png'},
+      uploadUncertain: false, submissionUncertain: false);
+    final controller = await FeedbackDraftController.open(store: store, media: media,
+      client: client, currentOwner: () => 'owner', initial: seeded);
+    await expectLater(controller.attach(file()), throwsA(isA<HttpFailure>()));
+    expect(controller.draft.uploadUncertain, isFalse);
+    expect((await store.read('owner'))!.assetNames['old-asset'], 'old.png');
+    status = 408; code = 'FEEDBACK_MEDIA_LIMIT';
+    await expectLater(controller.attach(file()), throwsA(isA<HttpFailure>()));
+    expect((await store.read('owner'))!.uploadUncertain, isTrue);
+  });
+
+  test('acknowledged submission survives failed local cleanup', () async {
+    final memory = _Memory()..failDelete = true;
+    final store = FeedbackDraftStore(memory);
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,
+      transport: (_) async => ApiResponse(statusCode: 200,
+        body: '{"submissionId":"server","reference":"ref","rewardQueued":false,"duplicate":false}'));
+    final media = FeedbackMediaRepository(client);
+    Future<FeedbackDraftController> open() => FeedbackDraftController.open(
+      store: store, media: media, client: client, currentOwner: () => 'owner', initial: initial());
+    final controller = await open();
+    await expectLater(controller.submit(), throwsA(isA<FeedbackConfirmedCleanupFailure>()));
+    final recovered = await open();
+    expect(recovered.draft.submissionConfirmed, isTrue);
+    await expectLater(recovered.submit(), throwsA(isA<StateError>()));
+    memory.failDelete = false;
+    await recovered.clearConfirmed();
+    expect(await store.read('owner'), isNull);
+  });
+
   test('definite first rejection unlocks but rejection of a retry does not', () async {
     var ambiguous = false;
     final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero,
@@ -111,10 +151,14 @@ void main() {
 
 final class _Memory implements SessionStorage {
   final values = <String, String>{};
+  bool failDelete = false;
   @override
   Future<String?> read(String key) async => values[key];
   @override
   Future<void> write(String key, String value) async { values[key] = value; }
   @override
-  Future<void> delete(String key) async { values.remove(key); }
+  Future<void> delete(String key) async {
+    if (failDelete) throw StateError('delete failed');
+    values.remove(key);
+  }
 }
