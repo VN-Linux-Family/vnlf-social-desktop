@@ -7,7 +7,15 @@ import 'preferences.dart';
 import 'preferences_repository.dart';
 
 final class PreferencesState {
-  const PreferencesState({this.saved, this.draft, this.busy = false, this.loadFailed = false, this.uncertain = false, this.savedNotice = false});
+  const PreferencesState({
+    this.saved,
+    this.draft,
+    this.busy = false,
+    this.loadFailed = false,
+    this.uncertain = false,
+    this.savedNotice = false,
+  });
+
   /// Last confirmed server value; it is not current while a write is uncertain.
   final WebsitePreferences? saved;
   WebsitePreferences? get confirmed => uncertain ? null : saved;
@@ -39,38 +47,72 @@ final class PreferencesController extends StateNotifier<PreferencesState> {
   Future<void> refresh() async {
     if (state.busy) return;
     final previous = state;
-    state = PreferencesState(saved: previous.saved, draft: previous.draft, busy: true, uncertain: previous.uncertain);
+    state = PreferencesState(
+      saved: previous.saved,
+      draft: previous.draft,
+      busy: true,
+      uncertain: previous.uncertain,
+    );
     try {
       final result = await repository.load();
       if (!mounted) return;
-      state = PreferencesState(saved: result, draft: previous.uncertain ? previous.draft : result);
+      state = PreferencesState(
+        saved: result,
+        draft: previous.uncertain ? previous.draft : result,
+      );
     } on Object {
       if (!mounted) return;
-      state = PreferencesState(saved: previous.saved, draft: previous.draft, loadFailed: true, uncertain: previous.uncertain);
+      state = PreferencesState(
+        saved: previous.saved,
+        draft: previous.draft,
+        loadFailed: true,
+        uncertain: previous.uncertain,
+      );
     }
   }
 
   Future<void> save() async {
     if (state.busy || state.uncertain || !state.dirty) return;
     final previous = state;
-    state = PreferencesState(saved: previous.saved, draft: previous.draft, busy: true);
+    state = PreferencesState(
+      saved: previous.saved,
+      draft: previous.draft,
+      busy: true,
+    );
     try {
-      await repository.save(previous.draft!);
+      await repository.save(previous.saved!, previous.draft!);
       if (!mounted) return;
-      state = PreferencesState(saved: previous.draft, draft: previous.draft, savedNotice: true);
+      state = PreferencesState(
+        saved: previous.draft,
+        draft: previous.draft,
+        savedNotice: true,
+      );
     } on Object {
       if (!mounted) return;
       // A failed or malformed response does not prove the server rejected the write.
-      state = PreferencesState(saved: previous.saved, draft: previous.draft, uncertain: true);
+      state = PreferencesState(
+        saved: previous.saved,
+        draft: previous.draft,
+        uncertain: true,
+      );
     }
   }
 }
 
-final preferencesControllerProvider = StateNotifierProvider.autoDispose<PreferencesController, PreferencesState>((ref) {
-  final owner = ref.watch(sessionStateProvider)?.userId;
-  if (owner == null || owner.isEmpty) throw StateError('Session required');
-  final client = ref.watch(apiClientProvider);
-  final unsubscribe = client.observeSessionInvalidation(ref.invalidateSelf);
-  ref.onDispose(unsubscribe);
-  return PreferencesController(PreferencesRepository(client, owner, () => ref.read(sessionStateProvider)?.userId));
-});
+final preferencesControllerProvider =
+    StateNotifierProvider.autoDispose<PreferencesController, PreferencesState>((
+      ref,
+    ) {
+      final owner = ref.watch(sessionStateProvider)?.userId;
+      if (owner == null || owner.isEmpty) throw StateError('Session required');
+      final client = ref.watch(apiClientProvider);
+      final unsubscribe = client.observeSessionInvalidation(ref.invalidateSelf);
+      ref.onDispose(unsubscribe);
+      return PreferencesController(
+        PreferencesRepository(
+          client,
+          owner,
+          () => ref.read(sessionStateProvider)?.userId,
+        ),
+      );
+    });

@@ -20,11 +20,12 @@ void main() {
       throttleInterval: Duration.zero,
       transport: (_) async {
         calls++;
-        if (calls == 1)
+        if (calls == 1) {
           return ApiResponse(
             statusCode: 200,
             body: '{"items":[{"id":"one","username":"one","displayName":"First list"}]}',
           );
+        }
         return next.future;
       },
     );

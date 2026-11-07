@@ -8,6 +8,10 @@ import 'src/app/providers.dart';
 import 'src/design_system/design_system.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/features/realtime/presentation/community_realtime_binding.dart';
+import 'src/features/settings/preferences/preferences_controller.dart';
+import 'src/features/settings/preferences/motion_preference_scope.dart';
+import 'src/features/shared/presentation/feature_samples.dart'
+    show offlineFeatures;
 
 void main() {
   runApp(const MainApp());
@@ -40,9 +44,20 @@ class _AppState extends ConsumerState<_App> {
 
   @override
   Widget build(BuildContext context) {
+    final hasSession = ref.watch(sessionStateProvider) != null;
+    final reduceMotion = hasSession && !offlineFeatures
+        ? ref.watch(
+            preferencesControllerProvider.select(
+              (state) => state.confirmed?.reduceMotion ?? false,
+            ),
+          )
+        : false;
     return MaterialApp.router(
-      builder: (context, child) => CommunityAppBinding(
-        child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => MotionPreferenceScope(
+        reduceMotion: reduceMotion,
+        child: CommunityAppBinding(
+          child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+        ),
       ),
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       theme: VnlfTheme.light(),

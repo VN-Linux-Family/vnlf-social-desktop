@@ -636,6 +636,16 @@ session response. Consequently, the authorized test logins and session reads may
 have recorded attendance even though no explicit check-in request was made. No
 confirmed endpoint for removing that attendance is known.
 
+The pinned website reads `GET /api/v1/me/preferences`, which may return JSON
+`null`, and saves partial changes with `PATCH` to the same path. Native privacy,
+notification and reduced-motion settings use the website's defaults, invert
+`leaderboardOptOut` for display, and require an `ok: true` acknowledgment.
+Only changed fields are sent. An uncertain save requires a fresh read before
+another attempt. The reduced-motion setting combines with the device's own
+accessibility setting. These flows have synthetic coverage only; no live
+preference changes were made. Other website display and decoration preferences
+are not yet implemented.
+
 ## Comment photos, mentions and session management — 2026-11-07
 
 At the pinned source revision, comment photos use

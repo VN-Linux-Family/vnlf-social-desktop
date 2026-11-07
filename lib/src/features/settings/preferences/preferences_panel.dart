@@ -10,43 +10,126 @@ final class PreferencesPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final english = Localizations.localeOf(context).languageCode == 'en';
     final state = ref.watch(preferencesControllerProvider);
     final controller = ref.read(preferencesControllerProvider.notifier);
     final draft = state.draft;
     if (draft == null) {
       if (state.loadFailed) {
-        return Column(children: [
-          const Text('Không thể tải cài đặt.'),
-          TextButton(onPressed: controller.refresh, child: const Text('Thử lại')),
-        ]);
+        return Column(
+          children: [
+            Text(
+              english ? 'Could not load settings.' : 'Không thể tải cài đặt.',
+            ),
+            TextButton(
+              onPressed: controller.refresh,
+              child: Text(english ? 'Retry' : 'Thử lại'),
+            ),
+          ],
+        );
       }
       return const Center(child: CircularProgressIndicator());
     }
     final enabled = !state.busy && !state.uncertain;
-    Widget toggle(String title, bool value, WebsitePreferences Function(bool) update) => SwitchListTile(
+    Widget toggle(
+      String title,
+      bool value,
+      WebsitePreferences Function(bool) update,
+    ) => SwitchListTile(
       title: Text(title),
       value: value,
       onChanged: enabled ? (value) => controller.edit(update(value)) : null,
     );
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text('Riêng tư', style: Theme.of(context).textTheme.titleMedium),
-      toggle('Mọi người có thể gửi tin nhắn riêng', draft.dmPolicy == DmPolicy.everyone, (value) => draft.copyWith(dmPolicy: value ? DmPolicy.everyone : DmPolicy.following)),
-      toggle('Hiển thị trên bảng xếp hạng', draft.leaderboardVisible, (value) => draft.copyWith(leaderboardVisible: value)),
-      toggle('Hiển thị trạng thái trực tuyến', draft.onlineVisible, (value) => draft.copyWith(onlineVisible: value)),
-      Text('Thông báo', style: Theme.of(context).textTheme.titleMedium),
-      toggle('Lượt thích', draft.likeNotifications, (value) => draft.copyWith(likeNotifications: value)),
-      toggle('Theo dõi mới', draft.followNotifications, (value) => draft.copyWith(followNotifications: value)),
-      toggle('Bình luận, trả lời và tin nhắn', draft.messageNotifications, (value) => draft.copyWith(messageNotifications: value)),
-      toggle('Âm báo tin nhắn', draft.messageSoundEnabled, (value) => draft.copyWith(messageSoundEnabled: value)),
-      Text('Hiển thị', style: Theme.of(context).textTheme.titleMedium),
-      toggle('Giảm chuyển động', draft.reduceMotion, (value) => draft.copyWith(reduceMotion: value)),
-      if (state.uncertain) ...[
-        const Text('Chưa xác định được cài đặt đã lưu hay chưa. Hãy tải lại để kiểm tra.'),
-        TextButton(onPressed: state.busy ? null : controller.refresh, child: const Text('Tải lại')),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          english ? 'Privacy' : 'Riêng tư',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        toggle(
+          english
+              ? 'Everyone can send private messages'
+              : 'Mọi người có thể gửi tin nhắn riêng',
+          draft.dmPolicy == DmPolicy.everyone,
+          (value) => draft.copyWith(
+            dmPolicy: value ? DmPolicy.everyone : DmPolicy.following,
+          ),
+        ),
+        toggle(
+          english ? 'Show on leaderboard' : 'Hiển thị trên bảng xếp hạng',
+          draft.leaderboardVisible,
+          (value) => draft.copyWith(leaderboardVisible: value),
+        ),
+        toggle(
+          english ? 'Show online status' : 'Hiển thị trạng thái trực tuyến',
+          draft.onlineVisible,
+          (value) => draft.copyWith(onlineVisible: value),
+        ),
+        Text(
+          english ? 'Notifications' : 'Thông báo',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        toggle(
+          english ? 'Likes' : 'Lượt thích',
+          draft.likeNotifications,
+          (value) => draft.copyWith(likeNotifications: value),
+        ),
+        toggle(
+          english ? 'New followers' : 'Theo dõi mới',
+          draft.followNotifications,
+          (value) => draft.copyWith(followNotifications: value),
+        ),
+        toggle(
+          english
+              ? 'Comments, replies and messages'
+              : 'Bình luận, trả lời và tin nhắn',
+          draft.messageNotifications,
+          (value) => draft.copyWith(messageNotifications: value),
+        ),
+        toggle(
+          english ? 'Message sound' : 'Âm báo tin nhắn',
+          draft.messageSoundEnabled,
+          (value) => draft.copyWith(messageSoundEnabled: value),
+        ),
+        Text(
+          english ? 'Display' : 'Hiển thị',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        toggle(
+          english ? 'Reduce motion' : 'Giảm chuyển động',
+          draft.reduceMotion,
+          (value) => draft.copyWith(reduceMotion: value),
+        ),
+        if (state.uncertain) ...[
+          Text(
+            english ? 'The save could not be confirmed. Refresh to check.' : 'Chưa xác định được cài đặt đã lưu hay chưa. Hãy tải lại để kiểm tra.',
+          ),
+          TextButton(
+            onPressed: state.busy ? null : controller.refresh,
+            child: Text(english ? 'Refresh' : 'Tải lại'),
+          ),
+        ],
+        if (state.loadFailed && state.uncertain)
+          Text(
+            english
+                ? 'Could not refresh settings.'
+                : 'Không thể tải lại cài đặt.',
+          ),
+        if (state.savedNotice)
+          Text(english ? 'Settings saved.' : 'Đã lưu cài đặt.'),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton(
+            onPressed: enabled && state.dirty ? controller.save : null,
+            child: Text(
+              state.busy
+                  ? (english ? 'Working…' : 'Đang xử lý…')
+                  : (english ? 'Save' : 'Lưu'),
+            ),
+          ),
+        ),
       ],
-      if (state.loadFailed && state.uncertain) const Text('Không thể tải lại cài đặt.'),
-      if (state.savedNotice) const Text('Đã lưu cài đặt.'),
-      Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: enabled && state.dirty ? controller.save : null, child: Text(state.busy ? 'Đang xử lý' : 'Lưu'))),
-    ]);
+    );
   }
 }

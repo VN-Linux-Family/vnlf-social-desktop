@@ -21,44 +21,82 @@ void main() {
   });
 
   test('parses opt out and rejects malformed values', () {
-    expect(WebsitePreferences.fromJson({'leaderboardOptOut': true}).leaderboardVisible, isFalse);
-    expect(() => WebsitePreferences.fromJson({'onlineVisible': 'yes'}), throwsA(isA<ParseFailure>()));
-    expect(() => WebsitePreferences.fromJson({'dmPolicy': 'UNKNOWN'}), throwsA(isA<ParseFailure>()));
+    expect(
+      WebsitePreferences.fromJson({'leaderboardOptOut': true})
+          .leaderboardVisible,
+      isFalse,
+    );
+    expect(
+      () => WebsitePreferences.fromJson({'onlineVisible': 'yes'}),
+      throwsA(isA<ParseFailure>()),
+    );
+    expect(
+      () => WebsitePreferences.fromJson({'dmPolicy': 'UNKNOWN'}),
+      throwsA(isA<ParseFailure>()),
+    );
   });
 
-  test('save sends explicit values once and requires acknowledgement', () async {
-    final requests = <ApiRequest>[];
-    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (request) async {
-      requests.add(request);
-      return ApiResponse(statusCode: 200, body: '{"ok":true}');
-    });
-    final repository = PreferencesRepository(client, 'a', () => 'a');
-    await repository.save(const WebsitePreferences(leaderboardVisible: false));
-    expect(requests, hasLength(1));
-    expect(requests.single.method, 'PATCH');
-    expect(jsonDecode(requests.single.body!)['leaderboardOptOut'], isTrue);
-    expect(jsonDecode(requests.single.body!)['dmPolicy'], 'EVERYONE');
-  });
+  test(
+    'save sends explicit values once and requires acknowledgement',
+    () async {
+      final requests = <ApiRequest>[];
+      final client = ApiClient(
+        hostKey: Object(),
+        throttleInterval: Duration.zero,
+        transport: (request) async {
+          requests.add(request);
+          return ApiResponse(statusCode: 200, body: '{"ok":true}');
+        },
+      );
+      final repository = PreferencesRepository(client, 'a', () => 'a');
+      await repository.save(
+        const WebsitePreferences(),
+        const WebsitePreferences(leaderboardVisible: false),
+      );
+      expect(requests, hasLength(1));
+      expect(requests.single.method, 'PATCH');
+      expect(jsonDecode(requests.single.body!)['leaderboardOptOut'], isTrue);
+      expect(jsonDecode(requests.single.body!), {'leaderboardOptOut': true});
+    },
+  );
 
   test('old account cannot save after session invalidation', () async {
     var calls = 0;
-    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (_) async {
-      calls++;
-      return ApiResponse(statusCode: 200, body: '{"ok":true}');
-    });
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (_) async {
+        calls++;
+        return ApiResponse(statusCode: 200, body: '{"ok":true}');
+      },
+    );
     final repository = PreferencesRepository(client, 'a', () => 'a');
     client.invalidateSession();
-    await expectLater(repository.save(const WebsitePreferences()), throwsA(isA<HttpFailure>()));
+    await expectLater(
+      repository.save(
+        const WebsitePreferences(),
+        const WebsitePreferences(reduceMotion: true),
+      ),
+      throwsA(isA<HttpFailure>()),
+    );
     expect(calls, 0);
   });
   test('uncertain write blocks another save until a fresh read', () async {
     var patches = 0;
-    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (request) async {
-      if (request.method == 'GET') return ApiResponse(statusCode: 200, body: '{}');
-      patches++;
-      throw TimeoutException('lost response');
-    });
-    final controller = PreferencesController(PreferencesRepository(client, 'a', () => 'a'));
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (request) async {
+        if (request.method == 'GET') {
+          return ApiResponse(statusCode: 200, body: '{}');
+        }
+        patches++;
+        throw TimeoutException('lost response');
+      },
+    );
+    final controller = PreferencesController(
+      PreferencesRepository(client, 'a', () => 'a'),
+    );
     await Future<void>.delayed(Duration.zero);
     // Wait for the initial asynchronous read without issuing a second load.
     while (controller.state.busy) {
@@ -77,5 +115,4 @@ void main() {
     expect(controller.state.dirty, isTrue);
     controller.dispose();
   });
-
 }

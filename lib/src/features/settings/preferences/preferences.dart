@@ -32,7 +32,9 @@ final class WebsitePreferences {
       return value;
     }
 
-    final policy = values.containsKey('dmPolicy') ? values['dmPolicy'] : 'EVERYONE';
+    final policy = values.containsKey('dmPolicy')
+        ? values['dmPolicy']
+        : 'EVERYONE';
     if (policy != 'EVERYONE' && policy != 'FOLLOWING') {
       throw const ParseFailure('preferences.dmPolicy');
     }
@@ -59,7 +61,16 @@ final class WebsitePreferences {
     'reduceMotion': reduceMotion,
   };
 
-  WebsitePreferences copyWith({DmPolicy? dmPolicy, bool? leaderboardVisible, bool? onlineVisible, bool? likeNotifications, bool? followNotifications, bool? messageNotifications, bool? messageSoundEnabled, bool? reduceMotion}) => WebsitePreferences(
+  WebsitePreferences copyWith({
+    DmPolicy? dmPolicy,
+    bool? leaderboardVisible,
+    bool? onlineVisible,
+    bool? likeNotifications,
+    bool? followNotifications,
+    bool? messageNotifications,
+    bool? messageSoundEnabled,
+    bool? reduceMotion,
+  }) => WebsitePreferences(
     dmPolicy: dmPolicy ?? this.dmPolicy,
     leaderboardVisible: leaderboardVisible ?? this.leaderboardVisible,
     onlineVisible: onlineVisible ?? this.onlineVisible,

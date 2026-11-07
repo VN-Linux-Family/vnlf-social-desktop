@@ -27,11 +27,23 @@ final class PreferencesRepository {
     return WebsitePreferences.fromJson(json);
   }
 
-  Future<void> save(WebsitePreferences preferences) async {
+  Future<void> save(
+    WebsitePreferences saved,
+    WebsitePreferences preferences,
+  ) async {
     _guard();
-    await _client.request<void>('PATCH', _path, body: jsonEncode(preferences.toJson()), decode: (json) {
-      if (json['ok'] != true) throw const ParseFailure('preferences.ack');
-    });
+    final oldValues = saved.toJson();
+    final changes = Map.of(preferences.toJson())
+      ..removeWhere((key, value) => oldValues[key] == value);
+    if (changes.isEmpty) return;
+    await _client.request<void>(
+      'PATCH',
+      _path,
+      body: jsonEncode(changes),
+      decode: (json) {
+        if (json['ok'] != true) throw const ParseFailure('preferences.ack');
+      },
+    );
     _guard();
   }
 }
