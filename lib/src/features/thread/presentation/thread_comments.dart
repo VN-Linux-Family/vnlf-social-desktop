@@ -10,6 +10,9 @@ import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/article_comment.dart';
 import '../data/comment_attachment_controller.dart';
+import '../mention/mention_candidates.dart';
+import '../mention/mention_controller.dart';
+import '../mention/mention_suggestions.dart';
 import 'comment_attachment_picker.dart';
 import 'comments_providers.dart';
 import 'comment_edit_dialog.dart';
@@ -34,10 +37,44 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   int _revision = 0;
   bool _selecting = false;
   String? _attachmentError;
+  late MentionController _mentions;
+
+  @override
+  void initState() {
+    super.initState();
+    _mentions = _createMentionController();
+  }
+
+  MentionController _createMentionController() {
+    final client = ref.read(apiClientProvider);
+    return MentionController(
+      input: _input,
+      focusNode: widget.focusNode,
+      repository: ref.read(mentionCandidatesRepositoryProvider),
+      client: client,
+      articleId: widget.postId,
+      authenticated:
+          ref.read(mentionSuggestionsEnabledProvider) &&
+          widget.postId.isNotEmpty &&
+          ref.read(sessionStateProvider) != null,
+    );
+  }
 
   @override
   void didUpdateWidget(covariant ThreadComments oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusNode != widget.focusNode) {
+      _mentions.dispose();
+      _mentions = _createMentionController();
+    } else if (oldWidget.postId != widget.postId) {
+      _mentions.updateContext(
+        articleId: widget.postId,
+        authenticated:
+            ref.read(mentionSuggestionsEnabledProvider) &&
+            widget.postId.isNotEmpty &&
+            ref.read(sessionStateProvider) != null,
+      );
+    }
     if (oldWidget.postId != widget.postId) {
       _revision++;
       _confirmed.clear();
@@ -52,6 +89,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
 
   @override
   void dispose() {
+    _mentions.dispose();
     _input.dispose();
     super.dispose();
   }
@@ -262,6 +300,13 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     ref.listen(sessionStateProvider, (before, after) {
       if (before?.userId == after?.userId) return;
       _revision++;
+      _mentions.updateContext(
+        articleId: widget.postId,
+        authenticated:
+            ref.read(mentionSuggestionsEnabledProvider) &&
+            widget.postId.isNotEmpty &&
+            after != null,
+      );
       setState(() {
         _confirmed.clear();
         _replyTo = null;
@@ -382,22 +427,29 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                     ? '${draft.pending!.attachmentIds.length} previously uploaded photos'
                     : '${draft.pending!.attachmentIds.length} ảnh đã tải lên trước đó',
               ),
-            TextField(
-              key: const ValueKey('comment-input'),
-              controller: _input,
-              readOnly:
-                  recovery.isLoading ||
-                  recovery.hasError ||
-                  draft.submissionPending ||
-                  _submitting,
-              focusNode: widget.focusNode,
-              minLines: 2,
-              maxLines: 5,
-              maxLength: 4000,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: english ? 'Write a comment' : 'Viết bình luận',
-                border: const OutlineInputBorder(),
+            if (!draft.submissionPending)
+              MentionSuggestions(controller: _mentions),
+            Focus(
+              onKeyEvent: (_, event) => _mentions.handleKey(event)
+                  ? KeyEventResult.handled
+                  : KeyEventResult.ignored,
+              child: TextField(
+                key: const ValueKey('comment-input'),
+                controller: _input,
+                readOnly:
+                    recovery.isLoading ||
+                    recovery.hasError ||
+                    draft.submissionPending ||
+                    _submitting,
+                focusNode: widget.focusNode,
+                minLines: 2,
+                maxLines: 5,
+                maxLength: 4000,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: english ? 'Write a comment' : 'Viết bình luận',
+                  border: const OutlineInputBorder(),
+                ),
               ),
             ),
             Text(

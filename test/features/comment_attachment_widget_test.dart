@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,11 +12,63 @@ import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comment_media_repository.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comments_repository.dart';
 import 'package:vnlfsocialapp/src/features/thread/domain/comment_upload.dart';
+import 'package:vnlfsocialapp/src/features/thread/mention/mention_candidates.dart';
 import 'package:vnlfsocialapp/src/features/thread/presentation/comment_attachment_picker.dart';
 import 'package:vnlfsocialapp/src/features/thread/presentation/comments_providers.dart';
 import 'package:vnlfsocialapp/src/features/thread/presentation/thread_comments.dart';
 
 void main() {
+  testWidgets('comment composer inserts a selected member mention', (
+    tester,
+  ) async {
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    final candidates = _Candidates();
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (_) async =>
+          ApiResponse(statusCode: 200, body: '{"items":[]}'),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(client),
+          sessionStorageProvider.overrideWithValue(_Storage()),
+          sessionStateProvider.overrideWith(
+            (_) => const Session(userId: 'owner', displayName: 'Owner'),
+          ),
+          mentionCandidatesRepositoryProvider.overrideWithValue(candidates),
+          mentionSuggestionsEnabledProvider.overrideWithValue(true),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ThreadComments(focusNode: focus, postId: 'article'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('comment-input')));
+    await tester.enterText(find.byKey(const ValueKey('comment-input')), '@du');
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump();
+    expect(candidates.queries, ['du']);
+    await tester.tap(find.text('Dũng Lê'));
+    await tester.pump();
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('comment-input')),
+    );
+    expect(field.controller!.text, '@dung ');
+    await tester.enterText(find.byKey(const ValueKey('comment-input')), '@du');
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    expect(field.controller!.text, '@dung ');
+  });
+
   testWidgets('photo-only comment retains its photo and identity on failure', (
     tester,
   ) async {
@@ -137,6 +190,21 @@ void main() {
     expect(find.byKey(const ValueKey('comment-confirmed')), findsNothing);
     expect(find.text('anh.png'), findsNothing);
   });
+}
+
+final class _Candidates implements MentionCandidatesRepository {
+  final queries = <String>[];
+  @override
+  Future<List<MentionCandidate>> search(String articleId, String query) async {
+    queries.add(query);
+    return [
+      const MentionCandidate(
+        id: 'member',
+        username: 'dung',
+        displayName: 'Dũng Lê',
+      ),
+    ];
+  }
 }
 
 final class _Storage implements SessionStorage {
