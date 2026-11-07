@@ -12,6 +12,7 @@ import '../../updates/presentation/update_panel.dart';
 import 'account_profile_screen.dart';
 import '../blocked/presentation/blocked_people_panel.dart';
 import '../preferences/preferences_panel.dart';
+import '../text_size/text_size.dart';
 import 'security_sessions_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
@@ -242,6 +243,8 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                 ],
               ),
+              const SizedBox(height: 24),
+              const TextSizeSettings(),
               const SizedBox(height: 24),
               Text(
                 english ? 'About the app' : 'Thông tin ứng dụng',

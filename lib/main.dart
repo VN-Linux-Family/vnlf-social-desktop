@@ -10,6 +10,7 @@ import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/features/realtime/presentation/community_realtime_binding.dart';
 import 'src/features/settings/preferences/preferences_controller.dart';
 import 'src/features/settings/preferences/motion_preference_scope.dart';
+import 'src/features/settings/text_size/text_size.dart';
 import 'src/features/shared/presentation/feature_samples.dart'
     show offlineFeatures;
 
@@ -55,8 +56,10 @@ class _AppState extends ConsumerState<_App> {
     return MaterialApp.router(
       builder: (context, child) => MotionPreferenceScope(
         reduceMotion: reduceMotion,
-        child: CommunityAppBinding(
-          child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+        child: TextSizeScope(
+          child: CommunityAppBinding(
+            child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+          ),
         ),
       ),
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

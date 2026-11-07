@@ -13,15 +13,19 @@ const _storageKey = 'vnlf_text_size';
 
 @immutable
 class TextSizeState {
-  const TextSizeState({this.size = textSizeDefault, this.storageFailure = false});
+  const TextSizeState({
+    this.size = textSizeDefault,
+    this.storageFailure = false,
+  });
 
   final int size;
   final bool storageFailure;
 }
 
-final textSizeProvider = StateNotifierProvider<TextSizeController, TextSizeState>(
-  (ref) => TextSizeController(ref.watch(preferencesStorageProvider)),
-);
+final textSizeProvider =
+    StateNotifierProvider<TextSizeController, TextSizeState>(
+      (ref) => TextSizeController(ref.watch(preferencesStorageProvider)),
+    );
 
 class TextSizeController extends StateNotifier<TextSizeState> {
   TextSizeController(this._storage) : super(const TextSizeState()) {
@@ -39,7 +43,10 @@ class TextSizeController extends StateNotifier<TextSizeState> {
       final stored = int.tryParse(await _storage.read(_storageKey) ?? '');
       if (!mounted || revision != _revision) return;
       state = TextSizeState(
-        size: stored != null && stored >= textSizeMinimum && stored <= textSizeMaximum
+        size:
+            stored != null &&
+                stored >= textSizeMinimum &&
+                stored <= textSizeMaximum
             ? stored
             : textSizeDefault,
       );
@@ -90,14 +97,17 @@ class PreferenceTextScaler extends TextScaler {
   final int size;
 
   @override
-  double scale(double fontSize) => device.scale(fontSize * size / textSizeDefault);
+  double scale(double fontSize) =>
+      device.scale(fontSize * size / textSizeDefault);
 
   @override
   double get textScaleFactor => scale(14) / 14;
 
   @override
   bool operator ==(Object other) =>
-      other is PreferenceTextScaler && other.device == device && other.size == size;
+      other is PreferenceTextScaler &&
+      other.device == device &&
+      other.size == size;
 
   @override
   int get hashCode => Object.hash(device, size);
@@ -113,7 +123,9 @@ class TextSizeScope extends ConsumerWidget {
     final media = MediaQuery.of(context);
     final size = ref.watch(textSizeProvider.select((value) => value.size));
     return MediaQuery(
-      data: media.copyWith(textScaler: PreferenceTextScaler(media.textScaler, size)),
+      data: media.copyWith(
+        textScaler: PreferenceTextScaler(media.textScaler, size),
+      ),
       child: child,
     );
   }
@@ -132,23 +144,31 @@ class TextSizeSettings extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(english ? 'Text size' : 'Cỡ chữ'),
-        Slider(
-          value: value.size.toDouble(),
-          min: textSizeMinimum.toDouble(),
-          max: textSizeMaximum.toDouble(),
-          divisions: textSizeMaximum - textSizeMinimum,
-          label: '${value.size}',
-          semanticFormatterCallback: (size) => '${size.round()} px',
-          onChanged: (size) => controller.preview(size.round()),
-          onChangeEnd: (_) => unawaited(controller.commit()),
+        Text('${value.size} px'),
+        Semantics(
+          label: english ? 'Text size' : 'Cỡ chữ',
+          child: Slider(
+            value: value.size.toDouble(),
+            min: textSizeMinimum.toDouble(),
+            max: textSizeMaximum.toDouble(),
+            divisions: textSizeMaximum - textSizeMinimum,
+            label: '${value.size}',
+            semanticFormatterCallback: (size) => '${size.round()} px',
+            onChanged: (size) => controller.preview(size.round()),
+            onChangeEnd: (_) => unawaited(controller.commit()),
+          ),
         ),
         TextButton(
-          onPressed: () => unawaited(controller.reset()),
+          onPressed: value.size == textSizeDefault && !value.storageFailure
+              ? null
+              : () => unawaited(controller.reset()),
           child: Text(english ? 'Reset' : 'Đặt lại'),
         ),
         if (value.storageFailure)
           Text(
-            english ? 'Could not save or load text size.' : 'Không thể lưu hoặc tải cỡ chữ.',
+            english
+                ? 'Could not save or load text size.'
+                : 'Không thể lưu hoặc tải cỡ chữ.',
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
       ],
