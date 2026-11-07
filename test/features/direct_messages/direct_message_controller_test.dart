@@ -234,6 +234,42 @@ void main() {
     await deleting;
     expect(controller.state.messages.single.isDeleted, isTrue);
   });
+
+  test(
+    'applyRealtimeMessage marks conversation as read when message is from peer',
+    () async {
+      final repo = ControlledDmRepository()
+        ..pages.add(DmMessagePage(items: <DmMessage>[sampleDmMessage]));
+      final controller = DmTimelineController(
+        repo,
+        conversationId: 'conv-1',
+        userId: 'test-user',
+      );
+      addTearDown(controller.dispose);
+      await controller.load();
+      repo.markReads.clear();
+
+      final peerMsg = DmMessage(
+        id: 'msg-peer-1',
+        conversationId: 'conv-1',
+        authorId: 'peer-1',
+        author: const Author(
+          id: 'peer-1',
+          username: 'nguoithu',
+          displayName: 'Người thử nghiệm',
+        ),
+        content: 'Tin nhắn từ peer',
+        createdAt: DateTime.utc(2026, 11, 5, 10, 5),
+      );
+
+      controller.applyRealtimeMessage(peerMsg);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(repo.markReads, hasLength(1));
+      expect(repo.markReads.single.conversationId, 'conv-1');
+      expect(repo.markReads.single.lastReadMessageId, 'msg-peer-1');
+    },
+  );
 }
 
 final DmMessage sampleDmMessage = DmMessage(
@@ -266,6 +302,8 @@ class ControlledDmRepository implements DirectMessageRepository {
   Completer<DmMessage> mutationCompleter = Completer<DmMessage>();
   final List<({String clientMessageId, String content})> sends =
       <({String clientMessageId, String content})>[];
+  final List<({String conversationId, String? lastReadMessageId})> markReads =
+      <({String conversationId, String? lastReadMessageId})>[];
   final List<DmMessagePage> pages = <DmMessagePage>[];
   DmConversation conversation = sampleConversation;
   AppFailure? readFailure;
@@ -352,8 +390,13 @@ class ControlledDmRepository implements DirectMessageRepository {
   Future<DmReadReceipt> markRead(
     String conversationId, {
     String? lastReadMessageId,
-  }) async =>
-      DmReadReceipt(changed: true, lastReadMessageId: lastReadMessageId);
+  }) async {
+    markReads.add((
+      conversationId: conversationId,
+      lastReadMessageId: lastReadMessageId,
+    ));
+    return DmReadReceipt(changed: true, lastReadMessageId: lastReadMessageId);
+  }
 
   @override
   Future<DmMessage> editMessage(String messageId, String content) =>

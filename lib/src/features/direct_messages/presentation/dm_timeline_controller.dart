@@ -89,7 +89,9 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       );
       _onConversationSynced?.call(syncedConversation);
 
-      if (syncedConversation.unreadCount > 0 && mergedMessages.isNotEmpty) {
+      if ((syncedConversation.unreadCount > 0 ||
+              syncedConversation.firstUnreadMessageId != null) &&
+          mergedMessages.isNotEmpty) {
         unawaited(markRead(lastReadMessageId: mergedMessages.last.id));
       }
     } catch (error) {
@@ -615,6 +617,9 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     state = state.copyWith(
       messages: _mergeMessages(<DmMessage>[...state.messages, resolved]),
     );
+    if (incoming.authorId != _userId) {
+      unawaited(markRead(lastReadMessageId: incoming.id));
+    }
   }
 
   void removeRealtimeMessage(String id) {

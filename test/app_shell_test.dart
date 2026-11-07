@@ -103,4 +103,59 @@ void main() {
     await tester.pump();
     expect(find.text('Notice problem'), findsNothing);
   });
+
+  testWidgets(
+    'mobile bottom nav and desktop sidebar show unread badge for messages',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: VnlfMobileBottomNav(
+              activeDestination: VnlfNavDestination.feed,
+              unreadDestinations: {VnlfNavDestination.messages},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == const Color(0xFFD7473E),
+        ),
+        findsOneWidget,
+      );
+
+      tester.view.physicalSize = const Size(1200, 800);
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: VnlfDesktopSidebar(
+              activeDestination: VnlfNavDestination.feed,
+              unreadDestinations: {VnlfNavDestination.messages},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).color == const Color(0xFFD7473E),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }

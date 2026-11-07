@@ -76,6 +76,20 @@ final class LiveChannelRepository implements ChannelRepository {
           {'emoji': emoji},
         );
 
+  @override
+  Future<void> markRead(String channelId, {String? lastReadMessageId}) async {
+    final encoded = Uri.encodeComponent(channelId);
+    final trimmed = lastReadMessageId?.trim();
+    await _write(
+      'POST',
+      '/api/v1/channels/$encoded/read',
+      trimmed != null && trimmed.isNotEmpty
+          ? <String, dynamic>{'lastReadMessageId': trimmed}
+          : <String, dynamic>{},
+    );
+    _client.clearCache();
+  }
+
   Future<void> _write(
     String method,
     String path, [

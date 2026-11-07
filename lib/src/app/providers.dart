@@ -159,10 +159,23 @@ bool _isLiveDefault() {
   return true;
 }
 
+String defaultApiBaseUrl() {
+  const envUrl = String.fromEnvironment('VNLF_API_URL');
+  if (envUrl.isNotEmpty) return envUrl;
+  const legacyEnv = String.fromEnvironment('VNLF_BASE_URL');
+  if (legacyEnv.isNotEmpty) return legacyEnv;
+  return 'https://vietnamlinuxfamily.net';
+}
+
+final apiBaseUrlProvider = StateProvider<String>((ref) {
+  return defaultApiBaseUrl();
+});
+
 /// Opt-in live HTTP transport with session cookie persistence.
 final ioTransportProvider = Provider<IoApiTransport?>((ref) {
   if (!_isLiveDefault()) return null;
-  final uri = Uri.parse('https://vietnamlinuxfamily.net');
+  final baseUrl = ref.watch(apiBaseUrlProvider);
+  final uri = Uri.parse(baseUrl);
   final storage = ref.watch(sessionStorageProvider);
   final transport = IoApiTransport(
     uri,

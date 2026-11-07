@@ -18,10 +18,13 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/activity/presentation/activity_page.dart';
 import '../features/composer/presentation/composer_screen.dart';
 import '../features/channels/presentation/channels_screen.dart';
+import '../features/channels/presentation/live_channel_state.dart';
 import '../features/direct_messages/presentation/direct_messages_screen.dart';
+import '../features/direct_messages/presentation/direct_message_state.dart';
 import '../features/discover/presentation/discover_screen.dart';
 import '../features/feed/presentation/feed_screen.dart';
 import '../features/leaderboard/presentation/leaderboard_screen.dart';
+import '../features/notifications/presentation/notifications_controller.dart';
 import '../features/projects/presentation/projects_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -200,7 +203,20 @@ GoRouter createMainRouter({
                   : state.uri.path == '/search'
                   ? (english ? 'Search' : 'Tìm kiếm')
                   : null;
+              final dmInbox = ref.watch(dmInboxProvider);
+              final channels =
+                  ref.watch(liveChannelsProvider).valueOrNull ?? const [];
+              final hasUnreadChannels = channels.any((c) => c.unreadCount > 0);
+              final hasUnreadMessages =
+                  dmInbox.totalUnreadCount > 0 || hasUnreadChannels;
+              final unreadDestinations = <VnlfNavDestination>{
+                if (hasUnreadMessages) VnlfNavDestination.messages,
+              };
+              final notificationBadgeCount =
+                  ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
               return VnlfAdaptiveShell(
+                unreadDestinations: unreadDestinations,
+                notificationBadgeCount: notificationBadgeCount,
                 centerMaxWidth: communication ? double.infinity : 1053,
                 showMobileBottomNav: !communicationDetail,
                 titleText: titleText,

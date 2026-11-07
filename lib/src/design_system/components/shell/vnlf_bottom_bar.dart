@@ -27,6 +27,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
     this.searchSemanticLabel = '',
     this.notificationsSemanticLabel = '',
     this.profileSemanticLabel,
+    this.notificationBadgeCount = 0,
     this.semanticLabel,
   });
 
@@ -45,6 +46,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   final String searchSemanticLabel;
   final String notificationsSemanticLabel;
   final String? profileSemanticLabel;
+  final int notificationBadgeCount;
   final String? semanticLabel;
 
   @override
@@ -150,6 +152,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
               _HeaderSquareIconButton(
                 icon: Icons.notifications_none_rounded,
                 semanticLabel: notificationsSemanticLabel,
+                badgeCount: notificationBadgeCount,
                 onTap: onNotificationsTap,
               ),
               const SizedBox(width: 8),
@@ -182,11 +185,13 @@ class _HeaderSquareIconButton extends StatelessWidget {
     required this.icon,
     required this.semanticLabel,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final String semanticLabel;
   final VoidCallback? onTap;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +210,27 @@ class _HeaderSquareIconButton extends StatelessWidget {
             color: colors.surfaceSoft,
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
           ),
-          child: Icon(icon, size: 18, color: colors.ink),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, size: 18, color: colors.ink),
+              if (badgeCount > 0)
+                Positioned(
+                  top: 5,
+                  right: 5,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD7473E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colors.surface, width: 1.5),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -226,6 +251,7 @@ class VnlfMobileBottomNav extends StatelessWidget {
     this.onDestinationSelected,
     this.destinationLabels = const {},
     this.destinationSemanticLabels = const {},
+    this.unreadDestinations = const {},
     this.semanticLabel,
   });
 
@@ -233,6 +259,7 @@ class VnlfMobileBottomNav extends StatelessWidget {
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;
+  final Set<VnlfNavDestination> unreadDestinations;
   final String? semanticLabel;
 
   @override
@@ -295,12 +322,34 @@ class VnlfMobileBottomNav extends StatelessWidget {
                                 VnlfDimensions.radiusFull,
                               ),
                             ),
-                            child: Icon(
-                              dest.icon,
-                              size: 20,
-                              color: dest == activeDestination
-                                  ? colors.brand
-                                  : colors.muted,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  dest.icon,
+                                  size: 20,
+                                  color: dest == activeDestination
+                                      ? colors.brand
+                                      : colors.muted,
+                                ),
+                                if (unreadDestinations.contains(dest))
+                                  Positioned(
+                                    top: -2,
+                                    right: -3,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD7473E),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: colors.surface,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),

@@ -12,4 +12,5 @@ abstract interface class ChannelRepository {
   Future<void> edit(String messageId, String content);
   Future<void> delete(String messageId);
   Future<void> react(String messageId, String emoji, {bool remove = false});
+  Future<void> markRead(String channelId, {String? lastReadMessageId});
 }

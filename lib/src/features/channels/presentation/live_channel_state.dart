@@ -220,6 +220,19 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     _messageReads.upsert(resolved);
     if (resolved.poll case final poll?) onPollRealtime?.call(poll);
     state = state.copy(messages: _merge([...state.messages, resolved]));
+    unawaited(markRead(lastReadMessageId: incoming.id));
+  }
+
+  Future<void> markRead({String? lastReadMessageId}) async {
+    if (!mounted) return;
+    try {
+      await _repository.markRead(
+        _channelId,
+        lastReadMessageId: lastReadMessageId ?? state.messages.lastOrNull?.id,
+      );
+    } catch (_) {
+      // Non-blocking
+    }
   }
 
   void removeRealtimeMessage(String id) {

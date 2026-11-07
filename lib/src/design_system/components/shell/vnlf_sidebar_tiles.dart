@@ -11,6 +11,7 @@ class SidebarNavTile extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.hasUnread = false,
     this.semanticLabel,
   });
 
@@ -18,6 +19,7 @@ class SidebarNavTile extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool hasUnread;
   final String? semanticLabel;
 
   @override
@@ -58,6 +60,17 @@ class SidebarNavTile extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (hasUnread) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFD7473E),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

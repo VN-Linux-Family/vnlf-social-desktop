@@ -80,6 +80,26 @@ client now requires that acknowledgment before considering either write
 confirmed. An owner-authenticated read-only notification-list probe succeeded
 and logged out; it did not mark any notification read or seen.
 
+## Push Notification Architecture & Server Source Analysis (2026-11-07)
+
+- **Backend Protocol**: The backend (`apps/api/src/modules/push.ts`) implements **W3C Web Push with VAPID** (RFC 8291 / RFC 8292).
+  - `GET /api/v1/push/config` returns `{ enabled: boolean, publicKey?: string }`.
+  - `GET /api/v1/push/subscriptions` lists active endpoints for the current session.
+  - `POST /api/v1/push/subscriptions` accepts `{ endpoint, keys: { p256dh, auth } }`.
+  - Allowed push endpoints are restricted strictly to browser push services: `fcm.googleapis.com`, `updates.push.services.mozilla.com`, `web.push.apple.com`, and `*.notify.windows.com`.
+  - Push delivery worker (`apps/worker/src/processors/push.ts`) uses npm `web-push` via BullMQ queues.
+- **Native Android / Client Implications**:
+  - The server repo has **NO native Firebase Cloud Messaging (FCM HTTP v1 / google-services.json)** or APNs or UnifiedPush server integration configured.
+  - On native desktop/mobile clients (Flutter), active real-time updates and notifications arrive directly over the persistent WebSocket connection (`/ws/community`) with topic subscriptions (`channel:join`, `conversation:join`, etc.).
+  - For future background push on Android without Play Services or via UnifiedPush, the backend would need an upstream gateway or endpoint whitelist update.
+
+## Read Receipts & Real-time Read State (2026-11-07)
+
+- `POST /api/v1/dm/conversations/:id/read` accepts `{ lastReadMessageId?: string }` and publishes `dm:peer-read` to peers.
+- `POST /api/v1/channels/:id/read` accepts `{ lastReadMessageId?: string }` and updates `channelReadStates`.
+- `GET /api/v1/dm/conversations` returns `unreadCount` calculated by counting non-deleted messages from other authors strictly after `member.lastReadMessageId`.
+- The native client invalidates client cache and triggers `markRead` upon viewing conversations or receiving incoming peer messages.
+
 ## Public article sharing (2026-11-05)
 
 - [CONFIRMED] The public feed links posts to `/a/{slug}`. Read-only inspection

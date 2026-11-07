@@ -237,10 +237,9 @@ class SettingsScreen extends ConsumerWidget {
                       labelStyle: VnlfTypography.control(colors.ink),
                       label: Text(item.value),
                       selected: language == item.key,
-                      onSelected: (_) =>
-                          ref.read(localeProvider.notifier).state = Locale(
-                            item.key,
-                          ),
+                      onSelected: (_) => ref
+                          .read(localeProvider.notifier)
+                          .setLocale(Locale(item.key)),
                     ),
                 ],
               ),
@@ -272,9 +271,48 @@ class SettingsScreen extends ConsumerWidget {
                 offlineFeatures
                     ? 'Offline fixture'
                     : (english
-                          ? 'Live server (https://vietnamlinuxfamily.net)'
-                          : 'Máy chủ trực tuyến (https://vietnamlinuxfamily.net)'),
+                          ? 'Server: ${ref.watch(apiBaseUrlProvider)}'
+                          : 'Máy chủ: ${ref.watch(apiBaseUrlProvider)}'),
               ),
+              if (!offlineFeatures) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      selectedColor: colors.brandSoft,
+                      checkmarkColor: colors.brand,
+                      side: BorderSide(color: colors.line),
+                      labelStyle: VnlfTypography.control(colors.ink),
+                      label: const Text('Production'),
+                      selected:
+                          ref.watch(apiBaseUrlProvider) ==
+                          'https://vietnamlinuxfamily.net',
+                      onSelected: (_) {
+                        ref.read(apiClientProvider).clearCache();
+                        ref.read(apiBaseUrlProvider.notifier).state =
+                            'https://vietnamlinuxfamily.net';
+                      },
+                    ),
+                    ChoiceChip(
+                      selectedColor: colors.brandSoft,
+                      checkmarkColor: colors.brand,
+                      side: BorderSide(color: colors.line),
+                      labelStyle: VnlfTypography.control(colors.ink),
+                      label: const Text('Local (127.0.0.1:3001)'),
+                      selected:
+                          ref.watch(apiBaseUrlProvider) ==
+                          'http://127.0.0.1:3001',
+                      onSelected: (_) {
+                        ref.read(apiClientProvider).clearCache();
+                        ref.read(apiBaseUrlProvider.notifier).state =
+                            'http://127.0.0.1:3001';
+                      },
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 8),
               Text(
                 english

@@ -101,6 +101,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.tabletRailSemanticLabel,
     this.mobileHeaderSemanticLabel,
     this.mobileBottomNavSemanticLabel,
+    this.unreadDestinations = const {},
+    this.notificationBadgeCount = 0,
     this.semanticLabel,
   });
 
@@ -113,6 +115,8 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final bool showMobileBottomNav;
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
+  final Set<VnlfNavDestination> unreadDestinations;
+  final int notificationBadgeCount;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
@@ -196,6 +200,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   VnlfDesktopSidebar(
                     activeDestination: activeDestination,
                     onDestinationSelected: onDestinationSelected,
+                    unreadDestinations: unreadDestinations,
                     themeMode: themeMode,
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
@@ -296,6 +301,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                   VnlfTabletRail(
                     activeDestination: activeDestination,
                     onDestinationSelected: onDestinationSelected,
+                    unreadDestinations: unreadDestinations,
                     themeMode: themeMode,
                     onThemeModeChanged: onThemeModeChanged,
                     onProfileTap: onProfileTap,
@@ -345,6 +351,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 child: SafeArea(
                   child: VnlfDesktopSidebar(
                     activeDestination: activeDestination,
+                    unreadDestinations: unreadDestinations,
                     onDestinationSelected: (dest) {
                       Navigator.of(context).maybePop();
                       onDestinationSelected?.call(dest);
@@ -440,6 +447,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     searchSemanticLabel: searchSemanticLabel,
                     onSearchTap: onSearchTap,
                     onNotificationsTap: onNotificationsTap,
+                    notificationBadgeCount: notificationBadgeCount,
                     notificationsSemanticLabel: notificationsSemanticLabel,
                     profileSemanticLabel: profileSemanticLabel,
                     semanticLabel: mobileHeaderSemanticLabel,
@@ -467,6 +475,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     onDestinationSelected: onDestinationSelected,
                     destinationLabels: destinationLabels,
                     destinationSemanticLabels: destinationSemanticLabels,
+                    unreadDestinations: unreadDestinations,
                     semanticLabel: mobileBottomNavSemanticLabel,
                   ),
           ),

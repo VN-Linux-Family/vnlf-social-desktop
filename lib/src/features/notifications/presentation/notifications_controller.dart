@@ -8,6 +8,19 @@ import '../domain/notifications_repository.dart';
 final notificationsRepositoryProvider = Provider<NotificationsRepository>(
   (ref) => LiveNotificationsRepository(ref.watch(apiClientProvider)),
 );
+
+final unreadNotificationsCountProvider = FutureProvider<int>((ref) async {
+  final session = ref.watch(sessionStateProvider);
+  if (session == null || session.userId.isEmpty) return 0;
+  final repo = ref.watch(notificationsRepositoryProvider);
+  try {
+    final page = await repo.load(unreadOnly: true);
+    return page.unreadCount;
+  } catch (_) {
+    return 0;
+  }
+});
+
 final notificationsControllerProvider =
     StateNotifierProvider.autoDispose<
       NotificationsController,

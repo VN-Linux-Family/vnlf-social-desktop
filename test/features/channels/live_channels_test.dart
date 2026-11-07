@@ -457,4 +457,7 @@ class ControlledRepository implements ChannelRepository {
   @override
   Future<void> react(String messageId, String emoji, {bool remove = false}) =>
       actionResult.future;
+  @override
+  Future<void> markRead(String channelId, {String? lastReadMessageId}) =>
+      actionResult.future;
 }

@@ -216,10 +216,10 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
   Future<DmReadReceipt> markRead(
     String conversationId, {
     String? lastReadMessageId,
-  }) {
+  }) async {
     final encoded = _encodeId(conversationId, 'conversationId');
     final trimmedLastRead = lastReadMessageId?.trim();
-    return _client.request<DmReadReceipt>(
+    final receipt = await _client.request<DmReadReceipt>(
       'POST',
       '/api/v1/dm/conversations/$encoded/read',
       body: jsonEncode(<String, Object?>{
@@ -228,6 +228,8 @@ final class LiveDirectMessageRepository implements DirectMessageRepository {
       }),
       decode: (json) => DmReadReceiptDto(json).toDomain(),
     );
+    _client.clearCache();
+    return receipt;
   }
 
   @override

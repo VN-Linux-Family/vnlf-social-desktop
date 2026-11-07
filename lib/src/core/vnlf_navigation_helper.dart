@@ -8,7 +8,9 @@ bool isVnlfHost(String? host) {
   final h = host.toLowerCase();
   return h == 'vietnamlinuxfamily.net' ||
       h == 'www.vietnamlinuxfamily.net' ||
-      h == 'localhost';
+      h == 'localhost' ||
+      h == '127.0.0.1' ||
+      h == '10.0.2.2';
 }
 
 /// Resolves a URL to an internal in-app route if it belongs to VNLF.

@@ -23,11 +23,13 @@ class VnlfTabletRail extends StatelessWidget {
     this.themeToggleTooltip = '',
     this.themeToggleSemanticLabel,
     this.profileSemanticLabel,
+    this.unreadDestinations = const {},
     this.semanticLabel,
   });
 
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
+  final Set<VnlfNavDestination> unreadDestinations;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
@@ -60,6 +62,7 @@ class VnlfTabletRail extends StatelessWidget {
             _RailNavButton(
               destination: dest,
               selected: dest == activeDestination,
+              hasUnread: unreadDestinations.contains(dest),
               tooltip: destinationLabels[dest] ?? '',
               semanticLabel:
                   destinationSemanticLabels[dest] ?? destinationLabels[dest],
@@ -127,6 +130,7 @@ class _RailNavButton extends StatelessWidget {
     required this.selected,
     required this.tooltip,
     required this.onTap,
+    this.hasUnread = false,
     this.semanticLabel,
   });
 
@@ -134,6 +138,7 @@ class _RailNavButton extends StatelessWidget {
   final bool selected;
   final String tooltip;
   final VoidCallback onTap;
+  final bool hasUnread;
   final String? semanticLabel;
 
   @override
@@ -157,10 +162,30 @@ class _RailNavButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
             border: selected ? Border.all(color: colors.line) : null,
           ),
-          child: Icon(
-            destination.icon,
-            size: 20,
-            color: selected ? colors.brand : colors.muted,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                destination.icon,
+                size: 20,
+                color: selected ? colors.brand : colors.muted,
+              ),
+              if (hasUnread)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD7473E),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colors.bg, width: 1.5),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

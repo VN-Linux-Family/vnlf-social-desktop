@@ -59,6 +59,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.themePickerSemanticLabel,
     this.profileSemanticLabel,
     this.collapseSidebarSemanticLabel,
+    this.unreadDestinations = const {},
     this.semanticLabel,
   });
 
@@ -67,6 +68,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
 
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
+  final Set<VnlfNavDestination> unreadDestinations;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
@@ -235,6 +237,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
                         destinationSemanticLabels[dest] ??
                         destinationLabels[dest],
                     selected: dest == activeDestination,
+                    hasUnread: unreadDestinations.contains(dest),
                     onTap: () => onDestinationSelected?.call(dest),
                   ),
                   const SizedBox(height: 2),
