@@ -58,6 +58,12 @@ final class PendingFeedbackMedia {
   final FeedbackMediaRepository _owner;
 }
 
+final class FeedbackMediaRecoverySession {
+  FeedbackMediaRecoverySession._(this._owner, this._session);
+  final FeedbackMediaRepository _owner;
+  final ApiSessionScope _session;
+}
+
 final class FeedbackMediaRepository {
   FeedbackMediaRepository(this._client, {FeedbackMediaTransfer? upload})
     : _transfer = upload ?? _uploadNative;
@@ -69,6 +75,9 @@ final class FeedbackMediaRepository {
   );
   static final _assetId = RegExp(r'^[a-zA-Z0-9_-]{1,80}$');
   static final _headerName = RegExp(r"^[!#\$%&'*+.^_`|~0-9a-zA-Z-]+$");
+
+  FeedbackMediaRecoverySession captureRecoverySession() =>
+      FeedbackMediaRecoverySession._(this, _client.captureSession());
 
   Future<PendingFeedbackMedia> presign({
     required String submissionId,
@@ -187,12 +196,46 @@ final class FeedbackMediaRepository {
 
   Future<void> delete(PendingFeedbackMedia pending) async {
     _check(pending);
-    final response = await _client.request<Map<String, dynamic>>(
-      'DELETE',
-      '/api/v1/feedback/assets/${Uri.encodeComponent(pending.assetId)}',
-      query: {'clientSubmissionId': pending.submissionId},
+    await _deleteIdentity(
+      assetId: pending.assetId,
+      submissionId: pending.submissionId,
+      session: pending._session,
     );
     _check(pending);
+  }
+
+  /// Deletes a recovered asset after the caller has verified its saved owner.
+  /// The scope must be captured for that owner before loading the draft.
+  Future<void> deleteRecovered({
+    required String assetId,
+    required String submissionId,
+    required FeedbackMediaRecoverySession session,
+  }) async {
+    if (!identical(session._owner, this)) {
+      throw const ParseFailure('feedback.upload.owner');
+    }
+    await _deleteIdentity(
+      assetId: assetId,
+      submissionId: submissionId,
+      session: session._session,
+    );
+  }
+
+  Future<void> _deleteIdentity({
+    required String assetId,
+    required String submissionId,
+    required ApiSessionScope session,
+  }) async {
+    if (!_assetId.hasMatch(assetId) || !_uuid.hasMatch(submissionId)) {
+      throw const ParseFailure('feedback.upload.input');
+    }
+    session.ensureCurrent();
+    final response = await _client.request<Map<String, dynamic>>(
+      'DELETE',
+      '/api/v1/feedback/assets/${Uri.encodeComponent(assetId)}',
+      query: {'clientSubmissionId': submissionId},
+    );
+    session.ensureCurrent();
     if (response['ok'] != true) {
       throw const ParseFailure('feedback.upload.delete');
     }

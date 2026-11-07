@@ -15,6 +15,51 @@ FeedbackMediaFile file({String mime = 'image/png', int length = 2}) =>
     );
 
 void main() {
+  test('recovered deletion validates identity, acknowledgment and session', () async {
+    var calls = 0;
+    var acknowledged = false;
+    final client = ApiClient(
+      hostKey: Object(),
+      throttleInterval: Duration.zero,
+      transport: (request) async {
+        calls++;
+        expect(request.method, 'DELETE');
+        expect(request.query, {'clientSubmissionId': submission});
+        return ApiResponse(
+          statusCode: 200,
+          body: acknowledged ? '{"ok":true}' : '{"ok":false}',
+        );
+      },
+    );
+    final repository = FeedbackMediaRepository(client);
+    final session = repository.captureRecoverySession();
+    await expectLater(
+      repository.deleteRecovered(
+        assetId: '../bad', submissionId: submission, session: session,
+      ),
+      throwsA(isA<ParseFailure>()),
+    );
+    expect(calls, 0);
+    await expectLater(
+      repository.deleteRecovered(
+        assetId: 'asset-1', submissionId: submission, session: session,
+      ),
+      throwsA(isA<ParseFailure>()),
+    );
+    acknowledged = true;
+    await repository.deleteRecovered(
+      assetId: 'asset-1', submissionId: submission, session: session,
+    );
+    client.invalidateSession();
+    await expectLater(
+      repository.deleteRecovered(
+        assetId: 'asset-1', submissionId: submission, session: session,
+      ),
+      throwsA(isA<HttpFailure>()),
+    );
+    expect(calls, 2);
+  });
+
   test('presigns, transfers, completes and deletes the same asset', () async {
     final requests = <ApiRequest>[];
     final client = ApiClient(
