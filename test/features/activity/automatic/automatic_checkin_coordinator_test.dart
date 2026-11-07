@@ -41,8 +41,22 @@ void main() {
     final coordinator = _coordinator(storage, repo);
     await coordinator.update(_state());
     expect(repo.claims, isEmpty);
-    expect(coordinator.status, AutomaticCheckInStatus.uncertain);
+    expect(coordinator.status, AutomaticCheckInStatus.failed);
   });
+
+  test(
+    'a storage failure with failed cleanup leaves status uncertain',
+    () async {
+      final storage = _Storage()
+        ..failWrite = true
+        ..failDelete = true;
+      final repo = _Repository();
+      final coordinator = _coordinator(storage, repo);
+      await coordinator.update(_state());
+      expect(repo.claims, isEmpty);
+      expect(coordinator.status, AutomaticCheckInStatus.uncertain);
+    },
+  );
 
   test('a failed uncertainty marker restores the prior unsent phase', () async {
     final storage = _Storage()..failMarkerWrite = true;
@@ -72,6 +86,38 @@ void main() {
       expect(repo.claims, [true]);
     },
   );
+
+  test(
+    'a pending phase write error is restored before subsequent runs',
+    () async {
+      final storage = _Storage()..failPendingPhaseAfterWrite = true;
+      final repo = _Repository();
+      final coordinator = _coordinator(storage, repo);
+      await coordinator.update(_state());
+      expect(repo.claims, isEmpty);
+      expect(storage.values, isEmpty);
+      expect(coordinator.status, AutomaticCheckInStatus.failed);
+      storage.failPendingPhaseAfterWrite = false;
+      await coordinator.update(_state());
+      expect(repo.claims, [true]);
+    },
+  );
+
+  test('an acknowledged check-in notifies callers even if post-ack storage write fails', () async {
+    var refreshed = false;
+    final storage = _Storage()..failPostAckPhaseWrite = true;
+    final repo = _Repository();
+    final coordinator = _coordinator(
+      storage,
+      repo,
+      onAcknowledged: () => refreshed = true,
+    );
+    await coordinator.update(_state());
+    expect(repo.claims, [true]);
+    await Future<void>.delayed(Duration.zero);
+    expect(refreshed, isTrue);
+    expect(coordinator.status, AutomaticCheckInStatus.uncertain);
+  });
 
   test(
     'a failed marker preserves a prior confirmed attendance record',
@@ -240,6 +286,7 @@ AutomaticCheckInCoordinator _coordinator(
   SessionStorage storage,
   _Repository repo, {
   DateTime Function()? clock,
+  void Function()? onAcknowledged,
 }) => AutomaticCheckInCoordinator(
   ownerId: 'owner',
   service: ActivityService(
@@ -248,6 +295,7 @@ AutomaticCheckInCoordinator _coordinator(
   ),
   storage: storage,
   clock: clock ?? () => DateTime.utc(2026, 11, 7),
+  onAcknowledged: onAcknowledged,
 );
 
 AutomaticCheckInContext _state({
@@ -275,10 +323,14 @@ CheckInAcknowledgment _ack() => CheckInAcknowledgment(
 final class _Storage implements SessionStorage {
   final values = <String, String>{};
   bool failWrite = false;
+  bool failDelete = false;
   bool failMarkerWrite = false;
   bool failMarkerAfterWrite = false;
+  bool failPendingPhaseAfterWrite = false;
+  bool failPostAckPhaseWrite = false;
   @override
   Future<void> delete(String key) async {
+    if (failDelete) throw StateError('storage delete failure');
     values.remove(key);
   }
 
@@ -290,7 +342,17 @@ final class _Storage implements SessionStorage {
     if (failMarkerWrite && key.startsWith('vnlf.activity.checkin.')) {
       throw StateError('marker write failed');
     }
+    if (failPostAckPhaseWrite &&
+        key.startsWith('vnlf.activity.automatic.') &&
+        (value.endsWith(':done') || value.endsWith(':recorded'))) {
+      throw StateError('post-ack storage write failed');
+    }
     values[key] = value;
+    if (failPendingPhaseAfterWrite &&
+        key.startsWith('vnlf.activity.automatic.') &&
+        value.endsWith(':pending')) {
+      throw StateError('pending phase write failed after persistence');
+    }
     if (failMarkerAfterWrite && key.startsWith('vnlf.activity.checkin.')) {
       throw StateError('marker failed after persistence');
     }

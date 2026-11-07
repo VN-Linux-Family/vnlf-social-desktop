@@ -39,6 +39,7 @@ class _App extends ConsumerStatefulWidget {
 
 class _AppState extends ConsumerState<_App> {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   final _modalTracker = AutomaticModalTracker(
     blockedPageNames: {composeRouteName, editComposeRouteName},
   );
@@ -57,6 +58,14 @@ class _AppState extends ConsumerState<_App> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<Session?>>(sessionProvider, (previous, next) {
+      final prevUser = previous?.valueOrNull?.userId;
+      final nextUser = next.valueOrNull?.userId;
+      if (prevUser != nextUser) {
+        _scaffoldMessengerKey.currentState?.clearSnackBars();
+      }
+    });
+
     final auth = ref.watch(sessionProvider);
     final session = auth is AsyncData<Session?> ? auth.value : null;
     final hasConfirmedSession = session != null && session.userId.isNotEmpty;
@@ -72,6 +81,7 @@ class _AppState extends ConsumerState<_App> {
           )
         : false;
     return MaterialApp.router(
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       builder: (context, child) => MotionPreferenceScope(
         reduceMotion: reduceMotion,
         child: TextSizeScope(
@@ -91,11 +101,11 @@ class _AppState extends ConsumerState<_App> {
                 if (!mounted || !identical(ref.read(sessionProvider), auth)) {
                   return;
                 }
-                final context = _navigatorKey.currentContext;
-                if (context == null) return;
-                final messenger = ScaffoldMessenger.maybeOf(context);
+                final messenger = _scaffoldMessengerKey.currentState;
                 if (messenger == null) return;
+                final context = _navigatorKey.currentContext;
                 final english =
+                    context != null &&
                     Localizations.localeOf(context).languageCode == 'en';
                 messenger.showSnackBar(
                   SnackBar(

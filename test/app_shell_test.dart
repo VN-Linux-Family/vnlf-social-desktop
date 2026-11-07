@@ -77,4 +77,30 @@ void main() {
     expect(Localizations.localeOf(context), const Locale('en'));
     expect(find.text('Feed'), findsWidgets);
   });
+
+  testWidgets('account switch removes an active problem notice snackbar', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const MainApp()),
+    );
+    await tester.pumpAndSettle();
+
+    final authController = container.read(authControllerProvider.notifier);
+    await authController.login('testuser', 'password');
+    await tester.pumpAndSettle();
+
+    final messenger = tester.state<ScaffoldMessengerState>(
+      find.byType(ScaffoldMessenger),
+    );
+    messenger.showSnackBar(const SnackBar(content: Text('Notice problem')));
+    await tester.pump();
+    expect(find.text('Notice problem'), findsOneWidget);
+
+    await authController.logout();
+    await tester.pump();
+    expect(find.text('Notice problem'), findsNothing);
+  });
 }

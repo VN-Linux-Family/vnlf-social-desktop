@@ -138,8 +138,8 @@ final class AutomaticCheckInCoordinator {
         await uncertainty.clear();
       }
 
-      await storage.write(_key, '$day:pending');
       try {
+        await storage.write(_key, '$day:pending');
         await uncertainty.mark();
       } catch (_) {
         try {
@@ -172,6 +172,8 @@ final class AutomaticCheckInCoordinator {
         _status = AutomaticCheckInStatus.uncertain;
         return;
       }
+      final notify = onAcknowledged;
+      if (notify != null) scheduleMicrotask(notify);
       await storage.write(_key, '$day:${claim ? 'done' : 'recorded'}');
       if (!_current(revision, day)) return;
       await uncertainty.clear();
@@ -184,8 +186,6 @@ final class AutomaticCheckInCoordinator {
         _celebration = result;
         _celebrationDay = day;
       }
-      final notify = onAcknowledged;
-      if (notify != null) scheduleMicrotask(notify);
       // A false claim may have completed while the modal closed. Release the
       // lease first; the follow-up acquires it and persists its own intent.
     } catch (_) {
