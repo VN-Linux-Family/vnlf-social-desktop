@@ -84,12 +84,12 @@ remain release gates. Do not replace these with simulated success states.
 
 The pinned server records attendance when issuing login and session responses,
 so the authorized test logins may have recorded it even though no explicit
-check-in request was made. No removal endpoint is known. Automatic celebration
-still needs an account/session-bound lifecycle coordinator that shares the
-manual check-in lease and durable uncertainty marker, respects visibility and
-open dialogs, handles Vietnam-local day rollover and never automatically repeats
-an uncertain write. Validate races and cleanup with synthetic tests before any
-live use.
+check-in request was made. No removal endpoint is known. The automatic
+celebration now uses an account/session-bound lifecycle coordinator that shares
+the manual check-in lease and durable uncertainty marker, respects visibility,
+dialogs and the composer, handles Vietnam-local day rollover and never
+automatically repeats an uncertain write. Synthetic tests cover these paths;
+live behavior and visual device verification remain outstanding.
 
 Live owner verification: production HTTP/auth repositories authenticated the
 authorized owner, confirmed the matching session, logged out and confirmed an

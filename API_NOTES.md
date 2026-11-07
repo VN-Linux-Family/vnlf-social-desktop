@@ -629,8 +629,12 @@ inclusive `from` and `to` dates; the pinned source returns each date in the
 requested range, Vietnam-local `today`, point totals, and streak information.
 The screen and owner/session guards have synthetic coverage, including date
 rollover. A read-only owner-account calendar request passed against the deployed
-server and the test session was logged out. The check-in endpoint is not called
-automatically by the native client; device visual verification remains outstanding.
+server and the test session was logged out. The native client now calls the
+source-confirmed check-in endpoint automatically for a confirmed live session;
+it coordinates with manual requests, app visibility, dialogs and the composer,
+uses Vietnam-local days, and does not automatically repeat an uncertain write.
+The automatic flow has synthetic coverage only; device visual verification and
+live behavior remain outstanding.
 The pinned auth source also calls `recordAttendance` while creating a login or
 session response. Consequently, the authorized test logins and session reads may
 have recorded attendance even though no explicit check-in request was made. No

@@ -6,6 +6,9 @@ import 'l10n/app_localizations.dart';
 import 'src/app/app_router.dart';
 import 'src/app/providers.dart';
 import 'src/design_system/design_system.dart';
+import 'src/domain/models.dart';
+import 'src/features/activity/automatic/automatic_checkin_binding.dart';
+import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/features/realtime/presentation/community_realtime_binding.dart';
 import 'src/features/settings/preferences/preferences_controller.dart';
@@ -35,16 +38,31 @@ class _App extends ConsumerStatefulWidget {
 }
 
 class _AppState extends ConsumerState<_App> {
-  final _router = createMainRouter();
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  final _modalTracker = AutomaticModalTracker(
+    blockedPageNames: {composeRouteName, editComposeRouteName},
+  );
+  late final _router = createMainRouter(
+    navigatorKey: _navigatorKey,
+    rootObservers: [_modalTracker.observer()],
+    shellObservers: [_modalTracker.observer()],
+  );
 
   @override
   void dispose() {
     _router.dispose();
+    _modalTracker.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(sessionProvider);
+    final session = auth is AsyncData<Session?> ? auth.value : null;
+    final hasConfirmedSession = session != null && session.userId.isNotEmpty;
+    final client = ref.watch(apiClientProvider);
+    final storage = ref.watch(sessionStorageProvider);
+    final live = !offlineFeatures && ref.watch(ioTransportProvider) != null;
     final hasSession = ref.watch(sessionStateProvider) != null;
     final reduceMotion = hasSession && !offlineFeatures
         ? ref.watch(
@@ -57,8 +75,20 @@ class _AppState extends ConsumerState<_App> {
       builder: (context, child) => MotionPreferenceScope(
         reduceMotion: reduceMotion,
         child: TextSizeScope(
-          child: CommunityAppBinding(
-            child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+          child: AutomaticCheckInBinding(
+            client: client,
+            storage: storage,
+            tracker: _modalTracker,
+            navigatorKey: _navigatorKey,
+            ownerId: hasConfirmedSession ? session.userId : null,
+            confirmation: hasConfirmedSession ? auth : null,
+            live: live,
+            onViewActivity: () => _router.go('/activity'),
+            onAcknowledged: (owner) =>
+                ref.invalidate(activityServiceProvider(owner)),
+            child: CommunityAppBinding(
+              child: AppUpdateNotifier(child: child ?? const SizedBox.shrink()),
+            ),
           ),
         ),
       ),

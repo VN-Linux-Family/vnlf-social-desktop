@@ -14,12 +14,19 @@ import 'automatic_checkin_coordinator.dart';
 /// Share one tracker between distinct observers on every app navigator.
 /// Popup routes remain blocking even when another route covers them.
 class AutomaticModalTracker extends ChangeNotifier {
+  AutomaticModalTracker({this.blockedPageNames = const {}});
+
+  final Set<String> blockedPageNames;
   final Set<Route<dynamic>> _routes = {};
   bool get modalOpen => _routes.isNotEmpty;
   NavigatorObserver observer() => _ModalObserver(this);
 
   void _add(Route<dynamic> route) {
-    if (route is PopupRoute && _routes.add(route)) notifyListeners();
+    if ((route is PopupRoute ||
+            blockedPageNames.contains(route.settings.name)) &&
+        _routes.add(route)) {
+      notifyListeners();
+    }
   }
 
   void _remove(Route<dynamic> route) {
@@ -31,11 +38,14 @@ class _ModalObserver extends NavigatorObserver {
   _ModalObserver(this.tracker);
   final AutomaticModalTracker tracker;
   @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => tracker._add(route);
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      tracker._add(route);
   @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => tracker._remove(route);
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      tracker._remove(route);
   @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) => tracker._remove(route);
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      tracker._remove(route);
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     if (oldRoute != null) tracker._remove(oldRoute);
@@ -47,9 +57,17 @@ class _ModalObserver extends NavigatorObserver {
 /// successful server session confirmation; null means unconfirmed.
 class AutomaticCheckInBinding extends StatefulWidget {
   const AutomaticCheckInBinding({
-    super.key, required this.client, required this.storage, required this.tracker,
-    required this.navigatorKey, required this.ownerId, required this.confirmation,
-    required this.live, required this.onViewActivity, required this.child,
+    super.key,
+    required this.client,
+    required this.storage,
+    required this.tracker,
+    required this.navigatorKey,
+    required this.ownerId,
+    required this.confirmation,
+    required this.live,
+    required this.onViewActivity,
+    required this.child,
+    this.onAcknowledged,
     this.clock,
   });
 
@@ -61,11 +79,13 @@ class AutomaticCheckInBinding extends StatefulWidget {
   final Object? confirmation;
   final bool live;
   final VoidCallback onViewActivity;
+  final ValueChanged<String>? onAcknowledged;
   final Widget child;
   final DateTime Function()? clock;
 
   @override
-  State<AutomaticCheckInBinding> createState() => _AutomaticCheckInBindingState();
+  State<AutomaticCheckInBinding> createState() =>
+      _AutomaticCheckInBindingState();
 }
 
 class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
@@ -78,6 +98,7 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
   NavigatorState? _dialogNavigator;
   Object? _invalidConfirmation;
   int _generation = 0;
+  int _acknowledgedWrites = 0;
   bool _visible = false;
   bool _running = false;
   AutomaticCheckInCoordinator? _activeCoordinator;
@@ -87,8 +108,13 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
 
   DateTime get _now => widget.clock?.call() ?? DateTime.now();
   bool get _valid {
-    if (!widget.live || widget.ownerId == null || widget.ownerId!.trim().isEmpty ||
-        widget.confirmation == null || identical(widget.confirmation, _invalidConfirmation)) return false;
+    if (!widget.live ||
+        widget.ownerId == null ||
+        widget.ownerId!.trim().isEmpty ||
+        widget.confirmation == null ||
+        identical(widget.confirmation, _invalidConfirmation)) {
+      return false;
+    }
     try {
       _scope?.ensureCurrent();
       return _scope != null;
@@ -101,13 +127,17 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _visible = WidgetsBinding.instance.lifecycleState == null ||
+    _visible =
+        WidgetsBinding.instance.lifecycleState == null ||
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     widget.tracker.addListener(_changed);
     _attach();
     _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       final day = activityDayString(_now);
-      if (day != _day) _changed();
+      if (day != _day ||
+          _coordinator?.status == AutomaticCheckInStatus.blocked) {
+        _changed();
+      }
     });
   }
 
@@ -124,6 +154,7 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     _generation++;
     _coordinator?.clear();
     _coordinator = null;
+    _acknowledgedWrites = 0;
     _closeDialog();
     _dirty = false;
   }
@@ -135,8 +166,10 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
       oldWidget.tracker.removeListener(_changed);
       widget.tracker.addListener(_changed);
     }
-    if (oldWidget.client != widget.client || oldWidget.storage != widget.storage ||
-        oldWidget.ownerId != widget.ownerId || oldWidget.live != widget.live ||
+    if (oldWidget.client != widget.client ||
+        oldWidget.storage != widget.storage ||
+        oldWidget.ownerId != widget.ownerId ||
+        oldWidget.live != widget.live ||
         !identical(oldWidget.confirmation, widget.confirmation)) {
       _reset();
       _unobserve?.call();
@@ -163,16 +196,23 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     final coordinator = _coordinator ??= AutomaticCheckInCoordinator(
       ownerId: owner,
       service: ActivityService(
-        LiveActivityRepository(widget.client, ownerId: owner,
-          currentOwnerId: () => _valid ? widget.ownerId : null),
+        LiveActivityRepository(
+          widget.client,
+          ownerId: owner,
+          currentOwnerId: () => _valid ? widget.ownerId : null,
+        ),
         uncertainty: ActivityUncertainty(widget.storage, owner),
       ),
       storage: widget.storage,
       clock: () => _now,
     );
-    final context = AutomaticCheckInContext(ownerId: owner,
-      sessionGeneration: _generation, confirmed: true, visible: _visible,
-      modalOpen: widget.tracker.modalOpen);
+    final context = AutomaticCheckInContext(
+      ownerId: owner,
+      sessionGeneration: _generation,
+      confirmed: true,
+      visible: _visible,
+      modalOpen: widget.tracker.modalOpen,
+    );
     // Update immediately, even during a pending call, to invalidate its view.
     if (_running) {
       if (identical(_activeCoordinator, coordinator)) {
@@ -189,6 +229,13 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
       _running = false;
       _activeCoordinator = null;
       if (!mounted) return;
+      if (generation == _generation &&
+          _valid &&
+          identical(_coordinator, coordinator) &&
+          coordinator.acknowledgedWrites > _acknowledgedWrites) {
+        _acknowledgedWrites = coordinator.acknowledgedWrites;
+        widget.onAcknowledged?.call(owner);
+      }
       if (generation != _generation || _dirty) {
         _dirty = false;
         _changed();
@@ -203,22 +250,33 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     _frameQueued = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _frameQueued = false;
-      if (!mounted || !_valid || !_visible || widget.tracker.modalOpen || _dialog != null) return;
+      if (!mounted ||
+          !_valid ||
+          !_visible ||
+          widget.tracker.modalOpen ||
+          _dialog != null) {
+        return;
+      }
       final navigator = widget.navigatorKey.currentState;
       if (navigator == null || !navigator.mounted) return;
       final acknowledgment = _coordinator?.takeCelebration();
       if (acknowledgment == null) return;
       final generation = _generation;
       late final DialogRoute<void> route;
-      route = DialogRoute<void>(context: navigator.context, builder: (_) =>
-        ActivityCheckInCelebration(acknowledgment: acknowledgment,
+      route = DialogRoute<void>(
+        context: navigator.context,
+        builder: (_) => ActivityCheckInCelebration(
+          acknowledgment: acknowledgment,
           onContinue: () => _removeDialog(route),
           onViewActivity: () {
             if (!mounted || generation != _generation || !_valid) return;
             _removeDialog(route);
-            if (mounted && generation == _generation && _valid) widget.onViewActivity();
+            if (mounted && generation == _generation && _valid) {
+              widget.onViewActivity();
+            }
           },
-        ));
+        ),
+      );
       _dialog = route;
       _dialogNavigator = navigator;
       navigator.push(route).whenComplete(() {
@@ -241,7 +299,10 @@ class _AutomaticCheckInBindingState extends State<AutomaticCheckInBinding>
     final navigator = _dialogNavigator;
     _dialog = null;
     _dialogNavigator = null;
-    if (route != null && navigator != null && navigator.mounted && route.isActive) {
+    if (route != null &&
+        navigator != null &&
+        navigator.mounted &&
+        route.isActive) {
       navigator.removeRoute(route);
     }
   }

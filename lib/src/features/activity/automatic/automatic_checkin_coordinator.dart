@@ -51,6 +51,8 @@ final class AutomaticCheckInCoordinator {
   bool _running = false;
   bool _cleared = false;
   int _revision = 0;
+  int _acknowledgedWrites = 0;
+  int get acknowledgedWrites => _acknowledgedWrites;
   AutomaticCheckInStatus _status = AutomaticCheckInStatus.idle;
   AutomaticCheckInStatus get status => _status;
 
@@ -154,6 +156,7 @@ final class AutomaticCheckInCoordinator {
         await uncertainty.mark();
         return;
       }
+      _acknowledgedWrites++;
       _status = AutomaticCheckInStatus.recorded;
       if (result.showCelebration) {
         _celebration = result;

@@ -39,6 +39,9 @@ const _paths = <VnlfNavDestination, String>{
   VnlfNavDestination.projects: '/projects',
 };
 
+const composeRouteName = 'compose';
+const editComposeRouteName = 'edit-compose';
+
 /// Feature screens are supplied by the application composition root.
 GoRouter createAppRouter({
   required Map<VnlfNavDestination, WidgetBuilder> screens,
@@ -87,7 +90,11 @@ GoRouter createAppRouter({
 }
 
 /// Public feature routes use repository-backed native screens.
-GoRouter createMainRouter() {
+GoRouter createMainRouter({
+  GlobalKey<NavigatorState>? navigatorKey,
+  List<NavigatorObserver>? rootObservers,
+  List<NavigatorObserver>? shellObservers,
+}) {
   const destinations = <VnlfNavDestination, String>{
     VnlfNavDestination.feed: '/',
     VnlfNavDestination.explore: '/discover',
@@ -96,6 +103,8 @@ GoRouter createMainRouter() {
     VnlfNavDestination.projects: '/projects',
   };
   return GoRouter(
+    navigatorKey: navigatorKey,
+    observers: rootObservers,
     routes: [
       GoRoute(
         path: '/gallery',
@@ -104,14 +113,17 @@ GoRouter createMainRouter() {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/compose',
+        name: composeRouteName,
         builder: (context, state) => const ComposerScreen(),
       ),
       GoRoute(
         path: '/compose/:id',
+        name: editComposeRouteName,
         builder: (context, state) =>
             ComposerScreen(draftId: state.pathParameters['id']!),
       ),
       ShellRoute(
+        observers: shellObservers,
         builder: (context, state, child) {
           final english = Localizations.localeOf(context).languageCode == 'en';
           final labels = english

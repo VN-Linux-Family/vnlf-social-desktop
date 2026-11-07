@@ -8,7 +8,7 @@ import '../domain/activity_uncertainty.dart';
 import '../domain/activity_service.dart';
 import 'activity_screen.dart';
 
-final _activityServiceProvider = Provider.autoDispose
+final activityServiceProvider = Provider.autoDispose
     .family<ActivityService, String>((ref, ownerId) {
       return ActivityService(
         LiveActivityRepository(
@@ -42,7 +42,7 @@ class ActivityPage extends ConsumerWidget {
     }
     return ActivityScreen(
       key: ValueKey(session.userId),
-      service: ref.watch(_activityServiceProvider(session.userId)),
+      service: ref.watch(activityServiceProvider(session.userId)),
     );
   }
 }
