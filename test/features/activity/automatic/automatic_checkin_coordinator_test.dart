@@ -59,6 +59,30 @@ void main() {
     expect(repo.claims, [true]);
   });
 
+  test(
+    'an unsent celebration claim retains a confirmed earlier record',
+    () async {
+      final storage = _DelayedMarkerStorage();
+      storage.values['vnlf.activity.automatic.owner'] = '2026-11-07:recorded';
+      final repo = _Repository();
+      final coordinator = _coordinator(storage, repo);
+      final pending = coordinator.update(_state());
+      await storage.markerStarted.future;
+      await coordinator.update(_state(modal: true));
+      storage.allowMarker.complete();
+      await pending;
+      expect(repo.claims, isEmpty);
+      expect(
+        storage.values['vnlf.activity.automatic.owner'],
+        '2026-11-07:recorded',
+      );
+      await coordinator.update(_state(modal: true));
+      expect(repo.claims, isEmpty);
+      await coordinator.update(_state());
+      expect(repo.claims, [true]);
+    },
+  );
+
   test('a response from the previous day cannot be presented', () async {
     var now = DateTime.utc(2026, 11, 7);
     final repo = _Repository()..response = Completer<CheckInAcknowledgment>();
