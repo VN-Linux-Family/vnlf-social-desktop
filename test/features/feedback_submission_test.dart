@@ -14,13 +14,14 @@ void main() {
     (tester) async {
       final bodies = <Map<String, dynamic>>[];
       var succeeds = false;
+      var malformed = false;
       final client = ApiClient(
         hostKey: Object(),
         throttleInterval: Duration.zero,
         transport: (request) async {
           bodies.add(jsonDecode(request.body!) as Map<String, dynamic>);
           return ApiResponse(
-            statusCode: succeeds ? 200 : 503,
+            statusCode: succeeds || malformed ? 200 : 503,
             body: succeeds
                 ? '{"submissionId":"confirmed","reference":"F-1","rewardQueued":false,"duplicate":false}'
                 : '{}',
@@ -60,7 +61,8 @@ void main() {
       await tester.tap(find.text('Gửi cho VNLF'));
       await tester.pumpAndSettle();
       expect(find.text('Đã ghi nhận phản hồi!'), findsNothing);
-      expect(find.textContaining('Không gửi được'), findsOneWidget);
+      expect(find.textContaining('Chưa xác nhận được kết quả'), findsOneWidget);
+      expect(tester.widget<TextField>(input).enabled, isFalse);
       expect(
         tester.widget<TextField>(input).controller!.text,
         contains('tiếng Việt'),
@@ -74,10 +76,16 @@ void main() {
           ),
         ),
       );
+      malformed = true;
+      await tester.tap(find.text('Gửi cho VNLF'));
+      await tester.pumpAndSettle();
+      expect(find.text('Đã ghi nhận phản hồi!'), findsNothing);
+      expect(find.textContaining('Chưa xác nhận được kết quả'), findsOneWidget);
+      expect(bodies.last['clientSubmissionId'], identity);
       succeeds = true;
       await tester.tap(find.text('Gửi cho VNLF'));
       await tester.pumpAndSettle();
-      expect(bodies, hasLength(2));
+      expect(bodies, hasLength(3));
       expect(bodies.last['clientSubmissionId'], identity);
       expect(find.text('Đã ghi nhận phản hồi!'), findsOneWidget);
     },

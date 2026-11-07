@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../design_system/design_system.dart';
+import '../core/api_client.dart';
 import '../core/request_identity.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/activity/presentation/activity_page.dart';
@@ -492,9 +493,14 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
       ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
   final contentController = TextEditingController();
   final contactController = TextEditingController();
+  final client = ref.read(apiClientProvider);
+  final sessionScope = client.captureSession();
+  final pagePath =
+      GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ?? '/';
   var tabIndex = 0; // 0 = feedback, 1 = bug
   var submitted = false;
   var submitting = false;
+  var uncertain = false;
   String? error;
   String? draftSignature;
   String? submissionId;
@@ -661,7 +667,9 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               borderRadius: BorderRadius.circular(
                                 VnlfDimensions.radiusSm,
                               ),
-                              onTap: () => setDialogState(() => tabIndex = 0),
+                              onTap: submitting || uncertain
+                                  ? null
+                                  : () => setDialogState(() => tabIndex = 0),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -693,7 +701,9 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                               borderRadius: BorderRadius.circular(
                                 VnlfDimensions.radiusSm,
                               ),
-                              onTap: () => setDialogState(() => tabIndex = 1),
+                              onTap: submitting || uncertain
+                                  ? null
+                                  : () => setDialogState(() => tabIndex = 1),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 8,
@@ -770,6 +780,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     const SizedBox(height: 6),
                     TextField(
                       controller: contentController,
+                      enabled: !submitting && !uncertain,
                       maxLines: 4,
                       maxLength: 4000,
                       style: TextStyle(color: colors.ink, fontSize: 14),
@@ -818,6 +829,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     const SizedBox(height: 6),
                     TextField(
                       controller: contactController,
+                      enabled: !submitting && !uncertain,
                       style: TextStyle(color: colors.ink, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: 'example@domain.com',
@@ -910,39 +922,60 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                     error = null;
                                   });
                                   try {
-                                    final client = ref.read(apiClientProvider);
-                                    await client.request<Map<String, dynamic>>(
-                                      'POST',
-                                      '/api/v1/feedback',
-                                      body: jsonEncode({
-                                        'clientSubmissionId': submissionId,
-                                        'kind': tabIndex == 0
-                                            ? 'FEEDBACK'
-                                            : 'BUG',
-                                        'detail': detail,
-                                        'pagePath':
-                                            GoRouter.maybeOf(context)
-                                                ?.routeInformationProvider
-                                                .value
-                                                .uri
-                                                .path ??
-                                            '/',
-                                        if (session == null &&
-                                            contact.isNotEmpty)
-                                          'contactEmail': contact,
-                                        'assetIds': const <String>[],
-                                      }),
-                                    );
+                                    sessionScope.ensureCurrent();
+                                    final acknowledgment = await client
+                                        .request<Map<String, dynamic>>(
+                                          'POST',
+                                          '/api/v1/feedback',
+                                          body: jsonEncode({
+                                            'clientSubmissionId': submissionId,
+                                            'kind': tabIndex == 0
+                                                ? 'FEEDBACK'
+                                                : 'BUG',
+                                            'detail': detail,
+                                            'pagePath': pagePath,
+                                            if (session == null &&
+                                                contact.isNotEmpty)
+                                              'contactEmail': contact,
+                                            'assetIds': const <String>[],
+                                          }),
+                                        );
+                                    sessionScope.ensureCurrent();
+                                    if (acknowledgment['submissionId']
+                                            is! String ||
+                                        (acknowledgment['submissionId']
+                                                as String)
+                                            .isEmpty ||
+                                        acknowledgment['reference']
+                                            is! String ||
+                                        (acknowledgment['reference'] as String)
+                                            .isEmpty ||
+                                        acknowledgment['rewardQueued']
+                                            is! bool ||
+                                        acknowledgment['duplicate'] is! bool) {
+                                      throw const ParseFailure(
+                                        'feedback.acknowledgment',
+                                      );
+                                    }
                                     if (ctx.mounted) {
                                       setDialogState(() => submitted = true);
                                     }
-                                  } catch (_) {
+                                  } catch (failure) {
                                     if (ctx.mounted) {
-                                      setDialogState(
-                                        () => error = english
-                                            ? 'Could not send feedback. Your draft is kept; try again.'
-                                            : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.',
-                                      );
+                                      final ambiguous =
+                                          failure is! HttpFailure ||
+                                          failure.statusCode == 408 ||
+                                          failure.statusCode >= 500;
+                                      setDialogState(() {
+                                        uncertain = uncertain || ambiguous;
+                                        error = uncertain
+                                            ? (english
+                                                  ? 'The result is unconfirmed. Retry this unchanged feedback to check.'
+                                                  : 'Chưa xác nhận được kết quả. Hãy gửi lại góp ý không thay đổi để kiểm tra.')
+                                            : (english
+                                                  ? 'Could not send feedback. Your draft is kept; try again.'
+                                                  : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.');
+                                      });
                                     }
                                   } finally {
                                     if (ctx.mounted) {
