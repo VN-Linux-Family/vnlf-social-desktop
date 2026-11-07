@@ -630,7 +630,11 @@ requested range, Vietnam-local `today`, point totals, and streak information.
 The screen and owner/session guards have synthetic coverage, including date
 rollover. A read-only owner-account calendar request passed against the deployed
 server and the test session was logged out. The check-in endpoint is not called
-automatically; device visual verification remains outstanding.
+automatically by the native client; device visual verification remains outstanding.
+The pinned auth source also calls `recordAttendance` while creating a login or
+session response. Consequently, the authorized test logins and session reads may
+have recorded attendance even though no explicit check-in request was made. No
+confirmed endpoint for removing that attendance is known.
 
 ## Comment photos, mentions and session management — 2026-11-07
 
