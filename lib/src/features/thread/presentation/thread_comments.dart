@@ -79,9 +79,9 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             ..._confirmed,
           }.values,
         );
-    final parentId = _replyTo == null
+    final parentId = draft.pending?.parentId ?? (_replyTo == null
         ? null
-        : commentReplyParent(_replyTo!, visible);
+        : commentReplyParent(_replyTo!, visible));
     setState(() {
       _submitting = true;
       _failure = null;
@@ -235,6 +235,16 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       errors: actions.errors,
     );
     final draft = ref.watch(commentAttachmentControllerProvider(widget.postId));
+    final recovery = ref.watch(commentAttachmentRecoveryProvider(widget.postId));
+    if (recovery.hasValue && draft.pending != null && _input.text != draft.pending!.content) {
+      _input.text = draft.pending!.content;
+    }
+    ref.listen(commentAttachmentRecoveryProvider(widget.postId), (before, after) {
+      if (after.hasValue) {
+        final pending = ref.read(commentAttachmentControllerProvider(widget.postId)).pending;
+        if (pending != null) setState(() => _input.text = pending.content);
+      }
+    });
     final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
     return FeatureSurface(
       child: Column(
@@ -268,10 +278,14 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                   ),
                 ],
               ),
+            if (recovery.hasError)
+              Text(english ? 'Could not restore the pending comment. Sending is disabled.' : 'Không khôi phục được bình luận đang chờ. Chức năng gửi đã bị khóa.', style: VnlfTypography.meta(colors.red)),
+            if (draft.pending != null && draft.pending!.attachmentIds.isNotEmpty)
+              Text(english ? '${draft.pending!.attachmentIds.length} previously uploaded photos' : '${draft.pending!.attachmentIds.length} ảnh đã tải lên trước đó'),
             TextField(
               key: const ValueKey('comment-input'),
               controller: _input,
-              readOnly: draft.submissionPending || _submitting,
+              readOnly: recovery.isLoading || recovery.hasError || draft.submissionPending || _submitting,
               focusNode: widget.focusNode,
               minLines: 2,
               maxLines: 5,
@@ -284,8 +298,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             ),
             Text(
               english
-                  ? 'Selected photos upload immediately and may remain on the server after removal.'
-                  : 'Ảnh được tải lên ngay khi chọn và có thể vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.',
+                  ? 'Selected photos upload immediately and are publicly accessible. They may retain image metadata and remain on the server after removal.'
+                  : 'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.',
               style: VnlfTypography.meta(colors.muted),
             ),
             Wrap(
@@ -294,7 +308,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               children: [
                 OutlinedButton.icon(
                   key: const ValueKey('comment-add-photos'),
-                  onPressed: _selecting || _submitting || draft.submissionPending || draft.attachments.length >= 10 ? null : _pickAttachments,
+                  onPressed: recovery.isLoading || recovery.hasError || _selecting || _submitting || draft.submissionPending || draft.attachments.length >= 10 ? null : _pickAttachments,
                   icon: const Icon(Icons.add_photo_alternate_outlined),
                   label: Text(english ? 'Add photos' : 'Thêm ảnh'),
                 ),
@@ -355,7 +369,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               alignment: Alignment.centerRight,
               child: FilledButton(
                 onPressed:
-                    (_input.text.trim().isEmpty && draft.readyIds.isEmpty) ||
+                    recovery.isLoading || recovery.hasError || (_input.text.trim().isEmpty && draft.readyIds.isEmpty) ||
                         draft.attachments.any((item) => item.state != CommentAttachmentState.ready) ||
                         _input.text.length > 4000 ||
                         _selecting || _submitting

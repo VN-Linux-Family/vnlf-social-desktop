@@ -5,6 +5,7 @@ import '../../../core/request_identity.dart';
 import '../domain/article_comment.dart';
 import '../domain/comment_upload.dart';
 import 'comment_media_repository.dart';
+import 'comment_pending_store.dart';
 
 enum CommentAttachmentState { selected, presigning, presignFailed, uploading, uploadFailed, completing, completeFailed, ready }
 
@@ -19,8 +20,24 @@ final class CommentAttachment {
 
 /// A draft belongs to one article and the session active when it was created.
 final class CommentAttachmentController {
-  CommentAttachmentController(this.articleId, this._media, this._comments, ApiClient client)
-      : _session = client.captureSession();
+  CommentAttachmentController(this.articleId, this._media, this._comments, ApiClient client, {CommentPendingStore? store, String? ownerId})
+      : _session = client.captureSession(), _store = store, _ownerId = ownerId;
+  final CommentPendingStore? _store;
+  final String? _ownerId;
+  Future<void>? _initialization;
+  PendingComment? _pending;
+  PendingComment? get pending => _pending;
+  Future<void> initialize() => _initialization ??= _restore();
+  Future<void> _restore() async {
+    if (_store == null) return;
+    final pending = await _store.read(_ownerId!, articleId);
+    _session.ensureCurrent();
+    _pending = pending;
+    if (pending != null) {
+      _signature = jsonEncode([pending.content, pending.parentId, pending.attachmentIds]);
+      _identity = pending.identity;
+    }
+  }
   final String articleId;
   final CommentMediaRepository _media;
   final CommentsRepository _comments;
@@ -33,7 +50,7 @@ final class CommentAttachmentController {
   bool get submissionPending => _signature != null;
 
   List<CommentAttachment> get attachments => List.unmodifiable(_items);
-  List<String> get readyIds => List.unmodifiable(_items.where((item) => item.state == CommentAttachmentState.ready).map((item) => item.assetId!));
+  List<String> get readyIds => _pending?.attachmentIds ?? List.unmodifiable(_items.where((item) => item.state == CommentAttachmentState.ready).map((item) => item.assetId!));
 
   CommentAttachment add(CommentUploadFile file) {
     _session.ensureCurrent();
@@ -104,6 +121,7 @@ final class CommentAttachmentController {
 
   /// The same payload keeps the same identity after an uncertain response.
   Future<ArticleComment> submit(String content, {String? parentId}) async {
+    await initialize();
     _session.ensureCurrent();
     if (_submitting || _items.any((item) => item.state != CommentAttachmentState.ready)) throw StateError('Attachments not ready');
     final text = content.trim();
@@ -117,9 +135,22 @@ final class CommentAttachmentController {
     _signature ??= signature;
     _identity ??= newRequestIdentity();
     _submitting = true;
+    final payload = PendingComment(identity: _identity!, content: text, parentId: parentId, attachmentIds: ids);
     try {
+      if (_store != null && !hadUncertainAttempt) {
+        await _store.write(_ownerId!, articleId, payload);
+        _session.ensureCurrent();
+      }
+      _pending = payload;
       final result = await _comments.create(articleId, text, parentId: parentId, attachmentIds: ids, clientCommentId: _identity);
       _session.ensureCurrent();
+      if (result.content != text || result.parentId != parentId ||
+          jsonEncode(result.attachments.map((item) => item.id).toList()) != jsonEncode(ids)) {
+        throw const ParseFailure('comment.createAck');
+      }
+      if (_store != null) await _store.clear(_ownerId!, articleId);
+      _session.ensureCurrent();
+      _pending = null;
       _items.clear();
       _signature = null;
       _identity = null;
@@ -131,6 +162,8 @@ final class CommentAttachmentController {
       }.contains(error.code)) ||
           (error.statusCode == 404 && error.code == 'ARTICLE_NOT_FOUND');
       if (!hadUncertainAttempt && rejected) {
+        if (_store != null) await _store.clear(_ownerId!, articleId);
+        _pending = null;
         _signature = null;
         _identity = null;
       }

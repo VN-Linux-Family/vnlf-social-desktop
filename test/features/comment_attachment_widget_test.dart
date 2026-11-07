@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
+import 'package:vnlfsocialapp/src/core/session_storage_contract.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comment_media_repository.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comments_repository.dart';
@@ -26,12 +27,13 @@ void main() {
         return ApiResponse(statusCode: completionAttempts == 1 ? 500 : 200, body: completionAttempts == 1 ? '{}' : '{"assetId":"asset","status":"READY"}');
       }
       bodies.add(jsonDecode(r.body!) as Map<String, dynamic>);
-      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200, body: bodies.length == 1 ? '{}' : '{"id":"new","content":"","author":{}}');
+      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200, body: bodies.length == 1 ? '{}' : '{"id":"new","content":"","attachments":[{"id":"asset"}],"author":{}}');
     });
     final focus = FocusNode();
     addTearDown(focus.dispose);
     final container = ProviderContainer(overrides: [
       apiClientProvider.overrideWithValue(client),
+      sessionStorageProvider.overrideWithValue(_Storage()),
       commentsRepositoryProvider.overrideWithValue(LiveCommentsRepository(client)),
       commentMediaRepositoryProvider.overrideWithValue(CommentMediaRepository(client, upload: (_, _, _) async {})),
       commentAttachmentPickerProvider.overrideWithValue(() async => [CommentUploadFile(name: 'anh.png', mime: 'image/png', length: 1, openRead: () => Stream.value([1]))]),
@@ -44,7 +46,7 @@ void main() {
       home: Scaffold(body: SingleChildScrollView(child: ThreadComments(focusNode: focus, postId: 'article'))),
     )));
     await tester.pumpAndSettle();
-    expect(find.text('Ảnh được tải lên ngay khi chọn và có thể vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.'), findsOneWidget);
+    expect(find.text('Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('comment-add-photos')));
     await tester.pumpAndSettle();
     expect(find.text('anh.png'), findsOneWidget);
@@ -62,4 +64,14 @@ void main() {
     expect(bodies.last['attachmentIds'], ['asset']);
     expect(find.text('anh.png'), findsNothing);
   });
+}
+
+final class _Storage implements SessionStorage {
+  final values = <String, String>{};
+  @override
+  Future<String?> read(String key) async => values[key];
+  @override
+  Future<void> write(String key, String value) async { values[key] = value; }
+  @override
+  Future<void> delete(String key) async { values.remove(key); }
 }

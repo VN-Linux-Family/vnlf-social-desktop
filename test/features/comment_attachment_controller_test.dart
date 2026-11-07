@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
+import 'package:vnlfsocialapp/src/core/session_storage_contract.dart';
+import 'package:vnlfsocialapp/src/features/thread/data/comment_pending_store.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comment_attachment_controller.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comment_media_repository.dart';
 import 'package:vnlfsocialapp/src/features/thread/data/comments_repository.dart';
@@ -19,7 +21,7 @@ void main() {
         return ApiResponse(statusCode: completeCount == 1 ? 500 : 200, body: completeCount == 1 ? '{}' : '{"assetId":"asset","status":"READY"}');
       }
       bodies.add(jsonDecode(r.body!) as Map<String, dynamic>);
-      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200, body: bodies.length == 1 ? '{}' : '{"id":"comment","content":"","author":{}}');
+      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200, body: bodies.length == 1 ? '{}' : '{"id":"comment","content":"","attachments":[{"id":"asset"}],"author":{}}');
     });
     final controller = CommentAttachmentController('article', CommentMediaRepository(client, upload: (_, _, _) async {}), LiveCommentsRepository(client), client);
     final item = controller.add(file);
@@ -93,4 +95,37 @@ void main() {
     expect(attempt, 3);
   });
 
+  test('pending create recovers by owner and article after controller disposal', () async {
+    final storage = _Storage();
+    final bodies = <Map<String, dynamic>>[];
+    final client = ApiClient(hostKey: Object(), throttleInterval: Duration.zero, transport: (request) async {
+      bodies.add(jsonDecode(request.body!) as Map<String, dynamic>);
+      return ApiResponse(statusCode: bodies.length == 1 ? 500 : 200, body: bodies.length == 1 ? '{}' : '{"id":"comment","content":"first","author":{}}');
+    });
+    CommentAttachmentController make(String owner) => CommentAttachmentController('article', CommentMediaRepository(client), LiveCommentsRepository(client), client, store: CommentPendingStore(storage), ownerId: owner);
+    final first = make('owner');
+    await expectLater(first.submit('first'), throwsA(isA<HttpFailure>()));
+    final other = make('other');
+    await other.initialize();
+    expect(other.pending, isNull);
+    final restored = make('owner');
+    await restored.initialize();
+    expect(restored.pending!.content, 'first');
+    await expectLater(restored.submit('different'), throwsStateError);
+    await restored.submit('first');
+    expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
+    expect(await CommentPendingStore(storage).read('owner', 'article'), isNull);
+  });
+
+}
+
+
+final class _Storage implements SessionStorage {
+  final values = <String, String>{};
+  @override
+  Future<String?> read(String key) async => values[key];
+  @override
+  Future<void> write(String key, String value) async { values[key] = value; }
+  @override
+  Future<void> delete(String key) async { values.remove(key); }
 }

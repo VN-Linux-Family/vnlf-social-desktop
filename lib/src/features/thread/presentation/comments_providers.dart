@@ -8,6 +8,7 @@ import '../../shared/presentation/feature_samples.dart';
 import '../data/comments_repository.dart';
 import '../data/comment_media_repository.dart';
 import '../data/comment_attachment_controller.dart';
+import '../data/comment_pending_store.dart';
 import '../domain/article_comment.dart';
 import 'comment_actions.dart';
 
@@ -22,9 +23,13 @@ final commentMediaRepositoryProvider = Provider<CommentMediaRepository>(
 );
 
 final commentAttachmentControllerProvider = Provider.autoDispose.family<CommentAttachmentController, String>((ref, id) {
-  ref.watch(sessionStateProvider.select((session) => session?.userId));
-  return CommentAttachmentController(id, ref.watch(commentMediaRepositoryProvider), ref.watch(commentsRepositoryProvider), ref.watch(apiClientProvider));
+  final owner = ref.watch(sessionStateProvider.select((session) => session?.userId));
+  return CommentAttachmentController(id, ref.watch(commentMediaRepositoryProvider), ref.watch(commentsRepositoryProvider), ref.watch(apiClientProvider),
+    store: owner == null ? null : CommentPendingStore(ref.watch(sessionStorageProvider)), ownerId: owner);
 });
+
+final commentAttachmentRecoveryProvider = FutureProvider.autoDispose.family<void, String>((ref, id) =>
+    ref.watch(commentAttachmentControllerProvider(id)).initialize());
 
 final articleCommentsProvider = FutureProvider.autoDispose
     .family<List<ArticleComment>, String>((ref, id) async {
