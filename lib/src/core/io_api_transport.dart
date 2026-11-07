@@ -68,6 +68,13 @@ final class IoApiTransport {
     final uri = baseUri
         .resolve('/ws/community')
         .replace(scheme: baseUri.scheme == 'https' ? 'wss' : 'ws');
+    final originScheme = baseUri.scheme == 'wss'
+        ? 'https'
+        : baseUri.scheme == 'ws'
+        ? 'http'
+        : baseUri.scheme;
+    final origin =
+        '$originScheme://${baseUri.host}${baseUri.hasPort ? ':${baseUri.port}' : ''}';
     final client = NonRedirectingHttpClient(HttpClient())
       ..userAgent = ApiClient.userAgent;
     _pendingUpgrades.add(client);
@@ -76,7 +83,7 @@ final class IoApiTransport {
     try {
       upgrade = WebSocket.connect(
         uri.toString(),
-        headers: {HttpHeaders.cookieHeader: _sessionCookie!},
+        headers: {HttpHeaders.cookieHeader: _sessionCookie!, 'Origin': origin},
         customClient: client,
         maxPayloadLength: 1024 * 1024,
       );

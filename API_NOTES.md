@@ -322,6 +322,9 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 wss://vietnamlinuxfamily.net/ws/community
 ```
 Connection uses HTTP upgrade with existing session cookies.
+- [CONFIRMED] Handshake Origin validation: The server (Caddy / Cloudflare) returns `HTTP 403 Forbidden` if the `Origin` header is absent during WebSocket handshake upgrade. Native clients must pass `Origin: https://vietnamlinuxfamily.net` (matching the origin of `baseUri`).
+- [CONFIRMED] Unauthenticated closure: The server immediately closes unauthenticated WebSocket connections with close code `4401` ("Authentication required").
+- [CONFIRMED from production chunk `03vhpiw_fgmse.js`]: Realtime provider module `8808` (`RealtimeProvider`) performs an initial `presence:heartbeat` frame upon open, and triggers invalidation / refetching for `dm-conversations`, `dm-messages`, `channels`, and `voice-rooms`.
 
 > [!NOTE]
 > **Observation Audit**: The page's live `/ws/community` WebSocket connection was **NOT observed**, and its live frames were **NOT captured**. All endpoint strings, event names, and protocol patterns below were inferred solely by string-matching static JavaScript bundle `2bvq-3i0lg1dx.js`. All sample frames shown below are purely synthetic/invented.

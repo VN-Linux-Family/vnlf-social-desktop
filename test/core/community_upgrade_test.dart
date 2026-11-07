@@ -79,6 +79,10 @@ void main() {
         request.headers.value(HttpHeaders.userAgentHeader),
         ApiClient.userAgent,
       );
+      expect(
+        request.headers.value('origin'),
+        'http://127.0.0.1:${server.port}',
+      );
       final echoed = connection.frames.first;
       connection.send('{"synthetic":true}');
       expect(await echoed, '{"synthetic":true}');
