@@ -184,6 +184,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('settings on mobile has exactly one back button', (tester) async {
+    final router = await _pumpApp(tester, width: 390);
+    router.go('/settings');
+    await tester.pumpAndSettle();
+
+    final backButtons = find.byWidgetPredicate(
+      (widget) =>
+          widget is IconButton &&
+          widget.icon is Icon &&
+          ((widget.icon as Icon).icon == Icons.arrow_back_rounded ||
+              (widget.icon as Icon).icon == Icons.arrow_back),
+    );
+    expect(backButtons, findsOneWidget);
+  });
+
   testWidgets('discover searches and filters articles and opens contributors', (
     tester,
   ) async {

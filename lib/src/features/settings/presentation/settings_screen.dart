@@ -26,6 +26,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final english = Localizations.localeOf(context).languageCode == 'en';
+    final mobile = MediaQuery.sizeOf(context).width < 840;
     final colors = VnlfColors.of(context);
     final theme = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
@@ -41,11 +42,13 @@ class SettingsScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        FeatureHeader(
-          title: english ? 'Settings' : 'Cài đặt',
-          showSettings: false,
-        ),
-        const SizedBox(height: 12),
+        if (!mobile) ...[
+          FeatureHeader(
+            title: english ? 'Settings' : 'Cài đặt',
+            showSettings: false,
+          ),
+          const SizedBox(height: 12),
+        ],
         const AppUpdatePanel(),
         const SizedBox(height: 12),
         FeatureSurface(
