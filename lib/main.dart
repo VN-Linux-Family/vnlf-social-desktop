@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'src/app/app_router.dart';
 import 'src/app/providers.dart';
+import 'src/core/android_background_service.dart';
 import 'src/core/desktop_tray_service.dart';
 import 'src/design_system/design_system.dart';
 import 'src/domain/models.dart';
@@ -57,6 +58,10 @@ class _AppState extends ConsumerState<_App> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (DesktopTrayService.isDesktop) {
         ref.read(desktopTrayServiceProvider).initialize();
+      }
+      if (AndroidBackgroundService.isAndroid &&
+          ref.read(androidBackgroundSyncProvider)) {
+        AndroidBackgroundService.start();
       }
       ref
           .read(localNotificationServiceProvider)

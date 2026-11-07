@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/android_background_service.dart';
+import '../../../core/desktop_tray_service.dart';
 import '../data/community_socket_client.dart';
 import '../data/io_community_connection.dart';
 import '../domain/community_connection.dart';
@@ -21,7 +23,16 @@ final communitySocketProvider = Provider<CommunitySocketClient?>((ref) {
   if (session == null || session.userId.isEmpty || connector == null) {
     return null;
   }
-  final client = CommunitySocketClient(connector: connector);
+  final desktopMinimize = ref.watch(desktopMinimizeToTrayProvider);
+  final androidSync = ref.watch(androidBackgroundSyncProvider);
+  final keepAlive =
+      (DesktopTrayService.isDesktop && desktopMinimize) ||
+      (AndroidBackgroundService.isAndroid && androidSync);
+
+  final client = CommunitySocketClient(
+    connector: connector,
+    keepAliveInBackground: keepAlive,
+  );
   final cancel = ref.watch(apiClientProvider).observeSessionInvalidation(() {
     unawaited(client.dispose());
   });

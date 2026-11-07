@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/android_background_service.dart';
 import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../notifications/presentation/push_notification_status_panel.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -368,6 +370,40 @@ class SettingsScreen extends ConsumerWidget {
                       .read(desktopAutostartProvider.notifier)
                       .setAutostart(val),
                 ),
+              ],
+              if (AndroidBackgroundService.isAndroid) ...[
+                const SizedBox(height: 16),
+                Text(
+                  english
+                      ? 'Android Background Sync'
+                      : 'Đồng bộ & Thông báo ngầm Android',
+                  style: VnlfTypography.h2(colors.ink),
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  activeThumbColor: colors.brand,
+                  title: Text(
+                    english
+                        ? 'Keep connection alive in background'
+                        : 'Duy trì kết nối nền nhận thông báo',
+                    style: VnlfTypography.body(colors.ink),
+                  ),
+                  subtitle: Text(
+                    english
+                        ? 'Maintain lightweight background connection for instant DMs and mentions'
+                        : 'Duy trì kết nối ngầm nhẹ nhàng để nhận tin nhắn và thông báo tức thì',
+                    style: VnlfTypography.meta(colors.muted),
+                  ),
+                  value: ref.watch(androidBackgroundSyncProvider),
+                  onChanged: (val) => ref
+                      .read(androidBackgroundSyncProvider.notifier)
+                      .toggle(val),
+                ),
+              ],
+              if (!offlineFeatures && session != null) ...[
+                const SizedBox(height: 16),
+                const PushNotificationStatusPanel(),
               ],
             ],
           ),

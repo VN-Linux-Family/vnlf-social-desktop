@@ -17,6 +17,7 @@ final class CommunitySocketClient {
     Duration Function(int)? reconnectDelay,
     this.maxFailures = 6,
     this.recentEventLimit = 256,
+    this.keepAliveInBackground = false,
   }) : _requests = CommunityRequests(ackTimeout),
        _reconnectDelay = reconnectDelay ?? _defaultDelay,
        assert(maxFailures > 0),
@@ -27,6 +28,7 @@ final class CommunitySocketClient {
   final Duration heartbeatInterval;
   final Duration Function(int) _reconnectDelay;
   final int maxFailures, recentEventLimit;
+  final bool keepAliveInBackground;
   final _events = StreamController<CommunityEvent>.broadcast();
   final _statuses = StreamController<CommunitySocketStatus>.broadcast();
   final _issues = StreamController<CommunitySocketIssue>.broadcast();
@@ -58,13 +60,13 @@ final class CommunitySocketClient {
       !_disposed &&
       !_sessionRevoked &&
       _started &&
-      _foreground &&
+      (_foreground || keepAliveInBackground) &&
       generation == _generation;
 
   Future<void> start() async {
     if (_disposed || _started || _sessionRevoked) return;
     _started = true;
-    if (!_foreground) {
+    if (!_foreground && !keepAliveInBackground) {
       _set(CommunityConnectionPhase.suspended);
       return;
     }
@@ -77,7 +79,7 @@ final class CommunitySocketClient {
       await previous;
       if (!_disposed &&
           _started &&
-          _foreground &&
+          (_foreground || keepAliveInBackground) &&
           _connection == null &&
           _reconnect == null &&
           _status.phase != CommunityConnectionPhase.failed &&
@@ -89,7 +91,7 @@ final class CommunitySocketClient {
     if (_disposed ||
         _sessionRevoked ||
         !_started ||
-        !_foreground ||
+        (!_foreground && !keepAliveInBackground) ||
         _connection != null) {
       return;
     }
@@ -163,7 +165,10 @@ final class CommunitySocketClient {
     if (_sessionRevoked) throw const HttpFailure(401);
     if (!_commands.contains(type)) throw const ParseFailure('realtime.command');
     final connection = _connection;
-    if (_disposed || !_started || !_foreground || connection == null) {
+    if (_disposed ||
+        !_started ||
+        (!_foreground && !keepAliveInBackground) ||
+        connection == null) {
       throw const TransportFailure();
     }
     final pending = _requests.register();
@@ -314,7 +319,12 @@ final class CommunitySocketClient {
   }
 
   void _schedule(AppFailure failure) {
-    if (_disposed || _sessionRevoked || !_started || !_foreground) return;
+    if (_disposed ||
+        _sessionRevoked ||
+        !_started ||
+        (!_foreground && !keepAliveInBackground)) {
+      return;
+    }
     _failures++;
     if (_failures >= maxFailures) {
       _set(CommunityConnectionPhase.failed, failure: failure);
@@ -359,11 +369,15 @@ final class CommunitySocketClient {
       return;
     }
     if (!foreground) {
-      _release(const TransportFailure());
-      _set(CommunityConnectionPhase.suspended);
+      if (!keepAliveInBackground) {
+        _release(const TransportFailure());
+        _set(CommunityConnectionPhase.suspended);
+      }
     } else if (_started) {
-      _failures = 0;
-      await _connect();
+      if (_connection == null) {
+        _failures = 0;
+        await _connect();
+      }
     }
   }
 
@@ -372,7 +386,7 @@ final class CommunitySocketClient {
     if (_sessionRevoked) throw const HttpFailure(401);
     _release(const TransportFailure());
     _failures = 0;
-    if (_started && _foreground) {
+    if (_started && (_foreground || keepAliveInBackground)) {
       _set(CommunityConnectionPhase.reconnecting);
       await _connect();
     }
