@@ -611,8 +611,18 @@ WebM video may be up to 50 MiB. Presigning uses
 `POST /api/v1/feedback/assets/presign`, a raw upload to the returned URL, and
 `POST /api/v1/feedback/assets/:assetId/complete`; an unsubmitted asset can be
 removed with `DELETE /api/v1/feedback/assets/:assetId`. Both the submission UUID
-and feedback kind bind the asset to the submission. This is a source contract,
-not evidence of a live upload or completed native attachment UI.
+and feedback kind bind the asset to the submission. The authenticated native
+dialog now selects, uploads, removes and submits attachments, and stores
+owner-scoped draft metadata and uncertain outcomes without signed URLs. The
+end-to-end flow has synthetic coverage only; no live upload was performed.
+Guest attachment uploads and visual previews remain unimplemented. A process
+termination inside the short edit debounce can lose the most recent text.
+
+The guestbook source uses `GET` and `POST /api/v1/profiles/:username/guestbook`,
+`PATCH` and `DELETE /api/v1/guestbook/:id`; write eligibility and visible/hidden
+entries come from the server. Native write, hide, show, delete, block and report
+controls have synthetic account and failure coverage; live writes remain
+unverified. A guestbook notification opens the native profile's guestbook tab.
 
 The personal activity screen reads `GET /api/v1/me/activity-calendar` with
 inclusive `from` and `to` dates; the pinned source returns each date in the

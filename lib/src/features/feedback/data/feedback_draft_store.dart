@@ -28,13 +28,18 @@ final class FeedbackDraftStore {
         draft.assetIds.length > 5 ||
         draft.assetIds.toSet().length != draft.assetIds.length ||
         draft.assetIds.any((id) => !_assetId.hasMatch(id)) ||
-        draft.assetNames.entries.any((entry) =>
-            !draft.assetIds.contains(entry.key) || entry.value.isEmpty || entry.value.length > 255) ||
+        draft.assetNames.entries.any(
+          (entry) =>
+              !draft.assetIds.contains(entry.key) ||
+              entry.value.isEmpty ||
+              entry.value.length > 255,
+        ) ||
         (draft.submissionConfirmed && !draft.submissionUncertain) ||
         (draft.pendingAssetId != null &&
             (!draft.uploadUncertain ||
                 !draft.assetIds.contains(draft.pendingAssetId))) ||
-        (draft.uploadUncertain && draft.pendingAssetId == null &&
+        (draft.uploadUncertain &&
+            draft.pendingAssetId == null &&
             draft.assetIds.length >= 5)) {
       throw const ParseFailure('feedback.draft');
     }
@@ -54,11 +59,14 @@ final class FeedbackDraftStore {
         contact: value['contact'] as String,
         pagePath: value['pagePath'] as String,
         assetIds: (value['assetIds'] as List).cast<String>(),
-        assetNames: value['assetNames'] == null ? const {} :
-            (value['assetNames'] as Map).cast<String, String>(),
+        assetNames: value['assetNames'] == null
+            ? const {}
+            : (value['assetNames'] as Map).cast<String, String>(),
         uploadUncertain: value['uploadUncertain'] as bool,
         submissionUncertain: value['submissionUncertain'] as bool,
-        submissionConfirmed: value['submissionConfirmed'] == null ? false : value['submissionConfirmed'] as bool,
+        submissionConfirmed: value['submissionConfirmed'] == null
+            ? false
+            : value['submissionConfirmed'] as bool,
         pendingAssetId: value['pendingAssetId'] as String?,
       );
       _validate(draft, ownerId);
@@ -71,21 +79,24 @@ final class FeedbackDraftStore {
   Future<void> write(String ownerId, FeedbackDraft draft) {
     final key = _key(ownerId);
     _validate(draft, ownerId);
-    return _storage.write(key, jsonEncode({
-      'schema': 1,
-      'ownerId': draft.ownerId,
-      'submissionId': draft.submissionId,
-      'kind': draft.kind,
-      'detail': draft.detail,
-      'contact': draft.contact,
-      'pagePath': draft.pagePath,
-      'assetIds': draft.assetIds,
-      'assetNames': draft.assetNames,
-      'uploadUncertain': draft.uploadUncertain,
-      'submissionUncertain': draft.submissionUncertain,
-      'submissionConfirmed': draft.submissionConfirmed,
-      'pendingAssetId': draft.pendingAssetId,
-    }));
+    return _storage.write(
+      key,
+      jsonEncode({
+        'schema': 1,
+        'ownerId': draft.ownerId,
+        'submissionId': draft.submissionId,
+        'kind': draft.kind,
+        'detail': draft.detail,
+        'contact': draft.contact,
+        'pagePath': draft.pagePath,
+        'assetIds': draft.assetIds,
+        'assetNames': draft.assetNames,
+        'uploadUncertain': draft.uploadUncertain,
+        'submissionUncertain': draft.submissionUncertain,
+        'submissionConfirmed': draft.submissionConfirmed,
+        'pendingAssetId': draft.pendingAssetId,
+      }),
+    );
   }
 
   Future<void> clear(String ownerId) => _storage.delete(_key(ownerId));

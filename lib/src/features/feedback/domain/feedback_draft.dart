@@ -28,6 +28,7 @@ final class FeedbackDraft {
   final bool uploadUncertain;
   final bool submissionUncertain;
   final bool submissionConfirmed;
+
   /// Known asset whose upload, completion, or deletion needs reconciliation.
   /// Null with uploadUncertain means the presign result itself is unknown.
   final String? pendingAssetId;

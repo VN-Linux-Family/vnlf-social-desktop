@@ -43,7 +43,10 @@ void main() {
   test('rejects mismatched owners and damaged recovery records', () async {
     final storage = _Memory();
     final store = FeedbackDraftStore(storage);
-    expect(() => store.write('other', draft('owner')), throwsA(isA<ParseFailure>()));
+    expect(
+      () => store.write('other', draft('owner')),
+      throwsA(isA<ParseFailure>()),
+    );
     expect(() => store.write('', draft('')), throwsA(isA<ParseFailure>()));
     await store.write('owner', draft('owner'));
     final key = storage.values.keys.single;
@@ -63,7 +66,12 @@ final class _Memory implements SessionStorage {
   @override
   Future<String?> read(String key) async => values[key];
   @override
-  Future<void> write(String key, String value) async { values[key] = value; }
+  Future<void> write(String key, String value) async {
+    values[key] = value;
+  }
+
   @override
-  Future<void> delete(String key) async { values.remove(key); }
+  Future<void> delete(String key) async {
+    values.remove(key);
+  }
 }

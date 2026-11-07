@@ -53,7 +53,13 @@ final class FeedbackDraftController {
     scope.ensureCurrent();
     if (currentOwner() != initial.ownerId) throw const HttpFailure(401);
     final controller = FeedbackDraftController._(
-      store, media, client, currentOwner, scope, recovery, existing ?? initial,
+      store,
+      media,
+      client,
+      currentOwner,
+      scope,
+      recovery,
+      existing ?? initial,
     );
     if (existing == null) await controller._save(initial);
     return controller;
@@ -113,7 +119,9 @@ final class FeedbackDraftController {
     uploadUncertain: uploadUncertain ?? draft.uploadUncertain,
     submissionUncertain: submissionUncertain ?? draft.submissionUncertain,
     submissionConfirmed: submissionConfirmed ?? draft.submissionConfirmed,
-    pendingAssetId: clearPending ? null : pendingAssetId ?? draft.pendingAssetId,
+    pendingAssetId: clearPending
+        ? null
+        : pendingAssetId ?? draft.pendingAssetId,
   );
 
   Future<void> edit({
@@ -122,20 +130,30 @@ final class FeedbackDraftController {
     required String contact,
     required String pagePath,
   }) => _exclusive(() async {
-    if (draft.submissionUncertain || draft.uploadUncertain ||
+    if (draft.submissionUncertain ||
+        draft.uploadUncertain ||
         (draft.assetIds.isNotEmpty && kind != draft.kind)) {
       throw StateError('Feedback draft is locked');
     }
-    await _save(_copy(kind: kind, detail: detail, contact: contact, pagePath: pagePath));
+    await _save(
+      _copy(kind: kind, detail: detail, contact: contact, pagePath: pagePath),
+    );
   });
 
   Future<void> attach(FeedbackMediaFile file) => _exclusive(() async {
-    if (draft.submissionUncertain || draft.uploadUncertain || draft.assetIds.length >= 5) {
+    if (draft.submissionUncertain ||
+        draft.uploadUncertain ||
+        draft.assetIds.length >= 5) {
       throw StateError('Feedback attachment is locked');
     }
-    if (file.name.isEmpty || file.name.length > 255 ||
-        !feedbackMediaMimes.contains(file.mime) || file.length < 1 ||
-        file.length > (file.mime.startsWith('video/') ? feedbackVideoLimit : feedbackImageLimit)) {
+    if (file.name.isEmpty ||
+        file.name.length > 255 ||
+        !feedbackMediaMimes.contains(file.mime) ||
+        file.length < 1 ||
+        file.length >
+            (file.mime.startsWith('video/')
+                ? feedbackVideoLimit
+                : feedbackImageLimit)) {
       throw const ParseFailure('feedback.upload.file');
     }
     // Written before presign: an interrupted response may have allocated a slot.
@@ -144,7 +162,9 @@ final class FeedbackDraftController {
     PendingFeedbackMedia pending;
     try {
       pending = await _media.presign(
-        submissionId: draft.submissionId, kind: draft.kind, file: file,
+        submissionId: draft.submissionId,
+        kind: draft.kind,
+        file: file,
       );
     } on HttpFailure catch (failure) {
       // These source-defined errors occur before the asset insert. Unknown
@@ -163,11 +183,13 @@ final class FeedbackDraftController {
     }
     _pending = pending;
     _check();
-    await _save(_copy(
-      assetIds: [...draft.assetIds, pending.assetId],
-      assetNames: {...draft.assetNames, pending.assetId: file.name},
-      pendingAssetId: pending.assetId,
-    ));
+    await _save(
+      _copy(
+        assetIds: [...draft.assetIds, pending.assetId],
+        assetNames: {...draft.assetNames, pending.assetId: file.name},
+        pendingAssetId: pending.assetId,
+      ),
+    );
     _check();
     await _media.upload(pending);
     _check();
@@ -178,11 +200,15 @@ final class FeedbackDraftController {
   });
 
   Future<void> deleteAsset(String assetId) => _exclusive(() async {
-    if (draft.submissionUncertain || !draft.assetIds.contains(assetId) ||
-        (draft.uploadUncertain && draft.pendingAssetId != null && draft.pendingAssetId != assetId)) {
+    if (draft.submissionUncertain ||
+        !draft.assetIds.contains(assetId) ||
+        (draft.uploadUncertain &&
+            draft.pendingAssetId != null &&
+            draft.pendingAssetId != assetId)) {
       throw StateError('Feedback attachment cannot be deleted');
     }
-    final unknownPresign = draft.uploadUncertain && draft.pendingAssetId == null;
+    final unknownPresign =
+        draft.uploadUncertain && draft.pendingAssetId == null;
     if (!unknownPresign) {
       await _save(_copy(uploadUncertain: true, pendingAssetId: assetId));
     } else {
@@ -193,33 +219,50 @@ final class FeedbackDraftController {
       await _media.delete(_pending!);
     } else {
       await _media.deleteRecovered(
-        assetId: assetId, submissionId: draft.submissionId, session: _recoverySession,
+        assetId: assetId,
+        submissionId: draft.submissionId,
+        session: _recoverySession,
       );
     }
     _check();
-    await _save(_copy(
-      assetIds: draft.assetIds.where((id) => id != assetId).toList(),
-      assetNames: Map.of(draft.assetNames)..remove(assetId),
-      uploadUncertain: unknownPresign, clearPending: true,
-    ));
+    await _save(
+      _copy(
+        assetIds: draft.assetIds.where((id) => id != assetId).toList(),
+        assetNames: Map.of(draft.assetNames)..remove(assetId),
+        uploadUncertain: unknownPresign,
+        clearPending: true,
+      ),
+    );
     _pending = null;
   });
 
   /// Called only after the user accepts that an unidentified asset may remain.
   Future<void> restartAfterUnknownPresign() => _exclusive(() async {
-    if (!draft.uploadUncertain || draft.pendingAssetId != null ||
-        draft.assetIds.isNotEmpty || draft.submissionUncertain) {
+    if (!draft.uploadUncertain ||
+        draft.pendingAssetId != null ||
+        draft.assetIds.isNotEmpty ||
+        draft.submissionUncertain) {
       throw StateError('Unknown upload cannot be discarded yet');
     }
-    await _save(FeedbackDraft(
-      ownerId: draft.ownerId, submissionId: newRequestIdentity(), kind: draft.kind,
-      detail: draft.detail, contact: draft.contact, pagePath: draft.pagePath,
-      assetIds: const [], uploadUncertain: false, submissionUncertain: false,
-    ));
+    await _save(
+      FeedbackDraft(
+        ownerId: draft.ownerId,
+        submissionId: newRequestIdentity(),
+        kind: draft.kind,
+        detail: draft.detail,
+        contact: draft.contact,
+        pagePath: draft.pagePath,
+        assetIds: const [],
+        uploadUncertain: false,
+        submissionUncertain: false,
+      ),
+    );
   });
 
   Future<void> submit() => _exclusive(() async {
-    if (draft.submissionConfirmed || draft.uploadUncertain || draft.detail.trim().length < 20 ||
+    if (draft.submissionConfirmed ||
+        draft.uploadUncertain ||
+        draft.detail.trim().length < 20 ||
         draft.detail.trim().length > 4000) {
       throw StateError('Feedback draft cannot be submitted');
     }
@@ -230,18 +273,22 @@ final class FeedbackDraftController {
     Map<String, dynamic> response;
     try {
       response = await _client.request<Map<String, dynamic>>(
-      'POST', '/api/v1/feedback', body: jsonEncode({
-        'clientSubmissionId': draft.submissionId,
-        'kind': draft.kind,
-        'detail': draft.detail.trim(),
-        'pagePath': draft.pagePath,
-        'assetIds': draft.assetIds,
-      }),
+        'POST',
+        '/api/v1/feedback',
+        body: jsonEncode({
+          'clientSubmissionId': draft.submissionId,
+          'kind': draft.kind,
+          'detail': draft.detail.trim(),
+          'pagePath': draft.pagePath,
+          'assetIds': draft.assetIds,
+        }),
       );
     } on HttpFailure catch (failure) {
       // A later rejection cannot resolve an earlier uncertain attempt.
-      if (!wasUncertain && failure.statusCode >= 400 &&
-          failure.statusCode < 500 && failure.statusCode != 408) {
+      if (!wasUncertain &&
+          failure.statusCode >= 400 &&
+          failure.statusCode < 500 &&
+          failure.statusCode != 408) {
         _check();
         await _save(_copy(submissionUncertain: false));
       }
@@ -250,8 +297,10 @@ final class FeedbackDraftController {
     _check();
     if (response['submissionId'] is! String ||
         (response['submissionId'] as String).isEmpty ||
-        response['reference'] is! String || (response['reference'] as String).isEmpty ||
-        response['rewardQueued'] is! bool || response['duplicate'] is! bool) {
+        response['reference'] is! String ||
+        (response['reference'] as String).isEmpty ||
+        response['rewardQueued'] is! bool ||
+        response['duplicate'] is! bool) {
       throw const ParseFailure('feedback.acknowledgment');
     }
     try {

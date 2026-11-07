@@ -498,12 +498,21 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
   _feedbackDialogOpen = true;
   final account = ref.read(sessionStateProvider);
   if (account != null) {
-    final pagePath = GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ?? '/';
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => FeedbackAttachmentDialog(ownerId: account.userId, pagePath: pagePath),
-    ).whenComplete(() => _feedbackDialogOpen = false);
+    final pagePath =
+        GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ??
+        '/';
+    showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => FeedbackAttachmentDialog(
+            ownerId: account.userId,
+            pagePath: pagePath,
+          ),
+        )
+        .then((openHistory) {
+          if (openHistory == true && context.mounted) context.push('/feedback');
+        })
+        .whenComplete(() => _feedbackDialogOpen = false);
     return;
   }
   final english = Localizations.localeOf(context).languageCode == 'en';

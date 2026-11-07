@@ -12,35 +12,65 @@ import '../data/feedback_draft_store.dart';
 import '../data/feedback_media_repository.dart';
 import '../domain/feedback_draft.dart';
 
-final feedbackFilePickerProvider = Provider<Future<FeedbackMediaFile?> Function()>(
-  (ref) => _pickFile,
+final feedbackFilePickerProvider =
+    Provider<Future<FeedbackMediaFile?> Function()>((ref) => _pickFile);
+
+final feedbackMediaRepositoryProvider = Provider<FeedbackMediaRepository>(
+  (ref) => FeedbackMediaRepository(ref.watch(apiClientProvider)),
 );
 
 Future<FeedbackMediaFile?> _pickFile() async {
-  final file = await openFile(acceptedTypeGroups: const [
-    XTypeGroup(label: 'Images and videos',
-      extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm'],
-      mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm']),
-  ]);
+  final file = await openFile(
+    acceptedTypeGroups: const [
+      XTypeGroup(
+        label: 'Images and videos',
+        extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm'],
+        mimeTypes: [
+          'image/jpeg',
+          'image/png',
+          'image/webp',
+          'image/gif',
+          'video/mp4',
+          'video/webm',
+        ],
+      ),
+    ],
+  );
   if (file == null) return null;
-  const mimes = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
-    'webp': 'image/webp', 'gif': 'image/gif', 'mp4': 'video/mp4', 'webm': 'video/webm'};
-  return FeedbackMediaFile(name: file.name,
+  const mimes = {
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'webp': 'image/webp',
+    'gif': 'image/gif',
+    'mp4': 'video/mp4',
+    'webm': 'video/webm',
+  };
+  return FeedbackMediaFile(
+    name: file.name,
     mime: file.mimeType ?? mimes[file.name.split('.').last.toLowerCase()] ?? '',
-    length: await file.length(), openRead: file.openRead);
+    length: await file.length(),
+    openRead: file.openRead,
+  );
 }
 
 /// The caller prevents more than one dialog from being open at once.
 class FeedbackAttachmentDialog extends ConsumerStatefulWidget {
-  const FeedbackAttachmentDialog({super.key, required this.ownerId, required this.pagePath});
+  const FeedbackAttachmentDialog({
+    super.key,
+    required this.ownerId,
+    required this.pagePath,
+  });
   final String ownerId;
   final String pagePath;
 
   @override
-  ConsumerState<FeedbackAttachmentDialog> createState() => _FeedbackAttachmentDialogState();
+  ConsumerState<FeedbackAttachmentDialog> createState() =>
+      _FeedbackAttachmentDialogState();
 }
 
-class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDialog> {
+class _FeedbackAttachmentDialogState
+    extends ConsumerState<FeedbackAttachmentDialog> {
   final _detail = TextEditingController();
   final _contact = TextEditingController();
   FeedbackDraftController? _controller;
@@ -72,11 +102,20 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
       final client = ref.read(apiClientProvider);
       final controller = await FeedbackDraftController.open(
         store: FeedbackDraftStore(ref.read(sessionStorageProvider)),
-        media: FeedbackMediaRepository(client), client: client,
+        media: ref.read(feedbackMediaRepositoryProvider),
+        client: client,
         currentOwner: _owner,
-        initial: FeedbackDraft(ownerId: widget.ownerId, submissionId: newRequestIdentity(),
-          kind: 'FEEDBACK', detail: '', contact: '', pagePath: widget.pagePath,
-          assetIds: [], uploadUncertain: false, submissionUncertain: false),
+        initial: FeedbackDraft(
+          ownerId: widget.ownerId,
+          submissionId: newRequestIdentity(),
+          kind: 'FEEDBACK',
+          detail: '',
+          contact: '',
+          pagePath: widget.pagePath,
+          assetIds: [],
+          uploadUncertain: false,
+          submissionUncertain: false,
+        ),
       );
       if (!mounted) return;
       _controller = controller;
@@ -85,8 +124,12 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
       _kind = controller.draft.kind;
       _done = controller.draft.submissionConfirmed;
     } catch (_) {
-      if (mounted) _error = _text('Không thể khôi phục bản nháp. Hãy kiểm tra tài khoản và bộ nhớ bảo mật.',
-        'Could not restore the draft. Check your account and secure storage.');
+      if (mounted) {
+        _error = _text(
+          'Không thể khôi phục bản nháp. Hãy kiểm tra tài khoản và bộ nhớ bảo mật.',
+          'Could not restore the draft. Check your account and secure storage.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -99,9 +142,14 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     final contact = _contact.text;
     final revision = _editRevision;
     _saveTail = _saveTail.then((_) async {
-      if (!controller.draft.submissionUncertain && !controller.draft.uploadUncertain) {
-        await controller.edit(kind: kind, detail: detail,
-          contact: contact, pagePath: controller.draft.pagePath);
+      if (!controller.draft.submissionUncertain &&
+          !controller.draft.uploadUncertain) {
+        await controller.edit(
+          kind: kind,
+          detail: detail,
+          contact: contact,
+          pagePath: controller.draft.pagePath,
+        );
         _savedRevision = revision;
       }
     });
@@ -112,9 +160,12 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     _editRevision++;
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 400), () {
-      _enqueueSave().then<void>((_) {}, onError: (Object _, StackTrace __) {
-        if (mounted) setState(() => _saveFailed = true);
-      });
+      _enqueueSave().then<void>(
+        (_) {},
+        onError: (Object _, StackTrace _) {
+          if (mounted) setState(() => _saveFailed = true);
+        },
+      );
     });
   }
 
@@ -131,15 +182,28 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     final store = FeedbackDraftStore(ref.read(sessionStorageProvider));
     _preserveFuture = () async {
       try {
-        try { await _saveTail; } catch (_) { /* Preserve the captured edit below. */ }
+        try {
+          await _saveTail;
+        } catch (_) {
+          /* Preserve the captured edit below. */
+        }
         final old = controller.draft;
         if (old.uploadUncertain || old.submissionUncertain) return;
-        await store.write(widget.ownerId, FeedbackDraft(
-          ownerId: old.ownerId, submissionId: old.submissionId, kind: kind,
-          detail: detail, contact: contact, pagePath: old.pagePath,
-          assetIds: old.assetIds, assetNames: old.assetNames,
-          uploadUncertain: false, submissionUncertain: false,
-        ));
+        await store.write(
+          widget.ownerId,
+          FeedbackDraft(
+            ownerId: old.ownerId,
+            submissionId: old.submissionId,
+            kind: kind,
+            detail: detail,
+            contact: contact,
+            pagePath: old.pagePath,
+            assetIds: old.assetIds,
+            assetNames: old.assetNames,
+            uploadUncertain: false,
+            submissionUncertain: false,
+          ),
+        );
         if (mounted) setState(() => _saveFailed = false);
       } catch (_) {
         if (mounted) setState(() => _saveFailed = true);
@@ -164,25 +228,44 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
 
   Future<void> _run(Future<void> Function() action) async {
     if (_busy || _controller == null) return;
-    setState(() { _busy = true; _error = null; });
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       await action();
     } catch (failure) {
       if (mounted && failure is FeedbackConfirmedCleanupFailure) {
         _done = true;
-        _error = _text('Đã gửi thành công, nhưng chưa dọn được bản nháp trên thiết bị.',
-          'Feedback was sent, but the local draft could not be cleared.');
-      } else if (mounted) _error = failure is FormatException
-        ? (failure.message == 'detail'
-          ? _text('Vui lòng nhập 20–4000 ký tự.', 'Enter 20–4000 characters.')
-          : _text('Tệp không hợp lệ hoặc vượt quá giới hạn kích thước.',
-              'The file is unsupported or exceeds the size limit.'))
-        : failure is HttpFailure && failure.statusCode >= 400 && failure.statusCode < 500 &&
-            failure.statusCode != 408 && _controller?.draft.submissionUncertain == false
-          ? _text('Máy chủ từ chối yêu cầu. Hãy kiểm tra nội dung và thử lại.',
-              'The server rejected the request. Check the content and try again.') : _text(
-        'Thao tác chưa được xác nhận. Bản nháp được giữ; kiểm tra trạng thái bên dưới.',
-        'The operation was not confirmed. The draft is kept; check its status below.');
+        _error = _text(
+          'Đã gửi thành công, nhưng chưa dọn được bản nháp trên thiết bị.',
+          'Feedback was sent, but the local draft could not be cleared.',
+        );
+      } else if (mounted) {
+        _error = failure is FormatException
+            ? (failure.message == 'detail'
+                  ? _text(
+                      'Vui lòng nhập 20–4000 ký tự.',
+                      'Enter 20–4000 characters.',
+                    )
+                  : _text(
+                      'Tệp không hợp lệ hoặc vượt quá giới hạn kích thước.',
+                      'The file is unsupported or exceeds the size limit.',
+                    ))
+            : failure is HttpFailure &&
+                  failure.statusCode >= 400 &&
+                  failure.statusCode < 500 &&
+                  failure.statusCode != 408 &&
+                  _controller?.draft.submissionUncertain == false
+            ? _text(
+                'Máy chủ từ chối yêu cầu. Hãy kiểm tra nội dung và thử lại.',
+                'The server rejected the request. Check the content and try again.',
+              )
+            : _text(
+                'Thao tác chưa được xác nhận. Bản nháp được giữ; kiểm tra trạng thái bên dưới.',
+                'The operation was not confirmed. The draft is kept; check its status below.',
+              );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -192,42 +275,72 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
     await _save();
     final file = await ref.read(feedbackFilePickerProvider)();
     if (file == null) return;
-    if (!feedbackMediaMimes.contains(file.mime) || file.length < 1 ||
-        file.length > (file.mime.startsWith('video/') ? feedbackVideoLimit : feedbackImageLimit) ||
-        file.name.isEmpty || file.name.length > 255) {
+    if (!feedbackMediaMimes.contains(file.mime) ||
+        file.length < 1 ||
+        file.length >
+            (file.mime.startsWith('video/')
+                ? feedbackVideoLimit
+                : feedbackImageLimit) ||
+        file.name.isEmpty ||
+        file.name.length > 255) {
       throw const FormatException();
     }
     await _controller!.attach(file);
   });
 
-  Future<void> _close() async {
+  Future<void> _close({bool openHistory = false}) async {
     if (_busy) return;
     await _preserveFuture;
-    if (_done && _controller != null && !_ownerChanged && _owner() == widget.ownerId) {
-      try { await _controller!.clearConfirmed(); } catch (_) { /* Keep the recovery marker. */ }
+    if (_done &&
+        _controller != null &&
+        !_ownerChanged &&
+        _owner() == widget.ownerId) {
+      try {
+        await _controller!.clearConfirmed();
+      } catch (_) {
+        /* Keep the recovery marker. */
+      }
     }
-    if (_controller != null && !_done && !_saveFailed && !_ownerChanged && _owner() == widget.ownerId) {
+    if (_controller != null &&
+        !_done &&
+        !_saveFailed &&
+        !_ownerChanged &&
+        _owner() == widget.ownerId) {
       await _run(_save);
       if (_error != null) return;
     }
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop(openHistory);
   }
 
   Future<void> _restart() async {
-    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: Text(_text('Bắt đầu bản nháp mới?', 'Start a new draft?')),
-      content: Text(_text(
-        'Máy chủ có thể đã tạo một tệp không xác định. Không thể xóa tệp đó. Nội dung sẽ được giữ và bản nháp mới dùng mã khác.',
-        'The server may have created an unidentified asset that cannot be deleted. Your text will be kept in a new draft with a new ID.')),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_text('Hủy', 'Cancel'))),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_text('Bắt đầu lại', 'Start again'))),
-      ],
-    ));
-    if (confirmed == true && mounted) await _run(() async {
-      await _save();
-      await _controller!.restartAfterUnknownPresign();
-    });
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_text('Bắt đầu bản nháp mới?', 'Start a new draft?')),
+        content: Text(
+          _text(
+            'Máy chủ có thể đã tạo một tệp không xác định. Không thể xóa tệp đó. Nội dung sẽ được giữ và bản nháp mới dùng mã khác.',
+            'The server may have created an unidentified asset that cannot be deleted. Your text will be kept in a new draft with a new ID.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_text('Hủy', 'Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_text('Bắt đầu lại', 'Start again')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await _run(() async {
+        await _save();
+        await _controller!.restartAfterUnknownPresign();
+      });
+    }
   }
 
   @override
@@ -242,105 +355,257 @@ class _FeedbackAttachmentDialogState extends ConsumerState<FeedbackAttachmentDia
   Widget build(BuildContext context) {
     ref.watch(sessionStateProvider);
     ref.listen(sessionStateProvider, (previous, next) {
-      if (previous?.userId == widget.ownerId && next?.userId != widget.ownerId) {
+      if (previous?.userId == widget.ownerId &&
+          next?.userId != widget.ownerId) {
         _ownerChanged = true;
         _preserveOriginalOwner();
       }
     });
     final draft = _controller?.draft;
-    final locked = draft == null || draft.uploadUncertain || draft.submissionUncertain;
+    final locked =
+        draft == null || draft.uploadUncertain || draft.submissionUncertain;
     final sessionChanged = _ownerChanged || _owner() != widget.ownerId;
     if (sessionChanged) {
       return PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) { if (!didPop) _close(); },
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) _close();
+        },
         child: AlertDialog(
           title: Text(_text('Tài khoản đã thay đổi', 'Account changed')),
-          content: Text(_saveFailed
-            ? _text('Không thể lưu thay đổi của tài khoản trước vào bộ nhớ bảo mật.',
-                'Could not save the previous account’s changes to secure storage.')
-            : _text('Đóng và đăng nhập lại để tiếp tục.', 'Close and sign in again to continue.')),
+          content: Text(
+            _saveFailed
+                ? _text(
+                    'Không thể lưu thay đổi của tài khoản trước vào bộ nhớ bảo mật.',
+                    'Could not save the previous account’s changes to secure storage.',
+                  )
+                : _text(
+                    'Đóng và đăng nhập lại để tiếp tục.',
+                    'Close and sign in again to continue.',
+                  ),
+          ),
           actions: [
             if (_saveFailed && _owner() == widget.ownerId)
-              TextButton(onPressed: _preserving ? null : _preserveOriginalOwner,
-                child: Text(_text('Thử lưu lại', 'Retry saving'))),
-            TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close'))),
+              TextButton(
+                onPressed: _preserving ? null : _preserveOriginalOwner,
+                child: Text(_text('Thử lưu lại', 'Retry saving')),
+              ),
+            TextButton(
+              onPressed: _busy ? null : _close,
+              child: Text(_text('Đóng', 'Close')),
+            ),
           ],
         ),
       );
     }
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) { if (!didPop) _close(); },
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _close();
+      },
       child: AlertDialog(
         title: Text(_text('Giúp VNLF tốt hơn', 'Help Make VNLF Better')),
-        content: SizedBox(width: 460, child: SingleChildScrollView(child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_done) ...[
-              Text(_text('Đã ghi nhận phản hồi!', 'Feedback received!')),
-              if (_error != null) Text(_error!),
-            ]
-            else ...[
-              if (sessionChanged) Text(_text('Tài khoản đã thay đổi. Đóng và đăng nhập lại để tiếp tục.',
-                'The account changed. Close and sign in again to continue.')),
-              DropdownButton<String>(value: _kind, isExpanded: true,
-                onChanged: _busy || _saveFailed || locked || sessionChanged || (draft?.assetIds.isNotEmpty ?? false)
-                  ? null : (value) { setState(() => _kind = value!); _scheduleSave(); },
-                items: [
-                  DropdownMenuItem(value: 'FEEDBACK', child: Text(_text('Góp ý', 'Feedback'))),
-                  DropdownMenuItem(value: 'BUG', child: Text(_text('Báo lỗi', 'Bug report'))),
-                ]),
-              TextField(controller: _detail, readOnly: _busy || locked || sessionChanged || _saveFailed,
-                onChanged: (_) => _scheduleSave(),
-                maxLines: 4, maxLength: 4000,
-                decoration: InputDecoration(labelText: _text('Mô tả (20–4000 ký tự)', 'Description (20–4000 characters)'))),
-              const SizedBox(height: 12),
-              Text(_text('Tệp đính kèm', 'Attachments')),
-              Text(_text('Tối đa 5 tệp. Ảnh tối đa 10 MiB; video MP4/WebM tối đa 50 MiB.',
-                'Up to 5 files. Images: 10 MiB; MP4/WebM video: 50 MiB.')),
-              if (draft != null) for (final id in draft.assetIds)
-                ListTile(contentPadding: EdgeInsets.zero,
-                  title: Text(draft.assetNames[id] ?? _text('Tệp đính kèm', 'Attachment')),
-                  subtitle: draft.pendingAssetId == id
-                    ? Text(_text('Chưa xác nhận; hãy xóa tệp này.', 'Unconfirmed; delete this attachment.')) : null,
-                  trailing: IconButton(tooltip: _text('Xóa tệp', 'Delete attachment'),
-                    onPressed: _busy || _saveFailed || sessionChanged || draft.submissionUncertain ||
-                      (draft.uploadUncertain && draft.pendingAssetId != null && draft.pendingAssetId != id)
-                      ? null : () => _run(() async { await _save(); await _controller!.deleteAsset(id); }),
-                    icon: const Icon(Icons.delete_outline))),
-              if (draft?.uploadUncertain == true && draft?.pendingAssetId == null)
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_text('Không xác nhận được yêu cầu tải lên. Một vị trí có thể đã được dùng; hãy xóa các tệp đã biết trước khi bắt đầu lại.',
-                    'The upload request is unconfirmed. One slot may be used; delete known attachments before starting again.')),
-                  TextButton(onPressed: _busy || _saveFailed || sessionChanged || draft!.assetIds.isNotEmpty ? null : _restart,
-                    child: Text(_text('Bắt đầu bản nháp mới', 'Start a new draft'))),
-                ]),
-              if (draft?.submissionUncertain == true)
-                Text(_text('Chưa xác nhận được kết quả gửi. Chỉ có thể gửi lại nội dung không thay đổi.',
-                  'The submission result is unconfirmed. Only the unchanged submission can be retried.')),
-              OutlinedButton.icon(onPressed: _busy || _saveFailed || locked || sessionChanged || (draft?.assetIds.length ?? 5) >= 5
-                ? null : _add, icon: const Icon(Icons.attach_file),
-                label: Text(_text('Thêm tệp', 'Add attachment'))),
-              if (_busy) const LinearProgressIndicator(),
-              if (_saveFailed) Text(_text(
-                'Không lưu được bản nháp vào bộ nhớ bảo mật. Không thể tiếp tục gửi; sao chép nội dung trước khi đóng.',
-                'The draft could not be saved to secure storage. Sending is disabled; copy your text before closing.'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ],
-          ],
-        ))),
+        content: SizedBox(
+          width: 460,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_done) ...[
+                  Text(_text('Đã ghi nhận phản hồi!', 'Feedback received!')),
+                  if (_error != null) Text(_error!),
+                ] else ...[
+                  if (sessionChanged)
+                    Text(
+                      _text(
+                        'Tài khoản đã thay đổi. Đóng và đăng nhập lại để tiếp tục.',
+                        'The account changed. Close and sign in again to continue.',
+                      ),
+                    ),
+                  DropdownButton<String>(
+                    value: _kind,
+                    isExpanded: true,
+                    onChanged:
+                        _busy ||
+                            _saveFailed ||
+                            locked ||
+                            sessionChanged ||
+                            draft.assetIds.isNotEmpty
+                        ? null
+                        : (value) {
+                            setState(() => _kind = value!);
+                            _scheduleSave();
+                          },
+                    items: [
+                      DropdownMenuItem(
+                        value: 'FEEDBACK',
+                        child: Text(_text('Góp ý', 'Feedback')),
+                      ),
+                      DropdownMenuItem(
+                        value: 'BUG',
+                        child: Text(_text('Báo lỗi', 'Bug report')),
+                      ),
+                    ],
+                  ),
+                  TextField(
+                    controller: _detail,
+                    readOnly: _busy || locked || sessionChanged || _saveFailed,
+                    onChanged: (_) => _scheduleSave(),
+                    maxLines: 4,
+                    maxLength: 4000,
+                    decoration: InputDecoration(
+                      labelText: _text(
+                        'Mô tả (20–4000 ký tự)',
+                        'Description (20–4000 characters)',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(_text('Tệp đính kèm', 'Attachments')),
+                  Text(
+                    _text(
+                      'Tối đa 5 tệp. Ảnh tối đa 10 MiB; video MP4/WebM tối đa 50 MiB.',
+                      'Up to 5 files. Images: 10 MiB; MP4/WebM video: 50 MiB.',
+                    ),
+                  ),
+                  if (draft != null)
+                    for (final id in draft.assetIds)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          draft.assetNames[id] ??
+                              _text('Tệp đính kèm', 'Attachment'),
+                        ),
+                        subtitle: draft.pendingAssetId == id
+                            ? Text(
+                                _text(
+                                  'Chưa xác nhận; hãy xóa tệp này.',
+                                  'Unconfirmed; delete this attachment.',
+                                ),
+                              )
+                            : null,
+                        trailing: IconButton(
+                          tooltip: _text('Xóa tệp', 'Delete attachment'),
+                          onPressed:
+                              _busy ||
+                                  _saveFailed ||
+                                  sessionChanged ||
+                                  draft.submissionUncertain ||
+                                  (draft.uploadUncertain &&
+                                      draft.pendingAssetId != null &&
+                                      draft.pendingAssetId != id)
+                              ? null
+                              : () => _run(() async {
+                                  await _save();
+                                  await _controller!.deleteAsset(id);
+                                }),
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ),
+                  if (draft?.uploadUncertain == true &&
+                      draft?.pendingAssetId == null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _text(
+                            'Không xác nhận được yêu cầu tải lên. Một vị trí có thể đã được dùng; hãy xóa các tệp đã biết trước khi bắt đầu lại.',
+                            'The upload request is unconfirmed. One slot may be used; delete known attachments before starting again.',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed:
+                              _busy ||
+                                  _saveFailed ||
+                                  sessionChanged ||
+                                  draft!.assetIds.isNotEmpty
+                              ? null
+                              : _restart,
+                          child: Text(
+                            _text('Bắt đầu bản nháp mới', 'Start a new draft'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (draft?.submissionUncertain == true)
+                    Text(
+                      _text(
+                        'Chưa xác nhận được kết quả gửi. Chỉ có thể gửi lại nội dung không thay đổi.',
+                        'The submission result is unconfirmed. Only the unchanged submission can be retried.',
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed:
+                        _busy ||
+                            _saveFailed ||
+                            locked ||
+                            sessionChanged ||
+                            draft.assetIds.length >= 5
+                        ? null
+                        : _add,
+                    icon: const Icon(Icons.attach_file),
+                    label: Text(_text('Thêm tệp', 'Add attachment')),
+                  ),
+                  if (_busy) const LinearProgressIndicator(),
+                  if (_saveFailed)
+                    Text(
+                      _text(
+                        'Không lưu được bản nháp vào bộ nhớ bảo mật. Không thể tiếp tục gửi; sao chép nội dung trước khi đóng.',
+                        'The draft could not be saved to secure storage. Sending is disabled; copy your text before closing.',
+                      ),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  if (_error != null)
+                    Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: _busy ? null : _close, child: Text(_text('Đóng', 'Close'))),
-          if (!_done) FilledButton(onPressed: _busy || _saveFailed || draft == null || draft.uploadUncertain || sessionChanged
-            ? null : () => _run(() async {
-              if (_detail.text.trim().length < 20 || _detail.text.trim().length > 4000) {
-                throw const FormatException('detail');
-              }
-              await _save(); await _controller!.submit(); if (mounted) _done = true;
-            }),
-            child: Text(draft?.submissionUncertain == true ? _text('Gửi lại', 'Retry') : _text('Gửi cho VNLF', 'Send feedback'))),
+          TextButton.icon(
+            onPressed: _busy || _saveFailed
+                ? null
+                : () => _close(openHistory: true),
+            icon: const Icon(Icons.history),
+            label: Text(_text('Góp ý của tôi', 'My feedback')),
+          ),
+          TextButton(
+            onPressed: _busy ? null : _close,
+            child: Text(_text('Đóng', 'Close')),
+          ),
+          if (!_done)
+            FilledButton(
+              onPressed:
+                  _busy ||
+                      _saveFailed ||
+                      draft == null ||
+                      draft.uploadUncertain ||
+                      sessionChanged
+                  ? null
+                  : () => _run(() async {
+                      if (_detail.text.trim().length < 20 ||
+                          _detail.text.trim().length > 4000) {
+                        throw const FormatException('detail');
+                      }
+                      await _save();
+                      await _controller!.submit();
+                      if (mounted) _done = true;
+                    }),
+              child: Text(
+                draft?.submissionUncertain == true
+                    ? _text('Gửi lại', 'Retry')
+                    : _text('Gửi cho VNLF', 'Send feedback'),
+              ),
+            ),
         ],
       ),
     );
