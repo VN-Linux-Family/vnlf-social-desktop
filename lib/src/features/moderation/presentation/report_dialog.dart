@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../core/api_client.dart';
 import '../data/live_report_repository.dart';
 import '../domain/report_repository.dart';
 
@@ -39,6 +40,21 @@ class ReportDialog extends ConsumerStatefulWidget {
 }
 
 class _ReportDialogState extends ConsumerState<ReportDialog> {
+  late final String? _openingUserId;
+  late final ApiSessionScope _openingSession;
+
+  @override
+  void initState() {
+    super.initState();
+    _openingUserId = ref.read(sessionStateProvider)?.userId;
+    _openingSession = ref.read(apiClientProvider).captureSession();
+  }
+
+  bool _isOpeningSession() {
+    if (_openingUserId == null || ref.read(sessionStateProvider)?.userId != _openingUserId) return false;
+    try { _openingSession.ensureCurrent(); return true; } catch (_) { return false; }
+  }
+
   final _reason = TextEditingController();
   final _detail = TextEditingController();
   bool _busy = false;
@@ -53,6 +69,10 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
 
   Future<void> _submit(bool english) async {
     if (_busy) return;
+    if (!_isOpeningSession()) {
+      setState(() => _error = english ? 'Your account changed. Close this report and open it again.' : 'Tài khoản đã thay đổi. Hãy đóng và mở lại báo cáo.');
+      return;
+    }
     if (_reason.text.trim().isEmpty) {
       setState(
         () => _error = english ? 'Enter a reason.' : 'Vui lòng nhập lý do.',
@@ -73,11 +93,11 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
             reason: _reason.text,
             detail: _detail.text,
           );
-      if (mounted && ref.read(sessionStateProvider)?.userId == account) {
+      if (mounted && ref.read(sessionStateProvider)?.userId == account && _isOpeningSession()) {
         setState(() => _confirmed = true);
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && _isOpeningSession()) {
         setState(
           () => _error = english
               ? 'Could not send report. Your draft is kept; try again.'
