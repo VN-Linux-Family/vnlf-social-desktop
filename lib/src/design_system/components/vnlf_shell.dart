@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -511,7 +512,10 @@ class VnlfFeedTabBar extends StatelessWidget {
                   child: InkWell(
                     onTap: onTabSelected == null
                         ? null
-                        : () => onTabSelected!(i),
+                        : () {
+                            HapticFeedback.selectionClick();
+                            onTabSelected!(i);
+                          },
                     child: Container(
                       padding: const EdgeInsets.only(top: 12, bottom: 10),
                       decoration: BoxDecoration(

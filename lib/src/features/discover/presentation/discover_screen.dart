@@ -1,6 +1,7 @@
 import '../../polls/presentation/poll_state.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,133 +84,187 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
     final isDesktop = MediaQuery.sizeOf(context).width > 840;
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        if (isDesktop) ...[
-          VnlfCenterPageHeader(title: english ? 'Discover' : 'Khám phá'),
-          const SizedBox(height: 12),
-        ],
-        FeatureSurface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                decoration: InputDecoration(
-                  labelText: english ? 'Search articles' : 'Tìm bài viết',
-                  prefixIcon: const Icon(Icons.search),
-                  border: const OutlineInputBorder(),
+    return RefreshIndicator(
+      onRefresh: () async {
+        HapticFeedback.lightImpact();
+        ref.invalidate(discoverDataProvider);
+        ref.invalidate(discoverArticlesProvider);
+        ref.invalidate(discoverProjectsProvider);
+        ref.invalidate(leaderboardProvider);
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          if (isDesktop) ...[
+            VnlfCenterPageHeader(title: english ? 'Discover' : 'Khám phá'),
+            const SizedBox(height: 12),
+          ],
+          FeatureSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: english ? 'Search articles' : 'Tìm bài viết',
+                    prefixIcon: const Icon(Icons.search),
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => setState(() => _query = value.trim()),
                 ),
-                onChanged: (value) => setState(() => _query = value.trim()),
+                const SizedBox(height: 16),
+                Text(
+                  english ? 'Popular tags' : 'Chủ đề phổ biến',
+                  style: VnlfTypography.h3(colors.ink),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final tag in tags)
+                      FilterChip(
+                        selectedColor: colors.brandSoft,
+                        checkmarkColor: colors.brand,
+                        side: BorderSide(color: colors.line),
+                        labelStyle: VnlfTypography.control(colors.ink),
+                        label: Text(tag),
+                        selected: _tag == tag,
+                        onSelected: (selected) {
+                          HapticFeedback.selectionClick();
+                          setState(() => _tag = selected ? tag : null);
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            english ? 'Featured articles' : 'Bài viết nổi bật',
+            style: VnlfTypography.h2(colors.ink),
+          ),
+          const SizedBox(height: 12),
+          ...articles.when(
+            loading: () => const [
+              VnlfLoadingShimmer(child: VnlfPostCard.loading()),
+            ],
+            error: (error, stack) => [
+              FeatureLoadError(
+                onRetry: () {
+                  ref.invalidate(discoverDataProvider);
+                  ref.invalidate(discoverArticlesProvider);
+                },
               ),
-              const SizedBox(height: 16),
-              Text(
-                english ? 'Popular tags' : 'Chủ đề phổ biến',
-                style: VnlfTypography.h3(colors.ink),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+            ],
+            data: (items) => [
+              DiscoverArticles(posts: items, query: _query, tag: _tag),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            english ? 'Community projects' : 'Dự án cộng đồng',
+            style: VnlfTypography.h2(colors.ink),
+          ),
+          const SizedBox(height: 8),
+          projects.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (error, stack) => FeatureLoadError(
+              onRetry: () => ref.invalidate(discoverProjectsProvider),
+            ),
+            data: (page) => FeatureSurface(
+              child: Column(
                 children: [
-                  for (final tag in tags)
-                    FilterChip(
-                      selectedColor: colors.brandSoft,
-                      checkmarkColor: colors.brand,
-                      side: BorderSide(color: colors.line),
-                      labelStyle: VnlfTypography.control(colors.ink),
-                      label: Text(tag),
-                      selected: _tag == tag,
-                      onSelected: (selected) =>
-                          setState(() => _tag = selected ? tag : null),
+                  if (page.items.isEmpty)
+                    Text(english ? 'No projects yet' : 'Chưa có dự án'),
+                  for (final project in page.items)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.terminal),
+                      title: Text(project.name),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/projects'),
                     ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          english ? 'Featured articles' : 'Bài viết nổi bật',
-          style: VnlfTypography.h2(colors.ink),
-        ),
-        const SizedBox(height: 12),
-        ...articles.when(
-          loading: () => const [
-            VnlfLoadingShimmer(child: VnlfPostCard.loading()),
-          ],
-          error: (error, stack) => [
-            FeatureLoadError(
-              onRetry: () {
-                ref.invalidate(discoverDataProvider);
-                ref.invalidate(discoverArticlesProvider);
-              },
-            ),
-          ],
-          data: (items) => [
-            DiscoverArticles(posts: items, query: _query, tag: _tag),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text(
-          english ? 'Community projects' : 'Dự án cộng đồng',
-          style: VnlfTypography.h2(colors.ink),
-        ),
-        const SizedBox(height: 8),
-        projects.when(
-          loading: () => const LinearProgressIndicator(),
-          error: (error, stack) => FeatureLoadError(
-            onRetry: () => ref.invalidate(discoverProjectsProvider),
-          ),
-          data: (page) => FeatureSurface(
-            child: Column(
-              children: [
-                if (page.items.isEmpty)
-                  Text(english ? 'No projects yet' : 'Chưa có dự án'),
-                for (final project in page.items)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.terminal),
-                    title: Text(project.name),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/projects'),
-                  ),
-              ],
             ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Text(
-          english ? 'Active contributors' : 'Thành viên tích cực',
-          style: VnlfTypography.h2(colors.ink),
-        ),
-        const SizedBox(height: 8),
-        contributors.when(
-          loading: () => const LinearProgressIndicator(),
-          error: (error, stack) => FeatureLoadError(
-            onRetry: () => ref.invalidate(leaderboardProvider),
+          const SizedBox(height: 20),
+          Text(
+            english ? 'Active contributors' : 'Thành viên tích cực',
+            style: VnlfTypography.h2(colors.ink),
           ),
-          data: (page) => FeatureSurface(
-            child: Column(
-              children: [
-                if (page.items.isEmpty)
-                  Text(english ? 'No contributors yet' : 'Chưa có thành viên'),
-                for (final member in page.items)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.person_outline),
-                    title: Text(member.displayName),
-                    subtitle: Text('@${member.username}'),
-                    trailing: Text('${member.earnedPoints}'),
-                    onTap: () => context.push(
-                      '/profile/${Uri.encodeComponent(member.username)}',
+          const SizedBox(height: 8),
+          contributors.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (error, stack) => FeatureLoadError(
+              onRetry: () => ref.invalidate(leaderboardProvider),
+            ),
+            data: (page) => FeatureSurface(
+              child: Column(
+                children: [
+                  if (page.items.isEmpty)
+                    Text(
+                      english ? 'No contributors yet' : 'Chưa có thành viên',
                     ),
-                  ),
-              ],
+                  for (final member in page.items)
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                      leading: VnlfAvatar(
+                        author: AuthorData(
+                          id: member.userId,
+                          username: member.username,
+                          displayName: member.displayName,
+                          avatarUrl: member.avatarUrl,
+                          style: AuthorStyleData(
+                            frame:
+                                (member.style?.frame != null &&
+                                    member.style!.frame!.isNotEmpty)
+                                ? AvatarFrameType.ring
+                                : AvatarFrameType.none,
+                          ),
+                          loadNetworkAvatar: member.avatarUrl.isNotEmpty,
+                        ),
+                        size: 36,
+                      ),
+                      title: Text(
+                        member.displayName,
+                        style: VnlfTypography.control(colors.ink),
+                      ),
+                      subtitle: Text(
+                        '@${member.username}',
+                        style: VnlfTypography.meta(colors.muted),
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.brandSoft,
+                          borderRadius: BorderRadius.circular(
+                            VnlfDimensions.radiusFull,
+                          ),
+                        ),
+                        child: Text(
+                          '${member.earnedPoints} pts',
+                          style: VnlfTypography.caption(
+                            colors.brand,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      onTap: () => context.push(
+                        '/profile/${Uri.encodeComponent(member.username)}',
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

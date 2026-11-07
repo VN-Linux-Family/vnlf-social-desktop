@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
@@ -224,23 +225,36 @@ class VnlfMobileBottomNav extends StatelessWidget {
                       destinationSemanticLabels[dest] ??
                       destinationLabels[dest],
                   child: InkWell(
-                    onTap: () => onDestinationSelected?.call(dest),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      onDestinationSelected?.call(dest);
+                    },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          dest.icon,
-                          size: 20,
-                          color: dest == activeDestination
-                              ? colors.brand
-                              : colors.muted,
+                        AnimatedScale(
+                          scale: dest == activeDestination ? 1.1 : 1.0,
+                          duration: VnlfDimensions.resolveDuration(
+                            context,
+                            VnlfDimensions.motionFast,
+                          ),
+                          curve: Curves.easeOutCubic,
+                          child: Icon(
+                            dest.icon,
+                            size: 20,
+                            color: dest == activeDestination
+                                ? colors.brand
+                                : colors.muted,
+                          ),
                         ),
                         if ((destinationLabels[dest] ?? '').isNotEmpty) ...[
                           const SizedBox(height: 3),
-                          Text(
-                            destinationLabels[dest]!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          AnimatedDefaultTextStyle(
+                            duration: VnlfDimensions.resolveDuration(
+                              context,
+                              VnlfDimensions.motionFast,
+                            ),
+                            curve: Curves.easeOutCubic,
                             style: VnlfTypography.caption(
                               dest == activeDestination
                                   ? colors.brand
@@ -249,6 +263,9 @@ class VnlfMobileBottomNav extends StatelessWidget {
                                   ? FontWeight.w700
                                   : FontWeight.w500,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            child: Text(destinationLabels[dest]!),
                           ),
                         ],
                       ],
