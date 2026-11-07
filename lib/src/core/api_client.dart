@@ -118,6 +118,18 @@ final class ApiClient {
     T Function(Map<String, dynamic>)? decode,
   }) => request<T>('GET', path, query: query, refresh: refresh, decode: decode);
 
+  /// Reads an endpoint whose successful response may be an object or JSON null.
+  Future<Map<String, dynamic>?> getNullableObject(
+    String path, {
+    bool refresh = false,
+  }) => _request<Map<String, dynamic>?>(
+    'GET',
+    path,
+    refresh: refresh,
+    allowNull: true,
+    decode: (value) => value,
+  );
+
   Future<T> request<T>(
     String method,
     String path, {
@@ -126,6 +138,25 @@ final class ApiClient {
     Map<String, String> headers = const {},
     bool refresh = false,
     T Function(Map<String, dynamic>)? decode,
+  }) => _request<T>(
+    method,
+    path,
+    query: query,
+    body: body,
+    headers: headers,
+    refresh: refresh,
+    decode: (value) => decode != null ? decode(value!) : value as T,
+  );
+
+  Future<T> _request<T>(
+    String method,
+    String path, {
+    Map<String, String> query = const {},
+    String? body,
+    Map<String, String> headers = const {},
+    bool refresh = false,
+    bool allowNull = false,
+    required T Function(Map<String, dynamic>?) decode,
   }) async {
     final cacheRevision = _cacheRevision;
     final sessionRevision = _sessionRevision;
@@ -161,8 +192,8 @@ final class ApiClient {
       final cached = isGet && !refresh ? _cache[key] : null;
       if (cached != null &&
           DateTime.now().difference(cached.$1) < cacheDuration) {
-        final value = _decode(cached.$2);
-        return decode != null ? decode(value) : value as T;
+        final value = _decode(cached.$2, allowNull: allowNull);
+        return decode(value);
       }
       if (isGet) _cache.remove(key);
       final canRetry =
@@ -216,8 +247,8 @@ final class ApiClient {
         if (!isGet) clearCache();
         final value = (response.statusCode == 204 || response.statusCode == 205)
             ? <String, dynamic>{}
-            : _decode(response.body);
-        final result = decode != null ? decode(value) : value as T;
+            : _decode(response.body, allowNull: allowNull);
+        final result = decode(value);
         if (isGet &&
             cacheDuration > Duration.zero &&
             cacheRevision == _cacheRevision) {
@@ -233,9 +264,10 @@ final class ApiClient {
     }
   }
 
-  Map<String, dynamic> _decode(String body) {
+  Map<String, dynamic>? _decode(String body, {bool allowNull = false}) {
     try {
       final decoded = jsonDecode(body);
+      if (allowNull && decoded == null) return null;
       if (decoded is! Map<String, dynamic>) throw const FormatException();
       return decoded;
     } on FormatException {
