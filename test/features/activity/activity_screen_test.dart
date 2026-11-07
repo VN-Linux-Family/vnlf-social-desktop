@@ -196,17 +196,40 @@ void main() {
       await tester.pump();
       expect(find.text('Check in today'), findsOneWidget);
       expect(find.textContaining('could not be confirmed'), findsNothing);
+      repository.write.completeError(Exception('interrupted'));
+      await tester.pump();
     },
   );
 
-  testWidgets('screens for the same owner cannot send simultaneous writes', (tester) async {
+  testWidgets('screens for the same owner cannot send simultaneous writes', (
+    tester,
+  ) async {
     final storage = _Storage();
     final repository = _CheckInRepository();
-    final service = ActivityService(repository, uncertainty: ActivityUncertainty(storage, 'lease-owner'));
-    await tester.pumpWidget(MaterialApp(home: Row(children: [
-      Expanded(child: ActivityScreen(service: service, clock: () => DateTime.utc(2026, 11, 6))),
-      Expanded(child: ActivityScreen(service: service, clock: () => DateTime.utc(2026, 11, 6))),
-    ])));
+    final service = ActivityService(
+      repository,
+      uncertainty: ActivityUncertainty(storage, 'lease-owner'),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Row(
+          children: [
+            Expanded(
+              child: ActivityScreen(
+                service: service,
+                clock: () => DateTime.utc(2026, 11, 6),
+              ),
+            ),
+            Expanded(
+              child: ActivityScreen(
+                service: service,
+                clock: () => DateTime.utc(2026, 11, 6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
     await tester.pump();
     await tester.tap(find.text('Check in today').first);
     await tester.pump();
@@ -217,25 +240,35 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('day rollover keeps pending marker during delayed reconciliation', (tester) async {
-    var now = DateTime.utc(2026, 11, 6);
-    final storage = _Storage();
-    final uncertainty = ActivityUncertainty(storage, 'rollover-owner');
-    await uncertainty.mark();
-    final repository = _CheckInRepository();
-    await tester.pumpWidget(MaterialApp(home: ActivityScreen(
-      service: ActivityService(repository, uncertainty: uncertainty), clock: () => now,
-    )));
-    await tester.pump();
-    repository.delayReads = true;
-    await tester.tap(find.text('Refresh activity'));
-    await tester.pump();
-    now = DateTime.utc(2026, 11, 7);
-    repository.delayedRead.complete(repository.calendar('2026-11-01', '2026-11-30'));
-    await tester.pump();
-    expect(await uncertainty.read(), isTrue);
-    expect(find.textContaining('could not be confirmed'), findsOneWidget);
-  });
+  testWidgets(
+    'day rollover keeps pending marker during delayed reconciliation',
+    (tester) async {
+      var now = DateTime.utc(2026, 11, 6);
+      final storage = _Storage();
+      final uncertainty = ActivityUncertainty(storage, 'rollover-owner');
+      await uncertainty.mark();
+      final repository = _CheckInRepository();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ActivityScreen(
+            service: ActivityService(repository, uncertainty: uncertainty),
+            clock: () => now,
+          ),
+        ),
+      );
+      await tester.pump();
+      repository.delayReads = true;
+      await tester.tap(find.text('Refresh activity'));
+      await tester.pump();
+      now = DateTime.utc(2026, 11, 7);
+      repository.delayedRead.complete(
+        repository.calendar('2026-11-01', '2026-11-30'),
+      );
+      await tester.pump();
+      expect(await uncertainty.read(), isTrue);
+      expect(find.textContaining('could not be confirmed'), findsOneWidget);
+    },
+  );
 
   testWidgets('storage failure prevents check-in', (tester) async {
     final storage = _Storage()..failWrites = true;
@@ -319,10 +352,23 @@ final class _CheckInRepository implements ActivityRepository {
   }
 
   ActivityCalendarData calendar(String from, String to) => ActivityCalendarData(
-      from: from, to: to, today: '2026-11-06', totalPoints: 0,
-      earnedPoints: 0, reversedPoints: 0, currentStreak: 0, longestStreak: 0,
-      days: [ActivityDay(date: '2026-11-06', points: 0, checkedIn: checkedIn, streakDay: 0)],
-    );
+    from: from,
+    to: to,
+    today: '2026-11-06',
+    totalPoints: 0,
+    earnedPoints: 0,
+    reversedPoints: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    days: [
+      ActivityDay(
+        date: '2026-11-06',
+        points: 0,
+        checkedIn: checkedIn,
+        streakDay: 0,
+      ),
+    ],
+  );
 
   @override
   Future<CheckInAcknowledgment> checkIn({required bool claimCelebration}) {

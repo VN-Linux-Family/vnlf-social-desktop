@@ -134,6 +134,7 @@ class _ActivityScreenState extends State<ActivityScreen>
       setState(() => _unconfirmed = true);
       return;
     }
+    var leaseOwned = true;
     setState(() {
       _checkingIn = true;
       _checkInMessage = null;
@@ -163,6 +164,8 @@ class _ActivityScreenState extends State<ActivityScreen>
       await _refreshCheckIn(afterAcknowledgment: true, leaseHeld: true);
       if (!mounted || service != widget.service) return;
       if (acknowledgment.showCelebration) {
+        uncertainty.release();
+        leaseOwned = false;
         await showDialog<void>(
           context: context,
           builder: (_) =>
@@ -178,14 +181,17 @@ class _ActivityScreenState extends State<ActivityScreen>
         }
       });
     } finally {
-      uncertainty.release();
+      if (leaseOwned) uncertainty.release();
       if (mounted && service == widget.service) {
         setState(() => _checkingIn = false);
       }
     }
   }
 
-  Future<void> _refreshCheckIn({bool afterAcknowledgment = false, bool leaseHeld = false}) async {
+  Future<void> _refreshCheckIn({
+    bool afterAcknowledgment = false,
+    bool leaseHeld = false,
+  }) async {
     if (_refreshingCheckIn || (_checkingIn && !afterAcknowledgment)) return;
     final service = widget.service;
     final year = _today.year;
@@ -198,7 +204,9 @@ class _ActivityScreenState extends State<ActivityScreen>
       return;
     }
     if (!leaseHeld && !uncertainty.tryAcquire()) return;
-    bool isCurrent() => mounted && service == widget.service &&
+    bool isCurrent() =>
+        mounted &&
+        service == widget.service &&
         revision == _loadRevision &&
         day == activityDayString(widget.clock?.call() ?? DateTime.now());
     setState(() => _refreshingCheckIn = true);
