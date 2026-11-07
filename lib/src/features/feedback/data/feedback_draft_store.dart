@@ -28,7 +28,11 @@ final class FeedbackDraftStore {
         draft.assetIds.length > 5 ||
         draft.assetIds.toSet().length != draft.assetIds.length ||
         draft.assetIds.any((id) => !_assetId.hasMatch(id)) ||
-        (draft.uploadUncertain && draft.assetIds.length >= 5)) {
+        (draft.pendingAssetId != null &&
+            (!draft.uploadUncertain ||
+                !draft.assetIds.contains(draft.pendingAssetId))) ||
+        (draft.uploadUncertain && draft.pendingAssetId == null &&
+            draft.assetIds.length >= 5)) {
       throw const ParseFailure('feedback.draft');
     }
   }
@@ -49,6 +53,7 @@ final class FeedbackDraftStore {
         assetIds: (value['assetIds'] as List).cast<String>(),
         uploadUncertain: value['uploadUncertain'] as bool,
         submissionUncertain: value['submissionUncertain'] as bool,
+        pendingAssetId: value['pendingAssetId'] as String?,
       );
       _validate(draft, ownerId);
       return draft;
@@ -71,6 +76,7 @@ final class FeedbackDraftStore {
       'assetIds': draft.assetIds,
       'uploadUncertain': draft.uploadUncertain,
       'submissionUncertain': draft.submissionUncertain,
+      'pendingAssetId': draft.pendingAssetId,
     }));
   }
 
