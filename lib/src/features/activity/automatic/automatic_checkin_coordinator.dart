@@ -127,9 +127,18 @@ final class AutomaticCheckInCoordinator {
       final claim = !_context!.modalOpen;
       await storage.write(_key, '$day:pending');
       await uncertainty.mark();
-      if (!_current(revision, day)) return;
-      if (!_context!.visible || claim != !_context!.modalOpen) {
-        _status = AutomaticCheckInStatus.uncertain;
+      if (!_current(revision, day) ||
+          !_context!.visible ||
+          claim != !_context!.modalOpen) {
+        // No request has left the device. Restore the prior phase while the
+        // owner lease is held so a later eligible update may proceed safely.
+        if (phase == null) {
+          await storage.delete(_key);
+        } else {
+          await storage.write(_key, phase);
+        }
+        await uncertainty.clear();
+        if (_current(revision, day)) _status = AutomaticCheckInStatus.idle;
         return;
       }
       final result = await service.checkIn(claimCelebration: claim);

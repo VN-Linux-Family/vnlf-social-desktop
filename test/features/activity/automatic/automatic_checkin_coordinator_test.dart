@@ -44,6 +44,21 @@ void main() {
     expect(coordinator.status, AutomaticCheckInStatus.uncertain);
   });
 
+  test('backgrounding before transport restores the unsent intent', () async {
+    final storage = _DelayedMarkerStorage();
+    final repo = _Repository();
+    final coordinator = _coordinator(storage, repo);
+    final pending = coordinator.update(_state());
+    await storage.markerStarted.future;
+    await coordinator.update(_state(visible: false));
+    storage.allowMarker.complete();
+    await pending;
+    expect(repo.claims, isEmpty);
+    expect(storage.values, isEmpty);
+    await coordinator.update(_state());
+    expect(repo.claims, [true]);
+  });
+
   test('a response from the previous day cannot be presented', () async {
     var now = DateTime.utc(2026, 11, 7);
     final repo = _Repository()..response = Completer<CheckInAcknowledgment>();
@@ -150,7 +165,7 @@ void main() {
 }
 
 AutomaticCheckInCoordinator _coordinator(
-  _Storage storage,
+  SessionStorage storage,
   _Repository repo, {
   DateTime Function()? clock,
 }) => AutomaticCheckInCoordinator(
@@ -198,6 +213,28 @@ final class _Storage implements SessionStorage {
   @override
   Future<void> write(String key, String value) async {
     if (failWrite) throw StateError('storage failure');
+    values[key] = value;
+  }
+}
+
+final class _DelayedMarkerStorage implements SessionStorage {
+  final values = <String, String>{};
+  final markerStarted = Completer<void>();
+  final allowMarker = Completer<void>();
+
+  @override
+  Future<void> delete(String key) async => values.remove(key);
+
+  @override
+  Future<String?> read(String key) async => values[key];
+
+  @override
+  Future<void> write(String key, String value) async {
+    if (key.startsWith('vnlf.activity.checkin.') &&
+        !markerStarted.isCompleted) {
+      markerStarted.complete();
+      await allowMarker.future;
+    }
     values[key] = value;
   }
 }
