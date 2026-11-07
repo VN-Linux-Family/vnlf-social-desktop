@@ -16,7 +16,10 @@ final _activityServiceProvider = Provider.autoDispose
           ownerId: ownerId,
           currentOwnerId: () => ref.read(sessionStateProvider)?.userId,
         ),
-        uncertainty: ActivityUncertainty(ref.watch(sessionStorageProvider), ownerId),
+        uncertainty: ActivityUncertainty(
+          ref.watch(sessionStorageProvider),
+          ownerId,
+        ),
       );
     });
 

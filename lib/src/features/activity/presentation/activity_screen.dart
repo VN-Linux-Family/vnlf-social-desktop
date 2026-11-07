@@ -62,27 +62,33 @@ class ActivityCheckInCelebration extends StatelessWidget {
       title: Text(english ? 'Daily check-in' : 'Điểm danh hàng ngày'),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              english
-                  ? 'You checked in for ${acknowledgment.currentStreak} days in a row.'
-                  : 'Bạn đã điểm danh ${acknowledgment.currentStreak} ngày liên tiếp.',
-              style: VnlfTypography.body(colors.ink),
-            ),
-            const SizedBox(height: 16),
-            _CalendarGrid(
-              days: days,
-              today: acknowledgment.date,
-              selectedDate: null,
-              english: english,
-              colors: colors,
-              selectable: false,
-              onSelect: (_) {},
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                english
+                    ? 'You checked in for ${acknowledgment.currentStreak} days in a row.'
+                    : 'Bạn đã điểm danh ${acknowledgment.currentStreak} ngày liên tiếp.',
+                style: VnlfTypography.body(colors.ink),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: 420,
+                height: 400,
+                child: _CalendarGrid(
+                  days: days,
+                  today: acknowledgment.date,
+                  selectedDate: null,
+                  english: english,
+                  colors: colors,
+                  selectable: false,
+                  onSelect: (_) {},
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -146,9 +152,8 @@ class _ActivityScreenState extends State<ActivityScreen>
       if (acknowledgment.showCelebration) {
         await showDialog<void>(
           context: context,
-          builder: (_) => ActivityCheckInCelebration(
-            acknowledgment: acknowledgment,
-          ),
+          builder: (_) =>
+              ActivityCheckInCelebration(acknowledgment: acknowledgment),
         );
       }
     } catch (_) {
@@ -340,37 +345,74 @@ class _ActivityScreenState extends State<ActivityScreen>
                   const SizedBox(height: 12),
                 ],
                 if (_storageError) ...[
-                  Semantics(liveRegion: true, child: Text(english
-                      ? 'Check-in storage is unavailable. Try again.'
-                      : 'Không thể lưu trạng thái điểm danh. Hãy thử lại.')),
-                  OutlinedButton(onPressed: _loadUncertainty, child: Text(english ? 'Retry storage' : 'Thử lại lưu trữ')),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      english
+                          ? 'Check-in storage is unavailable. Try again.'
+                          : 'Không thể lưu trạng thái điểm danh. Hãy thử lại.',
+                    ),
+                  ),
+                  OutlinedButton(
+                    onPressed: _loadUncertainty,
+                    child: Text(english ? 'Retry storage' : 'Thử lại lưu trữ'),
+                  ),
+                  const SizedBox(height: 12),
+                ] else if (_checkingIn) ...[
+                  FilledButton(
+                    onPressed: null,
+                    child: Text(english ? 'Checking in…' : 'Đang điểm danh…'),
+                  ),
                   const SizedBox(height: 12),
                 ] else if (_unconfirmed) ...[
                   Semantics(
                     liveRegion: true,
-                    child: Text(_checkInMessage == 'confirmed'
-                        ? (english
-                            ? 'Check-in confirmed. Refresh activity to update the calendar.'
-                            : 'Đã xác nhận điểm danh. Hãy làm mới hoạt động để cập nhật lịch.')
-                        : (english
-                            ? 'Check-in could not be confirmed. Refresh activity before trying again.'
-                            : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.')),
+                    child: Text(
+                      _checkInMessage == 'confirmed'
+                          ? (english
+                                ? 'Check-in confirmed. Refresh activity to update the calendar.'
+                                : 'Đã xác nhận điểm danh. Hãy làm mới hoạt động để cập nhật lịch.')
+                          : (english
+                                ? 'Check-in could not be confirmed. Refresh activity before trying again.'
+                                : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.'),
+                    ),
                   ),
                   OutlinedButton(
-                    onPressed: _refreshingCheckIn || _checkingIn ? null : () => _refreshCheckIn(),
-                    child: Text(english ? 'Refresh activity' : 'Làm mới hoạt động'),
+                    onPressed: _refreshingCheckIn || _checkingIn
+                        ? null
+                        : () => _refreshCheckIn(),
+                    child: Text(
+                      english ? 'Refresh activity' : 'Làm mới hoạt động',
+                    ),
                   ),
                   const SizedBox(height: 12),
-                ] else if (!_loadingUncertainty && data != null && !snapshot.hasError && isCurrentMonth) ...[
+                ] else if (!_loadingUncertainty &&
+                    data != null &&
+                    !snapshot.hasError &&
+                    isCurrentMonth) ...[
                   FilledButton(
-                    onPressed: _checkingIn || data.days.any((day) => day.date == data.today && day.checkedIn)
-                        ? null : _checkIn,
-                    child: Text(_checkingIn
-                        ? (english ? 'Checking in…' : 'Đang điểm danh…')
-                        : (english ? 'Check in today' : 'Điểm danh hôm nay')),
+                    onPressed:
+                        _checkingIn ||
+                            data.days.any(
+                              (day) => day.date == data.today && day.checkedIn,
+                            )
+                        ? null
+                        : _checkIn,
+                    child: Text(
+                      _checkingIn
+                          ? (english ? 'Checking in…' : 'Đang điểm danh…')
+                          : (english ? 'Check in today' : 'Điểm danh hôm nay'),
+                    ),
                   ),
                   if (_checkInMessage == 'confirmed')
-                    Semantics(liveRegion: true, child: Text(english ? 'Check-in confirmed.' : 'Đã xác nhận điểm danh.')),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        english
+                            ? 'Check-in confirmed.'
+                            : 'Đã xác nhận điểm danh.',
+                      ),
+                    ),
                   const SizedBox(height: 12),
                 ],
                 _ActivityPanel(

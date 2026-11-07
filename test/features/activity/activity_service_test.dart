@@ -116,7 +116,9 @@ void main() {
       }, currentOwnerId: () => owner);
       final result = repository.checkIn(claimCelebration: true);
       owner = 'owner-b';
-      response.complete(ApiResponse(statusCode: 200, body: jsonEncode(_checkInPayload())));
+      response.complete(
+        ApiResponse(statusCode: 200, body: jsonEncode(_checkInPayload())),
+      );
       await expectLater(result, throwsA(isA<HttpFailure>()));
       expect(writes, 1);
     });
