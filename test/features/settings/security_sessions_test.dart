@@ -100,6 +100,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(reads, 2);
     expect(find.text('Could not load sessions.'), findsNothing);
+    client.invalidateSession();
+    await tester.pumpAndSettle();
+    expect(reads, 3);
+    expect(find.text('Could not load sessions.'), findsNothing);
   });
 
   test(

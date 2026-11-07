@@ -175,7 +175,7 @@ void main() {
     expect(submitted!['parentId'], 'root');
   });
 
-  testWidgets('manual retry reuses comment id until the draft changes', (
+  testWidgets('uncertain comment retries keep the draft and identity', (
     tester,
   ) async {
     final bodies = <Map<String, dynamic>>[];
@@ -197,14 +197,16 @@ void main() {
     expect(bodies, hasLength(2));
     expect(bodies.first['clientCommentId'], isNotNull);
     expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
-    await tester.enterText(input, 'Bản nháp đã thay đổi');
-    await tester.pump();
+    expect(tester.widget<TextField>(input).readOnly, isTrue);
+    expect(
+      tester.widget<TextField>(input).controller!.text,
+      'Bản nháp không đổi',
+    );
     await tester.tap(find.text('Thêm bình luận'));
     await tester.pumpAndSettle();
-    expect(
-      bodies.last['clientCommentId'],
-      isNot(bodies.first['clientCommentId']),
-    );
+    expect(bodies, hasLength(3));
+    expect(bodies.last['clientCommentId'], bodies.first['clientCommentId']);
+    expect(bodies.last['content'], bodies.first['content']);
   });
 
   testWidgets('failed submission retains the draft and shows a failure', (
