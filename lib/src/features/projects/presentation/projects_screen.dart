@@ -73,7 +73,20 @@ class ProjectsScreen extends ConsumerWidget {
     return ListView(
       children: [
         if (MediaQuery.sizeOf(context).width > 840) ...[
-          VnlfCenterPageHeader(title: english ? 'Projects' : 'Dự án'),
+          VnlfCenterPageHeader(
+            title: english ? 'Projects' : 'Dự án',
+            trailing: OutlinedButton.icon(
+              onPressed: () {
+                final session =
+                    ref.read(sessionStateProvider) ??
+                    ref.read(sessionProvider).valueOrNull;
+                GoRouter.maybeOf(context)
+                    ?.push(session == null ? '/login' : '/projects/submit');
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(english ? 'Submit project' : 'Giới thiệu dự án'),
+            ),
+          ),
           const SizedBox(height: 12),
         ],
         TextField(

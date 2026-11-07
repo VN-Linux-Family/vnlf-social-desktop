@@ -1,4 +1,5 @@
 import '../features/projects/detail/presentation/project_detail_screen.dart';
+import '../features/projects/submission/project_submission_screen.dart';
 import '../features/feedback/feedback.dart';
 import '../features/feedback/presentation/feedback_attachment_dialog.dart';
 import '../features/notifications/presentation/notifications_sheet.dart';
@@ -306,6 +307,14 @@ GoRouter createMainRouter({
             path: '/projects',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProjectsScreen()),
+          ),
+          GoRoute(
+            path: '/projects/submit',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectSubmissionScreen(
+                onSubmitted: (slug) => context.go('/projects/$slug'),
+              ),
+            ),
           ),
           GoRoute(
             path: '/projects/:slug',
