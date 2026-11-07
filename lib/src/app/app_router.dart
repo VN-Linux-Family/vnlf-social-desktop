@@ -1,5 +1,6 @@
 import '../features/projects/detail/presentation/project_detail_screen.dart';
 import '../features/feedback/feedback.dart';
+import '../features/feedback/presentation/feedback_attachment_dialog.dart';
 import '../features/notifications/presentation/notifications_sheet.dart';
 
 import 'dart:convert';
@@ -490,7 +491,21 @@ void _showHelpDialog(BuildContext context) {
   );
 }
 
+bool _feedbackDialogOpen = false;
+
 void showFeedbackDialog(BuildContext context, WidgetRef ref) {
+  if (_feedbackDialogOpen) return;
+  _feedbackDialogOpen = true;
+  final account = ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
+  if (account != null) {
+    final pagePath = GoRouter.maybeOf(context)?.routeInformationProvider.value.uri.path ?? '/';
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => FeedbackAttachmentDialog(ownerId: account.userId, pagePath: pagePath),
+    ).whenComplete(() => _feedbackDialogOpen = false);
+    return;
+  }
   final english = Localizations.localeOf(context).languageCode == 'en';
   final colors = VnlfColors.of(context);
   final session =
@@ -1004,6 +1019,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
       },
     ),
   ).then((_) {
+    _feedbackDialogOpen = false;
     contentController.dispose();
     contactController.dispose();
   });

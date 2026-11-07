@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import '../../../core/api_client.dart';
+import '../../../core/request_identity.dart';
+import '../../../domain/models.dart' show StorageFailure;
 import '../domain/feedback_draft.dart';
 import 'feedback_draft_store.dart';
 import 'feedback_media_repository.dart';
@@ -122,6 +124,11 @@ final class FeedbackDraftController {
     if (draft.submissionUncertain || draft.uploadUncertain || draft.assetIds.length >= 5) {
       throw StateError('Feedback attachment is locked');
     }
+    if (file.name.isEmpty || file.name.length > 255 ||
+        !feedbackMediaMimes.contains(file.mime) || file.length < 1 ||
+        file.length > (file.mime.startsWith('video/') ? feedbackVideoLimit : feedbackImageLimit)) {
+      throw const ParseFailure('feedback.upload.file');
+    }
     // Written before presign: an interrupted response may have allocated a slot.
     await _save(_copy(uploadUncertain: true));
     _check();
@@ -144,10 +151,15 @@ final class FeedbackDraftController {
 
   Future<void> deleteAsset(String assetId) => _exclusive(() async {
     if (draft.submissionUncertain || !draft.assetIds.contains(assetId) ||
-        (draft.uploadUncertain && draft.pendingAssetId != assetId)) {
+        (draft.uploadUncertain && draft.pendingAssetId != null && draft.pendingAssetId != assetId)) {
       throw StateError('Feedback attachment cannot be deleted');
     }
-    await _save(_copy(uploadUncertain: true, pendingAssetId: assetId));
+    final unknownPresign = draft.uploadUncertain && draft.pendingAssetId == null;
+    if (!unknownPresign) {
+      await _save(_copy(uploadUncertain: true, pendingAssetId: assetId));
+    } else {
+      await _save(draft);
+    }
     _check();
     if (_pending?.assetId == assetId) {
       await _media.delete(_pending!);
@@ -159,9 +171,22 @@ final class FeedbackDraftController {
     _check();
     await _save(_copy(
       assetIds: draft.assetIds.where((id) => id != assetId).toList(),
-      uploadUncertain: false, clearPending: true,
+      uploadUncertain: unknownPresign, clearPending: true,
     ));
     _pending = null;
+  });
+
+  /// Called only after the user accepts that an unidentified asset may remain.
+  Future<void> restartAfterUnknownPresign() => _exclusive(() async {
+    if (!draft.uploadUncertain || draft.pendingAssetId != null ||
+        draft.assetIds.isNotEmpty || draft.submissionUncertain) {
+      throw StateError('Unknown upload cannot be discarded yet');
+    }
+    await _save(FeedbackDraft(
+      ownerId: draft.ownerId, submissionId: newRequestIdentity(), kind: draft.kind,
+      detail: draft.detail, contact: draft.contact, pagePath: draft.pagePath,
+      assetIds: const [], uploadUncertain: false, submissionUncertain: false,
+    ));
   });
 
   Future<void> submit() => _exclusive(() async {

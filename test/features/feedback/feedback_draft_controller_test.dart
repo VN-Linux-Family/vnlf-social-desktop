@@ -35,6 +35,11 @@ void main() {
     expect(recovered.draft.pendingAssetId, isNull);
     await expectLater(recovered.attach(file()), throwsA(isA<StateError>()));
     expect(calls, 1);
+    final oldId = recovered.draft.submissionId;
+    await recovered.restartAfterUnknownPresign();
+    expect(recovered.draft.submissionId, isNot(oldId));
+    expect(recovered.draft.detail, initial().detail);
+    expect(recovered.draft.uploadUncertain, isFalse);
   });
 
   test('uncertain submission freezes exact retry across reopen', () async {
