@@ -1,5 +1,12 @@
 final class BlockedPerson {
-  const BlockedPerson({required this.id, required this.username, required this.displayName, this.bio = '', this.avatarUrl, this.blockedAt});
+  const BlockedPerson({
+    required this.id,
+    required this.username,
+    required this.displayName,
+    this.bio = '',
+    this.avatarUrl,
+    this.blockedAt,
+  });
   final String id;
   final String username;
   final String displayName;

@@ -655,3 +655,9 @@ sessions may be revoked with `DELETE /api/v1/auth/sessions/:id`, and other
 sessions collectively with `POST /api/v1/auth/logout-others`. A read-only
 owner-account list check succeeded and the temporary test session was logged
 out. Revocation paths have synthetic coverage and were not exercised live.
+
+The account's blocked-people list uses `GET /api/v1/me/blocks`; unblocking uses
+`DELETE /api/v1/users/:id/block` and requires an explicit `ok: true` response.
+The native panel refreshes related profile, feed and inbox state after a possible
+change. An owner-account list read succeeded and its temporary session was
+logged out; unblock behavior has synthetic coverage and was not exercised live.
