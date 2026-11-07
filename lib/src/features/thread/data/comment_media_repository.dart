@@ -1,0 +1,154 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import '../../../core/api_client.dart';
+import '../../../data/field_reader.dart';
+import '../domain/comment_upload.dart';
+
+const int maxCommentImageBytes = 10 * 1024 * 1024;
+
+const Set<String> allowedCommentImageMimes = <String>{
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+};
+
+typedef CommentAssetUpload = Future<void> Function(
+  Uri url,
+  CommentUploadFile file,
+  Map<String, String> headers,
+);
+
+final class CommentMediaRepository {
+  CommentMediaRepository(this._client, {CommentAssetUpload? upload})
+    : _upload = upload ?? _uploadNative;
+
+  static final RegExp _safeAssetIdPattern = RegExp(r'^[a-zA-Z0-9_-]{1,128}$');
+
+  final ApiClient _client;
+  final CommentAssetUpload _upload;
+
+  Future<CommentUploadedAsset> upload(String articleId, CommentUploadFile file) async {
+    final session = _client.captureSession();
+    final name = file.name.trim();
+    final mime = file.mime.trim().toLowerCase();
+    if (name.isEmpty || name.length > 255) {
+      throw const ParseFailure('upload.fileName');
+    }
+    if (!allowedCommentImageMimes.contains(mime)) {
+      throw const ParseFailure('upload.mime');
+    }
+    if (file.length < 1 || file.length > maxCommentImageBytes) {
+      throw const ParseFailure('upload.size');
+    }
+
+    final presign = await _client.request<Map<String, dynamic>>(
+      'POST',
+      '/api/v1/articles/${Uri.encodeComponent(articleId)}/comment-assets/presign',
+      body: jsonEncode(<String, Object?>{
+        'fileName': name,
+        'mime': mime,
+        'size': file.length,
+      }),
+    );
+    final assetId = stringValue(presign['assetId'], 'upload.assetId');
+    final uploadUrl = stringValue(presign['uploadUrl'], 'upload.uploadUrl');
+    final uploadUri = Uri.tryParse(uploadUrl);
+    if (!_safeAssetIdPattern.hasMatch(assetId) ||
+        uploadUri == null ||
+        !uploadUri.hasScheme ||
+        uploadUri.scheme != 'https' ||
+        uploadUri.host.isEmpty ||
+        uploadUri.userInfo.isNotEmpty) {
+      throw const ParseFailure('upload.presign');
+    }
+
+    final rawHeaders =
+        objectValue(presign['headers'], 'upload.headers') ??
+        const <String, dynamic>{};
+    final uploadHeaders = <String, String>{};
+    for (final entry in rawHeaders.entries) {
+      final key = entry.key.trim();
+      final lower = key.toLowerCase();
+      // Never forward session cookies, authorization, or CSRF tokens to CDN/S3.
+      if (lower == 'cookie' ||
+          lower == 'authorization' ||
+          lower == 'x-csrf-token') {
+        continue;
+      }
+      final val = entry.value;
+      if (val is String && val.isNotEmpty) {
+        uploadHeaders[key] = val;
+      }
+    }
+
+    session.ensureCurrent();
+    final guardedFile = CommentUploadFile(
+      name: file.name,
+      mime: file.mime,
+      length: file.length,
+      openRead: () => file.openRead().map((chunk) {
+        session.ensureCurrent();
+        return chunk;
+      }),
+    );
+    await _upload(uploadUri, guardedFile, Map.unmodifiable(uploadHeaders));
+    session.ensureCurrent();
+
+    final encodedAssetId = Uri.encodeComponent(assetId);
+    final completed = await _client.request<Map<String, dynamic>>(
+      'POST',
+      '/api/v1/articles/${Uri.encodeComponent(articleId)}/comment-assets/$encodedAssetId/complete',
+      body: jsonEncode(const <String, Object?>{}),
+    );
+    final completedId = stringValue(completed['assetId'], 'upload.assetId');
+    final status = stringValue(completed['status'], 'upload.status');
+    if (completedId != assetId || status != 'READY') {
+      throw const ParseFailure('upload.complete');
+    }
+
+    session.ensureCurrent();
+    return CommentUploadedAsset(
+      assetId: completedId,
+      fileName: name,
+      status: status,
+      mime: mime,
+      size: file.length,
+    );
+  }
+}
+
+Future<void> _uploadNative(
+  Uri url,
+  CommentUploadFile file,
+  Map<String, String> headers,
+) async {
+  final client = HttpClient();
+  try {
+    final request = await client
+        .putUrl(url)
+        .timeout(const Duration(seconds: 30));
+    request.followRedirects = false;
+    request.headers.set(HttpHeaders.contentTypeHeader, file.mime);
+    for (final entry in headers.entries) {
+      request.headers.set(entry.key, entry.value);
+    }
+    request.contentLength = file.length;
+    await request
+        .addStream(file.openRead())
+        .timeout(const Duration(minutes: 3));
+    final response = await request.close().timeout(const Duration(seconds: 30));
+    await response.drain<void>();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpFailure(response.statusCode);
+    }
+  } on AppFailure {
+    rethrow;
+  } catch (_) {
+    throw const TransportFailure();
+  } finally {
+    client.close(force: true);
+  }
+}

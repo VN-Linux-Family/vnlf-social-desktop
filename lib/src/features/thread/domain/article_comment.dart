@@ -82,5 +82,6 @@ abstract interface class CommentsRepository {
     String content, {
     String? parentId,
     String? clientCommentId,
+    List<String> attachmentIds = const [],
   });
 }

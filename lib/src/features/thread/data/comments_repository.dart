@@ -140,6 +140,7 @@ final class LiveCommentsRepository implements CommentsRepository {
     String content, {
     String? parentId,
     String? clientCommentId,
+    List<String> attachmentIds = const [],
   }) async {
     final result = await _client.request<ArticleComment>(
       'POST',
@@ -148,6 +149,7 @@ final class LiveCommentsRepository implements CommentsRepository {
         'content': content,
         'parentId': ?parentId,
         'clientCommentId': ?clientCommentId,
+        'attachmentIds': attachmentIds,
       }),
       decode: commentFromJson,
     );
@@ -240,6 +242,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
     String content, {
     String? parentId,
     String? clientCommentId,
+    List<String> attachmentIds = const [],
   }) async {
     await load(articleId);
     final result = ArticleComment(
