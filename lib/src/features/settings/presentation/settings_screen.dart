@@ -10,6 +10,7 @@ import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../updates/presentation/update_panel.dart';
 import 'account_profile_screen.dart';
+import 'security_sessions_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
 
@@ -160,6 +161,10 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
+        if (session != null && !offlineFeatures) ...[
+          const SizedBox(height: 16),
+          const SecuritySessionsPanel(),
+        ],
         const SizedBox(height: 16),
         FeatureSurface(
           child: Column(
