@@ -6,6 +6,8 @@ import '../../../domain/models.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../data/comments_repository.dart';
+import '../data/comment_media_repository.dart';
+import '../data/comment_attachment_controller.dart';
 import '../domain/article_comment.dart';
 import 'comment_actions.dart';
 
@@ -14,6 +16,15 @@ final commentsRepositoryProvider = Provider<CommentsRepository>(
       ? FixtureCommentsRepository()
       : LiveCommentsRepository(ref.watch(apiClientProvider)),
 );
+
+final commentMediaRepositoryProvider = Provider<CommentMediaRepository>(
+  (ref) => CommentMediaRepository(ref.watch(apiClientProvider)),
+);
+
+final commentAttachmentControllerProvider = Provider.autoDispose.family<CommentAttachmentController, String>((ref, id) {
+  ref.watch(sessionStateProvider.select((session) => session?.userId));
+  return CommentAttachmentController(id, ref.watch(commentMediaRepositoryProvider), ref.watch(commentsRepositoryProvider), ref.watch(apiClientProvider));
+});
 
 final articleCommentsProvider = FutureProvider.autoDispose
     .family<List<ArticleComment>, String>((ref, id) async {

@@ -3,13 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/request_identity.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/article_comment.dart';
+import '../data/comment_attachment_controller.dart';
+import 'comment_attachment_picker.dart';
 import 'comments_providers.dart';
 import 'comment_edit_dialog.dart';
 import 'thread_post_provider.dart';
@@ -31,8 +32,23 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   AppFailure? _failure;
   ArticleComment? _replyTo;
   int _revision = 0;
-  String? _draftSignature;
-  String? _draftIdentity;
+  bool _selecting = false;
+  String? _attachmentError;
+
+  @override
+  void didUpdateWidget(covariant ThreadComments oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.postId != widget.postId) {
+      _revision++;
+      _confirmed.clear();
+      _replyTo = null;
+      _failure = null;
+      _submitting = false;
+      _selecting = false;
+      _attachmentError = null;
+      _input.clear();
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +58,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
 
   Future<void> _submit() async {
     final content = _input.text.trim();
-    if (content.isEmpty || content.length > 4000 || _submitting) return;
+    final draft = ref.read(commentAttachmentControllerProvider(widget.postId));
+    if ((content.isEmpty && draft.readyIds.isEmpty) || content.length > 4000 || _submitting) return;
     final sessionId = ref.read(sessionStateProvider)?.userId;
     if (!offlineFeatures && sessionId == null) {
       context.push('/login');
@@ -65,24 +82,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     final parentId = _replyTo == null
         ? null
         : commentReplyParent(_replyTo!, visible);
-    final signature = '${parentId ?? ''}\u0000$content';
-    if (_draftSignature != signature) {
-      _draftSignature = signature;
-      _draftIdentity = newRequestIdentity();
-    }
     setState(() {
       _submitting = true;
       _failure = null;
     });
     try {
-      final comment = await ref
-          .read(commentsRepositoryProvider)
-          .create(
-            widget.postId,
-            content,
-            parentId: parentId,
-            clientCommentId: _draftIdentity,
-          );
+      final comment = await draft.submit(content, parentId: parentId);
       if (!mounted || revision != _revision) return;
       if (!offlineFeatures &&
           ref.read(sessionStateProvider)?.userId != sessionId) {
@@ -92,8 +97,6 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _confirmed[comment.id] = comment;
         if (_input.text.trim() == content) _input.clear();
         _replyTo = null;
-        _draftSignature = null;
-        _draftIdentity = null;
       });
       ref.invalidate(articleCommentsProvider(widget.postId));
       ref.invalidate(feedNotifierProvider);
@@ -106,6 +109,41 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     } finally {
       if (mounted && revision == _revision) setState(() => _submitting = false);
     }
+  }
+
+  Future<void> _pickAttachments() async {
+    if (_selecting || !_authorized()) return;
+    final revision = _revision;
+    final owner = ref.read(sessionStateProvider)?.userId;
+    final draft = ref.read(commentAttachmentControllerProvider(widget.postId));
+    bool current() => mounted && revision == _revision && ref.read(sessionStateProvider)?.userId == owner && identical(draft, ref.read(commentAttachmentControllerProvider(widget.postId)));
+    void refresh() { if (current()) setState(() {}); }
+    setState(() { _selecting = true; _attachmentError = null; });
+    try {
+      final files = await ref.read(commentAttachmentPickerProvider)();
+      if (!current()) return;
+      if (files.length + draft.attachments.length > 10) {
+        setState(() => _attachmentError = 'limit');
+        return;
+      }
+      for (final file in files) {
+        if (!current()) return;
+        final item = draft.add(file);
+        refresh();
+        try { await draft.upload(item, onChange: refresh); } catch (_) { refresh(); }
+      }
+    } catch (_) {
+      if (current()) setState(() => _attachmentError = 'picker');
+    } finally {
+      if (current()) setState(() => _selecting = false);
+    }
+  }
+
+  Future<void> _retryAttachment(CommentAttachment item) async {
+    final revision = _revision;
+    final draft = ref.read(commentAttachmentControllerProvider(widget.postId));
+    void refresh() { if (mounted && revision == _revision) setState(() {}); }
+    try { await draft.retryCompletion(item, onChange: refresh); } catch (_) { refresh(); }
   }
 
   bool _authorized() {
@@ -168,8 +206,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _failure = null;
         _submitting = false;
         _input.clear();
-        _draftSignature = null;
-        _draftIdentity = null;
+        _selecting = false;
+        _attachmentError = null;
       });
     });
     ref.listen(articleCommentsProvider(widget.postId), (before, after) {
@@ -196,6 +234,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       pending: actions.pending,
       errors: actions.errors,
     );
+    final draft = ref.watch(commentAttachmentControllerProvider(widget.postId));
     final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
     return FeatureSurface(
       child: Column(
@@ -242,6 +281,48 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                 border: const OutlineInputBorder(),
               ),
             ),
+            Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  key: const ValueKey('comment-add-photos'),
+                  onPressed: _selecting || _submitting || draft.attachments.length >= 10 ? null : _pickAttachments,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  label: Text(english ? 'Add photos' : 'Thêm ảnh'),
+                ),
+                Text('${draft.attachments.length}/10'),
+              ],
+            ),
+            if (_attachmentError != null)
+              Text(_attachmentError == 'limit'
+                  ? (english ? 'A comment can have up to 10 photos.' : 'Mỗi bình luận có tối đa 10 ảnh.')
+                  : (english ? 'Could not open selected photos.' : 'Không mở được ảnh đã chọn.'),
+                style: VnlfTypography.meta(colors.red)),
+            for (final item in draft.attachments)
+              ListTile(
+                key: ValueKey(item),
+                leading: item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing
+                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Icon(item.state == CommentAttachmentState.ready ? Icons.image_outlined : Icons.error_outline),
+                title: Text(item.file.name, overflow: TextOverflow.ellipsis),
+                subtitle: Text(switch (item.state) {
+                  CommentAttachmentState.selected => english ? 'Selected' : 'Đã chọn',
+                  CommentAttachmentState.presigning => english ? 'Preparing' : 'Đang chuẩn bị',
+                  CommentAttachmentState.uploading => english ? 'Uploading' : 'Đang tải lên',
+                  CommentAttachmentState.completing => english ? 'Confirming' : 'Đang xác nhận',
+                  CommentAttachmentState.ready => english ? 'Ready' : 'Sẵn sàng',
+                  CommentAttachmentState.presignFailed || CommentAttachmentState.uploadFailed => english ? 'Upload failed; remove and select again.' : 'Tải lên thất bại; xóa và chọn lại.',
+                  CommentAttachmentState.completeFailed => english ? 'Confirmation failed.' : 'Xác nhận thất bại.',
+                }),
+                trailing: Wrap(children: [
+                  if (item.state == CommentAttachmentState.completeFailed)
+                    IconButton(tooltip: english ? 'Retry confirmation' : 'Thử xác nhận lại', onPressed: _submitting ? null : () => _retryAttachment(item), icon: const Icon(Icons.refresh)),
+                  IconButton(tooltip: english ? 'Remove photo' : 'Xóa ảnh',
+                    onPressed: _submitting || item.state == CommentAttachmentState.presigning || item.state == CommentAttachmentState.uploading || item.state == CommentAttachmentState.completing ? null : () => setState(() => draft.remove(item)),
+                    icon: const Icon(Icons.close)),
+                ]),
+              ),
             if (_failure != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -265,9 +346,10 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               alignment: Alignment.centerRight,
               child: FilledButton(
                 onPressed:
-                    _input.text.trim().isEmpty ||
+                    (_input.text.trim().isEmpty && draft.readyIds.isEmpty) ||
+                        draft.attachments.any((item) => item.state != CommentAttachmentState.ready) ||
                         _input.text.length > 4000 ||
-                        _submitting
+                        _selecting || _submitting
                     ? null
                     : _submit,
                 child: _submitting

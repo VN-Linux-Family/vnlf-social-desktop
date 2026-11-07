@@ -49,41 +49,48 @@ final class CommentAttachmentController {
     if (!_items.remove(item)) throw StateError('Unknown attachment');
   }
 
-  Future<void> upload(CommentAttachment item) async {
+  Future<void> upload(CommentAttachment item, {void Function()? onChange}) async {
     _check(item, CommentAttachmentState.selected);
     item.state = CommentAttachmentState.presigning;
+    onChange?.call();
     try {
       await item.transfer.presign();
     } catch (error) {
       item.error = error;
       item.state = CommentAttachmentState.presignFailed;
+      onChange?.call();
       rethrow;
     }
     item.state = CommentAttachmentState.uploading;
+    onChange?.call();
     try {
       await item.transfer.put();
     } catch (error) {
       item.error = error;
       item.state = CommentAttachmentState.uploadFailed;
+      onChange?.call();
       rethrow;
     }
-    await _complete(item);
+    await _complete(item, onChange);
   }
 
-  Future<void> retryCompletion(CommentAttachment item) async {
+  Future<void> retryCompletion(CommentAttachment item, {void Function()? onChange}) async {
     _check(item, CommentAttachmentState.completeFailed);
-    await _complete(item);
+    await _complete(item, onChange);
   }
 
-  Future<void> _complete(CommentAttachment item) async {
+  Future<void> _complete(CommentAttachment item, void Function()? onChange) async {
     item.state = CommentAttachmentState.completing;
+    onChange?.call();
     item.error = null;
     try {
       await item.transfer.complete();
       item.state = CommentAttachmentState.ready;
+      onChange?.call();
     } catch (error) {
       item.error = error;
       item.state = CommentAttachmentState.completeFailed;
+      onChange?.call();
       rethrow;
     }
   }
