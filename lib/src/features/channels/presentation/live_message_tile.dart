@@ -71,9 +71,7 @@ class LiveMessageTile extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: VnlfAuthorNameRow(author: author, fontSize: 13),
-                    ),
+                    Expanded(child: VnlfAuthorNameRow(author: author)),
                     Text(time, style: VnlfTypography.meta(colors.muted)),
                     if (!deleted)
                       PopupMenuButton<String>(

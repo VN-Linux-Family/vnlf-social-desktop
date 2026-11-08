@@ -39,15 +39,27 @@ class VnlfImagePlaceholder extends StatelessWidget {
         border: Border.all(color: colors.line),
       ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 36, color: colors.muted),
-            if (label.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(label, style: VnlfTypography.caption(colors.muted)),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 36, color: colors.muted),
+              if (label.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                // The box keeps its aspect ratio, so large text is truncated.
+                Flexible(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: VnlfTypography.caption(colors.muted),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

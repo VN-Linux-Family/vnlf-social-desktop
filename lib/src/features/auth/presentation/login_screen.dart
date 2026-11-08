@@ -230,8 +230,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'Vietnam Linux Family',
                       textAlign: TextAlign.center,
-                      style: VnlfTypography.h2(colors.ink)
-                          .copyWith(fontSize: 20),
+                      style: VnlfTypography.h2(colors.ink),
                     ),
                     const SizedBox(height: 4),
                     Text(

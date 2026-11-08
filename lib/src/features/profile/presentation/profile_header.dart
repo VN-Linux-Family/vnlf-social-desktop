@@ -79,11 +79,7 @@ class ProfileHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                VnlfAuthorNameRow(
-                  author: author,
-                  showHandleInline: false,
-                  fontSize: 25,
-                ),
+                VnlfAuthorNameRow(author: author, showHandleInline: false),
                 const SizedBox(height: 3),
                 Text(
                   '@${author.username}',
@@ -173,7 +169,7 @@ class _Stat extends StatelessWidget {
           children: [
             Text(
               value?.toString() ?? '—',
-              style: VnlfTypography.h2(colors.ink).copyWith(fontSize: 22),
+              style: VnlfTypography.number(colors.ink),
             ),
             if (level != null)
               Container(

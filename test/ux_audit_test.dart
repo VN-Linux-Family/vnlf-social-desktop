@@ -24,7 +24,13 @@ import 'package:vnlfsocialapp/src/features/voice/presentation/voice_providers.da
 void main() {
   setUpAll(() async {
     final loader = FontLoader('BeVietnamPro');
-    for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    for (final weight in [
+      'Regular',
+      'Medium',
+      'SemiBold',
+      'Bold',
+      'ExtraBold',
+    ]) {
       loader.addFont(rootBundle.load('assets/fonts/BeVietnamPro-$weight.ttf'));
     }
     await loader.load();
@@ -42,8 +48,9 @@ void main() {
     test(
       '${theme.brightness.name} Material text slots use VNLF typography',
       () {
+        // design-system/MASTER.md: all text 13px; only page titles are 18px.
         expect(theme.textTheme.titleLarge!.fontSize, 18);
-        expect(theme.textTheme.titleSmall!.fontSize, 14);
+        expect(theme.textTheme.titleSmall!.fontSize, 13);
         expect(theme.textTheme.bodyLarge!.fontSize, 13);
       },
     );
@@ -262,17 +269,26 @@ void main() {
         theme: VnlfTheme.light(),
         home: Scaffold(
           body: VnlfMobileStickyHeader(
-            openDrawerTooltip: 'Menu',
+            title: 'Bảng tin',
+            onBack: () {},
+            backTooltip: 'Back',
+            composeSemanticLabel: 'Create post',
             searchSemanticLabel: 'Search',
             notificationsSemanticLabel: 'Notifications',
-            profileSemanticLabel: 'Profile',
+            onComposeTap: () {},
             onSearchTap: () {},
             onNotificationsTap: () {},
-            onProfileTap: () {},
           ),
         ),
       ),
     );
+    // The website's phone bar: 54px tall, an 18px page title, bare icons.
+    expect(tester.getSize(find.byType(VnlfMobileStickyHeader)).height, 54);
+    expect(
+      tester.widget<Text>(find.text('Bảng tin')).style?.fontSize,
+      VnlfTypography.baseSize + 5,
+    );
+    expect(find.byType(InkWell), findsNWidgets(4));
     for (final control in find.byType(InkWell).evaluate()) {
       final size = tester.getSize(find.byWidget(control.widget));
       expect(size.width, greaterThanOrEqualTo(48));

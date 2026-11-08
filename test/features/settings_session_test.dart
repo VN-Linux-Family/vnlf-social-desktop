@@ -235,12 +235,12 @@ void main() {
       addTearDown(container.dispose);
       await _pumpApp(tester, container, width: width);
       if (width == 390) {
-        await tester.tap(find.byTooltip('Mở menu điều hướng'));
+        // The phone menu opens from the avatar in the bottom bar.
+        await tester.tap(find.byTooltip('Mở menu'));
         await tester.pumpAndSettle();
       }
-      final logout = width == 900
-          ? find.byTooltip('Đăng xuất')
-          : find.text('Đăng xuất');
+      // Tablets keep the full sidebar, so every width shows the labelled action.
+      final logout = find.text('Đăng xuất');
       expect(logout, findsOneWidget);
       await tester.tap(logout);
       await tester.pumpAndSettle();

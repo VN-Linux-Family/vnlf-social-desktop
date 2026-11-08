@@ -598,10 +598,7 @@ class _ProjectSubmissionScreenState
       for (var i = 0; i < (state?.mediaAssets.length ?? 0); i++)
         Card(
           child: ListTile(
-            leading: CircleAvatar(
-              radius: 14,
-              child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
-            ),
+            leading: CircleAvatar(radius: 14, child: Text('${i + 1}')),
             title: Text(state!.mediaAssets[i].fileName),
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline),

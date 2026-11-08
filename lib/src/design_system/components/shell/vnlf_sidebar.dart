@@ -150,10 +150,8 @@ class VnlfDesktopSidebar extends StatelessWidget {
                           const SizedBox(width: 9),
                           RichText(
                             text: TextSpan(
-                              style: VnlfTypography.h3(colors.ink).copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: VnlfTypography.h3(colors.ink)
+                                  .copyWith(fontWeight: FontWeight.w800),
                               children: [
                                 TextSpan(text: brandTitlePrefix),
                                 TextSpan(
@@ -321,7 +319,10 @@ class VnlfDesktopSidebar extends StatelessWidget {
                             ),
                             const SizedBox(height: 10),
                           ],
-                          Row(
+                          // Wraps instead of overflowing in the 220px tablet sidebar.
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
                             children: [
                               SocialCircleBadge(
                                 compact: !isDrawer,
@@ -334,14 +335,12 @@ class VnlfDesktopSidebar extends StatelessWidget {
                                 semanticLabel: facebookSemanticLabel,
                                 onTap: onFacebookTap,
                               ),
-                              const SizedBox(width: 16),
                               SocialCircleBadge(
                                 compact: !isDrawer,
                                 assetPath: 'assets/images/social-telegram.webp',
                                 semanticLabel: telegramSemanticLabel,
                                 onTap: onTelegramTap,
                               ),
-                              const SizedBox(width: 16),
                               SocialCircleBadge(
                                 compact: !isDrawer,
                                 assetPath: 'assets/images/social-discord.webp',

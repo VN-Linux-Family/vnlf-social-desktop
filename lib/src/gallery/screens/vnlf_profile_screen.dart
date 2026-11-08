@@ -63,7 +63,6 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
       darkThemeTooltip: VnlfGalleryFixtures.darkThemeTooltip,
       systemThemeTooltip: VnlfGalleryFixtures.systemThemeTooltip,
       themePickerSemanticLabel: VnlfGalleryFixtures.themePickerSemanticLabel,
-      railThemeToggleTooltip: VnlfGalleryFixtures.railThemeToggleTooltip,
       openDrawerTooltip: VnlfGalleryFixtures.openDrawerTooltip,
       searchSemanticLabel: VnlfGalleryFixtures.searchSemanticLabel,
       notificationsSemanticLabel:

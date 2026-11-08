@@ -361,8 +361,12 @@ class _ActivityScreenState extends State<ActivityScreen>
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
-        VnlfCenterPageHeader(title: english ? 'Activity' : 'Hoạt động'),
-        const SizedBox(height: 12),
+        // On phones the top bar already names the page (website docs 41).
+        if (VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
+            VnlfViewportSize.mobile) ...[
+          VnlfCenterPageHeader(title: english ? 'Activity' : 'Hoạt động'),
+          const SizedBox(height: 12),
+        ],
         FutureBuilder<ActivityCalendarData>(
           key: ValueKey('$_year-$_month-$_loadRevision'),
           future: _calendar,
@@ -588,7 +592,7 @@ class _StreakHero extends StatelessWidget {
           label: english ? '$streak day streak' : 'Chuỗi $streak ngày',
           child: Column(
             children: [
-              Text('$streak', style: VnlfTypography.h1(colors.brand)),
+              Text('$streak', style: VnlfTypography.number(colors.brand)),
               Text(
                 english ? 'days' : 'ngày',
                 style: VnlfTypography.meta(colors.muted),

@@ -309,10 +309,7 @@ class _TypeRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 210,
-            child: Text(
-              token,
-              style: VnlfTypography.code(colors.muted).copyWith(fontSize: 11.5),
-            ),
+            child: Text(token, style: VnlfTypography.code(colors.muted)),
           ),
           Expanded(child: Text(sample, style: style)),
         ],

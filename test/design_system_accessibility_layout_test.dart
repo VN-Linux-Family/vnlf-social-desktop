@@ -6,7 +6,13 @@ import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 void main() {
   setUpAll(() async {
     final loader = FontLoader('BeVietnamPro');
-    for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    for (final weight in [
+      'Regular',
+      'Medium',
+      'SemiBold',
+      'Bold',
+      'ExtraBold',
+    ]) {
       loader.addFont(rootBundle.load('assets/fonts/BeVietnamPro-$weight.ttf'));
     }
     await loader.load();

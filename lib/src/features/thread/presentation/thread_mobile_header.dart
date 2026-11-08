@@ -28,7 +28,7 @@ class ThreadMobileHeader extends StatelessWidget {
           Expanded(
             child: Text(
               en ? 'Post' : 'Bài viết',
-              style: VnlfTypography.h1(colors.ink),
+              style: VnlfTypography.pageTitle(colors.ink),
             ),
           ),
           IconButton(

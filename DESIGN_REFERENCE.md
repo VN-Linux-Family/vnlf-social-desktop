@@ -13,6 +13,29 @@ foregrounds with AA contrast. Native touch targets may exceed website controls.
 The detailed findings, limitations and current captures are recorded in
 `docs/ux-ui-audit-2026-11-08.md`.
 
+Website parity amendment — 2026-11-08 (branch `fix/web-parity`): the
+authoritative visual rules are the website's own `design-system/MASTER.md`,
+docs 31 (unified 13px type) and docs 41 (lean phone shell) in the
+`realfox99/vnlf-social` source at `ab23799`. Where this file disagrees, they win:
+
+- **Type:** every visible text is 13px (body, controls, metadata, captions,
+  headings, code). Hierarchy uses weight 700 for headings and weight 800 for
+  page titles and numbers (tabular figures). The only larger text is the page
+  title in the top bar: 13 + 5 = 18px, weight 800, line height 1.25. The 18/16/14/12/11px
+  scale in §2 below is historical. `VnlfTypography.pageTitle` and
+  `VnlfTypography.number` implement the two special roles.
+- **Phone shell (<840):** one 54px top bar with padding `0 6px 0 16px`, the
+  page title on the left and bare create / search / notification icons on the
+  right. No logo, hamburger or avatar in the bar. The bottom bar is a floating
+  56px pill (12px side inset, 6px above the safe area) with four icon-only
+  destinations (Bảng tin, Khám phá, Tin nhắn, Voice) and the account avatar,
+  which opens the sidebar as the menu. Projects and the other links live in
+  that menu. Labels stay as semantic labels. Content gutter is 6px up to 520px
+  wide and 8px up to 840px.
+- **Tablet (840–1180):** the full sidebar at 220px, not a compact rail.
+- Native keeps 48px minimum targets where the website uses 44px, and a back
+  control in the phone top bar on detail routes.
+
 ---
 
 ## 1. Visual Contract & Philosophy

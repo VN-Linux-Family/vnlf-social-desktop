@@ -51,16 +51,16 @@ void main() {
       switch (viewport.name) {
         case 'mobile':
           expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
-          expect(find.byType(VnlfTabletRail), findsNothing);
           expect(_permanentDesktopSidebar(), findsNothing);
         case 'tablet':
+          // The website keeps the full sidebar at 220px between 841 and 1180px.
           expect(find.byType(VnlfMobileBottomNav), findsNothing);
-          expect(find.byType(VnlfTabletRail), findsOneWidget);
-          expect(_permanentDesktopSidebar(), findsNothing);
+          expect(_permanentDesktopSidebar(), findsOneWidget);
+          expect(tester.getSize(_permanentDesktopSidebar()).width, 220);
         case 'desktop':
           expect(find.byType(VnlfMobileBottomNav), findsNothing);
-          expect(find.byType(VnlfTabletRail), findsNothing);
           expect(_permanentDesktopSidebar(), findsOneWidget);
+          expect(tester.getSize(_permanentDesktopSidebar()).width, 252);
       }
     });
   }
@@ -80,7 +80,7 @@ void main() {
         'Khám phá',
         'Tin nhắn',
         'Voice',
-        'Dự án',
+        'Mở menu',
       ]);
     }
 
@@ -96,7 +96,7 @@ void main() {
         'Discover',
         'Messages',
         'Voice',
-        'Projects',
+        'Open menu',
       ]);
     }
   });
@@ -165,14 +165,20 @@ void _expectScreenTitle(Type screen, String title) {
   );
 }
 
+/// The phone bar is icon-only like the website; names stay semantic labels.
 void _expectMobileNavigation(WidgetTester tester, List<String> labels) {
   final navigation = find.byType(VnlfMobileBottomNav);
   expect(navigation, findsOneWidget);
   for (final label in labels) {
     expect(
-      find.descendant(of: navigation, matching: find.text(label)),
+      find.descendant(
+        of: navigation,
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Semantics && widget.properties.label == label,
+        ),
+      ),
       findsOneWidget,
-      reason: 'mobile navigation should show $label',
+      reason: 'mobile navigation should announce $label',
     );
   }
 }

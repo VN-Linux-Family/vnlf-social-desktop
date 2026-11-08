@@ -30,10 +30,7 @@ class DmConversationHeader extends StatelessWidget {
     final colors = VnlfColors.of(context);
     final peer = conversation.peer;
     final scale = MediaQuery.textScalerOf(context);
-    final height = math.max(
-      54.0,
-      scale.scale(13) * 1.15 + scale.scale(11) * 1.2 + 6,
-    );
+    final height = math.max(54.0, scale.scale(13) * 1.15 * 2 + 6);
     return SizedBox(
       key: const Key('dm-conversation-header'),
       height: height,
@@ -81,11 +78,8 @@ class DmConversationHeader extends StatelessWidget {
                         '${peer.username.isEmpty ? '' : '@${peer.username} · '}${peer.isOnline ? dmText(context, 'Trực tuyến', 'Online') : dmText(context, 'Ngoại tuyến', 'Offline')}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.2,
-                          color: colors.muted,
-                        ),
+                        style: VnlfTypography.meta(colors.muted)
+                            .copyWith(height: 1.15),
                       ),
                     ],
                   ),
