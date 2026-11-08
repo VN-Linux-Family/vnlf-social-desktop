@@ -339,7 +339,6 @@ jobs:
           BUILD_COMPLETE: ${{ steps.manifest.outputs.complete }}
         run: |
           test "$GITHUB_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY"
-          gh api "repos/$PRIVATE_RELEASE_REPOSITORY" --jq '.private' | grep -qx true
           if ! gh release view "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
               --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
@@ -358,7 +357,7 @@ jobs:
   publish-public:
     name: Publish complete stable binaries for app updates
     needs: [metadata, publish-private]
-    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
+    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' && secrets.PUBLIC_RELEASE_TOKEN != '' }}
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}

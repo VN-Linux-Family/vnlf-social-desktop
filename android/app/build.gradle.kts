@@ -43,7 +43,7 @@ android {
         applicationId = "net.vietnamlinuxfamily.vnlfsocialapp"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = (flutter.versionCode ?: 1) + 3000
         versionName = flutter.versionName
         multiDexEnabled = true
     }
