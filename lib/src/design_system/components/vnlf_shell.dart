@@ -337,149 +337,70 @@ class VnlfAdaptiveShell extends StatelessWidget {
               ),
             ),
           ),
-          VnlfViewportSize.mobile => Scaffold(
-            key: const ValueKey('vnlf-shell-scaffold-mobile'),
-            backgroundColor: colors.bg,
-            drawer: SizedBox(
-              width: math.min(
-                VnlfDimensions.mobileDrawerMaxWidth,
-                constraints.maxWidth * 0.86,
-              ),
-              child: Drawer(
-                backgroundColor: colors.bg,
-                surfaceTintColor: Colors.transparent,
-                child: SafeArea(
-                  child: Builder(
-                    builder: (drawerCtx) => VnlfDesktopSidebar(
-                      activeDestination: activeDestination,
-                      unreadDestinations: unreadDestinations,
-                      onDestinationSelected: (dest) {
-                        Navigator.of(drawerCtx).maybePop();
-                        onDestinationSelected?.call(dest);
-                      },
-                      themeMode: themeMode,
-                      onThemeModeChanged: onThemeModeChanged,
-                      onProfileTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onProfileTap?.call();
-                      },
-                      onSettingsTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onSettingsTap?.call();
-                      },
-                      onLogoutTap: onLogoutTap == null
-                          ? null
-                          : () {
-                              Navigator.of(drawerCtx).maybePop();
-                              onLogoutTap?.call();
-                            },
-                      logoutLabel: logoutLabel,
-                      onHelpTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onHelpTap?.call();
-                      },
-                      onFeedbackTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onFeedbackTap?.call();
-                      },
-                      onSupportTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onSupportTap?.call();
-                      },
-                      onFacebookTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onFacebookTap?.call();
-                      },
-                      onTelegramTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onTelegramTap?.call();
-                      },
-                      onDiscordTap: () {
-                        Navigator.of(drawerCtx).maybePop();
-                        onDiscordTap?.call();
-                      },
-                      isDrawer: true,
-                      destinationLabels: destinationLabels,
-                      destinationSemanticLabels: destinationSemanticLabels,
-                      brandTitlePrefix: brandTitlePrefix,
-                      brandTitleAccent: brandTitleAccent,
-                      brandLogoSemanticLabel: brandLogoSemanticLabel,
-                      loginLabel: loginLabel,
-                      loginSubtitleLabel: loginSubtitleLabel,
-                      supportLabel: supportLabel,
-                      supportBadgeText: supportBadgeText,
-                      supportSemanticLabel: supportSemanticLabel,
-                      feedbackLabel: feedbackLabel,
-                      feedbackSemanticLabel: feedbackSemanticLabel,
-                      socialSectionLabel: socialSectionLabel,
-                      facebookBadgeLabel: facebookBadgeLabel,
-                      facebookSemanticLabel: facebookSemanticLabel,
-                      telegramSemanticLabel: telegramSemanticLabel,
-                      discordSemanticLabel: discordSemanticLabel,
-                      settingsLabel: settingsLabel,
-                      settingsSemanticLabel: settingsSemanticLabel,
-                      helpLabel: helpLabel,
-                      helpSemanticLabel: helpSemanticLabel,
-                      loginUtilitySemanticLabel: loginUtilitySemanticLabel,
-                      lightThemeTooltip: lightThemeTooltip,
-                      darkThemeTooltip: darkThemeTooltip,
-                      systemThemeTooltip: systemThemeTooltip,
-                      themePickerSemanticLabel: themePickerSemanticLabel,
-                      profileSemanticLabel: profileSemanticLabel,
-                      semanticLabel: leftSidebarSemanticLabel,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            body: Column(
-              children: [
-                if (showMobileHeader)
-                  VnlfMobileStickyHeader(
-                    onProfileTap: onProfileTap,
-                    onBack: onBack,
-                    backTooltip: backTooltip,
-                    backSemanticLabel: backSemanticLabel,
-                    openDrawerTooltip: openDrawerTooltip,
-                    openDrawerSemanticLabel: openDrawerSemanticLabel,
-                    titleText: titleText,
-                    brandTitlePrefix: brandTitlePrefix,
-                    brandTitleAccent: brandTitleAccent,
-                    brandLogoSemanticLabel: brandLogoSemanticLabel,
-                    searchSemanticLabel: searchSemanticLabel,
-                    onSearchTap: onSearchTap,
-                    onNotificationsTap: onNotificationsTap,
-                    notificationBadgeCount: notificationBadgeCount,
-                    notificationsSemanticLabel: notificationsSemanticLabel,
-                    profileSemanticLabel: profileSemanticLabel,
-                    semanticLabel: mobileHeaderSemanticLabel,
-                  )
-                else
-                  SizedBox(height: MediaQuery.paddingOf(context).top),
-                Expanded(
-                  child: SafeArea(
-                    top: false,
-                    bottom: false,
-                    child: _scrollArea(
-                      padding:
-                          centerPadding ??
-                          const EdgeInsets.fromLTRB(12, 12, 12, 20),
-                      child: centerChild,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            bottomNavigationBar: !showMobileBottomNav
-                ? null
-                : VnlfMobileBottomNav(
-                    activeDestination: activeDestination,
-                    onDestinationSelected: onDestinationSelected,
-                    destinationLabels: destinationLabels,
-                    destinationSemanticLabels: destinationSemanticLabels,
-                    unreadDestinations: unreadDestinations,
-                    semanticLabel: mobileBottomNavSemanticLabel,
-                  ),
+          VnlfViewportSize.mobile => _MobileShellScaffold(
+            colors: colors,
+            constraints: constraints,
+            activeDestination: activeDestination,
+            unreadDestinations: unreadDestinations,
+            themeMode: themeMode,
+            onThemeModeChanged: onThemeModeChanged,
+            onDestinationSelected: onDestinationSelected,
+            onProfileTap: onProfileTap,
+            onSettingsTap: onSettingsTap,
+            onLogoutTap: onLogoutTap,
+            logoutLabel: logoutLabel,
+            onHelpTap: onHelpTap,
+            onFeedbackTap: onFeedbackTap,
+            onSupportTap: onSupportTap,
+            onFacebookTap: onFacebookTap,
+            onTelegramTap: onTelegramTap,
+            onDiscordTap: onDiscordTap,
+            destinationLabels: destinationLabels,
+            destinationSemanticLabels: destinationSemanticLabels,
+            brandTitlePrefix: brandTitlePrefix,
+            brandTitleAccent: brandTitleAccent,
+            brandLogoSemanticLabel: brandLogoSemanticLabel,
+            loginLabel: loginLabel,
+            loginSubtitleLabel: loginSubtitleLabel,
+            supportLabel: supportLabel,
+            supportBadgeText: supportBadgeText,
+            supportSemanticLabel: supportSemanticLabel,
+            feedbackLabel: feedbackLabel,
+            feedbackSemanticLabel: feedbackSemanticLabel,
+            socialSectionLabel: socialSectionLabel,
+            facebookBadgeLabel: facebookBadgeLabel,
+            facebookSemanticLabel: facebookSemanticLabel,
+            telegramSemanticLabel: telegramSemanticLabel,
+            discordSemanticLabel: discordSemanticLabel,
+            settingsLabel: settingsLabel,
+            settingsSemanticLabel: settingsSemanticLabel,
+            helpLabel: helpLabel,
+            helpSemanticLabel: helpSemanticLabel,
+            loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+            lightThemeTooltip: lightThemeTooltip,
+            darkThemeTooltip: darkThemeTooltip,
+            systemThemeTooltip: systemThemeTooltip,
+            themePickerSemanticLabel: themePickerSemanticLabel,
+            profileSemanticLabel: profileSemanticLabel,
+            leftSidebarSemanticLabel: leftSidebarSemanticLabel,
+            showMobileHeader: showMobileHeader,
+            showMobileBottomNav: showMobileBottomNav,
+            onBack: onBack,
+            backTooltip: backTooltip,
+            backSemanticLabel: backSemanticLabel,
+            openDrawerTooltip: openDrawerTooltip,
+            openDrawerSemanticLabel: openDrawerSemanticLabel,
+            titleText: titleText,
+            searchSemanticLabel: searchSemanticLabel,
+            onSearchTap: onSearchTap,
+            onNotificationsTap: onNotificationsTap,
+            notificationBadgeCount: notificationBadgeCount,
+            notificationsSemanticLabel: notificationsSemanticLabel,
+            mobileHeaderSemanticLabel: mobileHeaderSemanticLabel,
+            mobileBottomNavSemanticLabel: mobileBottomNavSemanticLabel,
+            centerPadding: centerPadding,
+            centerChildHandlesScroll: centerChildHandlesScroll,
+            centerChild: centerChild,
           ),
         };
       },
@@ -587,5 +508,334 @@ class VnlfFeedTabBar extends StatelessWidget {
       return bar;
     }
     return Semantics(label: semanticLabel, container: true, child: bar);
+  }
+}
+
+class _MobileShellScaffold extends StatefulWidget {
+  const _MobileShellScaffold({
+    required this.colors,
+    required this.constraints,
+    required this.activeDestination,
+    required this.unreadDestinations,
+    required this.themeMode,
+    required this.onThemeModeChanged,
+    required this.onDestinationSelected,
+    required this.onProfileTap,
+    required this.onSettingsTap,
+    required this.onLogoutTap,
+    required this.logoutLabel,
+    required this.onHelpTap,
+    required this.onFeedbackTap,
+    required this.onSupportTap,
+    required this.onFacebookTap,
+    required this.onTelegramTap,
+    required this.onDiscordTap,
+    required this.destinationLabels,
+    required this.destinationSemanticLabels,
+    required this.brandTitlePrefix,
+    required this.brandTitleAccent,
+    required this.brandLogoSemanticLabel,
+    required this.loginLabel,
+    required this.loginSubtitleLabel,
+    required this.supportLabel,
+    required this.supportBadgeText,
+    required this.supportSemanticLabel,
+    required this.feedbackLabel,
+    required this.feedbackSemanticLabel,
+    required this.socialSectionLabel,
+    required this.facebookBadgeLabel,
+    required this.facebookSemanticLabel,
+    required this.telegramSemanticLabel,
+    required this.discordSemanticLabel,
+    required this.settingsLabel,
+    required this.settingsSemanticLabel,
+    required this.helpLabel,
+    required this.helpSemanticLabel,
+    required this.loginUtilitySemanticLabel,
+    required this.lightThemeTooltip,
+    required this.darkThemeTooltip,
+    required this.systemThemeTooltip,
+    required this.themePickerSemanticLabel,
+    required this.profileSemanticLabel,
+    required this.leftSidebarSemanticLabel,
+    required this.showMobileHeader,
+    required this.showMobileBottomNav,
+    required this.onBack,
+    required this.backTooltip,
+    required this.backSemanticLabel,
+    required this.openDrawerTooltip,
+    required this.openDrawerSemanticLabel,
+    required this.titleText,
+    required this.searchSemanticLabel,
+    required this.onSearchTap,
+    required this.onNotificationsTap,
+    required this.notificationBadgeCount,
+    required this.notificationsSemanticLabel,
+    required this.mobileHeaderSemanticLabel,
+    required this.mobileBottomNavSemanticLabel,
+    required this.centerPadding,
+    required this.centerChildHandlesScroll,
+    required this.centerChild,
+  });
+
+  final VnlfColors colors;
+  final BoxConstraints constraints;
+  final VnlfNavDestination activeDestination;
+  final Set<VnlfNavDestination> unreadDestinations;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
+  final ValueChanged<VnlfNavDestination>? onDestinationSelected;
+  final VoidCallback? onProfileTap;
+  final VoidCallback? onSettingsTap;
+  final VoidCallback? onLogoutTap;
+  final String logoutLabel;
+  final VoidCallback? onHelpTap;
+  final VoidCallback? onFeedbackTap;
+  final VoidCallback? onSupportTap;
+  final VoidCallback? onFacebookTap;
+  final VoidCallback? onTelegramTap;
+  final VoidCallback? onDiscordTap;
+  final Map<VnlfNavDestination, String> destinationLabels;
+  final Map<VnlfNavDestination, String> destinationSemanticLabels;
+  final String brandTitlePrefix;
+  final String brandTitleAccent;
+  final String? brandLogoSemanticLabel;
+  final String loginLabel;
+  final String loginSubtitleLabel;
+  final String supportLabel;
+  final String supportBadgeText;
+  final String? supportSemanticLabel;
+  final String feedbackLabel;
+  final String? feedbackSemanticLabel;
+  final String socialSectionLabel;
+  final String facebookBadgeLabel;
+  final String? facebookSemanticLabel;
+  final String? telegramSemanticLabel;
+  final String? discordSemanticLabel;
+  final String settingsLabel;
+  final String? settingsSemanticLabel;
+  final String helpLabel;
+  final String? helpSemanticLabel;
+  final String? loginUtilitySemanticLabel;
+  final String lightThemeTooltip;
+  final String darkThemeTooltip;
+  final String systemThemeTooltip;
+  final String? themePickerSemanticLabel;
+  final String? profileSemanticLabel;
+  final String? leftSidebarSemanticLabel;
+  final bool showMobileHeader;
+  final bool showMobileBottomNav;
+  final VoidCallback? onBack;
+  final String backTooltip;
+  final String? backSemanticLabel;
+  final String openDrawerTooltip;
+  final String? openDrawerSemanticLabel;
+  final String? titleText;
+  final String searchSemanticLabel;
+  final VoidCallback? onSearchTap;
+  final VoidCallback? onNotificationsTap;
+  final int notificationBadgeCount;
+  final String notificationsSemanticLabel;
+  final String? mobileHeaderSemanticLabel;
+  final String? mobileBottomNavSemanticLabel;
+  final EdgeInsets? centerPadding;
+  final bool centerChildHandlesScroll;
+  final Widget centerChild;
+
+  @override
+  State<_MobileShellScaffold> createState() => _MobileShellScaffoldState();
+}
+
+class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void didUpdateWidget(covariant _MobileShellScaffold oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.centerChild != oldWidget.centerChild ||
+        widget.titleText != oldWidget.titleText ||
+        widget.activeDestination != oldWidget.activeDestination) {
+      if (_scaffoldKey.currentState?.isDrawerOpen == true) {
+        _scaffoldKey.currentState?.closeDrawer();
+      }
+    }
+  }
+
+  void _closeDrawer(BuildContext drawerCtx) {
+    _scaffoldKey.currentState?.closeDrawer();
+    Scaffold.maybeOf(drawerCtx)?.closeDrawer();
+    Navigator.of(drawerCtx).maybePop();
+  }
+
+  Widget _scrollArea({required EdgeInsets padding, required Widget child}) =>
+      widget.centerChildHandlesScroll
+      ? Padding(padding: padding, child: child)
+      : SingleChildScrollView(padding: padding, child: child);
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_scaffoldKey.currentState?.isDrawerOpen == true) {
+          _scaffoldKey.currentState?.closeDrawer();
+        } else if (widget.onBack != null) {
+          widget.onBack!();
+        } else if (widget.activeDestination != VnlfNavDestination.feed) {
+          widget.onDestinationSelected?.call(VnlfNavDestination.feed);
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: widget.colors.bg,
+        drawer: SizedBox(
+          width: math.min(
+            VnlfDimensions.mobileDrawerMaxWidth,
+            widget.constraints.maxWidth * 0.86,
+          ),
+          child: Drawer(
+            backgroundColor: widget.colors.bg,
+            surfaceTintColor: Colors.transparent,
+            child: SafeArea(
+              child: Builder(
+                builder: (drawerCtx) => VnlfDesktopSidebar(
+                  activeDestination: widget.activeDestination,
+                  unreadDestinations: widget.unreadDestinations,
+                  onDestinationSelected: (dest) {
+                    _closeDrawer(drawerCtx);
+                    widget.onDestinationSelected?.call(dest);
+                  },
+                  themeMode: widget.themeMode,
+                  onThemeModeChanged: widget.onThemeModeChanged,
+                  onProfileTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onProfileTap?.call();
+                  },
+                  onSettingsTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onSettingsTap?.call();
+                  },
+                  onLogoutTap: widget.onLogoutTap == null
+                      ? null
+                      : () {
+                          _closeDrawer(drawerCtx);
+                          widget.onLogoutTap?.call();
+                        },
+                  logoutLabel: widget.logoutLabel,
+                  onHelpTap: () {
+                    _closeDrawer(drawerCtx);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      widget.onHelpTap?.call();
+                    });
+                  },
+                  onFeedbackTap: () {
+                    _closeDrawer(drawerCtx);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      widget.onFeedbackTap?.call();
+                    });
+                  },
+                  onSupportTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onSupportTap?.call();
+                  },
+                  onFacebookTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onFacebookTap?.call();
+                  },
+                  onTelegramTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onTelegramTap?.call();
+                  },
+                  onDiscordTap: () {
+                    _closeDrawer(drawerCtx);
+                    widget.onDiscordTap?.call();
+                  },
+                  isDrawer: true,
+                  destinationLabels: widget.destinationLabels,
+                  destinationSemanticLabels: widget.destinationSemanticLabels,
+                  brandTitlePrefix: widget.brandTitlePrefix,
+                  brandTitleAccent: widget.brandTitleAccent,
+                  brandLogoSemanticLabel: widget.brandLogoSemanticLabel,
+                  loginLabel: widget.loginLabel,
+                  loginSubtitleLabel: widget.loginSubtitleLabel,
+                  supportLabel: widget.supportLabel,
+                  supportBadgeText: widget.supportBadgeText,
+                  supportSemanticLabel: widget.supportSemanticLabel,
+                  feedbackLabel: widget.feedbackLabel,
+                  feedbackSemanticLabel: widget.feedbackSemanticLabel,
+                  socialSectionLabel: widget.socialSectionLabel,
+                  facebookBadgeLabel: widget.facebookBadgeLabel,
+                  facebookSemanticLabel: widget.facebookSemanticLabel,
+                  telegramSemanticLabel: widget.telegramSemanticLabel,
+                  discordSemanticLabel: widget.discordSemanticLabel,
+                  settingsLabel: widget.settingsLabel,
+                  settingsSemanticLabel: widget.settingsSemanticLabel,
+                  helpLabel: widget.helpLabel,
+                  helpSemanticLabel: widget.helpSemanticLabel,
+                  loginUtilitySemanticLabel: widget.loginUtilitySemanticLabel,
+                  lightThemeTooltip: widget.lightThemeTooltip,
+                  darkThemeTooltip: widget.darkThemeTooltip,
+                  systemThemeTooltip: widget.systemThemeTooltip,
+                  themePickerSemanticLabel: widget.themePickerSemanticLabel,
+                  profileSemanticLabel: widget.profileSemanticLabel,
+                  semanticLabel: widget.leftSidebarSemanticLabel,
+                ),
+              ),
+            ),
+          ),
+        ),
+        body: Column(
+          children: [
+            if (widget.showMobileHeader)
+              VnlfMobileStickyHeader(
+                onProfileTap: widget.onProfileTap,
+                onBack: widget.onBack,
+                backTooltip: widget.backTooltip,
+                backSemanticLabel: widget.backSemanticLabel,
+                openDrawerTooltip: widget.openDrawerTooltip,
+                openDrawerSemanticLabel: widget.openDrawerSemanticLabel,
+                titleText: widget.titleText,
+                brandTitlePrefix: widget.brandTitlePrefix,
+                brandTitleAccent: widget.brandTitleAccent,
+                brandLogoSemanticLabel: widget.brandLogoSemanticLabel,
+                searchSemanticLabel: widget.searchSemanticLabel,
+                onSearchTap: widget.onSearchTap,
+                onNotificationsTap: widget.onNotificationsTap,
+                notificationBadgeCount: widget.notificationBadgeCount,
+                notificationsSemanticLabel: widget.notificationsSemanticLabel,
+                profileSemanticLabel: widget.profileSemanticLabel,
+                semanticLabel: widget.mobileHeaderSemanticLabel,
+              )
+            else
+              SizedBox(height: MediaQuery.paddingOf(context).top),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: _scrollArea(
+                  padding:
+                      widget.centerPadding ??
+                      const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                  child: widget.centerChild,
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: !widget.showMobileBottomNav
+            ? null
+            : VnlfMobileBottomNav(
+                activeDestination: widget.activeDestination,
+                onDestinationSelected: widget.onDestinationSelected,
+                destinationLabels: widget.destinationLabels,
+                destinationSemanticLabels: widget.destinationSemanticLabels,
+                unreadDestinations: widget.unreadDestinations,
+                semanticLabel: widget.mobileBottomNavSemanticLabel,
+              ),
+      ),
+    );
   }
 }
