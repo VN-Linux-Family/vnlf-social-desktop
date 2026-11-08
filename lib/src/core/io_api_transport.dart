@@ -73,14 +73,8 @@ final class IoApiTransport {
         : baseUri.scheme == 'ws'
         ? 'http'
         : baseUri.scheme;
-    final isLocal =
-        baseUri.host == 'localhost' ||
-        baseUri.host == '127.0.0.1' ||
-        baseUri.host == '10.0.2.2' ||
-        baseUri.host.endsWith('.localhost.direct');
-    final origin = isLocal
-        ? 'http://localhost:3000'
-        : '$originScheme://${baseUri.host}${baseUri.hasPort ? ':${baseUri.port}' : ''}';
+    final origin =
+        '$originScheme://${baseUri.host}${baseUri.hasPort ? ':${baseUri.port}' : ''}';
     final client = NonRedirectingHttpClient(HttpClient())
       ..userAgent = ApiClient.userAgent;
     _pendingUpgrades.add(client);
