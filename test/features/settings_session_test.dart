@@ -174,6 +174,59 @@ void main() {
     },
   );
 
+  testWidgets(
+    'settings offers Production and Dev 3001 server modes without local ssl',
+    (tester) async {
+      final storage = _MemoryStorage();
+      final container = _container(storage: storage);
+      addTearDown(container.dispose);
+      final router = await _pumpApp(tester, container);
+      router.go('/settings');
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView).first, const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Chế độ máy chủ (Thử nghiệm)'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'Production'), findsOneWidget);
+      expect(
+        find.widgetWithText(ChoiceChip, 'Dev (127.0.0.1:3001)'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Local SSL'), findsNothing);
+      expect(find.textContaining('3002'), findsNothing);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Dev (127.0.0.1:3001)'));
+      await tester.pumpAndSettle();
+      expect(container.read(apiBaseUrlProvider), 'http://127.0.0.1:3001');
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Production'));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(apiBaseUrlProvider),
+        'https://vietnamlinuxfamily.net',
+      );
+    },
+  );
+
+  test(
+    'ApiBaseUrlController migrates obsolete localhost.direct to 3001',
+    () async {
+      final storage = _MemoryStorage();
+      await storage.write(
+        'vnlf_server_base_url',
+        'https://api.localhost.direct:3002',
+      );
+      final controller = ApiBaseUrlController(storage);
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.state, 'http://127.0.0.1:3001');
+      expect(
+        await storage.read('vnlf_server_base_url'),
+        'http://127.0.0.1:3001',
+      );
+    },
+  );
+
   for (final width in [390.0, 900.0, 1440.0]) {
     testWidgets('navigation offers logout for a member at width $width', (
       tester,

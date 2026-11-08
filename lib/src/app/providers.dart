@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -182,10 +183,16 @@ class ApiBaseUrlController extends StateNotifier<String> {
   final PreferencesStorage _storage;
 
   Future<void> _restore() async {
+    if (kReleaseMode) return;
     try {
       final saved = await _storage.read(_storageKey);
       if (saved != null && saved.isNotEmpty && mounted) {
-        state = saved;
+        if (saved == 'https://api.localhost.direct:3002') {
+          state = 'http://127.0.0.1:3001';
+          await _storage.write(_storageKey, 'http://127.0.0.1:3001');
+        } else {
+          state = saved;
+        }
       }
     } catch (_) {}
   }

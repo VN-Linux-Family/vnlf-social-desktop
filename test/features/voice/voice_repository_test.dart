@@ -93,10 +93,10 @@ void main() {
             'iceServers': <Map<String, dynamic>>[],
           });
         }),
-        baseUri: Uri.parse('https://api.localhost.direct:3002'),
+        baseUri: Uri.parse('http://dev.example.com:3001'),
       );
       final connection = await repository.join('room-1');
-      expect(connection.serverUrl, 'ws://api.localhost.direct:7880');
+      expect(connection.serverUrl, 'ws://dev.example.com:7880');
     },
   );
 

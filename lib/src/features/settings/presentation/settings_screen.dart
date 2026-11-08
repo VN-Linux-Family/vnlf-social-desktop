@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,7 @@ import 'security_sessions_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
 const isProduction = bool.fromEnvironment('PRODUCTION', defaultValue: false);
+bool get isDevBuild => !kReleaseMode && !isProduction;
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -262,7 +264,7 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               const TextSizeSettings(),
               const SizedBox(height: 24),
-              if (!isProduction) ...[
+              if (isDevBuild) ...[
                 const SizedBox(height: 24),
                 Text(
                   english ? 'Server mode (Dev)' : 'Chế độ máy chủ (Thử nghiệm)',
@@ -277,63 +279,45 @@ class SettingsScreen extends ConsumerWidget {
                             : 'Máy chủ: ${ref.watch(apiBaseUrlProvider)}'),
                   style: VnlfTypography.meta(colors.muted),
                 ),
-                if (!offlineFeatures) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        selectedColor: colors.brandSoft,
-                        checkmarkColor: colors.brand,
-                        side: BorderSide(color: colors.line),
-                        labelStyle: VnlfTypography.control(colors.ink),
-                        label: const Text('Production'),
-                        selected:
-                            ref.watch(apiBaseUrlProvider) ==
-                            'https://vietnamlinuxfamily.net',
-                        onSelected: (_) {
-                          ref.read(apiClientProvider).clearCache();
-                          ref
-                              .read(apiBaseUrlProvider.notifier)
-                              .setBaseUrl('https://vietnamlinuxfamily.net');
-                        },
-                      ),
-                      ChoiceChip(
-                        selectedColor: colors.brandSoft,
-                        checkmarkColor: colors.brand,
-                        side: BorderSide(color: colors.line),
-                        labelStyle: VnlfTypography.control(colors.ink),
-                        label: const Text('Local (127.0.0.1:3001)'),
-                        selected:
-                            ref.watch(apiBaseUrlProvider) ==
-                            'http://127.0.0.1:3001',
-                        onSelected: (_) {
-                          ref.read(apiClientProvider).clearCache();
-                          ref
-                              .read(apiBaseUrlProvider.notifier)
-                              .setBaseUrl('http://127.0.0.1:3001');
-                        },
-                      ),
-                      ChoiceChip(
-                        selectedColor: colors.brandSoft,
-                        checkmarkColor: colors.brand,
-                        side: BorderSide(color: colors.line),
-                        labelStyle: VnlfTypography.control(colors.ink),
-                        label: const Text('Local SSL (localhost.direct:3002)'),
-                        selected:
-                            ref.watch(apiBaseUrlProvider) ==
-                            'https://api.localhost.direct:3002',
-                        onSelected: (_) {
-                          ref.read(apiClientProvider).clearCache();
-                          ref
-                              .read(apiBaseUrlProvider.notifier)
-                              .setBaseUrl('https://api.localhost.direct:3002');
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ChoiceChip(
+                      selectedColor: colors.brandSoft,
+                      checkmarkColor: colors.brand,
+                      side: BorderSide(color: colors.line),
+                      labelStyle: VnlfTypography.control(colors.ink),
+                      label: const Text('Production'),
+                      selected:
+                          ref.watch(apiBaseUrlProvider) ==
+                          'https://vietnamlinuxfamily.net',
+                      onSelected: (_) {
+                        ref.read(apiClientProvider).clearCache();
+                        ref
+                            .read(apiBaseUrlProvider.notifier)
+                            .setBaseUrl('https://vietnamlinuxfamily.net');
+                      },
+                    ),
+                    ChoiceChip(
+                      selectedColor: colors.brandSoft,
+                      checkmarkColor: colors.brand,
+                      side: BorderSide(color: colors.line),
+                      labelStyle: VnlfTypography.control(colors.ink),
+                      label: const Text('Dev (127.0.0.1:3001)'),
+                      selected:
+                          ref.watch(apiBaseUrlProvider) ==
+                          'http://127.0.0.1:3001',
+                      onSelected: (_) {
+                        ref.read(apiClientProvider).clearCache();
+                        ref
+                            .read(apiBaseUrlProvider.notifier)
+                            .setBaseUrl('http://127.0.0.1:3001');
+                      },
+                    ),
+                  ],
+                ),
               ],
               const SizedBox(height: 8),
               Text(
