@@ -353,7 +353,26 @@ class VnlfPostCard extends StatelessWidget {
 
     final loadedPost = post!;
     final colors = VnlfColors.of(context);
-    final isMobile = MediaQuery.sizeOf(context).width <= 840;
+    final isMobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
+
+    final actions = VnlfPostInteractionBar(
+      voteScore: loadedPost.voteScore,
+      voteState: loadedPost.viewerVote,
+      commentCount: loadedPost.commentCount,
+      isBookmarked: loadedPost.isBookmarked,
+      onVoteChanged: loadedPost.actionPending ? null : onVoteChanged,
+      onCommentTap: onCommentTap,
+      onShareTap: onShareTap,
+      onBookmarkToggle: loadedPost.actionPending ? null : onBookmarkToggle,
+      voteSemanticLabel: voteSemanticLabel,
+      upvoteSemanticLabel: upvoteSemanticLabel,
+      downvoteSemanticLabel: downvoteSemanticLabel,
+      commentSemanticLabel: commentSemanticLabel,
+      shareSemanticLabel: shareSemanticLabel,
+      bookmarkSemanticLabel: bookmarkSemanticLabel,
+    );
 
     final card = Container(
       decoration: BoxDecoration(
@@ -364,271 +383,274 @@ class VnlfPostCard extends StatelessWidget {
       padding: isMobile
           ? const EdgeInsets.symmetric(horizontal: 14, vertical: 12)
           : const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GestureDetector(
-            onTap: onAuthorTap,
-            child: VnlfAvatar(
-              author: loadedPost.author,
-              size: 40,
-              semanticLabel: authorAvatarSemanticLabel,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header Row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: onAuthorTap,
-                        child: VnlfAuthorNameRow(author: loadedPost.author),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      loadedPost.relativeTime,
-                      style: VnlfTypography.meta(colors.textSubtle),
-                    ),
-                    const SizedBox(width: 6),
-                    Semantics(
-                      label: moreOptionsSemanticLabel,
-                      child: onMoreTap != null
-                          ? InkWell(
-                              borderRadius: BorderRadius.circular(999),
-                              onTap: onMoreTap,
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Icon(
-                                  Icons.more_horiz_rounded,
-                                  size: 16,
-                                  color: colors.muted,
-                                ),
-                              ),
-                            )
-                          : PopupMenuButton<String>(
-                              tooltip: moreOptionsSemanticLabel ?? 'Tùy chọn',
-                              icon: Icon(
-                                Icons.more_horiz_rounded,
-                                size: 16,
-                                color: colors.muted,
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 24,
-                                minHeight: 24,
-                              ),
-                              color: colors.surface,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  VnlfDimensions.radiusMd,
-                                ),
-                                side: BorderSide(color: colors.line),
-                              ),
-                              onSelected: (value) {
-                                switch (value) {
-                                  case 'copy':
-                                    onShareTap?.call();
-                                  case 'bookmark':
-                                    onBookmarkToggle?.call();
-                                  case 'report':
-                                    onReportTap?.call();
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'copy',
-                                  height: 38,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.link_rounded,
-                                        size: 18,
-                                        color: colors.ink,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Sao chép liên kết',
-                                        style: VnlfTypography.caption(
-                                          colors.ink,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'bookmark',
-                                  height: 38,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        loadedPost.isBookmarked
-                                            ? Icons.bookmark_remove_rounded
-                                            : Icons.bookmark_add_rounded,
-                                        size: 18,
-                                        color: colors.ink,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        loadedPost.isBookmarked
-                                            ? 'Bỏ lưu bài viết'
-                                            : 'Lưu bài viết',
-                                        style: VnlfTypography.caption(
-                                          colors.ink,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem(
-                                  value: 'report',
-                                  enabled: onReportTap != null,
-                                  height: 38,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.flag_outlined,
-                                        size: 18,
-                                        color: colors.red,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Báo cáo bài viết',
-                                        style: VnlfTypography.caption(
-                                          colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: onAuthorTap,
+                child: VnlfAvatar(
+                  author: loadedPost.author,
+                  size: 40,
+                  semanticLabel: authorAvatarSemanticLabel,
                 ),
-                if (loadedPost.title != null &&
-                    loadedPost.title!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(loadedPost.title!, style: VnlfTypography.h2(colors.ink)),
-                ],
-                const SizedBox(height: 6),
-                if (loadedPost.richContent != null)
-                  VnlfRichContent(
-                    document: loadedPost.richContent!,
-                    showImages: loadedPost.showInlineImages,
-                    selectable: loadedPost.selectableContent,
-                    postStyle: !loadedPost.isArticle,
-                    articleDetail:
-                        loadedPost.isArticle && loadedPost.selectableContent,
-                  )
-                else
-                  for (var i = 0; i < loadedPost.paragraphs.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 8),
-                    _VnlfPostParagraph(
-                      text: loadedPost.paragraphs[i],
-                      style: VnlfTypography.body(colors.ink),
-                      linkColor: colors.brand,
-                    ),
-                  ],
-                // Optional Attachment
-                if (loadedPost.attachment != null) ...[
-                  const SizedBox(height: 12),
-                  switch (loadedPost.attachment!) {
-                    final MediaGalleryAttachment gallery => VnlfMediaGallery(
-                      items: gallery.items,
-                    ),
-                    final ImagePlaceholderAttachment imagePlaceholder =>
-                      VnlfImagePlaceholder(
-                        imageUrl: imagePlaceholder.imageUrl,
-                        aspectRatio: imagePlaceholder.aspectRatio,
-                        label: imagePlaceholder.label,
-                        semanticLabel: imagePlaceholder.semanticLabel,
-                      ),
-                    final CodeBlockAttachment codeBlock => VnlfCodeBlock(
-                      code: codeBlock.code,
-                      showHorizontalScrollbar:
-                          codeBlock.showHorizontalScrollbar,
-                      copyLabel: codeBlock.copyLabel.isNotEmpty
-                          ? codeBlock.copyLabel
-                          : codeCopyLabel,
-                      copiedLabel: codeBlock.copiedLabel.isNotEmpty
-                          ? codeBlock.copiedLabel
-                          : codeCopiedLabel,
-                      semanticLabel:
-                          codeBlock.semanticLabel ?? codeBlockSemanticLabel,
-                      copyButtonSemanticLabel:
-                          codeBlock.copyButtonSemanticLabel,
-                    ),
-                    final ProjectPreviewAttachment projectPreview =>
-                      VnlfProjectPreviewCard(project: projectPreview.project),
-                  },
-                ],
-                ?poll,
-                if (loadedPost.actionError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      loadedPost.actionError!,
-                      style: VnlfTypography.meta(colors.red),
-                    ),
-                  ),
-                // Optional Category Tags
-                if (loadedPost.tags.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final tag in loadedPost.tags)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.surfaceSoft,
-                            borderRadius: BorderRadius.circular(
-                              VnlfDimensions.radiusSm,
-                            ),
-                            border: Border.all(color: colors.line),
-                          ),
-                          child: Text(
-                            '#$tag',
-                            style: VnlfTypography.caption(colors.muted),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: onAuthorTap,
+                            child: VnlfAuthorNameRow(author: loadedPost.author),
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Text(
+                          loadedPost.relativeTime,
+                          style: VnlfTypography.meta(colors.textSubtle),
+                        ),
+                        const SizedBox(width: 6),
+                        Semantics(
+                          label: moreOptionsSemanticLabel,
+                          child: onMoreTap != null
+                              ? InkWell(
+                                  borderRadius: BorderRadius.circular(999),
+                                  onTap: onMoreTap,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Icon(
+                                      Icons.more_horiz_rounded,
+                                      size: 16,
+                                      color: colors.muted,
+                                    ),
+                                  ),
+                                )
+                              : PopupMenuButton<String>(
+                                  tooltip:
+                                      moreOptionsSemanticLabel ?? 'Tùy chọn',
+                                  icon: Icon(
+                                    Icons.more_horiz_rounded,
+                                    size: 16,
+                                    color: colors.muted,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 24,
+                                    minHeight: 24,
+                                  ),
+                                  color: colors.surface,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      VnlfDimensions.radiusMd,
+                                    ),
+                                    side: BorderSide(color: colors.line),
+                                  ),
+                                  onSelected: (value) {
+                                    switch (value) {
+                                      case 'copy':
+                                        onShareTap?.call();
+                                      case 'bookmark':
+                                        onBookmarkToggle?.call();
+                                      case 'report':
+                                        onReportTap?.call();
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'copy',
+                                      height: 38,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.link_rounded,
+                                            size: 18,
+                                            color: colors.ink,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Sao chép liên kết',
+                                            style: VnlfTypography.caption(
+                                              colors.ink,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'bookmark',
+                                      height: 38,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            loadedPost.isBookmarked
+                                                ? Icons.bookmark_remove_rounded
+                                                : Icons.bookmark_add_rounded,
+                                            size: 18,
+                                            color: colors.ink,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            loadedPost.isBookmarked
+                                                ? 'Bỏ lưu bài viết'
+                                                : 'Lưu bài viết',
+                                            style: VnlfTypography.caption(
+                                              colors.ink,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'report',
+                                      enabled: onReportTap != null,
+                                      height: 38,
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.flag_outlined,
+                                            size: 18,
+                                            color: colors.red,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Báo cáo bài viết',
+                                            style: VnlfTypography.caption(
+                                              colors.red,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    ),
+                    if (loadedPost.title != null &&
+                        loadedPost.title!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        loadedPost.title!,
+                        style: VnlfTypography.h2(colors.ink),
+                      ),
                     ],
-                  ),
-                ],
-                if (showBottomActions) ...[
-                  const SizedBox(height: 12),
-                  VnlfPostInteractionBar(
-                    voteScore: loadedPost.voteScore,
-                    voteState: loadedPost.viewerVote,
-                    commentCount: loadedPost.commentCount,
-                    isBookmarked: loadedPost.isBookmarked,
-                    onVoteChanged: loadedPost.actionPending
-                        ? null
-                        : onVoteChanged,
-                    onCommentTap: onCommentTap,
-                    onShareTap: onShareTap,
-                    onBookmarkToggle: onBookmarkToggle,
-                    voteSemanticLabel: voteSemanticLabel,
-                    upvoteSemanticLabel: upvoteSemanticLabel,
-                    downvoteSemanticLabel: downvoteSemanticLabel,
-                    commentSemanticLabel: commentSemanticLabel,
-                    shareSemanticLabel: shareSemanticLabel,
-                    bookmarkSemanticLabel: bookmarkSemanticLabel,
-                  ),
-                ],
-              ],
-            ),
+                    const SizedBox(height: 6),
+                    if (loadedPost.richContent != null)
+                      VnlfRichContent(
+                        document: loadedPost.richContent!,
+                        showImages: loadedPost.showInlineImages,
+                        selectable: loadedPost.selectableContent,
+                        postStyle: !loadedPost.isArticle,
+                        articleDetail:
+                            loadedPost.isArticle &&
+                            loadedPost.selectableContent,
+                      )
+                    else
+                      for (
+                        var i = 0;
+                        i < loadedPost.paragraphs.length;
+                        i++
+                      ) ...[
+                        if (i > 0) const SizedBox(height: 8),
+                        _VnlfPostParagraph(
+                          text: loadedPost.paragraphs[i],
+                          style: VnlfTypography.body(colors.ink),
+                          linkColor: colors.brand,
+                        ),
+                      ],
+                    // Optional Attachment
+                    if (loadedPost.attachment != null) ...[
+                      const SizedBox(height: 12),
+                      switch (loadedPost.attachment!) {
+                        final MediaGalleryAttachment gallery =>
+                          VnlfMediaGallery(items: gallery.items),
+                        final ImagePlaceholderAttachment imagePlaceholder =>
+                          VnlfImagePlaceholder(
+                            imageUrl: imagePlaceholder.imageUrl,
+                            aspectRatio: imagePlaceholder.aspectRatio,
+                            label: imagePlaceholder.label,
+                            semanticLabel: imagePlaceholder.semanticLabel,
+                          ),
+                        final CodeBlockAttachment codeBlock => VnlfCodeBlock(
+                          code: codeBlock.code,
+                          showHorizontalScrollbar:
+                              codeBlock.showHorizontalScrollbar,
+                          copyLabel: codeBlock.copyLabel.isNotEmpty
+                              ? codeBlock.copyLabel
+                              : codeCopyLabel,
+                          copiedLabel: codeBlock.copiedLabel.isNotEmpty
+                              ? codeBlock.copiedLabel
+                              : codeCopiedLabel,
+                          semanticLabel:
+                              codeBlock.semanticLabel ?? codeBlockSemanticLabel,
+                          copyButtonSemanticLabel:
+                              codeBlock.copyButtonSemanticLabel,
+                        ),
+                        final ProjectPreviewAttachment projectPreview =>
+                          VnlfProjectPreviewCard(
+                            project: projectPreview.project,
+                          ),
+                      },
+                    ],
+                    ?poll,
+                    if (loadedPost.actionError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          loadedPost.actionError!,
+                          style: VnlfTypography.meta(colors.red),
+                        ),
+                      ),
+                    // Optional Category Tags
+                    if (loadedPost.tags.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final tag in loadedPost.tags)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.surfaceSoft,
+                                borderRadius: BorderRadius.circular(
+                                  VnlfDimensions.radiusSm,
+                                ),
+                                border: Border.all(color: colors.line),
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: VnlfTypography.caption(colors.muted),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                    if (showBottomActions && !isMobile) ...[
+                      const SizedBox(height: 12),
+                      actions,
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
+          if (showBottomActions && isMobile) ...[
+            const SizedBox(height: 12),
+            actions,
+          ],
         ],
       ),
     );

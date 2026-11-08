@@ -235,7 +235,7 @@ class VnlfInlineDistroIcon extends StatelessWidget {
           fontFamily: VnlfTypography.fontFamily,
           fontSize: size * 0.62,
           height: 1.0,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: fg,
         ),
       ),

@@ -227,7 +227,10 @@ GoRouter createMainRouter({
                 centerPadding:
                     communication ||
                         threadId != null &&
-                            MediaQuery.sizeOf(context).width <= 840
+                            VnlfViewportSize.fromWidth(
+                                  MediaQuery.sizeOf(context).width,
+                                ) ==
+                                VnlfViewportSize.mobile
                     ? EdgeInsets.zero
                     : null,
                 themeMode: ref.watch(themeModeProvider),

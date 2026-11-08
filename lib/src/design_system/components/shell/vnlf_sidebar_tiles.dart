@@ -38,6 +38,7 @@ class SidebarNavTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
           onTap: onTap,
           child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
               color: selected ? colors.brandSoft : Colors.transparent,
@@ -89,7 +90,7 @@ class SidebarSupportTile extends StatelessWidget {
     this.semanticLabel,
   });
 
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String label;
   final String badgeText;
   final String? semanticLabel;
@@ -106,7 +107,8 @@ class SidebarSupportTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
         onTap: onTap,
-        child: Padding(
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9.5),
           child: Row(
             children: [
@@ -181,8 +183,9 @@ class SidebarUtilityTile extends StatelessWidget {
       label: effectiveSemantics,
       child: InkWell(
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-        onTap: onTap ?? () {},
-        child: Padding(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
           child: Row(
             children: [
@@ -285,7 +288,7 @@ class _SocialCircleBadgeState extends State<SocialCircleBadge> {
                 style: TextStyle(
                   fontFamily: VnlfTypography.fontFamily,
                   fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: colors.surface,
                   height: 1,
                 ),
@@ -293,9 +296,7 @@ class _SocialCircleBadgeState extends State<SocialCircleBadge> {
             : Icon(widget.icon, size: 13, color: colors.surface),
       );
     }
-    if (!widget.compact) {
-      badge = SizedBox(width: 44, height: 44, child: Center(child: badge));
-    }
+    badge = SizedBox(width: 48, height: 48, child: Center(child: badge));
     if (widget.onTap != null) {
       badge = MouseRegion(
         onEnter: (_) => setState(() => _hovered = true),

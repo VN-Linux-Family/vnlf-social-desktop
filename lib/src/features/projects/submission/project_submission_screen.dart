@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+
+import '../../../design_system/tokens/vnlf_dimensions.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -288,7 +291,9 @@ class _ProjectSubmissionScreenState
     }
     final state = controller!;
     final locked = state.busy || state.uncertain || state.receipt != null;
-    final mobile = MediaQuery.sizeOf(context).width < 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     return Scaffold(
       appBar: mobile ? null : AppBar(title: const Text('Giới thiệu dự án')),
       body: Center(
@@ -455,6 +460,8 @@ class _ProjectSubmissionScreenState
     child: DropdownButtonFormField<String>(
       key: ValueKey(value),
       initialValue: value,
+      isExpanded: true,
+      itemHeight: null,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),

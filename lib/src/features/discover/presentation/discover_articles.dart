@@ -1,14 +1,16 @@
 import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
 import '../../shared/presentation/post_share.dart';
+import '../../shared/presentation/post_interactions.dart';
 
-class DiscoverArticles extends StatelessWidget {
+class DiscoverArticles extends ConsumerWidget {
   const DiscoverArticles({
     super.key,
     required this.posts,
@@ -21,7 +23,7 @@ class DiscoverArticles extends StatelessWidget {
   final String? tag;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final visible = posts.where((post) {
       final text =
@@ -51,7 +53,25 @@ class DiscoverArticles extends StatelessWidget {
                 poll: post.poll == null
                     ? null
                     : PollCard(poll: post.poll!, authorId: post.author.id),
-                post: presentPost(post, english: english),
+                post: ref
+                    .watch(postInteractionProvider(post.id))
+                    .apply(
+                      presentPost(post, english: english),
+                      english: english,
+                    ),
+                onVoteChanged: (vote) => ref
+                    .read(postInteractionsProvider.notifier)
+                    .vote(post.id, vote),
+                onBookmarkToggle: () => ref
+                    .read(postInteractionsProvider.notifier)
+                    .toggleBookmark(
+                      post.id,
+                      initialValue: post.viewerBookmarked,
+                    ),
+                upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
+                downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
+                bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
+                commentSemanticLabel: english ? 'Comments' : 'Bình luận',
                 onShareTap: () => copyPostLink(context, post),
                 shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
                 onCommentTap: () =>

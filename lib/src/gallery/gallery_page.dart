@@ -33,7 +33,7 @@ enum GalleryViewportPreset {
 }
 
 /// Primary `/gallery` page showcasing VNLF design tokens, atomic components,
-/// and the 3 key screens (`feed`, `thread`, `profile`) at phone (`<= 840px`)
+/// and the 3 key screens (`feed`, `thread`, `profile`) at phone (`< 840px`)
 /// and desktop (`>= 1181px`) widths.
 class GalleryPage extends StatefulWidget {
   const GalleryPage({

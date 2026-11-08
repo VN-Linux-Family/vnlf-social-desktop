@@ -44,7 +44,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
-    final mobile = MediaQuery.sizeOf(context).width < 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     final profile = ref.watch(profileProvider(widget.username));
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),

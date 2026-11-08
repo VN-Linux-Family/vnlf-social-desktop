@@ -33,7 +33,7 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
     final colors = VnlfColors.of(context);
 
     final picker = Container(
-      height: 36,
+      height: 54,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: colors.surfaceSoft,
@@ -47,21 +47,27 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
             tooltip: lightTooltip,
             semanticLabel: lightSemanticLabel,
             selected: themeMode == ThemeMode.light,
-            onTap: () => onThemeModeChanged?.call(ThemeMode.light),
+            onTap: onThemeModeChanged == null
+                ? null
+                : () => onThemeModeChanged!(ThemeMode.light),
           ),
           _SegmentBtn(
             icon: Icons.dark_mode_outlined,
             tooltip: darkTooltip,
             semanticLabel: darkSemanticLabel,
             selected: themeMode == ThemeMode.dark,
-            onTap: () => onThemeModeChanged?.call(ThemeMode.dark),
+            onTap: onThemeModeChanged == null
+                ? null
+                : () => onThemeModeChanged!(ThemeMode.dark),
           ),
           _SegmentBtn(
             icon: Icons.desktop_windows_outlined,
             tooltip: systemTooltip,
             semanticLabel: systemSemanticLabel,
             selected: themeMode == ThemeMode.system,
-            onTap: () => onThemeModeChanged?.call(ThemeMode.system),
+            onTap: onThemeModeChanged == null
+                ? null
+                : () => onThemeModeChanged!(ThemeMode.system),
           ),
         ],
       ),
@@ -86,7 +92,7 @@ class _SegmentBtn extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String? semanticLabel;
 
   @override
@@ -99,9 +105,9 @@ class _SegmentBtn extends StatelessWidget {
       button: true,
       selected: selected,
       label: effectiveSemantics,
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
-        behavior: HitTestBehavior.opaque,
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
         child: Container(
           decoration: BoxDecoration(
             color: selected ? colors.surface : Colors.transparent,

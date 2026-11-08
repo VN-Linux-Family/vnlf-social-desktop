@@ -258,7 +258,9 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: inRoom ? colors.red : colors.brand,
-                      foregroundColor: Colors.white,
+                      foregroundColor: inRoom
+                          ? Theme.of(context).colorScheme.onError
+                          : Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 12,

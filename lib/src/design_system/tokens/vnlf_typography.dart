@@ -97,9 +97,14 @@ abstract final class VnlfTypography {
     return TextTheme(
       headlineLarge: h1(colors.ink),
       headlineMedium: h2(colors.ink),
+      headlineSmall: h2(colors.ink),
+      titleLarge: h1(colors.ink),
       titleMedium: h3(colors.ink),
+      titleSmall: h3(colors.ink),
+      bodyLarge: body(colors.ink),
       bodyMedium: body(colors.ink),
       labelLarge: control(colors.ink),
+      labelMedium: meta(colors.muted),
       labelSmall: meta(colors.muted),
       bodySmall: caption(colors.muted),
     );

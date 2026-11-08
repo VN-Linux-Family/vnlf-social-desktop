@@ -2,6 +2,17 @@
 
 Source of truth for all UI design tokens, components, adaptive breakpoints, and states. Captured directly from `vietnamlinuxfamily.net` production assets and runtime DOM inspection.
 
+Native audit amendment — 2026-11-08: the requested native navigation tiers are
+mobile **<840**, tablet **840 ≤ width <1181**, desktop **≥1181** logical pixels.
+This supersedes the native breakpoint descriptions below; historical website
+measurements remain evidence of the website at capture time. All native layout
+decisions now use `VnlfViewportSize.fromWidth`, including fractional widths.
+Material text slots use the explicit VNLF hierarchy, standard buttons use the
+10px radius and a 48px minimum target, and dark accent backgrounds use dark
+foregrounds with AA contrast. Native touch targets may exceed website controls.
+The detailed findings, limitations and current captures are recorded in
+`docs/ux-ui-audit-2026-11-08.md`.
+
 ---
 
 ## 1. Visual Contract & Philosophy

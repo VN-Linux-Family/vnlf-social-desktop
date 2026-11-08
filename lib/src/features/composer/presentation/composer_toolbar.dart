@@ -1,6 +1,8 @@
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 
+import 'composer_link_dialog.dart';
+
 class ComposerToolbar extends StatelessWidget {
   const ComposerToolbar({
     super.key,
@@ -123,44 +125,13 @@ class ComposerToolbar extends StatelessWidget {
     },
   );
   Future<void> _link(BuildContext context) async {
-    final en = Localizations.localeOf(context).languageCode == 'en';
-    final input = TextEditingController(
-      text: controller.getSelectionStyle().value(ParchmentAttribute.link) ?? '',
-    );
     final link = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(en ? 'Link' : 'Liên kết'),
-        content: TextField(
-          controller: input,
-          autofocus: true,
-          decoration: InputDecoration(labelText: 'URL', hintText: 'https://…'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(en ? 'Cancel' : 'Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ''),
-            child: Text(en ? 'Remove link' : 'Gỡ liên kết'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = input.text.trim();
-              if (RegExp(
-                r'^(https?://|mailto:)',
-                caseSensitive: false,
-              ).hasMatch(value)) {
-                Navigator.pop(context, value);
-              }
-            },
-            child: Text(en ? 'Apply' : 'Áp dụng'),
-          ),
-        ],
+      builder: (_) => ComposerLinkDialog(
+        initialValue:
+            controller.getSelectionStyle().value(ParchmentAttribute.link) ?? '',
       ),
     );
-    input.dispose();
     if (link != null && context.mounted) {
       controller.formatSelection(
         link.isEmpty

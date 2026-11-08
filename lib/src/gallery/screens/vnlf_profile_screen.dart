@@ -69,8 +69,6 @@ class _VnlfProfileScreenState extends State<VnlfProfileScreen> {
       notificationsSemanticLabel:
           VnlfGalleryFixtures.notificationsSemanticLabel,
       profileSemanticLabel: VnlfGalleryFixtures.profileSemanticLabel,
-      collapseSidebarSemanticLabel:
-          VnlfGalleryFixtures.collapseSidebarSemanticLabel,
       rightSidebarChild: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

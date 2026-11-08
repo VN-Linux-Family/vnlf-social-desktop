@@ -29,7 +29,9 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final english = Localizations.localeOf(context).languageCode == 'en';
-    final mobile = MediaQuery.sizeOf(context).width < 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     final colors = VnlfColors.of(context);
     final theme = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);

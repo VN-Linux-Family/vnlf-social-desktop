@@ -190,7 +190,10 @@ void main() {
       await tester.tap(find.widgetWithText(ActionChip, 'Wayland'));
       await tester.pumpAndSettle();
       expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Thành viên'));
+      final membersScope = find.widgetWithText(ChoiceChip, 'Thành viên');
+      await tester.ensureVisible(membersScope);
+      await tester.pumpAndSettle();
+      await tester.tap(membersScope);
       await tester.enterText(find.byKey(const Key('search-input')), 'hoangnam');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();

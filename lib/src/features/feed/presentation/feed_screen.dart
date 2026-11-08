@@ -41,7 +41,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (MediaQuery.sizeOf(context).width > 840)
+        if (VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
+            VnlfViewportSize.mobile)
           VnlfCenterPageHeader(
             title: english ? 'Feed' : 'Bảng tin',
             trailing: Row(
@@ -195,6 +196,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                   key: ValueKey(data.posts[index].id),
                                   post: interaction.apply(
                                     presentPost(source, english: english),
+                                    english: english,
                                   ),
                                   onVoteChanged: (vote) => ref
                                       .read(postInteractionsProvider.notifier)

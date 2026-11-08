@@ -79,7 +79,8 @@ class ProjectsScreen extends ConsumerWidget {
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          if (MediaQuery.sizeOf(context).width > 840) ...[
+          if (VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
+              VnlfViewportSize.mobile) ...[
             VnlfCenterPageHeader(
               title: english ? 'Projects' : 'Dự án',
               trailing: OutlinedButton.icon(

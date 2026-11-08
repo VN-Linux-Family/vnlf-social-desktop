@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -631,30 +632,38 @@ class _ActivityPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Expanded(
-                child: Text(
-                  english ? 'Activity calendar' : 'Lịch hoạt động',
-                  style: VnlfTypography.h2(colors.ink),
-                ),
+              Text(
+                english ? 'Activity calendar' : 'Lịch hoạt động',
+                style: VnlfTypography.h2(colors.ink),
               ),
-              IconButton(
-                tooltip: english ? 'Previous month' : 'Tháng trước',
-                onPressed: onPrevious,
-                icon: const Icon(Icons.chevron_left),
-              ),
-              Semantics(
-                liveRegion: true,
-                child: Text(
-                  monthLabel,
-                  style: VnlfTypography.control(colors.ink),
-                ),
-              ),
-              IconButton(
-                tooltip: english ? 'Next month' : 'Tháng sau',
-                onPressed: isCurrentMonth ? null : onNext,
-                icon: const Icon(Icons.chevron_right),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: english ? 'Previous month' : 'Tháng trước',
+                    onPressed: onPrevious,
+                    icon: const Icon(Icons.chevron_left),
+                  ),
+                  Flexible(
+                    child: Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        monthLabel,
+                        style: VnlfTypography.control(colors.ink),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: english ? 'Next month' : 'Tháng sau',
+                    onPressed: isCurrentMonth ? null : onNext,
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                ],
               ),
             ],
           ),
@@ -703,77 +712,116 @@ class _CalendarGrid extends StatelessWidget {
     ];
     return Column(
       children: [
-        Row(
-          children: [
-            for (final label in english ? weekdaysEn : weekdaysVi)
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 7),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final extent = math.max(
+              48.0,
+              MediaQuery.textScalerOf(context).scale(18) + 16,
+            );
+            const minimumWidth = 7 * 48.0 + 6 * 5;
+            final calendar = SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: math.max(minimumWidth, constraints.maxWidth),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        for (final label in english ? weekdaysEn : weekdaysVi)
+                          Expanded(
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 7),
+                                child: Text(
+                                  label,
+                                  style: VnlfTypography.meta(colors.muted),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: cells.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 7,
+                        mainAxisSpacing: 5,
+                        crossAxisSpacing: 5,
+                        mainAxisExtent: extent,
+                      ),
+                      itemBuilder: (context, index) {
+                        final day = cells[index];
+                        if (day == null) return const SizedBox.shrink();
+                        final future = day.date.compareTo(today) > 0;
+                        final selected = day.date == selectedDate;
+                        final hasPoints = day.points > 0;
+                        final isToday = day.date == today;
+                        final background = day.checkedIn
+                            ? colors.brand
+                            : hasPoints
+                            ? colors.brandSoft
+                            : colors.surfaceSoft;
+                        final foreground = day.checkedIn
+                            ? colors.paper
+                            : colors.ink;
+                        final label = _daySemantics(day, today, english);
+                        return Semantics(
+                          button: selectable,
+                          label: label,
+                          selected: selected,
+                          enabled: !future && selectable,
+                          child: Tooltip(
+                            message: label,
+                            child: OutlinedButton(
+                              onPressed: future || !selectable
+                                  ? null
+                                  : () => onSelect(day.date),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                foregroundColor: foreground,
+                                backgroundColor: background,
+                                side: BorderSide(
+                                  color: selected || isToday
+                                      ? colors.brand
+                                      : colors.line,
+                                  width: selected || isToday ? 2 : 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                '${int.parse(day.date.substring(8, 10))}',
+                                style: VnlfTypography.control(
+                                  future ? colors.muted : foreground,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                calendar,
+                if (constraints.maxWidth < minimumWidth)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      label,
-                      style: VnlfTypography.meta(colors.muted),
+                      english
+                          ? 'Swipe horizontally to see all 7 days.'
+                          : 'Vuốt ngang để xem đủ 7 ngày.',
+                      style: VnlfTypography.caption(colors.muted),
                     ),
                   ),
-                ),
-              ),
-          ],
-        ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: cells.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 7,
-            mainAxisSpacing: 5,
-            crossAxisSpacing: 5,
-            childAspectRatio: 1.15,
-          ),
-          itemBuilder: (context, index) {
-            final day = cells[index];
-            if (day == null) return const SizedBox.shrink();
-            final future = day.date.compareTo(today) > 0;
-            final selected = day.date == selectedDate;
-            final hasPoints = day.points > 0;
-            final isToday = day.date == today;
-            final background = day.checkedIn
-                ? colors.brand
-                : hasPoints
-                ? colors.brandSoft
-                : colors.surfaceSoft;
-            final foreground = day.checkedIn ? colors.paper : colors.ink;
-            final label = _daySemantics(day, today, english);
-            return Semantics(
-              button: selectable,
-              label: label,
-              selected: selected,
-              enabled: !future && selectable,
-              child: Tooltip(
-                message: label,
-                child: OutlinedButton(
-                  onPressed: future || !selectable
-                      ? null
-                      : () => onSelect(day.date),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    foregroundColor: foreground,
-                    backgroundColor: background,
-                    side: BorderSide(
-                      color: selected || isToday ? colors.brand : colors.line,
-                      width: selected || isToday ? 2 : 1,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    '${int.parse(day.date.substring(8, 10))}',
-                    style: VnlfTypography.control(
-                      future ? colors.muted : foreground,
-                    ),
-                  ),
-                ),
-              ),
+              ],
             );
           },
         ),

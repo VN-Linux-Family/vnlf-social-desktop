@@ -35,7 +35,9 @@ class ArticleDetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final en = Localizations.localeOf(context).languageCode == 'en';
-    final compact = MediaQuery.sizeOf(context).width <= 840;
+    final compact =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     final colors = VnlfColors.of(context);
     final body = VnlfTypography.body(colors.ink)
         .copyWith(height: 1.7, letterSpacing: 0);

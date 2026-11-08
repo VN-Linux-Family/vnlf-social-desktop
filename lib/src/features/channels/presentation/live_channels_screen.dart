@@ -53,7 +53,9 @@ class LiveChannelsScreen extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final viewport = MediaQuery.sizeOf(context).width;
-          final wide = viewport > 840 && constraints.maxWidth >= 650;
+          final wide =
+              VnlfViewportSize.fromWidth(viewport) != VnlfViewportSize.mobile &&
+              constraints.maxWidth >= 650;
           final directory = CommunicationDirectory(
             activeChannelId: channel?.id,
           );
@@ -61,7 +63,14 @@ class LiveChannelsScreen extends ConsumerWidget {
           return Row(
             children: [
               if (wide) ...[
-                SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
+                SizedBox(
+                  width:
+                      VnlfViewportSize.fromWidth(viewport) ==
+                          VnlfViewportSize.desktop
+                      ? 240
+                      : 205,
+                  child: directory,
+                ),
                 const VerticalDivider(width: 1),
               ],
               Expanded(

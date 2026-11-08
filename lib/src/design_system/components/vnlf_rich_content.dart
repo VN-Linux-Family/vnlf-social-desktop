@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/external_uri.dart';
 import '../../core/vnlf_navigation_helper.dart';
 import '../tokens/vnlf_colors.dart';
+import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 import 'vnlf_code_block.dart';
 import 'vnlf_media_gallery.dart';
@@ -119,7 +120,9 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
   EdgeInsets _blockSpacing(Map<String, dynamic> node) {
     if (widget.postStyle) return EdgeInsets.zero;
     final compact =
-        widget.articleDetail && MediaQuery.sizeOf(context).width <= 840;
+        widget.articleDetail &&
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+            VnlfViewportSize.mobile;
     if (node['type'] == 'paragraph') {
       return EdgeInsets.only(
         bottom: widget.articleDetail ? (compact ? 12 : 18) : 17,

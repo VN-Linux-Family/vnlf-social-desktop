@@ -297,7 +297,11 @@ class _Detail extends StatelessWidget {
                           Text(project.ownerName),
                           if (project.ownerUsername.isNotEmpty)
                             Text(
-                              '@${project.ownerUsername} · ${_relation(project.relation, en)}',
+                              [
+                                '@${project.ownerUsername}',
+                                if (project.relation.isNotEmpty)
+                                  _relation(project.relation, en),
+                              ].join(' · '),
                             ),
                         ]),
                         if (project.seeking)
@@ -306,24 +310,25 @@ class _Detail extends StatelessWidget {
                             en ? 'Seeking contributors' : 'Tìm người đóng góp',
                             [Text(project.seekingNote)],
                           ),
-                        _section(context, en ? 'Information' : 'Thông tin', [
-                          if (repo != null)
-                            _Link(
-                              label: '${repo.owner}/${repo.name}',
-                              url: repo.url,
-                            ),
-                          if (repo?.license != null)
-                            Text(
-                              '${en ? 'License' : 'Giấy phép'}: ${repo!.license}',
-                            ),
-                          if (repo != null && repo.topics.isNotEmpty)
-                            Text(repo.topics.join(' · ')),
-                          for (final link in project.links)
-                            _Link(
-                              label: _linkKind(link.kind, en),
-                              url: link.url,
-                            ),
-                        ]),
+                        if (repo != null || project.links.isNotEmpty)
+                          _section(context, en ? 'Information' : 'Thông tin', [
+                            if (repo != null)
+                              _Link(
+                                label: '${repo.owner}/${repo.name}',
+                                url: repo.url,
+                              ),
+                            if (repo?.license != null)
+                              Text(
+                                '${en ? 'License' : 'Giấy phép'}: ${repo!.license}',
+                              ),
+                            if (repo != null && repo.topics.isNotEmpty)
+                              Text(repo.topics.join(' · ')),
+                            for (final link in project.links)
+                              _Link(
+                                label: _linkKind(link.kind, en),
+                                url: link.url,
+                              ),
+                          ]),
                       ],
                     );
                     return constraints.maxWidth >= 750

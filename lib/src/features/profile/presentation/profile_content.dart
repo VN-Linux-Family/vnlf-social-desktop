@@ -10,6 +10,7 @@ import '../../../domain/models.dart';
 import '../../feed/presentation/post_mapper.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../shared/presentation/post_share.dart';
+import '../../shared/presentation/post_interactions.dart';
 import '../domain/public_profile.dart';
 import 'profile_data.dart';
 
@@ -40,7 +41,28 @@ class ProfileContent extends ConsumerWidget {
                   poll: post.poll == null
                       ? null
                       : PollCard(poll: post.poll!, authorId: post.author.id),
-                  post: presentPost(post, english: english),
+                  post: ref
+                      .watch(postInteractionProvider(post.id))
+                      .apply(
+                        presentPost(post, english: english),
+                        english: english,
+                      ),
+                  onVoteChanged: (vote) => ref
+                      .read(postInteractionsProvider.notifier)
+                      .vote(post.id, vote),
+                  onBookmarkToggle: () => ref
+                      .read(postInteractionsProvider.notifier)
+                      .toggleBookmark(
+                        post.id,
+                        initialValue: post.viewerBookmarked,
+                      ),
+                  upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
+                  downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
+                  bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
+                  commentSemanticLabel: english ? 'Comments' : 'Bình luận',
+                  onAuthorTap: () => context.push(
+                    '/profile/${Uri.encodeComponent(post.author.username)}',
+                  ),
                   onCommentTap: () =>
                       context.push('/thread/${Uri.encodeComponent(post.id)}'),
                   onShareTap: () => copyPostLink(context, post),

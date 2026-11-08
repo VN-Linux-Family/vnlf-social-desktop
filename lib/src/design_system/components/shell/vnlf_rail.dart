@@ -6,7 +6,7 @@ import '../brand_assets.dart';
 import '../vnlf_avatar.dart';
 import '../vnlf_shell.dart';
 
-/// Compact tablet navigation rail (`76px`) for viewports `841px - 1180px`.
+/// Compact tablet navigation rail (`72px`) for viewports `840px <= width < 1181px`.
 class VnlfTabletRail extends StatelessWidget {
   const VnlfTabletRail({
     super.key,
@@ -105,11 +105,17 @@ class VnlfTabletRail extends StatelessWidget {
           Semantics(
             button: true,
             label: profileSemanticLabel,
-            child: GestureDetector(
+            child: InkWell(
               onTap: onProfileTap,
-              child: VnlfGuestAvatarBox(
-                size: 36,
-                semanticLabel: profileSemanticLabel,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: VnlfGuestAvatarBox(
+                    size: 36,
+                    semanticLabel: profileSemanticLabel,
+                  ),
+                ),
               ),
             ),
           ),

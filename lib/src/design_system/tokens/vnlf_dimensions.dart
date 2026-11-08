@@ -16,11 +16,8 @@ abstract final class VnlfDimensions {
   static const double radiusFull = 999.0;
 
   // Responsive Breakpoints
-  /// Mobile viewport upper bound (`<= 840px`).
-  static const double mobileMaxWidth = 840.0;
-
-  /// Tablet viewport upper bound (`841px - 1180px`).
-  static const double tabletMaxWidth = 1180.0;
+  /// Tablet viewport lower bound. Mobile is strictly below 840 logical pixels.
+  static const double tabletMinWidth = 840.0;
 
   /// Desktop viewport lower bound (`>= 1181px`).
   static const double desktopMinWidth = 1181.0;
@@ -124,20 +121,20 @@ abstract final class VnlfDimensions {
 
 /// Viewport classification according to `DESIGN_REFERENCE.md` Section 5.
 enum VnlfViewportSize {
-  /// `<= 840px`: 1 column + sticky 64px top header + sticky 56px bottom nav.
+  /// `< 840px`: 1 column + sticky 64px top header + sticky 56px bottom nav.
   mobile,
 
-  /// `841px - 1180px`: 2 columns / compact nav rail + main feed surface.
+  /// `840px <= width < 1181px`: compact nav rail + main feed surface.
   tablet,
 
   /// `>= 1181px`: 3 columns (252px left sidebar, 717px center feed, 304px right sidebar).
   desktop;
 
   static VnlfViewportSize fromWidth(double width) {
-    if (width <= VnlfDimensions.mobileMaxWidth) {
+    if (width < VnlfDimensions.tabletMinWidth) {
       return VnlfViewportSize.mobile;
     }
-    if (width <= VnlfDimensions.tabletMaxWidth) {
+    if (width < VnlfDimensions.desktopMinWidth) {
       return VnlfViewportSize.tablet;
     }
     return VnlfViewportSize.desktop;

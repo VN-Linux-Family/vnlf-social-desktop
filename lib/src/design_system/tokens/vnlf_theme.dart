@@ -14,13 +14,13 @@ abstract final class VnlfTheme {
     final colorScheme = ColorScheme(
       brightness: brightness,
       primary: colors.brand,
-      onPrimary: Colors.white,
+      onPrimary: colors.isDark ? colors.bg : Colors.white,
       primaryContainer: colors.brandSoft,
-      onPrimaryContainer: colors.brandStrong,
+      onPrimaryContainer: colors.isDark ? colors.brand : colors.brandStrong,
       secondary: colors.blue,
-      onSecondary: Colors.white,
+      onSecondary: colors.isDark ? colors.bg : Colors.white,
       error: colors.red,
-      onError: Colors.white,
+      onError: colors.isDark ? colors.bg : Colors.white,
       surface: colors.surface,
       onSurface: colors.ink,
       outline: colors.line,
@@ -34,6 +34,40 @@ abstract final class VnlfTheme {
       canvasColor: colors.paper,
       colorScheme: colorScheme,
       textTheme: VnlfTypography.textTheme(colors),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          side: BorderSide(color: colors.line),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          borderSide: BorderSide(color: colors.line),
+        ),
+      ),
       dividerColor: colors.line,
       dividerTheme: DividerThemeData(
         color: colors.line,

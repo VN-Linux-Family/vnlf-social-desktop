@@ -24,7 +24,9 @@ class LeaderboardScreen extends ConsumerWidget {
     final isCurrent = selected.anchor == current.anchor;
     String date(DateTime day) =>
         '${day.day.toString().padLeft(2, "0")}/${day.month.toString().padLeft(2, "0")}/${day.year}';
-    final isDesktop = MediaQuery.sizeOf(context).width > 840;
+    final isDesktop =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
+        VnlfViewportSize.mobile;
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [

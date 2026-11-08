@@ -65,8 +65,7 @@ class VnlfVoteCapsule extends StatelessWidget {
           context,
           VnlfDimensions.motionFast,
         ),
-        height: compact ? 26 : 30,
-        padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 8),
+        constraints: const BoxConstraints(minHeight: 48),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
@@ -77,6 +76,8 @@ class VnlfVoteCapsule extends StatelessWidget {
           children: [
             Semantics(
               button: true,
+              enabled: onVoteChanged != null,
+              toggled: voteState == VoteState.upvoted,
               label: upvoteSemanticLabel,
               child: InkWell(
                 borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
@@ -89,17 +90,17 @@ class VnlfVoteCapsule extends StatelessWidget {
                             : VoteState.upvoted;
                         onVoteChanged!(next);
                       },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: compact ? 4 : 6,
-                    vertical: compact ? 3 : 4,
-                  ),
-                  child: CustomPaint(
-                    size: const Size(13, 13),
-                    painter: _HollowVoteArrowPainter(
-                      color: upColor,
-                      isUp: true,
-                      filled: voteState == VoteState.upvoted,
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: CustomPaint(
+                      size: const Size(13, 13),
+                      painter: _HollowVoteArrowPainter(
+                        color: upColor,
+                        isUp: true,
+                        filled: voteState == VoteState.upvoted,
+                      ),
                     ),
                   ),
                 ),
@@ -117,6 +118,8 @@ class VnlfVoteCapsule extends StatelessWidget {
             ),
             Semantics(
               button: true,
+              enabled: onVoteChanged != null,
+              toggled: voteState == VoteState.downvoted,
               label: downvoteSemanticLabel,
               child: InkWell(
                 borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
@@ -129,17 +132,17 @@ class VnlfVoteCapsule extends StatelessWidget {
                             : VoteState.downvoted;
                         onVoteChanged!(next);
                       },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: compact ? 4 : 6,
-                    vertical: compact ? 3 : 4,
-                  ),
-                  child: CustomPaint(
-                    size: const Size(13, 13),
-                    painter: _HollowVoteArrowPainter(
-                      color: downColor,
-                      isUp: false,
-                      filled: voteState == VoteState.downvoted,
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: CustomPaint(
+                      size: const Size(13, 13),
+                      painter: _HollowVoteArrowPainter(
+                        color: downColor,
+                        isUp: false,
+                        filled: voteState == VoteState.downvoted,
+                      ),
                     ),
                   ),
                 ),
@@ -195,8 +198,8 @@ class VnlfPostInteractionBar extends StatelessWidget {
 
     final bar = Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 12,
-      runSpacing: 4,
+      spacing: 8,
+      runSpacing: 8,
       children: [
         VnlfVoteCapsule(
           score: voteScore,
@@ -208,6 +211,7 @@ class VnlfPostInteractionBar extends StatelessWidget {
         ),
         Semantics(
           button: true,
+          enabled: onCommentTap != null,
           label: commentSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
@@ -217,7 +221,8 @@ class VnlfPostInteractionBar extends StatelessWidget {
                     HapticFeedback.selectionClick();
                     onCommentTap!();
                   },
-            child: Padding(
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -239,6 +244,7 @@ class VnlfPostInteractionBar extends StatelessWidget {
         ),
         Semantics(
           button: true,
+          enabled: onShareTap != null,
           label: shareSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
@@ -248,7 +254,11 @@ class VnlfPostInteractionBar extends StatelessWidget {
                     HapticFeedback.selectionClick();
                     onShareTap!();
                   },
-            child: Padding(
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
               padding: const EdgeInsets.all(6),
               child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
             ),
@@ -256,6 +266,8 @@ class VnlfPostInteractionBar extends StatelessWidget {
         ),
         Semantics(
           button: true,
+          enabled: onBookmarkToggle != null,
+          toggled: isBookmarked,
           label: bookmarkSemanticLabel,
           child: InkWell(
             borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
@@ -265,7 +277,11 @@ class VnlfPostInteractionBar extends StatelessWidget {
                     HapticFeedback.lightImpact();
                     onBookmarkToggle!();
                   },
-            child: Padding(
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
               padding: const EdgeInsets.all(6),
               child: Icon(
                 isBookmarked

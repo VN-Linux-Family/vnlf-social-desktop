@@ -7,7 +7,7 @@ import '../screens/vnlf_feed_screen.dart';
 import '../screens/vnlf_profile_screen.dart';
 import '../screens/vnlf_thread_screen.dart';
 
-/// Renders Phone (`390px <= 840px`) and Desktop (`1280px >= 1181px`) side-by-side
+/// Renders Phone (`390px < 840px`) and Desktop (`1280px >= 1181px`) side-by-side
 /// for any of the 3 key screens (`feed`, `thread`, `profile`).
 class SideBySideViewportComparison extends StatefulWidget {
   const SideBySideViewportComparison({
@@ -69,7 +69,7 @@ class _SideBySideViewportComparisonState
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                'So sánh khung nhìn Phone (<= 840px) & Desktop (>= 1181px):',
+                'So sánh khung nhìn Phone (< 840px) & Desktop (>= 1181px):',
                 style: VnlfTypography.meta(
                   colors.muted,
                   fontWeight: FontWeight.w600,
@@ -99,12 +99,12 @@ class _SideBySideViewportComparisonState
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Phone Frame (390px <= 840px)
+                // Phone Frame (390px < 840px)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Phone Viewport (390px <= 840px)',
+                      'Phone Viewport (390px < 840px)',
                       style: VnlfTypography.meta(
                         colors.ink,
                         fontWeight: FontWeight.w700,

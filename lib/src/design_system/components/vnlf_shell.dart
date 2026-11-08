@@ -30,8 +30,8 @@ enum VnlfNavDestination {
 /// Adaptive application shell implementing the 3 production viewports from
 /// `DESIGN_REFERENCE.md` and `reference_feed_desktop.png`:
 /// - Desktop (`>= 1181px`): 252px Left Sidebar + 717px Center Column + 304px Right Column.
-/// - Tablet (`841px - 1180px`): Compact Navigation Rail + Center Column.
-/// - Mobile (`<= 840px`): Sticky 64px Top Header + Full-Width Feed + Sticky 56px Bottom Nav + Drawer.
+/// - Tablet (`840px <= width < 1181px`): Compact Navigation Rail + Center Column.
+/// - Mobile (`< 840px`): Sticky 64px Top Header + Full-Width Feed + Sticky 56px Bottom Nav + Drawer.
 class VnlfAdaptiveShell extends StatelessWidget {
   const VnlfAdaptiveShell({
     super.key,
@@ -95,7 +95,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.searchSemanticLabel = '',
     this.notificationsSemanticLabel = '',
     this.profileSemanticLabel,
-    this.collapseSidebarSemanticLabel,
     this.leftSidebarSemanticLabel,
     this.rightSidebarSemanticLabel,
     this.tabletRailSemanticLabel,
@@ -168,7 +167,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String searchSemanticLabel;
   final String notificationsSemanticLabel;
   final String? profileSemanticLabel;
-  final String? collapseSidebarSemanticLabel;
   final String? leftSidebarSemanticLabel;
   final String? rightSidebarSemanticLabel;
   final String? tabletRailSemanticLabel;
@@ -240,7 +238,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     systemThemeTooltip: systemThemeTooltip,
                     themePickerSemanticLabel: themePickerSemanticLabel,
                     profileSemanticLabel: profileSemanticLabel,
-                    collapseSidebarSemanticLabel: collapseSidebarSemanticLabel,
                     semanticLabel: leftSidebarSemanticLabel,
                   ),
                   Expanded(
@@ -832,7 +829,9 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
             ),
           ],
         ),
-        bottomNavigationBar: !widget.showMobileBottomNav
+        bottomNavigationBar:
+            !widget.showMobileBottomNav ||
+                MediaQuery.viewInsetsOf(context).bottom > 0
             ? null
             : VnlfMobileBottomNav(
                 activeDestination: widget.activeDestination,

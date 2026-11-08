@@ -1,4 +1,20 @@
-# Current production audit — 2026-11-06
+# Current production audit — 2026-11-08
+
+The November 8 UX/UI audit is documented in
+`docs/ux-ui-audit-2026-11-08.md`, with reproducible synthetic Linux capture tools
+and a route/large-text/accessibility regression matrix. Native navigation now
+uses <840 / [840,1181) / >=1181 logical-pixel tiers. Confirmed fixes cover dark
+accent contrast, Material typography/radii, native targets and keyboard theme
+selection, short/large-text layouts, real code scrolling/copy geometry, composer
+link validation, and consistent post actions in Discover/profile. This audit
+does not certify complete website parity, physical-device accessibility,
+realtime/audio delivery or 60/120fps; its report lists those remaining gates.
+Final verification: pub get, format and analyze pass; all 816 Flutter tests pass
+with concurrency 1, including 31 new UX regressions. The Linux ARM64 release
+audit harness exits normally with 132 validated screenshots and zero Flutter
+errors. Captures use synthetic data and no production/RTC connection; ATK and
+initial resize/OpenGL warnings remain environment limits. No server writes or
+dependency changes were made.
 
 This update supersedes the historical phase assignments and unknown-contract
 assumptions below. Codex owns `luank3/vnlf-production-audit` in its isolated

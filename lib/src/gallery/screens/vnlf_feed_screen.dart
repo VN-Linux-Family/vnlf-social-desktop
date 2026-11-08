@@ -4,7 +4,7 @@ import '../../design_system/design_system.dart';
 import '../fixtures/vnlf_gallery_fixtures.dart';
 
 /// Key Screen 1: Community Feed (`Bảng tin`) matching `reference_feed_desktop.png`
-/// across Phone (`<= 840px`), Tablet (`841px - 1180px`), and Desktop (`>= 1181px`).
+/// across Phone (`< 840px`), Tablet (`840px <= width < 1181px`), and Desktop (`>= 1181px`).
 class VnlfFeedScreen extends StatefulWidget {
   const VnlfFeedScreen({
     super.key,
@@ -95,8 +95,6 @@ class _VnlfFeedScreenState extends State<VnlfFeedScreen> {
       notificationsSemanticLabel:
           VnlfGalleryFixtures.notificationsSemanticLabel,
       profileSemanticLabel: VnlfGalleryFixtures.profileSemanticLabel,
-      collapseSidebarSemanticLabel:
-          VnlfGalleryFixtures.collapseSidebarSemanticLabel,
       rightSidebarChild: VnlfLeaderboardCard(
         entries: VnlfGalleryFixtures.weeklyLeaderboard,
         onAuthorTap: (_) => widget.onOpenProfile?.call(),

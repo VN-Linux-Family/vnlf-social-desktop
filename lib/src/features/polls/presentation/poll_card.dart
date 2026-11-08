@@ -121,7 +121,10 @@ class PollCard extends ConsumerWidget {
                                   ),
                                   minimumSize: Size(
                                     double.infinity,
-                                    MediaQuery.sizeOf(context).width <= 840
+                                    VnlfViewportSize.fromWidth(
+                                              MediaQuery.sizeOf(context).width,
+                                            ) ==
+                                            VnlfViewportSize.mobile
                                         ? 44
                                         : 40,
                                   ),

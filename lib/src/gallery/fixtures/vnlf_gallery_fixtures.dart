@@ -41,7 +41,6 @@ abstract final class VnlfGalleryFixtures {
   static const String searchSemanticLabel = 'Tìm kiếm';
   static const String notificationsSemanticLabel = 'Thông báo';
   static const String profileSemanticLabel = 'Tài khoản cá nhân';
-  static const String collapseSidebarSemanticLabel = 'Thu gọn thanh bên';
 
   // Leaderboard sample labels
   static const String leaderboardTitle = 'Xếp hạng tuần';

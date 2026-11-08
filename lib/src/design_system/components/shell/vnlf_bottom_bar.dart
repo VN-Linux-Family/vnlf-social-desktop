@@ -8,7 +8,7 @@ import '../brand_assets.dart';
 import '../vnlf_avatar.dart';
 import '../vnlf_shell.dart';
 
-/// Sticky mobile top header (`64px` height) for viewports `<= 840px`.
+/// Sticky mobile top header (`64px` height) for viewports `< 840px`.
 class VnlfMobileStickyHeader extends StatelessWidget {
   const VnlfMobileStickyHeader({
     super.key,
@@ -79,11 +79,10 @@ class VnlfMobileStickyHeader extends StatelessWidget {
                       backSemanticLabel ??
                       (backTooltip.isNotEmpty ? backTooltip : null),
                   child: IconButton(
-                    visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
+                      minWidth: 48,
+                      minHeight: 48,
                     ),
                     icon: Icon(
                       Icons.arrow_back_rounded,
@@ -101,11 +100,10 @@ class VnlfMobileStickyHeader extends StatelessWidget {
                       openDrawerSemanticLabel ??
                       (openDrawerTooltip.isNotEmpty ? openDrawerTooltip : null),
                   child: IconButton(
-                    visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
+                      minWidth: 48,
+                      minHeight: 48,
                     ),
                     icon: Icon(Icons.menu_rounded, size: 22, color: colors.ink),
                     tooltip: openDrawerTooltip.isNotEmpty
@@ -123,13 +121,13 @@ class VnlfMobileStickyHeader extends StatelessWidget {
                         titleText!,
                         overflow: TextOverflow.ellipsis,
                         style: VnlfTypography.h3(colors.ink)
-                            .copyWith(fontWeight: FontWeight.w800),
+                            .copyWith(fontWeight: FontWeight.w700),
                       )
                     : RichText(
                         overflow: TextOverflow.ellipsis,
                         text: TextSpan(
                           style: VnlfTypography.h3(colors.ink)
-                              .copyWith(fontWeight: FontWeight.w800),
+                              .copyWith(fontWeight: FontWeight.w700),
                           children: [
                             TextSpan(text: brandTitlePrefix),
                             TextSpan(
@@ -159,11 +157,17 @@ class VnlfMobileStickyHeader extends StatelessWidget {
               Semantics(
                 button: true,
                 label: profileSemanticLabel,
-                child: GestureDetector(
+                child: InkWell(
                   onTap: onProfileTap,
-                  child: VnlfGuestAvatarBox(
-                    size: 36,
-                    semanticLabel: profileSemanticLabel,
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(
+                      child: VnlfGuestAvatarBox(
+                        size: 36,
+                        semanticLabel: profileSemanticLabel,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -203,33 +207,39 @@ class _HeaderSquareIconButton extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
         onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: colors.surfaceSoft,
-            borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Icon(icon, size: 18, color: colors.ink),
-              if (badgeCount > 0)
-                Positioned(
-                  top: 5,
-                  right: 5,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD7473E),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.surface, width: 1.5),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: colors.surfaceSoft,
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Icon(icon, size: 18, color: colors.ink),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: 5,
+                      right: 5,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD7473E),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.surface, width: 1.5),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -243,7 +253,7 @@ class _HeaderSquareIconButton extends StatelessWidget {
   }
 }
 
-/// Sticky mobile bottom navigation bar (`56px` height) for viewports `<= 840px`.
+/// Sticky mobile bottom navigation bar (`56px` height) for viewports `< 840px`.
 class VnlfMobileBottomNav extends StatelessWidget {
   const VnlfMobileBottomNav({
     super.key,

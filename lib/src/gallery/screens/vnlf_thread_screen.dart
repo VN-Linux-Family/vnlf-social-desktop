@@ -67,8 +67,6 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
       notificationsSemanticLabel:
           VnlfGalleryFixtures.notificationsSemanticLabel,
       profileSemanticLabel: VnlfGalleryFixtures.profileSemanticLabel,
-      collapseSidebarSemanticLabel:
-          VnlfGalleryFixtures.collapseSidebarSemanticLabel,
       rightSidebarChild: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

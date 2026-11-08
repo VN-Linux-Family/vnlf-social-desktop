@@ -71,7 +71,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final english = Localizations.localeOf(context).languageCode == 'en';
-    final mobile = MediaQuery.sizeOf(context).width < 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     final colors = VnlfColors.of(context);
     final labels = english
         ? ['All', 'Posts', 'Projects', 'Users', 'Topics']
@@ -121,22 +123,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final scope in SearchScope.values)
-              ChoiceChip(
-                selectedColor: colors.brandSoft,
-                backgroundColor: colors.surface,
-                checkmarkColor: colors.brand,
-                side: BorderSide(color: colors.line),
-                labelStyle: VnlfTypography.control(colors.ink),
-                label: Text(labels[scope.index]),
-                selected: _scope == scope,
-                onSelected: (_) => setState(() => _scope = scope),
-              ),
-          ],
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            spacing: 8,
+            children: [
+              for (final scope in SearchScope.values)
+                ChoiceChip(
+                  selectedColor: colors.brandSoft,
+                  backgroundColor: colors.surface,
+                  checkmarkColor: colors.brand,
+                  side: BorderSide(color: colors.line),
+                  labelStyle: VnlfTypography.control(colors.ink),
+                  label: Text(labels[scope.index]),
+                  selected: _scope == scope,
+                  onSelected: (_) => setState(() => _scope = scope),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         if (offlineFeatures)

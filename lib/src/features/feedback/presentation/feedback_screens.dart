@@ -319,7 +319,9 @@ class _FeedbackPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final mobile = MediaQuery.sizeOf(context).width < 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     return Scaffold(
       backgroundColor: colors.bg,
       appBar: mobile

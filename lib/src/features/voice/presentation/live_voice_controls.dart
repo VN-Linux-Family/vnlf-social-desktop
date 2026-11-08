@@ -77,7 +77,9 @@ class LiveVoiceControls extends StatelessWidget {
               FilledButton.icon(
                 style: FilledButton.styleFrom(
                   backgroundColor: selectedActive ? colors.red : colors.brand,
-                  foregroundColor: Colors.white,
+                  foregroundColor: selectedActive
+                      ? Theme.of(context).colorScheme.onError
+                      : Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 12,

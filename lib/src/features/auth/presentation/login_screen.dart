@@ -440,7 +440,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: _loading ? null : _handleLogin,
                               style: FilledButton.styleFrom(
                                 backgroundColor: colors.brand,
-                                foregroundColor: Colors.white,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
@@ -451,12 +453,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               child: _loading
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                       ),
                                     )
                                   : Text(
@@ -464,7 +468,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           ? 'Enter VNLF Social'
                                           : 'Vào VNLF Social',
                                       style: VnlfTypography.control(
-                                        Colors.white,
+                                        Theme.of(context).colorScheme.onPrimary,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -559,7 +563,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: _loading ? null : _handleRegister,
                               style: FilledButton.styleFrom(
                                 backgroundColor: colors.brand,
-                                foregroundColor: Colors.white,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 14,
                                 ),
@@ -570,12 +576,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                               child: _loading
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
                                       ),
                                     )
                                   : Text(
@@ -583,7 +591,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           ? 'Create Account'
                                           : 'Tạo tài khoản',
                                       style: VnlfTypography.control(
-                                        Colors.white,
+                                        Theme.of(context).colorScheme.onPrimary,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),

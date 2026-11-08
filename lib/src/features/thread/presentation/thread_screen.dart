@@ -28,11 +28,13 @@ class ThreadScreen extends ConsumerWidget {
     final english = Localizations.localeOf(context).languageCode == 'en';
     final post = ref.watch(threadPostProvider(postId));
     final article = post.valueOrNull?.format == 'ARTICLE';
-    final mobile = MediaQuery.sizeOf(context).width <= 840;
+    final mobile =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
     return ListView(
       padding: const EdgeInsets.only(bottom: 20),
       children: [
-        if (!mobile)
+        if (!mobile && article)
           Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(

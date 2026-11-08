@@ -82,7 +82,9 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       orElse: () => _defaultTags,
     );
 
-    final isDesktop = MediaQuery.sizeOf(context).width > 840;
+    final isDesktop =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
+        VnlfViewportSize.mobile;
 
     return RefreshIndicator(
       onRefresh: () async {
