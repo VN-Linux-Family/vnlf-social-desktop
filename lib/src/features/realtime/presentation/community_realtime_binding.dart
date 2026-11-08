@@ -78,9 +78,15 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
 
     final notifService = ref.read(localNotificationServiceProvider);
     final id = event.eventId.hashCode;
+    final currentUserId = ref.read(sessionStateProvider)?.userId;
 
-    if (event.type == 'dm:message') {
+    if (event.type == 'dm:message' || event.type == 'dm:message-created') {
       final author = data['author'];
+      final authorId =
+          (author is Map<String, dynamic> ? author['id'] : null) ??
+          data['authorId'];
+      if (authorId != null && authorId == currentUserId) return;
+
       final authorName = author is Map<String, dynamic>
           ? (author['displayName'] ?? author['username'] ?? 'Tin nhắn mới')
           : 'Tin nhắn mới';
@@ -96,6 +102,11 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
       );
     } else if (event.type == 'message:created') {
       final author = data['author'];
+      final authorId =
+          (author is Map<String, dynamic> ? author['id'] : null) ??
+          data['authorId'];
+      if (authorId != null && authorId == currentUserId) return;
+
       final authorName = author is Map<String, dynamic>
           ? (author['displayName'] ?? 'Kênh chat')
           : 'Kênh chat';
