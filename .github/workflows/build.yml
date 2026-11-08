@@ -311,7 +311,7 @@ jobs:
       APP_VERSION: ${{ needs.metadata.outputs.version }}
       BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
       SOURCE_SHA: ${{ github.sha }}
-      RELEASE_TAG: ci-${{ github.run_id }}-${{ github.run_attempt }}
+      RELEASE_TAG: ${{ needs.metadata.outputs.is_stable == 'true' && needs.metadata.outputs.release_tag || format('ci-{0}-{1}', github.run_id, github.run_attempt) }}
       IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -357,7 +357,7 @@ jobs:
   publish-public:
     name: Publish complete stable binaries for app updates
     needs: [metadata, publish-private]
-    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' && secrets.PUBLIC_RELEASE_TOKEN != '' }}
+    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
     runs-on: ubuntu-24.04
     env:
       GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
@@ -365,20 +365,33 @@ jobs:
       RELEASE_TAG: ${{ needs.metadata.outputs.release_tag }}
     steps:
       - name: Check public publishing prerequisites
+        id: check_prereqs
         run: |
-          test -n "$GH_TOKEN" || { echo 'PUBLIC_RELEASE_TOKEN must grant Contents write access to the release-only public repository.' >&2; exit 1; }
-          gh repo view "$PUBLIC_RELEASE_REPOSITORY" --json visibility --jq '.visibility' | grep -qx PUBLIC
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+          if [ -z "$GH_TOKEN" ] || [ "$PUBLIC_RELEASE_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY" ]; then
+            echo "External release mirror token not configured; skipping external mirror publishing."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! gh repo view "$PUBLIC_RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            echo "External mirror $PUBLIC_RELEASE_REPOSITORY does not exist; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+      - if: steps.check_prereqs.outputs.skip != 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: binary-*-${{ github.run_attempt }}
           path: dist
           merge-multiple: true
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - if: steps.check_prereqs.outputs.skip != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: source-tools
           sparse-checkout: tool/release_metadata.py
           sparse-checkout-cone-mode: false
       - name: Require all nine binaries and publish release assets only
+        if: steps.check_prereqs.outputs.skip != 'true'
         env:
           BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
           SOURCE_SHA: ${{ github.sha }}
