@@ -22,3 +22,20 @@ class AndroidSigningTest(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('No development signing fallback', result.stderr)
             self.assertFalse((Path(temp) / 'android/app/key.properties').exists())
+
+    def test_stable_release_uses_repository_keystore_when_present(self):
+        with tempfile.TemporaryDirectory() as temp:
+            env = {key: value for key, value in os.environ.items() if not key.startswith('ANDROID_')}
+            env['RUNNER_TEMP'] = temp
+            app_dir = Path(temp) / 'android/app'
+            app_dir.mkdir(parents=True)
+            (app_dir / 'release.keystore').write_bytes(b'dummy-keystore-data')
+            (app_dir / 'key.properties').write_text('storePassword=testpass\nkeyPassword=testkey\nkeyAlias=testalias\n')
+            result = subprocess.run(['python3', str(ROOT / 'tool' / 'prepare_android_signing.py'), '--stable', 'true'], cwd=temp, env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('Using repository release keystore', result.stdout)
+            props_file = app_dir / 'key.properties'
+            self.assertTrue(props_file.exists())
+            content = props_file.read_text()
+            self.assertIn('storePassword=testpass', content)
+            self.assertIn('keyAlias=testalias', content)

@@ -24,13 +24,27 @@ def main():
     keystore = directory / 'release.keystore'
     required = ['ANDROID_KEYSTORE_BASE64', 'ANDROID_STORE_PASSWORD', 'ANDROID_KEY_PASSWORD', 'ANDROID_KEY_ALIAS']
     configured = all(os.environ.get(name) for name in required)
-    if args.stable == 'true' and not configured:
-        raise SystemExit('Stable Android releases require all four ANDROID signing secrets. No development signing fallback is permitted.')
+    repo_keystore = Path('android/app/release.keystore')
+    repo_properties = Path('android/app/key.properties')
     if configured:
         keystore.write_bytes(base64.b64decode(os.environ['ANDROID_KEYSTORE_BASE64'], validate=True))
         store_password = os.environ['ANDROID_STORE_PASSWORD']
         key_password = os.environ['ANDROID_KEY_PASSWORD']
         alias = os.environ['ANDROID_KEY_ALIAS']
+    elif repo_keystore.exists():
+        keystore.write_bytes(repo_keystore.read_bytes())
+        props = {}
+        if repo_properties.exists():
+            for line in repo_properties.read_text().splitlines():
+                if '=' in line and not line.startswith('#'):
+                    k, v = line.split('=', 1)
+                    props[k.strip()] = v.strip()
+        store_password = props.get('storePassword', 'vnlfsocialapp')
+        key_password = props.get('keyPassword', 'vnlfsocialapp')
+        alias = props.get('keyAlias', 'vnlf')
+        print('Using repository release keystore; APKs are signed with the permanent VNLF key.')
+    elif args.stable == 'true':
+        raise SystemExit('Stable Android releases require all four ANDROID signing secrets or a repository release keystore. No development signing fallback is permitted.')
     else:
         store_password = key_password = secrets.token_urlsafe(32)
         alias = 'ci-development'
