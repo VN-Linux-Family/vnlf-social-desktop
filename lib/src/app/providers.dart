@@ -167,9 +167,36 @@ String defaultApiBaseUrl() {
   return 'https://vietnamlinuxfamily.net';
 }
 
-final apiBaseUrlProvider = StateProvider<String>((ref) {
-  return defaultApiBaseUrl();
+final apiBaseUrlProvider = StateNotifierProvider<ApiBaseUrlController, String>((
+  ref,
+) {
+  return ApiBaseUrlController(ref.watch(preferencesStorageProvider));
 });
+
+class ApiBaseUrlController extends StateNotifier<String> {
+  ApiBaseUrlController(this._storage) : super(defaultApiBaseUrl()) {
+    _restore();
+  }
+
+  static const _storageKey = 'vnlf_server_base_url';
+  final PreferencesStorage _storage;
+
+  Future<void> _restore() async {
+    try {
+      final saved = await _storage.read(_storageKey);
+      if (saved != null && saved.isNotEmpty && mounted) {
+        state = saved;
+      }
+    } catch (_) {}
+  }
+
+  Future<void> setBaseUrl(String url) async {
+    state = url;
+    try {
+      await _storage.write(_storageKey, url);
+    } catch (_) {}
+  }
+}
 
 /// Opt-in live HTTP transport with session cookie persistence.
 final ioTransportProvider = Provider<IoApiTransport?>((ref) {

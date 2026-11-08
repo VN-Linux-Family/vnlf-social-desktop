@@ -33,6 +33,7 @@ final channelTimelineProvider =
       final controller = ChannelTimelineController(
         ref.watch(liveChannelRepositoryProvider),
         id,
+        onRead: () => ref.invalidate(liveChannelsProvider),
         onPollRealtime: (poll) => ref
             .read(pollStoreProvider.notifier)
             .ingestRealtime(poll, preserveViewerSelection: true),
@@ -113,9 +114,11 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     this._channelId, {
     this._capturePollRead,
     this.onPollRealtime,
+    this.onRead,
   }) : super(ChannelTimelineState());
   final PollReadTicket Function()? _capturePollRead;
   final void Function(Poll)? onPollRealtime;
+  final void Function()? onRead;
   final _messageReads = MessageReadReconciler<ChannelMessage>(
     idOf: (m) => m.id,
   );
@@ -230,6 +233,7 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
         _channelId,
         lastReadMessageId: lastReadMessageId ?? state.messages.lastOrNull?.id,
       );
+      onRead?.call();
     } catch (_) {
       // Non-blocking
     }

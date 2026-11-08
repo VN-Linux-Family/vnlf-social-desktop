@@ -21,6 +21,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
     this._readActiveUserId,
     this._onConversationSynced,
     this._onConversationRemoved,
+    this._onMarkRead,
     this._capturePollRead,
     this._onPollRealtime,
   }) : super(DmTimelineState(conversationId: conversationId));
@@ -30,6 +31,8 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
   final String? Function()? _readActiveUserId;
   final void Function(DmConversation)? _onConversationSynced;
   final void Function(String)? _onConversationRemoved;
+  final void Function(String conversationId, String? lastReadMessageId)?
+  _onMarkRead;
   final PollReadTicket Function()? _capturePollRead;
   final void Function(Poll, bool)? _onPollRealtime;
   final _messageReads = MessageReadReconciler<DmMessage>(idOf: (m) => m.id);
@@ -89,9 +92,7 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
       );
       _onConversationSynced?.call(syncedConversation);
 
-      if ((syncedConversation.unreadCount > 0 ||
-              syncedConversation.firstUnreadMessageId != null) &&
-          mergedMessages.isNotEmpty) {
+      if (mergedMessages.isNotEmpty) {
         unawaited(markRead(lastReadMessageId: mergedMessages.last.id));
       }
     } catch (error) {
@@ -221,6 +222,10 @@ class DmTimelineController extends StateNotifier<DmTimelineState> {
         state = state.copyWith(conversation: updated);
         _onConversationSynced?.call(updated);
       }
+      _onMarkRead?.call(
+        state.conversationId,
+        receipt.lastReadMessageId ?? targetId,
+      );
     } catch (_) {
       // Read-sync is non-blocking; timeline stays usable if it fails.
     }

@@ -60,6 +60,11 @@ final dmTimelineProvider = StateNotifierProvider.autoDispose
         onConversationSynced: (conversation) {
           ref.read(dmInboxProvider.notifier).upsertConversation(conversation);
         },
+        onMarkRead: (convId, lastMsgId) {
+          ref
+              .read(dmInboxProvider.notifier)
+              .markConversationRead(convId, lastReadMessageId: lastMsgId);
+        },
         capturePollRead: () => ref.read(pollStoreProvider.notifier).beginRead(),
         onPollRealtime: (poll, preserve) => ref
             .read(pollStoreProvider.notifier)

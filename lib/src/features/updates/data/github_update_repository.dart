@@ -14,7 +14,7 @@ typedef ReleaseTransport = Future<ReleaseResponse> Function(Uri uri);
 final class GitHubUpdateRepository implements UpdateRepository {
   GitHubUpdateRepository({
     ReleaseTransport? transport,
-    this.repository = 'VN-Linux-Family/vnlf-social-app',
+    this.repository = 'VN-Linux-Family/vnlf-social-desktop',
   }) : _transport = transport ?? _getRelease;
   final ReleaseTransport _transport;
   final String repository;

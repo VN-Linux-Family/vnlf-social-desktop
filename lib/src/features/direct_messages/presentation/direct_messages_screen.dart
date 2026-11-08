@@ -47,46 +47,54 @@ class DirectMessagesScreen extends ConsumerWidget {
 
     final inbox = ref.watch(dmInboxProvider);
     final id = conversationId;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final viewport = MediaQuery.sizeOf(context).width;
-        final wide = viewport > 840 && constraints.maxWidth >= 650;
-        final directory = CommunicationDirectory(activeConversationId: id);
-        if (!wide && id == null) return directory;
-        return Row(
-          children: [
-            if (wide) ...[
-              SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
-              const VerticalDivider(width: 1),
-            ],
-            Expanded(
-              child: id == null
-                  ? Center(
-                      child: Text(
-                        dmText(
-                          context,
-                          'Chọn một cuộc trò chuyện',
-                          'Choose a conversation',
+    return PopScope(
+      canPop: id == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go('/messages');
+        }
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewport = MediaQuery.sizeOf(context).width;
+          final wide = viewport > 840 && constraints.maxWidth >= 650;
+          final directory = CommunicationDirectory(activeConversationId: id);
+          if (!wide && id == null) return directory;
+          return Row(
+            children: [
+              if (wide) ...[
+                SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
+                const VerticalDivider(width: 1),
+              ],
+              Expanded(
+                child: id == null
+                    ? Center(
+                        child: Text(
+                          dmText(
+                            context,
+                            'Chọn một cuộc trò chuyện',
+                            'Choose a conversation',
+                          ),
+                        ),
+                      )
+                    : DmRealtimeBinding(
+                        conversationId: id,
+                        child: _DmConversationPane(
+                          key: ValueKey('${session.userId}-$id'),
+                          conversationId: id,
+                          conversation: inbox.conversations
+                              .where((item) => item.id == id)
+                              .firstOrNull,
+                          viewerUserId: session.userId,
+                          wide: wide,
+                          onOpenInboxSheet: () => context.go('/messages'),
                         ),
                       ),
-                    )
-                  : DmRealtimeBinding(
-                      conversationId: id,
-                      child: _DmConversationPane(
-                        key: ValueKey('${session.userId}-$id'),
-                        conversationId: id,
-                        conversation: inbox.conversations
-                            .where((item) => item.id == id)
-                            .firstOrNull,
-                        viewerUserId: session.userId,
-                        wide: wide,
-                        onOpenInboxSheet: () => context.go('/messages'),
-                      ),
-                    ),
-            ),
-          ],
-        );
-      },
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

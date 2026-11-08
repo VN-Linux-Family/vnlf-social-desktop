@@ -43,128 +43,140 @@ class LiveChannelsScreen extends ConsumerWidget {
     final channel = channels.valueOrNull
         ?.where((item) => item.slug == channelSlug && !item.isArchived)
         .firstOrNull;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final viewport = MediaQuery.sizeOf(context).width;
-        final wide = viewport > 840 && constraints.maxWidth >= 650;
-        final directory = CommunicationDirectory(activeChannelId: channel?.id);
-        if (!wide && channelSlug == null) return directory;
-        return Row(
-          children: [
-            if (wide) ...[
-              SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
-              const VerticalDivider(width: 1),
-            ],
-            Expanded(
-              child: channel == null
-                  ? Center(
-                      child: channels.isLoading
-                          ? const CircularProgressIndicator()
-                          : channelSlug == null
-                          ? Text(
-                              channelText(
-                                context,
-                                'Chọn một kênh hoặc cuộc trò chuyện',
-                                'Choose a channel or conversation',
-                              ),
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  channelText(
-                                    context,
-                                    'Không mở được kênh này',
-                                    'Could not open this channel',
-                                  ),
+    return PopScope(
+      canPop: channelSlug == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go('/channels');
+        }
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewport = MediaQuery.sizeOf(context).width;
+          final wide = viewport > 840 && constraints.maxWidth >= 650;
+          final directory = CommunicationDirectory(
+            activeChannelId: channel?.id,
+          );
+          if (!wide && channelSlug == null) return directory;
+          return Row(
+            children: [
+              if (wide) ...[
+                SizedBox(width: viewport >= 1181 ? 240 : 205, child: directory),
+                const VerticalDivider(width: 1),
+              ],
+              Expanded(
+                child: channel == null
+                    ? Center(
+                        child: channels.isLoading
+                            ? const CircularProgressIndicator()
+                            : channelSlug == null
+                            ? Text(
+                                channelText(
+                                  context,
+                                  'Chọn một kênh hoặc cuộc trò chuyện',
+                                  'Choose a channel or conversation',
                                 ),
-                                TextButton(
-                                  onPressed: () =>
-                                      ref.invalidate(liveChannelsProvider),
-                                  child: Text(
+                              )
+                            : Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
                                     channelText(
                                       context,
-                                      'Thử lại',
-                                      'Try again',
+                                      'Không mở được kênh này',
+                                      'Could not open this channel',
                                     ),
                                   ),
-                                ),
-                                if (!wide)
                                   TextButton(
-                                    onPressed: () => context.go('/channels'),
+                                    onPressed: () =>
+                                        ref.invalidate(liveChannelsProvider),
                                     child: Text(
                                       channelText(
                                         context,
-                                        'Danh sách trò chuyện',
-                                        'Conversation list',
+                                        'Thử lại',
+                                        'Try again',
                                       ),
                                     ),
                                   ),
-                              ],
-                            ),
-                    )
-                  : Column(
-                      children: [
-                        SizedBox(
-                          height: 54,
-                          child: Row(
-                            children: [
-                              if (!wide)
+                                  if (!wide)
+                                    TextButton(
+                                      onPressed: () => context.go('/channels'),
+                                      child: Text(
+                                        channelText(
+                                          context,
+                                          'Danh sách trò chuyện',
+                                          'Conversation list',
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                      )
+                    : Column(
+                        children: [
+                          SizedBox(
+                            height: 54,
+                            child: Row(
+                              children: [
+                                if (!wide)
+                                  IconButton(
+                                    tooltip: channelText(
+                                      context,
+                                      'Danh sách trò chuyện',
+                                      'Conversation list',
+                                    ),
+                                    onPressed: () => context.go('/channels'),
+                                    icon: const Icon(Icons.arrow_back),
+                                  ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    '#${channel.slug}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                                 IconButton(
                                   tooltip: channelText(
                                     context,
-                                    'Danh sách trò chuyện',
-                                    'Conversation list',
+                                    'Làm mới tin nhắn',
+                                    'Refresh messages',
                                   ),
-                                  onPressed: () => context.go('/channels'),
-                                  icon: const Icon(Icons.arrow_back),
+                                  icon: const Icon(Icons.refresh),
+                                  onPressed: () {
+                                    ref.read(apiClientProvider).clearCache();
+                                    ref
+                                        .read(
+                                          channelTimelineProvider(channel.id)
+                                              .notifier,
+                                        )
+                                        .refresh();
+                                  },
                                 ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  '#${channel.slug}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: channelText(
-                                  context,
-                                  'Làm mới tin nhắn',
-                                  'Refresh messages',
-                                ),
-                                icon: const Icon(Icons.refresh),
-                                onPressed: () {
-                                  ref.read(apiClientProvider).clearCache();
-                                  ref
-                                      .read(
-                                        channelTimelineProvider(channel.id)
-                                            .notifier,
-                                      )
-                                      .refresh();
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: ChannelRealtimeBinding(
-                            channelId: channel.id,
-                            child: _ChannelHistory(
-                              key: ValueKey('${session.userId}-${channel.id}'),
-                              channel: channel,
-                              userId: session.userId,
-                              canPost: channel.canPost(session.role),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
-        );
-      },
+                          const Divider(height: 1),
+                          Expanded(
+                            child: ChannelRealtimeBinding(
+                              channelId: channel.id,
+                              child: _ChannelHistory(
+                                key: ValueKey(
+                                  '${session.userId}-${channel.id}',
+                                ),
+                                channel: channel,
+                                userId: session.userId,
+                                canPost: channel.canPost(session.role),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

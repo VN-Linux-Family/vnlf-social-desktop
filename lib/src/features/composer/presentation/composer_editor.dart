@@ -127,6 +127,11 @@ class ComposerEditorState extends State<ComposerEditor> {
             minHeight: 180,
             padding: const EdgeInsets.all(16),
             embedBuilder: _embed,
+            contextMenuBuilder: (context, editorState) =>
+                AdaptiveTextSelectionToolbar.buttonItems(
+                  buttonItems: editorState.contextMenuButtonItems,
+                  anchors: editorState.contextMenuAnchors,
+                ),
           ),
         ],
       ),

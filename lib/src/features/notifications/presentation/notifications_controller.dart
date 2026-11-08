@@ -29,6 +29,9 @@ final notificationsControllerProvider =
       final account = ref.watch(sessionStateProvider);
       final controller = NotificationsController(
         ref.watch(notificationsRepositoryProvider),
+        onUnreadCountChanged: () {
+          ref.invalidate(unreadNotificationsCountProvider);
+        },
       );
       if (account != null) controller.refresh();
       return controller;
@@ -71,8 +74,10 @@ final class NotificationsState {
 }
 
 class NotificationsController extends StateNotifier<NotificationsState> {
-  NotificationsController(this._repository) : super(NotificationsState());
+  NotificationsController(this._repository, {this.onUnreadCountChanged})
+    : super(NotificationsState());
   final NotificationsRepository _repository;
+  final void Function()? onUnreadCountChanged;
   bool _seen = false;
   Future<void> refresh({bool? unreadOnly, NotificationKind? kind}) =>
       _load(reset: true, unreadOnly: unreadOnly, kind: kind);
@@ -144,6 +149,7 @@ class NotificationsController extends StateNotifier<NotificationsState> {
             ? 0
             : (state.unreadCount - changed).clamp(0, state.unreadCount),
       );
+      onUnreadCountChanged?.call();
     } catch (error) {
       if (mounted) state = state.copy(busy: false, failure: _failure(error));
     }

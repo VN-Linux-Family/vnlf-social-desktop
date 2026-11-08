@@ -227,6 +227,10 @@ class ProjectsScreen extends ConsumerWidget {
             runSpacing: 8,
             children: [
               ChoiceChip(
+                selectedColor: colors.brandSoft,
+                checkmarkColor: colors.brand,
+                side: BorderSide(color: colors.line),
+                labelStyle: VnlfTypography.control(colors.ink),
                 label: Text(english ? 'All' : 'Tất cả'),
                 selected: filters.type.isEmpty,
                 onSelected: (_) {
@@ -239,6 +243,9 @@ class ProjectsScreen extends ConsumerWidget {
                     filters.type == type)
                   ChoiceChip(
                     selectedColor: colors.brandSoft,
+                    checkmarkColor: colors.brand,
+                    side: BorderSide(color: colors.line),
+                    labelStyle: VnlfTypography.control(colors.ink),
                     label: Text(
                       '${(english ? englishTypeLabels : typeLabels)[type]} (${directory.types.where((f) => f.name == type).fold<int>(0, (n, f) => n + f.count)})',
                     ),

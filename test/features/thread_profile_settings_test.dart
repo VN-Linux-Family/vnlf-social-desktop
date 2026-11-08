@@ -152,10 +152,7 @@ void main() {
     router.go('/settings');
     await tester.pumpAndSettle();
     expect(find.text('Offline fixture'), findsOneWidget);
-    expect(
-      find.text('VNLF Flutter v0.1.0 (Bản thử nghiệm cộng đồng)'),
-      findsOneWidget,
-    );
+    expect(find.text('Phiên bản đang dùng: 0.1.0'), findsOneWidget);
     await tester.tap(find.text('Tối'));
     await tester.pumpAndSettle();
     expect(

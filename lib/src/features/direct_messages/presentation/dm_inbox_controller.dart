@@ -137,6 +137,27 @@ class DmInboxController extends StateNotifier<DmInboxState> {
     state = state.copyWith(conversations: _sortConversations(next));
   }
 
+  void markConversationRead(
+    String conversationId, {
+    String? lastReadMessageId,
+  }) {
+    if (!_isSessionValid()) return;
+    final existing = state.conversations;
+    final next = <DmConversation>[
+      for (final item in existing)
+        if (item.id == conversationId)
+          item.copyWith(
+            unreadCount: 0,
+            clearFirstUnread: true,
+            lastReadMessageId: lastReadMessageId ?? item.lastReadMessageId,
+            replaceLastRead: lastReadMessageId != null,
+          )
+        else
+          item,
+    ];
+    state = state.copyWith(conversations: _sortConversations(next));
+  }
+
   void removeConversation(String conversationId) {
     if (!_isSessionValid()) return;
     final next = state.conversations

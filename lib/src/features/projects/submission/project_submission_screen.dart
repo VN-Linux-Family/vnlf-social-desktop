@@ -288,8 +288,9 @@ class _ProjectSubmissionScreenState
     }
     final state = controller!;
     final locked = state.busy || state.uncertain || state.receipt != null;
+    final mobile = MediaQuery.sizeOf(context).width < 840;
     return Scaffold(
-      appBar: AppBar(title: const Text('Giới thiệu dự án')),
+      appBar: mobile ? null : AppBar(title: const Text('Giới thiệu dự án')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 780),

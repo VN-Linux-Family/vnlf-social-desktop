@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +8,7 @@ import '../../../core/android_background_service.dart';
 import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
-import '../../notifications/presentation/push_notification_status_panel.dart';
+import '../../notifications/presentation/push_notifications_providers.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -261,63 +262,78 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               const TextSizeSettings(),
               const SizedBox(height: 24),
-              Text(
-                english ? 'About the app' : 'Thông tin ứng dụng',
-                style: VnlfTypography.h2(colors.ink),
-              ),
-              const SizedBox(height: 12),
-              Text('VNLF Flutter v$appVersion (Bản thử nghiệm cộng đồng)'),
-              const SizedBox(height: 16),
-              Text(
-                english ? 'Server mode' : 'Chế độ máy chủ',
-                style: VnlfTypography.h3(colors.ink),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                offlineFeatures
-                    ? 'Offline fixture'
-                    : (english
-                          ? 'Server: ${ref.watch(apiBaseUrlProvider)}'
-                          : 'Máy chủ: ${ref.watch(apiBaseUrlProvider)}'),
-              ),
-              if (!offlineFeatures) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      selectedColor: colors.brandSoft,
-                      checkmarkColor: colors.brand,
-                      side: BorderSide(color: colors.line),
-                      labelStyle: VnlfTypography.control(colors.ink),
-                      label: const Text('Production'),
-                      selected:
-                          ref.watch(apiBaseUrlProvider) ==
-                          'https://vietnamlinuxfamily.net',
-                      onSelected: (_) {
-                        ref.read(apiClientProvider).clearCache();
-                        ref.read(apiBaseUrlProvider.notifier).state =
-                            'https://vietnamlinuxfamily.net';
-                      },
-                    ),
-                    ChoiceChip(
-                      selectedColor: colors.brandSoft,
-                      checkmarkColor: colors.brand,
-                      side: BorderSide(color: colors.line),
-                      labelStyle: VnlfTypography.control(colors.ink),
-                      label: const Text('Local (127.0.0.1:3001)'),
-                      selected:
-                          ref.watch(apiBaseUrlProvider) ==
-                          'http://127.0.0.1:3001',
-                      onSelected: (_) {
-                        ref.read(apiClientProvider).clearCache();
-                        ref.read(apiBaseUrlProvider.notifier).state =
-                            'http://127.0.0.1:3001';
-                      },
-                    ),
-                  ],
+              if (!kReleaseMode) ...[
+                const SizedBox(height: 24),
+                Text(
+                  english ? 'Server mode (Dev)' : 'Chế độ máy chủ (Thử nghiệm)',
+                  style: VnlfTypography.h2(colors.ink),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  offlineFeatures
+                      ? 'Offline fixture'
+                      : (english
+                            ? 'Server: ${ref.watch(apiBaseUrlProvider)}'
+                            : 'Máy chủ: ${ref.watch(apiBaseUrlProvider)}'),
+                  style: VnlfTypography.meta(colors.muted),
+                ),
+                if (!offlineFeatures) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        selectedColor: colors.brandSoft,
+                        checkmarkColor: colors.brand,
+                        side: BorderSide(color: colors.line),
+                        labelStyle: VnlfTypography.control(colors.ink),
+                        label: const Text('Production'),
+                        selected:
+                            ref.watch(apiBaseUrlProvider) ==
+                            'https://vietnamlinuxfamily.net',
+                        onSelected: (_) {
+                          ref.read(apiClientProvider).clearCache();
+                          ref
+                              .read(apiBaseUrlProvider.notifier)
+                              .setBaseUrl('https://vietnamlinuxfamily.net');
+                        },
+                      ),
+                      ChoiceChip(
+                        selectedColor: colors.brandSoft,
+                        checkmarkColor: colors.brand,
+                        side: BorderSide(color: colors.line),
+                        labelStyle: VnlfTypography.control(colors.ink),
+                        label: const Text('Local (127.0.0.1:3001)'),
+                        selected:
+                            ref.watch(apiBaseUrlProvider) ==
+                            'http://127.0.0.1:3001',
+                        onSelected: (_) {
+                          ref.read(apiClientProvider).clearCache();
+                          ref
+                              .read(apiBaseUrlProvider.notifier)
+                              .setBaseUrl('http://127.0.0.1:3001');
+                        },
+                      ),
+                      ChoiceChip(
+                        selectedColor: colors.brandSoft,
+                        checkmarkColor: colors.brand,
+                        side: BorderSide(color: colors.line),
+                        labelStyle: VnlfTypography.control(colors.ink),
+                        label: const Text('Local SSL (localhost.direct:3002)'),
+                        selected:
+                            ref.watch(apiBaseUrlProvider) ==
+                            'https://api.localhost.direct:3002',
+                        onSelected: (_) {
+                          ref.read(apiClientProvider).clearCache();
+                          ref
+                              .read(apiBaseUrlProvider.notifier)
+                              .setBaseUrl('https://api.localhost.direct:3002');
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ],
               const SizedBox(height: 8),
               Text(
@@ -374,12 +390,11 @@ class SettingsScreen extends ConsumerWidget {
                       .setAutostart(val),
                 ),
               ],
-              if (AndroidBackgroundService.isAndroid) ...[
+              if (AndroidBackgroundService.isAndroid ||
+                  (!offlineFeatures && session != null)) ...[
                 const SizedBox(height: 16),
                 Text(
-                  english
-                      ? 'Android Background Sync'
-                      : 'Đồng bộ & Thông báo ngầm Android',
+                  english ? 'Notifications' : 'Thông báo',
                   style: VnlfTypography.h2(colors.ink),
                 ),
                 const SizedBox(height: 8),
@@ -387,26 +402,31 @@ class SettingsScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: colors.brand,
                   title: Text(
-                    english
-                        ? 'Keep connection alive in background'
-                        : 'Duy trì kết nối nền nhận thông báo',
+                    english ? 'Push notifications' : 'Thông báo đẩy',
                     style: VnlfTypography.body(colors.ink),
                   ),
                   subtitle: Text(
                     english
-                        ? 'Maintain lightweight background connection for instant DMs and mentions'
-                        : 'Duy trì kết nối ngầm nhẹ nhàng để nhận tin nhắn và thông báo tức thì',
+                        ? 'Receive instant direct messages, mentions, and updates'
+                        : 'Nhận tin nhắn, phản hồi và cập nhật quan trọng tức thì',
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(androidBackgroundSyncProvider),
-                  onChanged: (val) => ref
-                      .read(androidBackgroundSyncProvider.notifier)
-                      .toggle(val),
+                  onChanged: (val) {
+                    ref
+                        .read(androidBackgroundSyncProvider.notifier)
+                        .toggle(val);
+                    if (val) {
+                      ref
+                          .read(pushRegistrationControllerProvider.notifier)
+                          .registerDevice(force: true);
+                    } else {
+                      ref
+                          .read(pushRegistrationControllerProvider.notifier)
+                          .unregisterDevice();
+                    }
+                  },
                 ),
-              ],
-              if (!offlineFeatures && session != null) ...[
-                const SizedBox(height: 16),
-                const PushNotificationStatusPanel(),
               ],
             ],
           ),

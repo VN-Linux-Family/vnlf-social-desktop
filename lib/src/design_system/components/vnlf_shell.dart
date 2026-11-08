@@ -349,83 +349,85 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 backgroundColor: colors.bg,
                 surfaceTintColor: Colors.transparent,
                 child: SafeArea(
-                  child: VnlfDesktopSidebar(
-                    activeDestination: activeDestination,
-                    unreadDestinations: unreadDestinations,
-                    onDestinationSelected: (dest) {
-                      Navigator.of(context).maybePop();
-                      onDestinationSelected?.call(dest);
-                    },
-                    themeMode: themeMode,
-                    onThemeModeChanged: onThemeModeChanged,
-                    onProfileTap: () {
-                      Navigator.of(context).maybePop();
-                      onProfileTap?.call();
-                    },
-                    onSettingsTap: () {
-                      Navigator.of(context).maybePop();
-                      onSettingsTap?.call();
-                    },
-                    onLogoutTap: onLogoutTap == null
-                        ? null
-                        : () {
-                            Navigator.of(context).maybePop();
-                            onLogoutTap?.call();
-                          },
-                    logoutLabel: logoutLabel,
-                    onHelpTap: () {
-                      Navigator.of(context).maybePop();
-                      onHelpTap?.call();
-                    },
-                    onFeedbackTap: () {
-                      Navigator.of(context).maybePop();
-                      onFeedbackTap?.call();
-                    },
-                    onSupportTap: () {
-                      Navigator.of(context).maybePop();
-                      onSupportTap?.call();
-                    },
-                    onFacebookTap: () {
-                      Navigator.of(context).maybePop();
-                      onFacebookTap?.call();
-                    },
-                    onTelegramTap: () {
-                      Navigator.of(context).maybePop();
-                      onTelegramTap?.call();
-                    },
-                    onDiscordTap: () {
-                      Navigator.of(context).maybePop();
-                      onDiscordTap?.call();
-                    },
-                    isDrawer: true,
-                    destinationLabels: destinationLabels,
-                    destinationSemanticLabels: destinationSemanticLabels,
-                    brandTitlePrefix: brandTitlePrefix,
-                    brandTitleAccent: brandTitleAccent,
-                    brandLogoSemanticLabel: brandLogoSemanticLabel,
-                    loginLabel: loginLabel,
-                    loginSubtitleLabel: loginSubtitleLabel,
-                    supportLabel: supportLabel,
-                    supportBadgeText: supportBadgeText,
-                    supportSemanticLabel: supportSemanticLabel,
-                    feedbackLabel: feedbackLabel,
-                    feedbackSemanticLabel: feedbackSemanticLabel,
-                    socialSectionLabel: socialSectionLabel,
-                    facebookBadgeLabel: facebookBadgeLabel,
-                    facebookSemanticLabel: facebookSemanticLabel,
-                    telegramSemanticLabel: telegramSemanticLabel,
-                    discordSemanticLabel: discordSemanticLabel,
-                    settingsLabel: settingsLabel,
-                    settingsSemanticLabel: settingsSemanticLabel,
-                    helpLabel: helpLabel,
-                    helpSemanticLabel: helpSemanticLabel,
-                    loginUtilitySemanticLabel: loginUtilitySemanticLabel,
-                    lightThemeTooltip: lightThemeTooltip,
-                    darkThemeTooltip: darkThemeTooltip,
-                    systemThemeTooltip: systemThemeTooltip,
-                    themePickerSemanticLabel: themePickerSemanticLabel,
-                    profileSemanticLabel: profileSemanticLabel,
-                    semanticLabel: leftSidebarSemanticLabel,
+                  child: Builder(
+                    builder: (drawerCtx) => VnlfDesktopSidebar(
+                      activeDestination: activeDestination,
+                      unreadDestinations: unreadDestinations,
+                      onDestinationSelected: (dest) {
+                        Navigator.of(drawerCtx).maybePop();
+                        onDestinationSelected?.call(dest);
+                      },
+                      themeMode: themeMode,
+                      onThemeModeChanged: onThemeModeChanged,
+                      onProfileTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onProfileTap?.call();
+                      },
+                      onSettingsTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onSettingsTap?.call();
+                      },
+                      onLogoutTap: onLogoutTap == null
+                          ? null
+                          : () {
+                              Navigator.of(drawerCtx).maybePop();
+                              onLogoutTap?.call();
+                            },
+                      logoutLabel: logoutLabel,
+                      onHelpTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onHelpTap?.call();
+                      },
+                      onFeedbackTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onFeedbackTap?.call();
+                      },
+                      onSupportTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onSupportTap?.call();
+                      },
+                      onFacebookTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onFacebookTap?.call();
+                      },
+                      onTelegramTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onTelegramTap?.call();
+                      },
+                      onDiscordTap: () {
+                        Navigator.of(drawerCtx).maybePop();
+                        onDiscordTap?.call();
+                      },
+                      isDrawer: true,
+                      destinationLabels: destinationLabels,
+                      destinationSemanticLabels: destinationSemanticLabels,
+                      brandTitlePrefix: brandTitlePrefix,
+                      brandTitleAccent: brandTitleAccent,
+                      brandLogoSemanticLabel: brandLogoSemanticLabel,
+                      loginLabel: loginLabel,
+                      loginSubtitleLabel: loginSubtitleLabel,
+                      supportLabel: supportLabel,
+                      supportBadgeText: supportBadgeText,
+                      supportSemanticLabel: supportSemanticLabel,
+                      feedbackLabel: feedbackLabel,
+                      feedbackSemanticLabel: feedbackSemanticLabel,
+                      socialSectionLabel: socialSectionLabel,
+                      facebookBadgeLabel: facebookBadgeLabel,
+                      facebookSemanticLabel: facebookSemanticLabel,
+                      telegramSemanticLabel: telegramSemanticLabel,
+                      discordSemanticLabel: discordSemanticLabel,
+                      settingsLabel: settingsLabel,
+                      settingsSemanticLabel: settingsSemanticLabel,
+                      helpLabel: helpLabel,
+                      helpSemanticLabel: helpSemanticLabel,
+                      loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+                      lightThemeTooltip: lightThemeTooltip,
+                      darkThemeTooltip: darkThemeTooltip,
+                      systemThemeTooltip: systemThemeTooltip,
+                      themePickerSemanticLabel: themePickerSemanticLabel,
+                      profileSemanticLabel: profileSemanticLabel,
+                      semanticLabel: leftSidebarSemanticLabel,
+                    ),
                   ),
                 ),
               ),
@@ -483,10 +485,24 @@ class VnlfAdaptiveShell extends StatelessWidget {
       },
     );
 
+    final scopedShell = PopScope(
+      canPop: activeDestination == VnlfNavDestination.feed && onBack == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          if (onBack != null) {
+            onBack!();
+          } else if (onDestinationSelected != null) {
+            onDestinationSelected!(VnlfNavDestination.feed);
+          }
+        }
+      },
+      child: shell,
+    );
+
     if (semanticLabel == null) {
-      return shell;
+      return scopedShell;
     }
-    return Semantics(label: semanticLabel, container: true, child: shell);
+    return Semantics(label: semanticLabel, container: true, child: scopedShell);
   }
 }
 

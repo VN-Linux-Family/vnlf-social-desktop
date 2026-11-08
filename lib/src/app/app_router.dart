@@ -189,12 +189,16 @@ GoRouter createMainRouter({
                   state.uri.path.startsWith('/user/') ||
                   state.uri.path.startsWith('/users/') ||
                   state.uri.path.startsWith('/u/') ||
+                  state.uri.path == '/feedback' ||
                   state.uri.path.startsWith('/feedback/') ||
                   state.uri.path == '/search';
               final titleText = threadId != null
                   ? (english ? 'Post' : 'Bài viết')
                   : state.uri.path == '/settings'
                   ? (english ? 'Settings' : 'Cài đặt')
+                  : state.uri.path == '/feedback' ||
+                        state.uri.path.startsWith('/feedback/')
+                  ? (english ? 'My feedback' : 'Góp ý của tôi')
                   : state.uri.path.startsWith('/profile/') ||
                         state.uri.path.startsWith('/user/') ||
                         state.uri.path.startsWith('/users/') ||
@@ -275,9 +279,7 @@ GoRouter createMainRouter({
                     context.push('/login');
                   }
                 },
-                showMobileHeader:
-                    !communicationDetail &&
-                    !state.uri.path.startsWith('/feedback'),
+                showMobileHeader: !communicationDetail,
                 centerChildHandlesScroll:
                     communication ||
                     const [
@@ -1152,5 +1154,7 @@ void _showNotificationsModal(BuildContext context, WidgetRef ref) {
     context: context,
     isScrollControlled: true,
     builder: (_) => const NotificationsSheet(),
-  );
+  ).whenComplete(() {
+    ref.invalidate(unreadNotificationsCountProvider);
+  });
 }

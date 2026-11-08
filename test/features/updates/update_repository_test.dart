@@ -49,15 +49,15 @@ void main() {
           'tag_name': 'v1.0.0',
           'draft': false,
           'prerelease': false,
-          'html_url': 'https://github.com/VN-Linux-Family/vnlf-social-app/releases/tag/v1.0.0',
+          'html_url': 'https://github.com/VN-Linux-Family/vnlf-social-desktop/releases/tag/v1.0.0',
           'assets': [
             {
               'name': 'vnlf-social-1.0.0-linux-x64.tar.gz',
-              'browser_download_url': 'https://github.com/VN-Linux-Family/vnlf-social-app/releases/download/v1.0.0/linux-x64.tar.gz',
+              'browser_download_url': 'https://github.com/VN-Linux-Family/vnlf-social-desktop/releases/download/v1.0.0/linux-x64.tar.gz',
             },
             {
               'name': 'vnlf-social-1.0.0-linux-arm64.tar.gz',
-              'browser_download_url': 'https://github.com/VN-Linux-Family/vnlf-social-app/releases/download/v1.0.0/linux-arm64.tar.gz',
+              'browser_download_url': 'https://github.com/VN-Linux-Family/vnlf-social-desktop/releases/download/v1.0.0/linux-arm64.tar.gz',
             },
           ],
         }),
@@ -77,7 +77,7 @@ void main() {
         200,
         jsonEncode({
           'tag_name': 'v0.1.0',
-          'html_url': 'https://github.com/VN-Linux-Family/vnlf-social-app/releases/tag/v0.1.0',
+          'html_url': 'https://github.com/VN-Linux-Family/vnlf-social-desktop/releases/tag/v0.1.0',
           'assets': <Object>[],
         }),
       ),
