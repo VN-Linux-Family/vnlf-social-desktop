@@ -1,21 +1,16 @@
 # Build and release
 
-Source commits are pushed to both private repositories:
+Source commits are pushed to both repositories:
 `VN-Linux-Family/vnlf-social-desktop` and `luank3/vnlfsocialapp`.
-Only `luank3/vnlfsocialapp` executes workflows. The organization's build and CI
-workflows remain manually disabled; every workflow job also checks the exact
-personal repository before allocating a runner. The repository owner pays for
-Actions, regardless of who pushes or dispatches it.
-Every packaging workflow stores its available binaries in the executing private
-repository's release assets. Organization asset mirroring uses the explicit
-recovery command below or `ORG_RELEASE_TOKEN` after the completion workflow is
-on the personal default branch. No personal Actions secrets are configured yet;
-automatic organization release mirroring is therefore not active.
+Both repositories are public and execute the CI and release packaging workflows.
+Every packaging workflow stores its available binaries in the executing
+repository's release assets. Public stable releases (`v*` tags) are published
+directly in [VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases),
+which the in-app updater queries at `/repos/VN-Linux-Family/vnlf-social-desktop/releases/latest`.
 Incomplete builds remain drafts with an explicit missing-target inventory.
-Private release tags include run ID and attempt, including stable builds, so reruns
-do not overwrite a previous build. Public stable tags retain their semantic version.
-Only complete stable tags can be promoted to the separate public, release-only
-`VN-Linux-Family/vnlf-social-app` repository. No source checkout is uploaded there.
+Development release tags include run ID and attempt (`ci-<run_id>-<attempt>`) so reruns
+do not overwrite a previous build. Public stable tags retain their semantic version (`v0.1.0`)
+and are marked as the latest release once all nine platform targets complete.
 
 ## Local resource budget
 
@@ -92,33 +87,20 @@ can be checked independently. Stable promotion requires all nine binaries.
 
 ## Required owner setup
 
-The current GitHub identity has push access to the private source repository,
-but GitHub rejected organization repository creation with HTTP 403. An organization
-owner must create `VN-Linux-Family/vnlf-social-app` as public, initialized with only
-a README. The application source remains private.
+`VN-Linux-Family/vnlf-social-desktop` is the public repository for both source
+code and official release binaries.
 
-Configure `luank3/vnlfsocialapp` Actions secrets:
+Configure `VN-Linux-Family/vnlf-social-desktop` and `luank3/vnlfsocialapp` Actions secrets:
 
-- `PRIVATE_RELEASE_TOKEN`: needed when building a branch whose workflow changes
-  are not on the default branch. Use a fine-grained token scoped only to this
-  private repository, with Contents and Workflows write permissions. GitHub's
-  release API applies the workflow-file permission guard when creating a tag at
-  such a commit; the built-in token cannot request Workflows write. Builds on the
-  default branch can use the normal `GITHUB_TOKEN`. Never store a broad local CLI
-  token in Actions. See the [release API permission requirements](https://docs.github.com/en/rest/releases/releases#create-a-release).
-- `PUBLIC_RELEASE_TOKEN`: a fine-grained token or equivalent app token with
-  Contents write permission **only** for the public release repository. The
-  private repository's normal `GITHUB_TOKEN` cannot publish to a different repo.
-- `ORG_RELEASE_TOKEN`: optional token scoped only to the organization private
-  repository, with Contents write and Workflows write if tag creation requires
-  it. Source Actions/artifact reads retain the personal repository token;
-  destination release operations alone receive the organization token.
-  Used only by completion recovery to mirror binary assets; it does not execute
-  an organization workflow. Local explicit recovery can mirror assets without
-  installing any token into Actions.
+- `PRIVATE_RELEASE_TOKEN` (optional): needed only when building a branch whose
+  workflow changes are not on the default branch. Builds on the default branch
+  and release tags use the standard `GITHUB_TOKEN`.
+- `ORG_RELEASE_TOKEN` (optional): used only by completion recovery to mirror
+  binary assets across repositories when needed.
 - `ANDROID_KEYSTORE_BASE64`, `ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD`,
-  `ANDROID_KEY_ALIAS`: the intended stable Android signing identity. Keep key
-  material out of commits, command output, issue text, and release notes.
+  `ANDROID_KEY_ALIAS`: the official VNLF Android release signing identity so
+  every `.apk` release upgrades cleanly in-place without uninstalling prior versions.
+  Keep key material out of commits, command output, issue text, and release notes.
 
 No account-wide CLI token is copied into Actions secrets. Stable Android builds
 fail clearly without configured signing. Development CI can generate an explicit

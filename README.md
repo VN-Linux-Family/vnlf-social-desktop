@@ -33,11 +33,10 @@ KWallet service. A headless session without that service cannot verify account
 sign-in or secure draft recovery. The app reports storage failures; credentials
 must never be saved in source, fixtures or logs.
 
-Private CI binaries are stored in
-[VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases).
-Stable community updates are intended for the separate public release-only
-`VN-Linux-Family/vnlf-social-app` repository; organization setup and stable signing
-remain release gates. See [distribution instructions](docs/BUILD_AND_RELEASE.md).
+Release binaries and community updates are published directly in
+[VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases),
+and the in-app updater fetches stable updates from that public repository. See
+[distribution instructions](docs/BUILD_AND_RELEASE.md).
 
 `assets/fonts/` contains Be Vietnam Pro, distributed under the included SIL Open
 Font License. Source contracts and design comparisons are documented in

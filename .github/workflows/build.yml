@@ -20,8 +20,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.9'
-  PRIVATE_RELEASE_REPOSITORY: ${{ github.repository }}
-  PUBLIC_RELEASE_REPOSITORY: VN-Linux-Family/vnlf-social-app
+  RELEASE_REPOSITORY: ${{ github.repository }}
 
 jobs:
   metadata:
@@ -389,8 +388,8 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
-  publish-private:
-    name: Store every build in private releases
+  publish-release:
+    name: Publish release binaries
     if: ${{ always() && !cancelled() && (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.result == 'success' && (needs.desktop.result == 'success' || needs.android.result == 'success' || needs.desktop.result == 'failure') }}
     needs: [metadata, quality, desktop, android]
     runs-on: ubuntu-24.04
@@ -415,8 +414,8 @@ jobs:
       - name: Preserve existing release binaries when merging targets
         run: |
           mkdir -p dist
-          if gh release view "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" >/dev/null 2>&1; then
-            gh release download "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --dir dist --pattern "vnlf-social-${APP_VERSION}-*" --skip-existing || true
+          if gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release download "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --dir dist --pattern "vnlf-social-${APP_VERSION}-*" --skip-existing || true
           fi
       - id: manifest
         name: Inventory binaries and write checksums
@@ -432,73 +431,22 @@ jobs:
               '\n\nSee release.json and SHA256SUMS for architecture and integrity information.\n' +
               ('\nDevelopment APK signing is for internal testing only.\n' if os.environ['IS_STABLE'] != 'true' else ''))
           PY
-      - name: Upload all available binaries to the private repository
+      - name: Upload all available binaries to the release repository
         env:
           BUILD_COMPLETE: ${{ steps.manifest.outputs.complete }}
         run: |
-          test "$GITHUB_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY"
-          if ! gh release view "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
+          test "$GITHUB_REPOSITORY" = "$RELEASE_REPOSITORY"
+          if ! gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --target "$SOURCE_SHA" \
               --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
           fi
           for asset in dist/*; do
-            gh release upload "$RELEASE_TAG" "$asset" --repo "$PRIVATE_RELEASE_REPOSITORY" --clobber
+            gh release upload "$RELEASE_TAG" "$asset" --repo "$RELEASE_REPOSITORY" --clobber
           done
           if [[ "$BUILD_COMPLETE" == true ]]; then
             if [[ "$IS_STABLE" == true ]]; then
-              gh release edit "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --draft=false --prerelease=false --latest
+              gh release edit "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --draft=false --prerelease=false --latest
             else
-              gh release edit "$RELEASE_TAG" --repo "$PRIVATE_RELEASE_REPOSITORY" --draft=false --prerelease --latest=false
+              gh release edit "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --draft=false --prerelease --latest=false
             fi
           fi
-
-  publish-public:
-    name: Publish complete stable binaries for app updates
-    needs: [metadata, publish-private]
-    if: ${{ (github.repository == 'luank3/vnlfsocialapp' || github.repository == 'VN-Linux-Family/vnlf-social-desktop') && needs.metadata.outputs.is_stable == 'true' && needs.publish-private.outputs.complete == 'true' }}
-    runs-on: ubuntu-24.04
-    env:
-      GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN }}
-      APP_VERSION: ${{ needs.metadata.outputs.version }}
-      RELEASE_TAG: ${{ needs.metadata.outputs.release_tag }}
-    steps:
-      - name: Check public publishing prerequisites
-        id: check_prereqs
-        run: |
-          if [ -z "$GH_TOKEN" ] || [ "$PUBLIC_RELEASE_REPOSITORY" = "$PRIVATE_RELEASE_REPOSITORY" ]; then
-            echo "External release mirror token not configured; skipping external mirror publishing."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if ! gh repo view "$PUBLIC_RELEASE_REPOSITORY" >/dev/null 2>&1; then
-            echo "External mirror $PUBLIC_RELEASE_REPOSITORY does not exist; skipping."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "skip=false" >> "$GITHUB_OUTPUT"
-      - if: steps.check_prereqs.outputs.skip != 'true'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          pattern: binary-*-${{ github.run_attempt }}
-          path: dist
-          merge-multiple: true
-      - if: steps.check_prereqs.outputs.skip != 'true'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          path: source-tools
-          sparse-checkout: tool/release_metadata.py
-          sparse-checkout-cone-mode: false
-      - name: Require all nine binaries and publish release assets only
-        if: steps.check_prereqs.outputs.skip != 'true'
-        env:
-          BUILD_NUMBER: ${{ needs.metadata.outputs.build_number }}
-          SOURCE_SHA: ${{ github.sha }}
-        run: |
-          python3 source-tools/tool/release_metadata.py --manifest-dir dist
-          printf 'VNLF Social %s\n\nStable release binaries. Verify downloads with SHA256SUMS.\n' "$APP_VERSION" > release-notes.md
-          if ! gh release view "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" >/dev/null 2>&1; then
-            gh release create "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" --target main \
-              --title "VNLF Social $APP_VERSION" --notes-file release-notes.md --draft
-          fi
-          gh release upload "$RELEASE_TAG" dist/* --repo "$PUBLIC_RELEASE_REPOSITORY" --clobber
-          gh release edit "$RELEASE_TAG" --repo "$PUBLIC_RELEASE_REPOSITORY" --draft=false --prerelease=false --latest
