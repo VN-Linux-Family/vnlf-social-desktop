@@ -272,10 +272,13 @@ jobs:
           IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
         run: python3 tool/prepare_android_signing.py --stable "$IS_STABLE"
       - name: Build one APK for each ABI
+        env:
+          IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
         run: >-
           flutter build apk --release --split-per-abi --target-platform=android-arm,android-arm64,android-x64
           --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
           --dart-define="APP_VERSION=$APP_VERSION" --dart-define=VNLF_LIVE=true
+          $( [ "$IS_STABLE" = "true" ] && echo "--dart-define=PRODUCTION=true" || echo "" )
       - name: Verify native libraries inside each Android APK
         run: |
           python3 tool/verify_binary_arch.py --platform android --arch armv7 build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk

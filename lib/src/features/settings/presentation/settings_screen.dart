@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +19,7 @@ import '../text_size/text_size.dart';
 import 'security_sessions_panel.dart';
 
 const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.1.0');
+const isProduction = bool.fromEnvironment('PRODUCTION', defaultValue: false);
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -262,7 +262,7 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               const TextSizeSettings(),
               const SizedBox(height: 24),
-              if (!kReleaseMode) ...[
+              if (!isProduction) ...[
                 const SizedBox(height: 24),
                 Text(
                   english ? 'Server mode (Dev)' : 'Chế độ máy chủ (Thử nghiệm)',
