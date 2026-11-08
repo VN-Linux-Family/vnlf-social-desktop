@@ -31,19 +31,32 @@ final class VoiceRoomDto {
 }
 
 final class VoiceConnectionDto {
-  VoiceConnectionDto(Map<String, dynamic> json)
-    : serverUrl = _required(json, 'serverUrl'),
+  VoiceConnectionDto(Map<String, dynamic> json, {Uri? baseUri})
+    : serverUrl = _normalizeServerUrl(_required(json, 'serverUrl'), baseUri),
       token = _required(json, 'token'),
       iceServers = _iceServers(json['iceServers']) {
     final uri = Uri.tryParse(serverUrl);
     if (uri == null ||
         uri.host.isEmpty ||
-        !['wss', 'https'].contains(uri.scheme)) {
+        !['ws', 'wss', 'http', 'https'].contains(uri.scheme)) {
       throw const ParseFailure('voice.serverUrl');
     }
   }
   final String serverUrl, token;
   final List<VoiceIceServer> iceServers;
+
+  static String _normalizeServerUrl(String rawUrl, Uri? baseUri) {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null) return rawUrl;
+    if (baseUri != null &&
+        (uri.host == 'localhost' || uri.host == '127.0.0.1') &&
+        baseUri.host.isNotEmpty &&
+        baseUri.host != 'localhost' &&
+        baseUri.host != '127.0.0.1') {
+      return uri.replace(host: baseUri.host).toString();
+    }
+    return rawUrl;
+  }
 
   VoiceConnection toDomain() => VoiceConnection(
     serverUrl: serverUrl,

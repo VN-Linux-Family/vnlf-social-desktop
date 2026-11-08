@@ -4,8 +4,9 @@ import '../domain/voice_repository.dart';
 import 'voice_dto.dart';
 
 final class LiveVoiceRepository implements VoiceRepository {
-  const LiveVoiceRepository(this._client);
+  const LiveVoiceRepository(this._client, {this.baseUri});
   final ApiClient _client;
+  final Uri? baseUri;
 
   @override
   Future<List<VoiceRoom>> getRooms() => _client.get(
@@ -33,7 +34,7 @@ final class LiveVoiceRepository implements VoiceRepository {
     '/api/v1/voice/rooms/${Uri.encodeComponent(roomId)}/join-token',
     decode: (json) {
       try {
-        return VoiceConnectionDto(json).toDomain();
+        return VoiceConnectionDto(json, baseUri: baseUri).toDomain();
       } on TypeError {
         throw const ParseFailure('voice.connection');
       }

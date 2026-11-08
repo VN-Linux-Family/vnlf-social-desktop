@@ -116,7 +116,10 @@ void main() {
       await controller.load();
       await controller.react('message', '👍');
       final writes = requests
-          .where((request) => request.method != 'GET')
+          .where(
+            (request) =>
+                request.method != 'GET' && !request.path.endsWith('/read'),
+          )
           .toList();
       expect(writes.single.method, 'DELETE');
       expect(
@@ -338,6 +341,25 @@ void main() {
     expect(controller.state.operationFailure, isA<HttpFailure>());
     expect(controller.state.busyMessageId, isNull);
   });
+
+  test('visiting channel loads history and marks messages as read', () async {
+    final repo = ControlledRepository()
+      ..pages.add(ChannelMessagePage(items: [message]));
+    var readNotificationFired = false;
+    final controller = ChannelTimelineController(
+      repo,
+      'channel-123',
+      onRead: () => readNotificationFired = true,
+    );
+    addTearDown(controller.dispose);
+    await controller.load();
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.state.messages, hasLength(1));
+    expect(repo.markReads, hasLength(1));
+    expect(repo.markReads.single.channelId, 'channel-123');
+    expect(repo.markReads.single.lastReadMessageId, message.id);
+    expect(readNotificationFired, isTrue);
+  });
 }
 
 ApiClient client(ApiTransport transport) => ApiClient(
@@ -457,7 +479,9 @@ class ControlledRepository implements ChannelRepository {
   @override
   Future<void> react(String messageId, String emoji, {bool remove = false}) =>
       actionResult.future;
+  final markReads = <({String channelId, String? lastReadMessageId})>[];
   @override
-  Future<void> markRead(String channelId, {String? lastReadMessageId}) =>
-      actionResult.future;
+  Future<void> markRead(String channelId, {String? lastReadMessageId}) async {
+    markReads.add((channelId: channelId, lastReadMessageId: lastReadMessageId));
+  }
 }

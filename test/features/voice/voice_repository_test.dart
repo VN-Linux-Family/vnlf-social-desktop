@@ -83,6 +83,24 @@ void main() {
   );
 
   test(
+    'join accepts ws scheme and normalizes localhost using baseUri',
+    () async {
+      final repository = LiveVoiceRepository(
+        _client((request) async {
+          return _response({
+            'serverUrl': 'ws://localhost:7880',
+            'token': 'synthetic-test-value',
+            'iceServers': <Map<String, dynamic>>[],
+          });
+        }),
+        baseUri: Uri.parse('https://api.localhost.direct:3002'),
+      );
+      final connection = await repository.join('room-1');
+      expect(connection.serverUrl, 'ws://api.localhost.direct:7880');
+    },
+  );
+
+  test(
     'missing connection credentials cannot become a successful join',
     () async {
       final repository = LiveVoiceRepository(

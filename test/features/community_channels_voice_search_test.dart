@@ -290,7 +290,7 @@ void main() {
     );
   });
 
-  testWidgets('search page on mobile has exactly one back button', (
+  testWidgets('search page on mobile has exactly one back button and header', (
     tester,
   ) async {
     await _pump(tester, '/search', width: 390);
@@ -302,6 +302,7 @@ void main() {
               (widget.icon as Icon).icon == Icons.arrow_back),
     );
     expect(backButtons, findsOneWidget);
+    expect(find.text('Tìm kiếm'), findsOneWidget);
   });
 
   testWidgets('voice room page does not contain Kenh thoai header', (

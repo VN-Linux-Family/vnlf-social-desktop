@@ -143,13 +143,15 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
       final page = await _repository.getMessages(_channelId);
       if (!mounted || revision != _revision) return;
       pollRead?.acceptAll(page.items.map((message) => message.poll));
+      final newMessages = _merge(_messageReads.complete(read, page.items));
       state = state.copy(
-        messages: _merge(_messageReads.complete(read, page.items)),
+        messages: newMessages,
         nextCursor: page.nextCursor,
         replaceCursor: true,
         loading: false,
         loaded: true,
       );
+      unawaited(markRead(lastReadMessageId: newMessages.lastOrNull?.id));
     } catch (error) {
       if (mounted && revision == _revision) {
         state = state.copy(loading: false, failure: _failure(error));
@@ -379,21 +381,22 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
     try {
       final page = await _repository.getMessages(_channelId);
       if (!mounted || revision != _revision) return;
-      state = state.copy(
-        messages: _merge(
-          _messageReads.complete(
-            read,
-            reconcileLatest
-                ? latestHistoryWindow(
-                    current: state.messages,
-                    incoming: page.items,
-                    hasOlder: page.nextCursor != null,
-                    idOf: (m) => m.id,
-                    createdAt: (m) => m.createdAt,
-                  )
-                : [...state.messages, ...page.items],
-          ),
+      final newMessages = _merge(
+        _messageReads.complete(
+          read,
+          reconcileLatest
+              ? latestHistoryWindow(
+                  current: state.messages,
+                  incoming: page.items,
+                  hasOlder: page.nextCursor != null,
+                  idOf: (m) => m.id,
+                  createdAt: (m) => m.createdAt,
+                )
+              : [...state.messages, ...page.items],
         ),
+      );
+      state = state.copy(
+        messages: newMessages,
         nextCursor: state.loaded ? state.nextCursor : page.nextCursor,
         replaceCursor: true,
         loaded: true,
@@ -401,6 +404,7 @@ class ChannelTimelineController extends StateNotifier<ChannelTimelineState> {
         loadingOlder: false,
         clearFailure: true,
       );
+      unawaited(markRead(lastReadMessageId: newMessages.lastOrNull?.id));
     } catch (error) {
       if (mounted && revision == _revision) {
         state = state.copy(

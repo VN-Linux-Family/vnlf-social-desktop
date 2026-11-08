@@ -42,6 +42,9 @@ void main() {
       signedIn: true,
       transport: (request) async {
         if (request.method == 'POST') {
+          if (request.path.endsWith('/read')) {
+            return reply({'ok': true, 'changed': true});
+          }
           sends++;
           return pending.future;
         }

@@ -18,7 +18,10 @@ final voiceAccountIdProvider = Provider<String?>(
 );
 
 final voiceRepositoryProvider = Provider<VoiceRepository>(
-  (ref) => LiveVoiceRepository(ref.watch(apiClientProvider)),
+  (ref) => LiveVoiceRepository(
+    ref.watch(apiClientProvider),
+    baseUri: Uri.tryParse(ref.watch(apiBaseUrlProvider)),
+  ),
 );
 
 final voiceRoomSessionFactoryProvider = Provider<VoiceRoomSessionFactory>(

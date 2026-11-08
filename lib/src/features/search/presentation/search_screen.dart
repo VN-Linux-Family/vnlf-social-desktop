@@ -83,17 +83,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        VnlfCenterPageHeader(
-          title: english ? 'Search' : 'Tìm kiếm',
-          leading: !mobile && context.canPop()
-              ? IconButton(
-                  tooltip: english ? 'Back' : 'Quay lại',
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  onPressed: () => context.pop(),
-                )
-              : null,
-        ),
-        const SizedBox(height: 12),
+        if (!mobile) ...[
+          VnlfCenterPageHeader(
+            title: english ? 'Search' : 'Tìm kiếm',
+            leading: context.canPop()
+                ? IconButton(
+                    tooltip: english ? 'Back' : 'Quay lại',
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    onPressed: () => context.pop(),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 12),
+        ],
         TextField(
           key: const Key('search-input'),
           controller: _query,

@@ -106,8 +106,8 @@ const _communityRoutes =
     <({String path, String vietnamese, String english, Type screen})>[
       (
         path: '/search',
-        vietnamese: 'Tìm kiếm',
-        english: 'Search',
+        vietnamese: 'Tìm trong cộng đồng',
+        english: 'Search the community',
         screen: SearchScreen,
       ),
       (

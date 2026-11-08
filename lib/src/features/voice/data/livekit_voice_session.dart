@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:livekit_client/livekit_client.dart' as rtc;
 
 import '../domain/voice_models.dart';
@@ -82,7 +83,8 @@ final class LiveKitVoiceSession implements VoiceRoomSession {
       _emit();
     } on VoiceFailure {
       rethrow;
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('LiveKit Voice connect failed: $e\n$stack');
       throw const VoiceConnectionFailure();
     }
   }
