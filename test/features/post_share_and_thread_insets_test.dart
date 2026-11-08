@@ -33,10 +33,7 @@ void main() {
       throttleInterval: Duration.zero,
       hostKey: Object(),
     );
-    final repository = LivePostRepository(
-      client,
-      FixturePostRepository(FixtureFeedRepository(client)),
-    );
+    final repository = LivePostRepository(client);
     final post = await repository.getPost('article-1');
     expect(
       canonicalPostUri(post!).toString(),
