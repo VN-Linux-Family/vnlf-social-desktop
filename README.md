@@ -33,6 +33,10 @@ KWallet service. A headless session without that service cannot verify account
 sign-in or secure draft recovery. The app reports storage failures; credentials
 must never be saved in source, fixtures or logs.
 
+macOS archives are signed ad hoc and not notarized. After unzipping, move the
+app to Applications and open it; if macOS blocks the first launch, choose
+System Settings > Privacy & Security > Open Anyway.
+
 Release binaries and community updates are published directly in
 [VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases),
 and the in-app updater fetches stable updates from that public repository. See
