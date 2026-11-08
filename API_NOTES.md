@@ -41,6 +41,25 @@ HTTP 403 from Cloudflare for the WebSocket upgrade in this environment. No test
 message was sent; the connection closed, logout succeeded, and cleanup was clear.
 Whether this response is specific to this network or configuration remains unknown.
 
+## Article slugs, error retry hints and client id — 2026-11-08
+
+- `GET /api/v1/articles/:id` matches only the UUID column. Public links
+  (`/a/{slug}`) must use `GET /api/v1/articles/slug/:slug`, which returns the
+  same article projection and also resolves renamed (old) slugs; unpublished
+  articles answer 404 `ARTICLE_NOT_FOUND`. Two read-only guest GETs on
+  2026-11-08 confirmed it on production: the slug route returned 200 for a
+  public article, while the id route given the same slug returned 500
+  `INTERNAL_ERROR` with `retryable: false`. `LivePostRepository` now picks the
+  route from the value's shape, and the thread view treats 404 as "not found".
+- Error envelopes may carry `retryable`. `ApiClient` no longer retries a
+  429/5xx response that says `retryable: false`; responses without the hint
+  (for example proxy HTML) keep the bounded GET retry.
+- Every API request now carries `x-vnlf-client`: one random UUID per app
+  process, like the website's per-tab id (`apps/web/lib/api.ts`). The server
+  only uses it as the `origin` of `read:synced` events after HTTP read marks
+  (`apps/api/src/lib/read-sync.ts`). The native client does not yet consume
+  `read:synced`, so this changes no behaviour today.
+
 ## Projects, account profile and member feedback (pinned source)
 
 The following contracts were checked against upstream commit
@@ -157,14 +176,17 @@ fixture demonstrates a live value or authenticated behavior.
 - Media CDN: `https://media.vietnamlinuxfamily.net`
 
 ### Request Headers
-Every request made by the native client MUST replicate the web client's exact envelope:
+Headers the native `ApiClient` sends (updated 2026-11-08; the earlier
+`VNLF-Mobile` user agent and per-installation id were never implemented):
 ```http
-x-vnlf-client: <persistent-client-uuid-v4>
-Content-Type: application/json
+x-vnlf-client: <uuid-v4, one per app process>
+Content-Type: application/json   (requests with a body)
 Accept: application/json
-User-Agent: VNLF-Mobile/<version> (Linux; Android)
+User-Agent: vlf-flutter-dev/0.1 (unofficial community client)
 ```
-- `x-vnlf-client`: Persistent UUID generated once on installation and stored securely in local device storage.
+- `x-vnlf-client`: the website generates one per tab (`apps/web/lib/api.ts`); the
+  native client generates one per process. See "Article slugs, error retry hints
+  and client id" above.
 - Session Management: Cookie-based session (`credentials: "include"`). Exact CSRF, cookie names, and set-cookie headers under authenticated states are **[UNKNOWN / INFERRED]** pending the coordinator receiving the user's Phase 3 HAR/cURL export.
 
 ### Standard Error Response Shape [CONFIRMED - observed unauthenticated (public)]

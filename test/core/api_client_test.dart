@@ -52,6 +52,60 @@ void main() {
     },
   );
 
+  test('identifies this app instance with a stable x-vnlf-client id', () async {
+    final ids = <String?>[];
+    server.listen((request) async {
+      ids.add(request.headers.value('x-vnlf-client'));
+      request.response.write('{"ok":true}');
+      await request.response.close();
+    });
+    final client = ApiClient(
+      hostKey: Object(),
+      transport: transport.call,
+      throttleInterval: Duration.zero,
+      cacheDuration: Duration.zero,
+    );
+    await client.get<Map<String, dynamic>>('/feed');
+    await client.request<Map<String, dynamic>>('POST', '/read', body: '{}');
+    expect(ids, [ApiClient.clientId, ApiClient.clientId]);
+    expect(
+      ApiClient.clientId,
+      matches(
+        RegExp(
+          r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+        ),
+      ),
+    );
+  });
+
+  test('does not retry a server error marked retryable false', () async {
+    var requests = 0;
+    server.listen((request) async {
+      requests++;
+      request.response.statusCode = 500;
+      request.response.write(
+        '{"code":"INTERNAL_ERROR","message":"Đã có lỗi xảy ra.",'
+        '"requestId":"synthetic","retryable":false}',
+      );
+      await request.response.close();
+    });
+    final client = ApiClient(
+      hostKey: Object(),
+      transport: transport.call,
+      retryDelay: (_) async => fail('must not wait for a retry'),
+      throttleInterval: Duration.zero,
+    );
+    await expectLater(
+      client.get<Map<String, dynamic>>('/feed'),
+      throwsA(
+        isA<HttpFailure>()
+            .having((failure) => failure.statusCode, 'status', 500)
+            .having((failure) => failure.code, 'code', 'INTERNAL_ERROR'),
+      ),
+    );
+    expect(requests, 1);
+  });
+
   test(
     'caches successful results by query and keeps returned objects isolated',
     () async {
