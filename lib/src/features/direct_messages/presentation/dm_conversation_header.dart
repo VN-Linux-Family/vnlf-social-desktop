@@ -71,7 +71,8 @@ class DmConversationHeader extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${peer.username.isEmpty ? '' : '@${peer.username} · '}${peer.isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}',
+                        '${peer.username.isEmpty ? '' : '@${peer.username} · '}'
+                        '${peer.isOnline ? vi.app.directMessages.trucTuyen : vi.app.directMessages.ngoaiTuyen}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: VnlfTypography.meta(colors.muted)

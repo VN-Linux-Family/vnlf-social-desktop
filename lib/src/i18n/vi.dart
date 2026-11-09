@@ -4755,6 +4755,7 @@ final class ViAppChannels {
   final tepDangDuocXu = 'Tệp đang được xử lý';
   final khongXuLyDuoc = 'Không xử lý được tệp';
   final tinNhanCoGif = 'Tin nhắn có GIF / nhãn dán';
+  final cheDoCham = 'Chế độ chậm: {seconds} giây';
 }
 
 final class ViAppCommon {
@@ -4794,6 +4795,8 @@ final class ViAppCommon {
   final trangWeb = 'Trang web';
   final xoaAnh = 'Xóa ảnh';
   final ban = 'Bạn';
+  final dangTraLoi = 'Đang trả lời {name}: {content}';
+  final tepDinhKemLoai = 'Tệp đính kèm · {mime}';
 }
 
 final class ViAppCommunication {
@@ -4940,7 +4943,6 @@ final class ViAppDirectMessages {
       'Hiện không thể gửi tin nhắn trong cuộc trò chuyện này.';
   final banCoTheGui =
       'Bạn có thể gửi tin nhắn mở đầu cho yêu cầu trò chuyện này.';
-  final nhapTinNhan = 'Nhập tin nhắn...';
   final banKhongTheThuc =
       'Bạn không thể thực hiện thao tác này trong trạng thái cuộc trò chuyện hiện tại.';
   final khongTimThayCuoc = 'Không tìm thấy cuộc trò chuyện hoặc tin nhắn.';
@@ -5017,6 +5019,8 @@ final class ViAppDirectMessages {
   final nhapItNhat2 = 'Nhập ít nhất 2 ký tự để tìm thành viên.';
   final khongTaiDuocThanh = 'Không tải được thành viên. Thử lại';
   final khongTimThayThanh = 'Không tìm thấy thành viên';
+  final trucTuyen = 'Trực tuyến';
+  final ngoaiTuyen = 'Ngoại tuyến';
 }
 
 final class ViAppDiscover {
