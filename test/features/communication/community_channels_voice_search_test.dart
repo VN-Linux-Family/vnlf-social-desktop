@@ -223,7 +223,7 @@ void main() {
     await tester.tap(postAction('Ủng hộ'));
     await tester.pumpAndSettle();
     expect(post().voteScore, 3);
-    await tester.tap(postAction('Lưu bài viết'));
+    await tester.tap(postAction('Lưu bài'));
     await tester.pumpAndSettle();
     expect(post().isBookmarked, isTrue);
     router.go('/thread/fixture-post-1');

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../icons/vnlf_icon.dart';
+
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
 import '../../tokens/vnlf_typography.dart';
@@ -20,6 +22,7 @@ class VnlfDesktopSidebar extends StatelessWidget {
     this.themeMode = ThemeMode.light,
     this.onThemeModeChanged,
     this.onProfileTap,
+    this.profileAvatar,
     this.onSettingsTap,
     this.onLogoutTap,
     this.onHelpTap,
@@ -71,6 +74,9 @@ class VnlfDesktopSidebar extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
+
+  /// The member's 38px rounded avatar; guests get the "?" box.
+  final Widget? profileAvatar;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onLogoutTap;
   final VoidCallback? onHelpTap;
@@ -187,11 +193,12 @@ class VnlfDesktopSidebar extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              VnlfGuestAvatarBox(
-                                size: 34,
-                                semanticLabel: profileSemanticLabel,
-                              ),
-                              const SizedBox(width: 10),
+                              profileAvatar ??
+                                  VnlfGuestAvatarBox(
+                                    size: 38,
+                                    semanticLabel: profileSemanticLabel,
+                                  ),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,10 +223,10 @@ class VnlfDesktopSidebar extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                size: 16,
-                                color: colors.muted,
+                              VnlfIcon(
+                                VnlfLucide.chevronDown,
+                                size: 15,
+                                color: colors.ink,
                               ),
                             ],
                           ),
@@ -280,9 +287,9 @@ class VnlfDesktopSidebar extends StatelessWidget {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    Icons.rate_review_outlined,
-                                    size: 17,
+                                  VnlfIcon(
+                                    VnlfLucide.messageSquareText,
+                                    size: 18,
                                     color: colors.brand,
                                   ),
                                   const SizedBox(width: 10),
@@ -363,28 +370,28 @@ class VnlfDesktopSidebar extends StatelessWidget {
                       // Utility Bottom Links
                       if (settingsLabel.isNotEmpty)
                         SidebarUtilityTile(
-                          icon: Icons.settings_outlined,
+                          icon: VnlfLucide.settings,
                           label: settingsLabel,
                           semanticLabel: settingsSemanticLabel,
                           onTap: onSettingsTap,
                         ),
                       if (helpLabel.isNotEmpty)
                         SidebarUtilityTile(
-                          icon: Icons.help_outline_rounded,
+                          icon: VnlfLucide.circleHelp,
                           label: helpLabel,
                           semanticLabel: helpSemanticLabel,
                           onTap: onHelpTap,
                         ),
                       if (onLogoutTap != null)
                         SidebarUtilityTile(
-                          icon: Icons.logout_rounded,
+                          icon: VnlfLucide.logOut,
                           label: logoutLabel,
                           semanticLabel: logoutLabel,
                           onTap: onLogoutTap,
                         )
                       else if (loginLabel.isNotEmpty)
                         SidebarUtilityTile(
-                          icon: Icons.login_rounded,
+                          icon: VnlfLucide.logOut,
                           label: loginLabel,
                           semanticLabel: loginUtilitySemanticLabel,
                           onTap: onProfileTap,
@@ -417,30 +424,107 @@ class VnlfDesktopSidebar extends StatelessWidget {
   }
 }
 
-/// Desktop Right Complementary Sidebar (`304px`) matching the right column in
-/// `DESIGN_REFERENCE.md` Section 5 and `reference_feed_desktop.png`.
+/// The website's right rail (`aside.right-rail`): 304px, the full height
+/// beside the scrolling center, with a hairline on its left. Its content
+/// does not scroll with the page; the footer sits under the cards.
 class VnlfDesktopRightSidebar extends StatelessWidget {
   const VnlfDesktopRightSidebar({
     super.key,
     required this.child,
+    this.footer,
     this.width = VnlfDimensions.rightSidebarWidth,
     this.semanticLabel,
   });
 
   final Widget child;
+  final Widget? footer;
   final double width;
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    final column = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: width),
-      child: SizedBox(width: width, child: child),
+    final colors = VnlfColors.of(context);
+    final column = Container(
+      width: width,
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: colors.line)),
+      ),
+      // The website clips the rail; scrolling keeps large text reachable.
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 34, 20, 25),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [child, ?footer],
+        ),
+      ),
     );
 
     if (semanticLabel == null) {
       return column;
     }
     return Semantics(label: semanticLabel, container: true, child: column);
+  }
+}
+
+/// The website's rail footer: the copyright line, then policy links that
+/// turn brand on hover.
+class VnlfRailFooter extends StatelessWidget {
+  const VnlfRailFooter({
+    super.key,
+    required this.copyright,
+    required this.links,
+  });
+
+  final String copyright;
+  final List<(String, VoidCallback)> links;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
+      child: Wrap(
+        spacing: 9,
+        runSpacing: 4,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: Text(copyright, style: VnlfTypography.body(colors.muted)),
+          ),
+          for (final (label, onTap) in links) _FooterLink(label, onTap),
+        ],
+      ),
+    );
+  }
+}
+
+class _FooterLink extends StatefulWidget {
+  const _FooterLink(this.label, this.onTap);
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  State<_FooterLink> createState() => _FooterLinkState();
+}
+
+class _FooterLinkState extends State<_FooterLink> {
+  var _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    return Semantics(
+      link: true,
+      child: InkWell(
+        onTap: widget.onTap,
+        onHover: (value) => setState(() => _hovered = value),
+        child: Text(
+          widget.label,
+          style: VnlfTypography.body(_hovered ? colors.brand : colors.muted),
+        ),
+      ),
+    );
   }
 }

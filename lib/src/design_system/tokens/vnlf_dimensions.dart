@@ -38,6 +38,10 @@ abstract final class VnlfDimensions {
   /// Right complementary column width (`304px`).
   static const double rightSidebarWidth = 304.0;
 
+  /// Content width of the website's `.main-content` on desktop: 860px
+  /// minus its 38px side padding.
+  static const double mainContentMaxWidth = 784.0;
+
   /// Sticky mobile top header height (`54px`).
   static const double mobileHeaderHeight = 54.0;
 

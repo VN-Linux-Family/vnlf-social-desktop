@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../icons/vnlf_icon.dart';
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
 import '../../tokens/vnlf_typography.dart';
 
-class SidebarNavTile extends StatelessWidget {
+/// The website's sidebar `.nav-item`: muted at rest; the active page is
+/// ink and bold on the surface with a hairline ring and a brand icon.
+class SidebarNavTile extends StatefulWidget {
   const SidebarNavTile({
     super.key,
     required this.icon,
@@ -15,7 +18,7 @@ class SidebarNavTile extends StatelessWidget {
     this.semanticLabel,
   });
 
-  final IconData icon;
+  final VnlfLucide icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -23,46 +26,65 @@ class SidebarNavTile extends StatelessWidget {
   final String? semanticLabel;
 
   @override
+  State<SidebarNavTile> createState() => _SidebarNavTileState();
+}
+
+class _SidebarNavTileState extends State<SidebarNavTile> {
+  var _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final selected = widget.selected;
+    final label = widget.label;
     final effectiveSemantics =
-        semanticLabel ?? (label.isNotEmpty ? label : null);
+        widget.semanticLabel ?? (label.isNotEmpty ? label : null);
+    final background = selected
+        ? colors.surface
+        : (_hovered ? colors.surfaceSoft : Colors.transparent);
 
     return Semantics(
       button: true,
       selected: selected,
       label: effectiveSemantics,
       child: Material(
-        color: Colors.transparent,
+        color: background,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          side: selected ? BorderSide(color: colors.line) : BorderSide.none,
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-          onTap: onTap,
+          onTap: widget.onTap,
+          onHover: (value) => setState(() => _hovered = value),
           child: Container(
             constraints: const BoxConstraints(minHeight: 48),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(
-              color: selected ? colors.brandSoft : Colors.transparent,
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             child: Row(
+              spacing: 12,
               children: [
-                Icon(
-                  icon,
+                VnlfIcon(
+                  widget.icon,
                   size: 19,
+                  strokeWidth: selected ? 2.4 : 1.8,
                   color: selected ? colors.brand : colors.muted,
                 ),
-                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    label,
-                    style: VnlfTypography.control(
-                      selected ? colors.brand : colors.ink,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  child: ExcludeSemantics(
+                    child: Text(
+                      label,
+                      style:
+                          VnlfTypography.body(
+                            selected || _hovered ? colors.ink : colors.muted,
+                          ).copyWith(
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                          ),
                     ),
                   ),
                 ),
-                if (hasUnread) ...[
-                  const SizedBox(width: 8),
+                if (widget.hasUnread)
                   Container(
                     width: 8,
                     height: 8,
@@ -71,7 +93,6 @@ class SidebarNavTile extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                ],
               ],
             ),
           ),
@@ -167,7 +188,7 @@ class SidebarUtilityTile extends StatelessWidget {
     this.semanticLabel,
   });
 
-  final IconData icon;
+  final VnlfLucide icon;
   final String label;
   final VoidCallback? onTap;
   final String? semanticLabel;
@@ -182,17 +203,17 @@ class SidebarUtilityTile extends StatelessWidget {
       button: true,
       label: effectiveSemantics,
       child: InkWell(
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
         onTap: onTap,
         child: Container(
           constraints: const BoxConstraints(minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7.5),
+          padding: const EdgeInsets.fromLTRB(4, 11, 12, 11),
           child: Row(
+            spacing: 12,
             children: [
-              Icon(icon, size: 17, color: colors.muted),
-              const SizedBox(width: 10),
+              VnlfIcon(icon, size: 18, strokeWidth: 1.8, color: colors.muted),
               Expanded(
-                child: Text(label, style: VnlfTypography.control(colors.muted)),
+                child: Text(label, style: VnlfTypography.body(colors.muted)),
               ),
             ],
           ),

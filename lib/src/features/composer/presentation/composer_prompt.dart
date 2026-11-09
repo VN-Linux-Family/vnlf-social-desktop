@@ -1,63 +1,85 @@
 import 'package:flutter/material.dart';
 
-import '../../../design_system/tokens/vnlf_colors.dart';
-import '../../../design_system/tokens/vnlf_dimensions.dart';
-import '../../../design_system/tokens/vnlf_typography.dart';
+import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 
+/// The website's composer bar: the viewer's avatar, the prompt and an
+/// add-image tile. Wider screens draw a bordered card; phones a full-bleed
+/// band whose image tile is a plain 44px target.
 class ComposerPrompt extends StatelessWidget {
-  const ComposerPrompt({super.key, required this.onPressed});
+  const ComposerPrompt({
+    super.key,
+    required this.onPressed,
+    required this.avatar,
+  });
+
   final VoidCallback onPressed;
+
+  /// The viewer's 34px avatar, or the guest "?".
+  final Widget avatar;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final phone =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
+    final imageTile = phone
+        ? SizedBox.square(
+            dimension: 44,
+            child: Center(
+              child: VnlfIcon(
+                VnlfLucide.imagePlus,
+                size: 20,
+                color: colors.muted,
+              ),
+            ),
+          )
+        : Container(
+            width: 25,
+            height: 25,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colors.brandSoft,
+              borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+            ),
+            child: VnlfIcon(
+              VnlfLucide.imagePlus,
+              size: 20,
+              color: colors.brand,
+            ),
+          );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: phone
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 14),
       child: Material(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            phone ? 0 : VnlfDimensions.radiusLg,
+          ),
+          side: phone ? BorderSide.none : BorderSide(color: colors.line),
+        ),
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-              border: Border.all(color: colors.line),
-            ),
+          child: Padding(
+            padding: phone
+                ? const EdgeInsets.fromLTRB(16, 10, 6, 10)
+                : const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             child: Row(
+              spacing: phone ? 12 : 10,
               children: [
-                Icon(Icons.edit_note_rounded, color: colors.brand, size: 22),
-                const SizedBox(width: 10),
+                SizedBox.square(dimension: 34, child: avatar),
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceSoft,
-                      borderRadius: BorderRadius.circular(
-                        VnlfDimensions.radiusFull,
-                      ),
-                      border: Border.all(color: colors.line),
-                    ),
-                    child: Text(
-                      isEn
-                          ? 'What would you like to share today?'
-                          : 'Hôm nay bạn muốn chia sẻ điều gì?',
-                      style: VnlfTypography.caption(colors.muted),
-                    ),
+                  child: Text(
+                    vi.feedViews.homNayBanMuonChia,
+                    style: VnlfTypography.body(colors.muted),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Icon(
-                  Icons.add_photo_alternate_outlined,
-                  color: colors.muted,
-                  size: 20,
-                ),
+                imageTile,
               ],
             ),
           ),

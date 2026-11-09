@@ -83,7 +83,9 @@ void main() {
       expect(find.text('Tủ đồ & Huy hiệu'), findsNothing);
       expect(find.text('Bài viết'), findsOneWidget);
       expect(find.text('Bài viết trong hồ sơ'), findsOneWidget);
-      final share = find.byIcon(Icons.link_rounded);
+      final share = find.byWidgetPredicate(
+        (w) => w is VnlfIcon && w.icon == VnlfLucide.link2,
+      );
       await tester.ensureVisible(share);
       await tester.tap(share);
       await tester.pumpAndSettle();

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../icons/vnlf_icon.dart';
+
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
 
@@ -43,7 +45,7 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
       child: Row(
         children: [
           _SegmentBtn(
-            icon: Icons.wb_sunny_outlined,
+            icon: VnlfLucide.sun,
             tooltip: lightTooltip,
             semanticLabel: lightSemanticLabel,
             selected: themeMode == ThemeMode.light,
@@ -52,7 +54,7 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
                 : () => onThemeModeChanged!(ThemeMode.light),
           ),
           _SegmentBtn(
-            icon: Icons.dark_mode_outlined,
+            icon: VnlfLucide.moon,
             tooltip: darkTooltip,
             semanticLabel: darkSemanticLabel,
             selected: themeMode == ThemeMode.dark,
@@ -61,7 +63,7 @@ class VnlfThemeSegmentPicker extends StatelessWidget {
                 : () => onThemeModeChanged!(ThemeMode.dark),
           ),
           _SegmentBtn(
-            icon: Icons.desktop_windows_outlined,
+            icon: VnlfLucide.monitor,
             tooltip: systemTooltip,
             semanticLabel: systemSemanticLabel,
             selected: themeMode == ThemeMode.system,
@@ -89,7 +91,7 @@ class _SegmentBtn extends StatelessWidget {
     this.semanticLabel,
   });
 
-  final IconData icon;
+  final VnlfLucide icon;
   final String tooltip;
   final bool selected;
   final VoidCallback? onTap;
@@ -117,9 +119,9 @@ class _SegmentBtn extends StatelessWidget {
                 : null,
           ),
           alignment: Alignment.center,
-          child: Icon(
+          child: VnlfIcon(
             icon,
-            size: 16,
+            size: 15,
             color: selected ? colors.brand : colors.muted,
           ),
         ),

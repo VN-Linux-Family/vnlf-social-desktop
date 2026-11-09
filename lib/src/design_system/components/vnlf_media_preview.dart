@@ -65,17 +65,28 @@ class VnlfImagePlaceholder extends StatelessWidget {
     );
 
     if (imageUrl != null && imageUrl!.isNotEmpty) {
+      // The website's article cover: the image's own proportions, at most
+      // 480px tall (360px up to 520px wide), cropped to fill, in a 14px
+      // rounded frame with a hairline.
+      final maxHeight = MediaQuery.sizeOf(context).width <= 520 ? 360.0 : 480.0;
       return Semantics(
         label: effectiveSemantics,
         image: true,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-          child: AspectRatio(
-            aspectRatio: aspectRatio,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: colors.surfaceSoft,
+            border: Border.all(color: colors.line),
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
             child: Image.network(
               imageUrl!,
+              width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => fallback(),
+              errorBuilder: (context, error, stackTrace) =>
+                  AspectRatio(aspectRatio: aspectRatio, child: fallback()),
             ),
           ),
         ),
