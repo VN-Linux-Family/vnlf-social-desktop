@@ -21,6 +21,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 | Every user-visible string in `vi.dart`; no language flags | #7 |
 | Post and article detail pages, post menu, share dialog, link previews, author view counts | #8 |
 | Comments panel and media gallery like the website's | #9 |
+| Sticker and GIF picker in comments | #9 |
 
 ## Screens and features, in port order
 
@@ -29,7 +30,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ Comments panel like `comments-panel.tsx`: count header, rows, depth-one replies, stickers and GIFs, a composer above the phone bar (#9). Still to do: the desktop composer staying in view while scrolling, and `?comment=` links.
 - ✅ The website's "…" menu everywhere a post appears: save, copy link, edit and delete for the author, hide and report for everyone else (#8).
 - ✅ Share dialog: message, Facebook, Telegram, Email and copy (#8).
-- ⬜ GIF (KLIPY) and sticker pickers in comments.
+- ✅ Sticker and GIF picker in comments: KLIPY search, saved stickers, installed packs, recent stickers (#9). The pack dialog and sticker pages still open the website.
 - ⬜ Profile hover card on desktop (`profile-card.tsx`).
 
 ### 2. Sign-in pages
@@ -40,7 +41,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 
 ### 3. Composer
 - ⬜ Article editor parity (`article-editor.tsx`).
-- ⬜ Stickers and GIFs. Link previews and YouTube cards already show under posts (#8).
+- ⬜ Stickers and GIFs in the article composer. Comments have them (#9); link previews and YouTube cards already show under posts (#8).
 
 ### 4. Notifications
 - ⬜ Full notifications page (`/notifications`). The app only has a sheet.

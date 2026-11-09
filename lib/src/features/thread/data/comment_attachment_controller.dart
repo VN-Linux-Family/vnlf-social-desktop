@@ -58,6 +58,7 @@ final class CommentAttachmentController {
         pending.content,
         pending.parentId,
         pending.attachmentIds,
+        pending.gif,
       ]);
       _identity = pending.identity;
       _reserved = true;
@@ -192,7 +193,11 @@ final class CommentAttachmentController {
   }
 
   /// The same payload keeps the same identity after an uncertain response.
-  Future<ArticleComment> submit(String content, {String? parentId}) async {
+  Future<ArticleComment> submit(
+    String content, {
+    String? parentId,
+    Map<String, Object>? gif,
+  }) async {
     await initialize();
     _session.ensureCurrent();
     if (confirmed) throw StateError('Dismiss the confirmed submission first');
@@ -202,10 +207,10 @@ final class CommentAttachmentController {
     }
     final text = content.trim();
     final ids = readyIds;
-    if ((text.isEmpty && ids.isEmpty) || text.length > 4000) {
+    if ((text.isEmpty && ids.isEmpty && gif == null) || text.length > 4000) {
       throw const ParseFailure('comment.content');
     }
-    final signature = jsonEncode([text, parentId, ids]);
+    final signature = jsonEncode([text, parentId, ids, gif]);
     if (_signature != null && _signature != signature) {
       throw StateError(
         'Resolve the pending submission before changing the draft',
@@ -220,6 +225,7 @@ final class CommentAttachmentController {
       content: text,
       parentId: parentId,
       attachmentIds: ids,
+      gif: gif,
     );
     try {
       if (_store != null) {
@@ -238,10 +244,14 @@ final class CommentAttachmentController {
         parentId: parentId,
         attachmentIds: ids,
         clientCommentId: _identity,
+        gif: gif,
       );
       if (result.id.isEmpty ||
           result.content != text ||
           result.parentId != parentId ||
+          (gif != null &&
+              (result.gif?.provider != gif['provider'] ||
+                  result.gif?.id != gif['id'])) ||
           jsonEncode(result.attachments.map((item) => item.id).toList()) !=
               jsonEncode(ids)) {
         throw const ParseFailure('comment.createAck');

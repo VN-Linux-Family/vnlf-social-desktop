@@ -137,6 +137,55 @@ class _MenuPopover extends StatelessWidget {
   }
 }
 
+/// Opens [builder] in a panel anchored to [anchor] like the website's
+/// `Popover`: below the trigger and right-aligned, or above it when there is
+/// no room, never closer than 8px to the window edge.
+Future<T?> showVnlfPopover<T>(
+  BuildContext context, {
+  required Rect anchor,
+  required String label,
+  required WidgetBuilder builder,
+  double width = 360,
+}) {
+  final screen = MediaQuery.sizeOf(context).width;
+  return showGeneralDialog<T>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: label,
+    barrierColor: Colors.transparent,
+    transitionDuration: MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 120),
+    pageBuilder: (context, _, _) {
+      final colors = VnlfColors.of(context);
+      return CustomSingleChildLayout(
+        delegate: _PopoverLayout(anchor),
+        child: Semantics(
+          label: label,
+          scopesRoute: true,
+          explicitChildNodes: true,
+          child: Container(
+            width: (screen - 16).clamp(0, width).toDouble(),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              border: Border.all(color: colors.line),
+              borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+              boxShadow: vnlfHardShadow(colors),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: builder(context),
+            ),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, _, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+}
+
 /// Below the trigger and right-aligned to it, or above when there is no room,
 /// always 8px inside the window.
 class _PopoverLayout extends SingleChildLayoutDelegate {

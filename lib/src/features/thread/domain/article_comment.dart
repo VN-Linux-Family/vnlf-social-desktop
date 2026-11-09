@@ -94,5 +94,9 @@ abstract interface class CommentsRepository {
     String? parentId,
     String? clientCommentId,
     List<String> attachmentIds = const [],
+
+    /// The website's `gif` attachment: a KLIPY GIF or sticker, or a VNLF
+    /// sticker.
+    Map<String, Object>? gif,
   });
 }

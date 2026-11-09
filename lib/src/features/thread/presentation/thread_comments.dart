@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -12,6 +14,9 @@ import '../../../i18n/vi.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/session_avatar.dart';
+import '../../stickers/domain/stickers.dart';
+import '../../stickers/presentation/gif_picker.dart';
+import '../../stickers/presentation/sticker_providers.dart';
 import '../domain/article_comment.dart';
 import '../data/comment_attachment_controller.dart';
 import '../mention/mention_candidates.dart';
@@ -45,6 +50,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   late MentionController _mentions;
   final _portal = OverlayPortalController();
   double _composerHeight = 64;
+  GifPick? _gif;
 
   @override
   void initState() {
@@ -104,7 +110,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   Future<void> _submit() async {
     final content = _input.text.trim();
     final draft = ref.read(commentAttachmentControllerProvider(widget.postId));
-    if ((content.isEmpty && draft.readyIds.isEmpty) ||
+    if ((content.isEmpty && draft.readyIds.isEmpty && _gif == null) ||
         content.length > 4000 ||
         _submitting) {
       return;
@@ -136,7 +142,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       _failure = null;
     });
     try {
-      final comment = await draft.submit(content, parentId: parentId);
+      final sent = _gif;
+      final comment = await draft.submit(
+        content,
+        parentId: parentId,
+        gif: sent?.choice.toJson(),
+      );
       if (!mounted || revision != _revision) return;
       if (!offlineFeatures &&
           ref.read(sessionStateProvider)?.userId != sessionId) {
@@ -146,7 +157,9 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _confirmed[comment.id] = comment;
         if (!draft.confirmed && _input.text.trim() == content) _input.clear();
         _replyTo = null;
+        if (!draft.confirmed) _gif = null;
       });
+      if (sent != null) _afterGifSent(sent, sessionId);
       ref.invalidate(articleCommentsProvider(widget.postId));
       ref.invalidate(feedNotifierProvider);
     } on AppFailure catch (error) {
@@ -163,6 +176,38 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       }
     } finally {
       if (mounted && revision == _revision) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _pickGif(BuildContext button) async {
+    if (!_authorized()) return;
+    final box = button.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final pick = await showGifPicker(
+      context,
+      anchor: box.localToGlobal(Offset.zero) & box.size,
+    );
+    if (pick != null && mounted) setState(() => _gif = pick);
+  }
+
+  /// Like the website: tell KLIPY once the comment is sent, and keep the
+  /// sticker at the top of "Dùng gần đây".
+  void _afterGifSent(GifPick sent, String? owner) {
+    final config = ref.read(klipyConfigProvider).valueOrNull;
+    if (sent.choice.isKlipy && config != null) {
+      unawaited(
+        ref
+            .read(klipyRepositoryProvider)
+            .share(config, sent.choice, sent.query),
+      );
+    }
+    if (sent.choice.sticker && owner != null) {
+      unawaited(
+        ref
+            .read(recentStickersStoreProvider)
+            .remember(owner, sent.choice)
+            .then((_) => ref.invalidate(recentStickersProvider)),
+      );
     }
   }
 
@@ -183,6 +228,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       }
       setState(() {
         _input.clear();
+        _gif = null;
         _failure = null;
       });
     } catch (_) {
@@ -321,6 +367,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         _input.clear();
         _selecting = false;
         _attachmentError = null;
+        _gif = null;
       });
     });
     ref.listen(articleCommentsProvider(widget.postId), (before, after) {
@@ -354,6 +401,10 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         draft.pending != null &&
         _input.text != draft.pending!.content) {
       _input.text = draft.pending!.content;
+    }
+    if (recovery.hasValue && draft.pending?.gif != null && _gif == null) {
+      final restored = GifChoice.fromJson(draft.pending!.gif);
+      if (restored != null) _gif = (choice: restored, query: '');
     }
     ref.listen(commentAttachmentRecoveryProvider(widget.postId), (
       before,
@@ -567,7 +618,9 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       !(recovery.isLoading ||
           recovery.hasError ||
           draft.confirmed ||
-          (_input.text.trim().isEmpty && draft.readyIds.isEmpty) ||
+          (_input.text.trim().isEmpty &&
+              draft.readyIds.isEmpty &&
+              _gif == null) ||
           draft.attachments.any(
             (item) => item.state != CommentAttachmentState.ready,
           ) ||
@@ -731,6 +784,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                     : vi.commentsPanel.chuaGuiDuocBinhLuan,
                 style: error,
               ),
+            if (_gif != null) _gifChip(context, busy: busy),
             if (!draft.submissionPending)
               MentionSuggestions(controller: _mentions),
             Padding(
@@ -790,6 +844,25 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                             ),
                             borderSide: BorderSide.none,
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: phone ? 44 : 40,
+                    height: 44,
+                    child: Builder(
+                      builder: (button) => IconButton(
+                        key: const ValueKey('comment-stickers'),
+                        tooltip: vi.commentsPanel.stickerVaGif,
+                        padding: EdgeInsets.zero,
+                        onPressed: !signedIn || busy
+                            ? null
+                            : () => _pickGif(button),
+                        icon: VnlfIcon(
+                          VnlfLucide.sticker,
+                          size: 20,
+                          color: colors.muted,
                         ),
                       ),
                     ),
@@ -859,6 +932,49 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The chosen GIF or sticker, with a button to drop it.
+  Widget _gifChip(BuildContext context, {required bool busy}) {
+    final colors = VnlfColors.of(context);
+    final choice = _gif!.choice;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        spacing: 8,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+            child: SizedBox(
+              width: 54,
+              height: 42,
+              child: Image.network(
+                choice.url,
+                fit: choice.sticker ? BoxFit.contain : BoxFit.cover,
+                excludeFromSemantics: true,
+                errorBuilder: (_, _, _) =>
+                    ColoredBox(color: colors.surfaceSoft),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              choice.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: VnlfTypography.body(colors.ink),
+            ),
+          ),
+          IconButton(
+            tooltip: choice.sticker
+                ? vi.commentsPanel.boSticker
+                : vi.commentsPanel.boGif,
+            onPressed: busy ? null : () => setState(() => _gif = null),
+            icon: VnlfIcon(VnlfLucide.x, size: 16, color: colors.muted),
+          ),
+        ],
       ),
     );
   }
