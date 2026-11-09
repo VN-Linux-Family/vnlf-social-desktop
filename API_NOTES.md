@@ -831,3 +831,17 @@ API routes in `integrations.ts`, `stickers.ts` and `articles.ts`:
 No live call was made: the picker needs a signed-in account, and none was
 authorized for testing. Parsing, requests and the picker have synthetic coverage.
 
+## Password reset — 2026-11-09
+
+`POST /api/v1/auth/forgot-password {email}` always answers
+`{ok: true, message}`, whether or not the address has an account, and is
+limited to 5 requests an hour per IP (`apps/api/src/modules/auth.ts`). The
+emailed link points to `https://vietnamlinuxfamily.net/reset-password?token=`,
+where `POST /api/v1/auth/reset-password {token, password}` sets the new
+password (`400 RESET_TOKEN_INVALID` for a used or expired token). The native
+app sends the email request and waits 60 seconds before offering a resend,
+like the website. The reset itself happens on the website until the app
+handles that link. Google and Discord sign-in
+(`/api/v1/auth/{google/start,discord/login}`) finish on the website's domain,
+so a native client cannot receive the session without a server change.
+

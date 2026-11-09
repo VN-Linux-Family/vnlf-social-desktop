@@ -1,587 +1,854 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/api_client.dart';
-import '../../../domain/models.dart' show StorageFailure;
 import '../../../design_system/design_system.dart';
+import '../../../domain/models.dart';
 import '../../../i18n/vi.dart';
+import '../../shared/presentation/feature_samples.dart';
+import '../data/password_reset_repository.dart';
+import '../domain/password_reset.dart';
+
+/// The three forms of the website's sign-in page (`AuthView`). A reset link
+/// from the email opens the website, where the new password is set.
+enum AuthMode { login, register, forgot }
+
+final passwordResetRepositoryProvider = Provider<PasswordResetRepository>(
+  (ref) => offlineFeatures
+      ? const FixturePasswordResetRepository()
+      : LivePasswordResetRepository(ref.watch(apiClientProvider)),
+);
+
+const _resendCooldown = 60;
+final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+final _usernamePattern = RegExp(r'^[A-Za-z0-9._]{3,30}$');
+final _loginPattern = RegExp(r'^@?[A-Za-z0-9._]{3,30}$');
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.initialMode = AuthMode.login});
+
+  final AuthMode initialMode;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
+typedef _Notice = ({bool error, String text});
+
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  int _tabIndex = 0; // 0 = login, 1 = register
+  late AuthMode _mode = widget.initialMode;
+  final _email = TextEditingController();
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _showPassword = false;
+  bool _submitting = false;
+  _Notice? _notice;
+  String? _sentTo;
+  int _resendIn = 0;
+  Timer? _resendTimer;
 
-  // Login controllers & focus
-  final _loginIdController = TextEditingController();
-  final _loginPasswordController = TextEditingController();
-  final _loginIdFocus = FocusNode();
-  final _loginPasswordFocus = FocusNode();
-  bool _loginObscure = true;
-
-  // Register controllers & focus
-  final _regEmailController = TextEditingController();
-  final _regUsernameController = TextEditingController();
-  final _regPasswordController = TextEditingController();
-  final _regConfirmPasswordController = TextEditingController();
-  final _regEmailFocus = FocusNode();
-  final _regUsernameFocus = FocusNode();
-  final _regPasswordFocus = FocusNode();
-  final _regConfirmFocus = FocusNode();
-  bool _regObscure = true;
-
-  bool _loading = false;
-  String? _errorMessage;
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in [_email, _username, _password, _confirm]) {
+      controller.addListener(() => setState(() {}));
+    }
+  }
 
   @override
   void dispose() {
-    _loginIdController.dispose();
-    _loginPasswordController.dispose();
-    _loginIdFocus.dispose();
-    _loginPasswordFocus.dispose();
-    _regEmailController.dispose();
-    _regUsernameController.dispose();
-    _regPasswordController.dispose();
-    _regConfirmPasswordController.dispose();
-    _regEmailFocus.dispose();
-    _regUsernameFocus.dispose();
-    _regPasswordFocus.dispose();
-    _regConfirmFocus.dispose();
+    _resendTimer?.cancel();
+    for (final controller in [_email, _username, _password, _confirm]) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final login = _loginIdController.text.trim();
-    final password = _loginPasswordController.text;
+  bool get _validEmail => _emailPattern.hasMatch(_email.text.trim());
+  bool get _validUsername => _usernamePattern.hasMatch(_username.text.trim());
+  bool get _validLogin =>
+      _validEmail || _loginPattern.hasMatch(_email.text.trim());
+  bool get _validPassword => _password.text.length >= 10;
+  bool get _passwordsMatch => _password.text == _confirm.text;
 
-    if (login.isEmpty || password.isEmpty) {
-      setState(() {
-        _errorMessage = vi.app.auth.vuiLongNhapDay;
-      });
-      return;
-    }
+  bool get _emailInvalid =>
+      _email.text.isNotEmpty &&
+      (_mode == AuthMode.login ? !_validLogin : !_validEmail);
 
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
+  bool get _canSubmit => switch (_mode) {
+    AuthMode.forgot => _validEmail,
+    AuthMode.register =>
+      _validEmail && _validUsername && _validPassword && _passwordsMatch,
+    AuthMode.login => _validLogin && _password.text.isNotEmpty,
+  };
 
-    try {
-      final session = await ref
-          .read(authControllerProvider.notifier)
-          .login(login, password);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            format(vi.app.auth.chaoMungTroLai, {
-              'displayName': session.displayName,
-            }),
-          ),
-          backgroundColor: VnlfColors.of(context).brand,
-        ),
-      );
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = authErrorMessage(e);
-      });
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  void _switch(AuthMode mode) => setState(() {
+    _mode = mode;
+    _notice = null;
+    _sentTo = null;
+  });
+
+  void _leave() {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/');
     }
   }
 
-  Future<void> _handleRegister() async {
-    final email = _regEmailController.text.trim();
-    final username = _regUsernameController.text.trim();
-    final password = _regPasswordController.text;
-    final confirm = _regConfirmPasswordController.text;
-
-    if (email.isEmpty || username.isEmpty || password.isEmpty) {
-      setState(() {
-        _errorMessage = vi.app.auth.vuiLongDienDay;
-      });
-      return;
-    }
-
-    if (password != confirm) {
-      setState(() {
-        _errorMessage = vi.app.auth.matKhauXacNhan;
-      });
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final session = await ref
-          .read(authControllerProvider.notifier)
-          .register(email, username, password);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            format(vi.app.auth.taoTaiKhoanThanh, {
-              'displayName': session.displayName,
-            }),
-          ),
-          backgroundColor: VnlfColors.of(context).brand,
-        ),
+  Future<void> _submit() async {
+    if (_submitting) return;
+    if (!_canSubmit) {
+      setState(
+        () => _notice = (error: true, text: vi.miscViews.kiemTraLaiThongTin),
       );
-      if (context.canPop()) {
-        context.pop();
+      return;
+    }
+    if (_mode == AuthMode.forgot) {
+      await _sendResetLink(_email.text.trim(), again: false);
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _notice = null;
+    });
+    try {
+      final auth = ref.read(authControllerProvider.notifier);
+      if (_mode == AuthMode.register) {
+        await auth.register(
+          _email.text.trim(),
+          _username.text.trim(),
+          _password.text,
+        );
       } else {
-        context.go('/');
+        await auth.login(_email.text.trim(), _password.text);
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = authErrorMessage(e);
-      });
+      if (mounted) _leave();
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _notice = (error: true, text: authErrorMessage(error)));
+      }
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _sendResetLink(String target, {required bool again}) async {
+    setState(() {
+      _submitting = true;
+      _notice = null;
+    });
+    try {
+      await ref.read(passwordResetRepositoryProvider).requestReset(target);
+      if (!mounted) return;
+      _resendTimer?.cancel();
+      setState(() {
+        _sentTo = target;
+        _resendIn = _resendCooldown;
+        if (again) _notice = (error: false, text: vi.miscViews.daGuiLaiEmail);
+      });
+      _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted || _resendIn <= 1) timer.cancel();
+        if (mounted) {
+          setState(() => _resendIn = _resendIn > 0 ? _resendIn - 1 : 0);
+        }
+      });
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _notice = (error: true, text: authErrorMessage(error)));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    var canPop = false;
-    try {
-      canPop = context.canPop();
-    } catch (_) {
-      try {
-        canPop = Navigator.canPop(context);
-      } catch (_) {}
-    }
-
+    final size = MediaQuery.sizeOf(context);
+    final phone = size.width < VnlfDimensions.tabletMinWidth;
+    final panel = _panel(context, phone: phone, width: size.width);
     return Scaffold(
-      backgroundColor: colors.bg,
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: colors.surface,
-        elevation: 0,
-        leading: IconButton(
-          tooltip: vi.app.common.quayLai,
-          icon: Icon(Icons.arrow_back_rounded, color: colors.ink),
-          onPressed: () {
-            if (canPop) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
-          },
-        ),
-        title: Text(
-          _tabIndex == 0 ? vi.common.dangNhap : vi.miscViews.dangKy,
-          style: VnlfTypography.h3(colors.ink),
-        ),
-      ),
+      backgroundColor: colors.surface,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-                  border: Border.all(color: colors.line),
-                ),
-                padding: const EdgeInsets.all(24),
+        child: phone
+            ? SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Brand Logo & Header
-                    Center(
-                      child: BrandAssets.logo(
-                        size: 48,
-                        semanticLabel: 'VNLF Social',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Vietnam Linux Family',
-                      textAlign: TextAlign.center,
-                      style: VnlfTypography.h2(colors.ink),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      vi.app.auth.congDongLinuxMa,
-                      textAlign: TextAlign.center,
-                      style: VnlfTypography.meta(colors.muted),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Tab Segment
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colors.bg,
-                        borderRadius: BorderRadius.circular(
-                          VnlfDimensions.radiusMd,
-                        ),
-                        border: Border.all(color: colors.line),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: () => setState(() {
-                                _tabIndex = 0;
-                                _errorMessage = null;
-                              }),
-                              borderRadius: BorderRadius.circular(
-                                VnlfDimensions.radiusSm,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _tabIndex == 0 ? colors.surface : null,
-                                  borderRadius: BorderRadius.circular(
-                                    VnlfDimensions.radiusSm,
-                                  ),
-                                  boxShadow: _tabIndex == 0
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.06,
-                                            ),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Text(
-                                  vi.common.dangNhap,
-                                  textAlign: TextAlign.center,
-                                  style: VnlfTypography.control(
-                                    _tabIndex == 0
-                                        ? colors.brand
-                                        : colors.muted,
-                                    fontWeight: _tabIndex == 0
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () => setState(() {
-                                _tabIndex = 1;
-                                _errorMessage = null;
-                              }),
-                              borderRadius: BorderRadius.circular(
-                                VnlfDimensions.radiusSm,
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _tabIndex == 1 ? colors.surface : null,
-                                  borderRadius: BorderRadius.circular(
-                                    VnlfDimensions.radiusSm,
-                                  ),
-                                  boxShadow: _tabIndex == 1
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.06,
-                                            ),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Text(
-                                  vi.miscViews.dangKy,
-                                  textAlign: TextAlign.center,
-                                  style: VnlfTypography.control(
-                                    _tabIndex == 1
-                                        ? colors.brand
-                                        : colors.muted,
-                                    fontWeight: _tabIndex == 1
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Error Message Banner
-                    if (_errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colors.red.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(
-                            VnlfDimensions.radiusMd,
-                          ),
-                          border: Border.all(
-                            color: colors.red.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: colors.red,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: VnlfTypography.meta(colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Tab Form Body
-                    if (_tabIndex == 0) ...[
-                      // LOGIN FORM
-                      AutofillGroup(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextField(
-                              key: const Key('login-id-field'),
-                              controller: _loginIdController,
-                              focusNode: _loginIdFocus,
-                              autofillHints: const [
-                                AutofillHints.username,
-                                AutofillHints.email,
-                              ],
-                              decoration: InputDecoration(
-                                labelText: vi.app.auth.emailHoacTenNguoi,
-                                prefixIcon: const Icon(Icons.person_outline),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) =>
-                                  FocusScope.of(context)
-                                      .requestFocus(_loginPasswordFocus),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              key: const Key('login-password-field'),
-                              controller: _loginPasswordController,
-                              focusNode: _loginPasswordFocus,
-                              obscureText: _loginObscure,
-                              autofillHints: const [AutofillHints.password],
-                              decoration: InputDecoration(
-                                labelText: vi.miscViews.matKhau2,
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _loginObscure
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _loginObscure = !_loginObscure,
-                                  ),
-                                ),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _handleLogin(),
-                            ),
-                            const SizedBox(height: 20),
-                            FilledButton(
-                              onPressed: _loading ? null : _handleLogin,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: colors.brand,
-                                foregroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimary,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    VnlfDimensions.radiusMd,
-                                  ),
-                                ),
-                              ),
-                              child: _loading
-                                  ? SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    )
-                                  : Text(
-                                      vi.miscViews.vaoVnlfSocial,
-                                      style: VnlfTypography.control(
-                                        Theme.of(context).colorScheme.onPrimary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ] else ...[
-                      // REGISTER FORM
-                      AutofillGroup(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextField(
-                              key: const Key('reg-email-field'),
-                              controller: _regEmailController,
-                              focusNode: _regEmailFocus,
-                              autofocus: true,
-                              keyboardType: TextInputType.emailAddress,
-                              autofillHints: const [AutofillHints.email],
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email_outlined),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) =>
-                                  _regUsernameFocus.requestFocus(),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              key: const Key('reg-username-field'),
-                              controller: _regUsernameController,
-                              focusNode: _regUsernameFocus,
-                              autofillHints: const [AutofillHints.newUsername],
-                              decoration: InputDecoration(
-                                labelText: vi.app.common.tenNguoiDung,
-                                prefixIcon: const Icon(Icons.alternate_email),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) =>
-                                  _regPasswordFocus.requestFocus(),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              key: const Key('reg-password-field'),
-                              controller: _regPasswordController,
-                              focusNode: _regPasswordFocus,
-                              obscureText: _regObscure,
-                              autofillHints: const [AutofillHints.newPassword],
-                              decoration: InputDecoration(
-                                labelText: vi.miscViews.matKhau2,
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _regObscure
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _regObscure = !_regObscure,
-                                  ),
-                                ),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.next,
-                              onSubmitted: (_) =>
-                                  _regConfirmFocus.requestFocus(),
-                            ),
-                            const SizedBox(height: 14),
-                            TextField(
-                              key: const Key('reg-confirm-field'),
-                              controller: _regConfirmPasswordController,
-                              focusNode: _regConfirmFocus,
-                              obscureText: _regObscure,
-                              autofillHints: const [AutofillHints.newPassword],
-                              decoration: InputDecoration(
-                                labelText: vi.miscViews.nhapLaiMatKhau,
-                                prefixIcon: const Icon(Icons.lock_reset),
-                                border: const OutlineInputBorder(),
-                              ),
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _handleRegister(),
-                            ),
-                            const SizedBox(height: 20),
-                            FilledButton(
-                              onPressed: _loading ? null : _handleRegister,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: colors.brand,
-                                foregroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimary,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    VnlfDimensions.radiusMd,
-                                  ),
-                                ),
-                              ),
-                              child: _loading
-                                  ? SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary,
-                                      ),
-                                    )
-                                  : Text(
-                                      vi.miscViews.taoTaiKhoan,
-                                      style: VnlfTypography.control(
-                                        Theme.of(context).colorScheme.onPrimary,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+                  children: [const _AuthArt(phone: true), panel],
                 ),
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Expanded(flex: 9, child: _AuthArt(phone: false)),
+                  Expanded(
+                    flex: 11,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Center(child: panel),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _panel(
+    BuildContext context, {
+    required bool phone,
+    required double width,
+  }) {
+    final colors = VnlfColors.of(context);
+    final muted = VnlfTypography.body(colors.muted);
+    final heading = switch (_mode) {
+      AuthMode.login =>
+        '${vi.miscViews.noiCongDong} ${vi.miscViews.cungXayDung}',
+      AuthMode.register =>
+        '${vi.miscViews.batDauCauChuyen} ${vi.miscViews.cuaBan}',
+      AuthMode.forgot => '${vi.miscViews.datLai} ${vi.miscViews.matKhau}',
+    };
+    final lead = switch (_mode) {
+      AuthMode.login => vi.miscViews.chiaSeDieuBanBiet,
+      AuthMode.register => vi.miscViews.taoUsernameTimCongDong,
+      AuthMode.forgot => vi.miscViews.nhapEmailDeNhanLien,
+    };
+    final sent = _mode == AuthMode.forgot && _sentTo != null;
+    return Padding(
+      padding: phone
+          ? const EdgeInsets.fromLTRB(14, 14, 14, 28)
+          : EdgeInsets.symmetric(
+              horizontal: (width * .08).clamp(30, 120).toDouble(),
+              vertical: 30,
+            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _AuthHead(onHome: _leave),
+          SizedBox(height: phone ? 18 : 75),
+          // The column stretches its children, so the copy needs its own
+          // alignment for the website's 430px limit to apply.
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 430),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 22, bottom: 12),
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        heading,
+                        style: VnlfTypography.body(colors.ink)
+                            .copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                  if (!sent) Text(lead, style: muted.copyWith(height: 1.6)),
+                ],
               ),
             ),
           ),
+          if (_mode != AuthMode.forgot)
+            _AuthTabs(mode: _mode, onChanged: _switch),
+          if (sent) ..._sentOutcome(context) else ..._form(context),
+          if (_mode != AuthMode.forgot)
+            Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 6,
+                children: [
+                  VnlfIcon(
+                    VnlfLucide.shieldCheck,
+                    size: 15,
+                    color: colors.muted,
+                  ),
+                  Flexible(
+                    child: Text(vi.miscViews.dangKyMoKhongCan, style: muted),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _form(BuildContext context) {
+    final register = _mode == AuthMode.register;
+    final login = _mode == AuthMode.login;
+    return [
+      if (_notice != null) _AuthAlert(notice: _notice!),
+      if (register)
+        _AuthField(
+          key: const Key('reg-username-field'),
+          controller: _username,
+          icon: VnlfLucide.atSign,
+          hint: vi.miscViews.username,
+          error: _username.text.isNotEmpty && !_validUsername
+              ? vi.miscViews.usernameCan330Ky
+              : null,
+          onSubmitted: _submit,
+        ),
+      _AuthField(
+        key: Key(login ? 'login-id-field' : 'reg-email-field'),
+        controller: _email,
+        icon: login ? VnlfLucide.atSign : VnlfLucide.mail,
+        hint: login ? vi.miscViews.emailHoacUsername : vi.miscViews.emailCuaBan,
+        keyboardType: login ? TextInputType.text : TextInputType.emailAddress,
+        error: _emailInvalid
+            ? (login
+                  ? vi.miscViews.emailHoacUsernameChuaDung
+                  : vi.miscViews.emailChuaDungDinhDang)
+            : null,
+        onSubmitted: _submit,
+      ),
+      if (_mode != AuthMode.forgot)
+        _AuthField(
+          key: Key(login ? 'login-password-field' : 'reg-password-field'),
+          controller: _password,
+          icon: VnlfLucide.lockKeyhole,
+          hint: register
+              ? vi.miscViews.matKhauToiThieu10
+              : vi.miscViews.matKhau2,
+          obscure: !_showPassword,
+          onToggleObscure: () => setState(() => _showPassword = !_showPassword),
+          error: register && _password.text.isNotEmpty && !_validPassword
+              ? vi.miscViews.matKhauCanItNhat
+              : null,
+          onSubmitted: _submit,
+        ),
+      if (register)
+        _AuthField(
+          key: const Key('reg-confirm-field'),
+          controller: _confirm,
+          icon: VnlfLucide.lockKeyhole,
+          hint: vi.miscViews.nhapLaiMatKhau,
+          obscure: !_showPassword,
+          error: _confirm.text.isNotEmpty && !_passwordsMatch
+              ? vi.miscViews.matKhauNhapLaiChua
+              : null,
+          onSubmitted: _submit,
+        ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 17),
+          child: _AuthSubmit(
+            label: _submitting
+                ? (_mode == AuthMode.forgot
+                      ? vi.miscViews.dangGui
+                      : vi.common.dangXuLy)
+                : switch (_mode) {
+                    AuthMode.login => vi.miscViews.vaoVnlfSocial,
+                    AuthMode.register => vi.miscViews.taoTaiKhoan,
+                    AuthMode.forgot => vi.miscViews.guiLienKetDatLai,
+                  },
+            busy: _submitting,
+            onPressed: _canSubmit && !_submitting ? _submit : null,
+          ),
+        ),
+      ),
+      if (login)
+        _AuthLink(
+          label: vi.miscViews.quenMatKhau,
+          onPressed: () => _switch(AuthMode.forgot),
+        ),
+      if (_mode == AuthMode.forgot)
+        _AuthLink(
+          label: vi.miscViews.quayLaiDangNhap,
+          onPressed: () => _switch(AuthMode.login),
+        ),
+    ];
+  }
+
+  List<Widget> _sentOutcome(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final muted = VnlfTypography.body(colors.muted).copyWith(height: 1.6);
+    return [
+      const SizedBox(height: 22),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.bg,
+          border: Border.all(color: colors.line),
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+        ),
+        child: Semantics(
+          liveRegion: true,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.brand.withValues(alpha: .12),
+                ),
+                child: Center(
+                  child: VnlfIcon(
+                    VnlfLucide.mailCheck,
+                    size: 20,
+                    color: colors.brand,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 6,
+                  children: [
+                    Text(
+                      vi.miscViews.kiemTraHopThu,
+                      style: VnlfTypography.body(colors.ink)
+                          .copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      format(vi.miscViews.neuEmailDaDangKy, {
+                        'email': _sentTo ?? '',
+                      }),
+                      style: muted,
+                    ),
+                    Text(vi.miscViews.chuaThayEmail, style: muted),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      if (_notice != null) _AuthAlert(notice: _notice!),
+      Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: SizedBox(
+          height: 44,
+          child: OutlinedButton(
+            onPressed: _submitting || _resendIn > 0
+                ? null
+                : () => _sendResetLink(_sentTo ?? '', again: true),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colors.ink,
+              backgroundColor: colors.surface,
+              side: BorderSide(color: colors.line),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+              ),
+              textStyle: VnlfTypography.body(colors.ink)
+                  .copyWith(fontWeight: FontWeight.w600),
+            ),
+            child: Text(
+              _submitting
+                  ? vi.miscViews.dangGui
+                  : _resendIn > 0
+                  ? format(vi.miscViews.guiLaiSau, {'seconds': _resendIn})
+                  : vi.miscViews.guiLai,
+            ),
+          ),
+        ),
+      ),
+      _AuthLink(
+        label: vi.miscViews.dungEmailKhac,
+        onPressed: () => setState(() {
+          _sentTo = null;
+          _notice = null;
+        }),
+      ),
+      _AuthLink(
+        label: vi.miscViews.quayLaiDangNhap,
+        onPressed: () => _switch(AuthMode.login),
+      ),
+    ];
+  }
+}
+
+/// The brand-green column with the emblem; a 120px band on phones.
+class _AuthArt extends StatelessWidget {
+  const _AuthArt({required this.phone});
+  final bool phone;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final ink = const Color(0xFFEDF5E9);
+    return Container(
+      height: phone ? 120 : null,
+      color: colors.isDark ? const Color(0xFF0E3A24) : const Color(0xFF1D6B43),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipOval(child: BrandAssets.logo(size: phone ? 54 : 190)),
+          Padding(
+            padding: EdgeInsets.only(top: phone ? 5 : 22),
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '${vi.miscViews.vietNam}\n'),
+                  TextSpan(
+                    text: vi.miscViews.linuxFamily,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              style: VnlfTypography.body(ink)
+                  .copyWith(height: 1.8, letterSpacing: .4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthHead extends ConsumerWidget {
+  const _AuthHead({required this.onHome});
+  final VoidCallback onHome;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = VnlfColors.of(context);
+    return Row(
+      children: [
+        InkWell(
+          onTap: onHome,
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 8,
+            children: [
+              BrandAssets.logo(size: 30, semanticLabel: 'VNLF Social'),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: 'VNLF ',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    TextSpan(
+                      text: 'Social',
+                      style: TextStyle(color: colors.brand),
+                    ),
+                  ],
+                ),
+                style: VnlfTypography.body(colors.ink),
+              ),
+            ],
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          tooltip: vi.miscViews.doiGiaoDien,
+          onPressed: () => ref
+              .read(themeModeProvider.notifier)
+              .setThemeMode(colors.isDark ? ThemeMode.light : ThemeMode.dark),
+          icon: VnlfIcon(
+            colors.isDark ? VnlfLucide.sun : VnlfLucide.moon,
+            size: 18,
+            color: colors.muted,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthTabs extends StatelessWidget {
+  const _AuthTabs({required this.mode, required this.onChanged});
+
+  final AuthMode mode;
+  final ValueChanged<AuthMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    Widget tab(String label, AuthMode value) {
+      final active = mode == value;
+      return Semantics(
+        selected: active,
+        button: true,
+        child: InkWell(
+          onTap: () => onChanged(value),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: active ? colors.brand : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Text(
+              label,
+              style: VnlfTypography.body(active ? colors.ink : colors.muted)
+                  .copyWith(fontWeight: active ? FontWeight.w700 : null),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 42),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.line)),
+      ),
+      child: Row(
+        spacing: 24,
+        children: [
+          tab(vi.common.dangNhap, AuthMode.login),
+          tab(vi.miscViews.dangKy, AuthMode.register),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    super.key,
+    required this.controller,
+    required this.icon,
+    required this.hint,
+    required this.onSubmitted,
+    this.error,
+    this.obscure = false,
+    this.onToggleObscure,
+    this.keyboardType,
+  });
+
+  final TextEditingController controller;
+  final VnlfLucide icon;
+  final String hint;
+  final String? error;
+  final bool obscure;
+  final VoidCallback? onToggleObscure;
+  final TextInputType? keyboardType;
+  final VoidCallback onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final invalid = error != null;
+    return Padding(
+      padding: const EdgeInsets.only(top: 11),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 5,
+        children: [
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 11),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: invalid
+                    ? Color.alphaBlend(
+                        colors.red.withValues(alpha: .65),
+                        colors.line,
+                      )
+                    : colors.line,
+              ),
+              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+              boxShadow: invalid
+                  ? [
+                      BoxShadow(
+                        color: colors.red.withValues(alpha: .09),
+                        spreadRadius: 3,
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              spacing: 8,
+              children: [
+                VnlfIcon(icon, size: 16, color: colors.muted),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    obscureText: obscure,
+                    keyboardType: keyboardType,
+                    autocorrect: false,
+                    enableSuggestions: !obscure,
+                    onSubmitted: (_) => onSubmitted(),
+                    style: VnlfTypography.body(colors.ink),
+                    // The box above draws the border; the theme's outline
+                    // would draw a second one inside it.
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      hintText: hint,
+                      hintStyle: VnlfTypography.body(colors.muted),
+                    ),
+                  ),
+                ),
+                if (onToggleObscure != null)
+                  IconButton(
+                    tooltip: obscure
+                        ? vi.miscViews.hienMatKhau
+                        : vi.miscViews.anMatKhau,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onToggleObscure,
+                    icon: VnlfIcon(
+                      VnlfLucide.eye,
+                      size: 16,
+                      color: colors.muted,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (invalid)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                error!,
+                style: VnlfTypography.body(colors.red).copyWith(height: 1.45),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthSubmit extends StatelessWidget {
+  const _AuthSubmit({
+    required this.label,
+    required this.busy,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool busy;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final background = colors.isDark
+        ? const Color(0xFF7FCF9A)
+        : const Color(0xFF1D6B43);
+    final foreground = colors.isDark ? const Color(0xFF0C1F14) : Colors.white;
+    return Opacity(
+      opacity: onPressed == null ? .5 : 1,
+      child: Material(
+        color: background,
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 7,
+              children: [
+                Text(
+                  label,
+                  style: VnlfTypography.body(foreground)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                VnlfIcon(
+                  busy ? VnlfLucide.loaderCircle : VnlfLucide.arrowUpRight,
+                  size: 16,
+                  color: foreground,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthLink extends StatelessWidget {
+  const _AuthLink({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    // The website's link has no hover background.
+    return InkWell(
+      onTap: onPressed,
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: VnlfTypography.body(colors.muted),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthAlert extends StatelessWidget {
+  const _AuthAlert({required this.notice});
+  final _Notice notice;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final tint = notice.error ? colors.red : colors.brand;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: tint.withValues(alpha: notice.error ? .08 : .09),
+          border: Border.all(
+            color: tint.withValues(alpha: notice.error ? .28 : .26),
+          ),
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: VnlfIcon(
+                notice.error ? VnlfLucide.circleAlert : VnlfLucide.circleCheck,
+                size: 16,
+                color: tint,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                notice.text,
+                style: VnlfTypography.body(tint).copyWith(height: 1.5),
+              ),
+            ),
+          ],
         ),
       ),
     );
