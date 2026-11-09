@@ -331,46 +331,8 @@ jobs:
         env:
           IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
         run: python3 tool/prepare_android_signing.py --stable "$IS_STABLE"
-      - name: Pre-cache Gradle and Android native dependencies
-        run: |
-          python3 - <<'PY'
-          import hashlib, pathlib, time, urllib.request
-          def fetch(url, dest, expected_md5=None, min_size=10000):
-              path = pathlib.Path(dest)
-              path.parent.mkdir(parents=True, exist_ok=True)
-              for attempt in range(6):
-                  try:
-                      print(f"Pre-caching {url} (attempt {attempt+1})...")
-                      req = urllib.request.Request(url, headers={'User-Agent': 'VNLF-CI/1.0'})
-                      with urllib.request.urlopen(req, timeout=120) as resp, path.open('wb') as out:
-                          out.write(resp.read())
-                      data = path.read_bytes()
-                      if expected_md5 and hashlib.md5(data).hexdigest() != expected_md5:
-                          raise ValueError(f"MD5 mismatch for {dest}")
-                      if len(data) < min_size:
-                          raise ValueError(f"File too small: {len(data)}")
-                      print(f"Verified {dest} ({len(data)} bytes)")
-                      return
-                  except Exception as exc:
-                      print(f"Attempt {attempt+1} failed: {exc}")
-                      time.sleep(4 * (attempt + 1))
-              raise SystemExit(f"Failed to pre-cache {url}")
-          mpv_base = "https://github.com/media-kit/libmpv-android-video-build/releases/download/v1.1.7"
-          for name, md5 in (
-              ("default-arm64-v8a.jar", "83df25b61193af8fa815e373143ac9af"),
-              ("default-armeabi-v7a.jar", "22e21526fefc0a2b8f17adbec9f57590"),
-              ("default-x86_64.jar", "6fa26bf0459b11f1c0b0dbc29e5b940d"),
-              ("default-x86.jar", "0d742b756dc9d1fcd84ea271d8b68f32"),
-          ):
-              fetch(f"{mpv_base}/{name}", f"build/media_kit_libs_android_video/v1.1.7/{name}", expected_md5=md5)
-          PY
-          for attempt in 1 2 3 4 5; do
-            if (cd android && ./gradlew --version); then
-              break
-            fi
-            echo "Gradle wrapper bootstrap attempt $attempt failed; retrying..."
-            sleep $((attempt * 4))
-          done
+      - name: Pre-cache libmpv Android libraries
+        run: python3 tool/precache_android_build.py
       - name: Build one APK for each ABI
         env:
           IS_STABLE: ${{ needs.metadata.outputs.is_stable }}

@@ -78,6 +78,18 @@ class LocalNotificationService {
     }
   }
 
+  /// Asks Android 13+ for the notification permission and reports whether
+  /// notifications can be shown. Older Android versions report the system
+  /// setting; other platforms need no grant here.
+  Future<bool> requestPermission() async {
+    if (kIsWeb || !Platform.isAndroid) return true;
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    return await android?.requestNotificationsPermission() ?? false;
+  }
+
   Future<void> showNotification({
     required int id,
     required String title,

@@ -9,6 +9,16 @@ import '../data/community_socket_client.dart';
 import '../data/io_community_connection.dart';
 import '../domain/community_connection.dart';
 
+/// The Android foreground service runs only while it keeps a signed-in
+/// realtime connection alive for background notifications.
+final androidBackgroundServiceWantedProvider = Provider<bool>((ref) {
+  final session = ref.watch(sessionStateProvider);
+  return ref.watch(androidPlatformProvider) &&
+      ref.watch(androidBackgroundSyncProvider) &&
+      session != null &&
+      session.userId.isNotEmpty;
+});
+
 final communityConnectorProvider = Provider<CommunityConnector?>((ref) {
   final transport = ref.watch(ioTransportProvider);
   if (transport == null) return null;

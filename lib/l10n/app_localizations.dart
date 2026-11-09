@@ -145,6 +145,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bạn có hoạt động mới trên Vietnam Linux Family.'**
   String get activityNotificationBody;
+
+  /// Shown when Android denies the notification permission after the member turns on background notifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ứng dụng chưa được phép gửi thông báo. Hãy cho phép trong cài đặt hệ thống rồi bật lại.'**
+  String get notificationPermissionDenied;
 }
 
 class _AppLocalizationsDelegate

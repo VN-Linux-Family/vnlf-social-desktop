@@ -11,23 +11,37 @@ void main() {
     });
 
     test('isAndroid returns false on host test runner', () {
-      // In host VM flutter test, Platform.isAndroid is false (running on Linux VM)
       expect(AndroidBackgroundService.isAndroid, isFalse);
     });
 
-    test('notifier initializes with default true and toggles', () async {
+    test('starting or stopping off Android does nothing', () async {
+      await const AndroidBackgroundService().start();
+      await const AndroidBackgroundService().stop();
+    });
+
+    test('background notifications stay off until turned on', () async {
       final notifier = AndroidBackgroundSyncNotifier();
-      expect(notifier.state, isTrue);
-
-      await notifier.toggle(false);
+      await Future<void>.delayed(Duration.zero);
       expect(notifier.state, isFalse);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('android_background_sync'), isFalse);
 
       await notifier.toggle(true);
       expect(notifier.state, isTrue);
+
+      final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('android_background_sync'), isTrue);
+
+      await notifier.toggle(false);
+      expect(notifier.state, isFalse);
+      expect(prefs.getBool('android_background_sync'), isFalse);
+    });
+
+    test('a saved choice is restored', () async {
+      SharedPreferences.setMockInitialValues({'android_background_sync': true});
+
+      final notifier = AndroidBackgroundSyncNotifier();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(notifier.state, isTrue);
     });
   });
 }
