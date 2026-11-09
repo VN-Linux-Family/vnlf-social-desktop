@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../moderation/presentation/report_dialog.dart';
 import '../../direct_messages/presentation/direct_message_state.dart';
 import '../../feed/presentation/feed_notifier.dart';
@@ -98,11 +99,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
       });
     } catch (_) {
       if (_current(generation, viewer)) {
-        setState(
-          () => _error = Localizations.localeOf(context).languageCode == 'en'
-              ? 'Could not load more messages.'
-              : 'Không tải được lời nhắn tiếp theo.',
-        );
+        setState(() => _error = vi.app.profile.khongTaiDuocLoi);
       }
     } finally {
       if (_current(generation, viewer)) setState(() => _busy = false);
@@ -119,21 +116,20 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
         (text.isEmpty || text.length > 200 || viewer == widget.ownerId)) {
       return;
     }
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final scope = ref.read(apiClientProvider).captureSession();
     if (action == 'delete') {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(english ? 'Delete this message?' : 'Xóa lời nhắn?'),
+          title: Text(vi.app.profile.xoaLoiNhan),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(english ? 'Cancel' : 'Hủy'),
+              child: Text(vi.common.huy),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(english ? 'Delete' : 'Xóa'),
+              child: Text(vi.common.xoa),
             ),
           ],
         ),
@@ -188,12 +184,8 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
       if (_current(generation, viewer)) {
         setState(
           () => _error = acknowledged
-              ? (english
-                    ? 'Action confirmed, but the guestbook could not be refreshed.'
-                    : 'Đã xác nhận thao tác, nhưng không tải lại được sổ lưu bút.')
-              : (english
-                    ? 'Could not confirm this action. Check the guestbook before trying again.'
-                    : 'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.'),
+              ? vi.app.profile.daXacNhanThao
+              : vi.app.profile.chuaXacNhanDuoc,
         );
       }
     } finally {
@@ -219,7 +211,6 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
         });
       }
     });
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final viewer = ref.watch(sessionStateProvider)?.userId;
     final owner = viewer != null && viewer == widget.ownerId;
@@ -239,7 +230,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                   minLines: 2,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    labelText: english ? 'Saved draft' : 'Bản nháp đã giữ',
+                    labelText: vi.app.profile.banNhapDaGiu,
                   ),
                 ),
               FeatureLoadError(
@@ -260,15 +251,11 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    english ? 'Guestbook' : 'Sổ lưu bút',
+                    vi.guestbook.soLuuBut,
                     style: VnlfTypography.h2(colors.ink),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    english
-                        ? '${page.total} messages'
-                        : '${page.total} lời nhắn',
-                  ),
+                  Text(format(vi.guestbook.soLoiNhan, {'count': page.total})),
                   if (reason == null &&
                       viewer != null &&
                       !owner &&
@@ -281,49 +268,29 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                       maxLines: 4,
                       enabled: !_busy,
                       decoration: InputDecoration(
-                        labelText: english
-                            ? 'Write a message'
-                            : 'Viết lời nhắn',
+                        labelText: vi.guestbook.vietLoiNhan,
                       ),
                     ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: FilledButton(
                         onPressed: _busy ? null : () => _act('write'),
-                        child: Text(english ? 'Send' : 'Gửi lời nhắn'),
+                        child: Text(vi.app.profile.guiLoiNhan),
                       ),
                     ),
                   ] else if (reason != null) ...[
                     Text(switch (reason) {
-                      'SIGN_IN' =>
-                        english
-                            ? 'Sign in to write.'
-                            : 'Đăng nhập để viết lời nhắn.',
-                      'GUESTBOOK_DISABLED' =>
-                        english
-                            ? 'This guestbook is disabled.'
-                            : 'Sổ lưu bút đã tắt.',
-                      'GUESTBOOK_DAILY_LIMIT' =>
-                        english
-                            ? 'You have already written today (Vietnam time).'
-                            : 'Bạn đã viết hôm nay (giờ Việt Nam).',
-                      'GUESTBOOK_BLOCKED' =>
-                        english
-                            ? 'You cannot write here.'
-                            : 'Bạn không thể viết vào sổ này.',
-                      'GUESTBOOK_OWN' =>
-                        english
-                            ? 'This is your guestbook.'
-                            : 'Đây là sổ lưu bút của bạn.',
-                      _ =>
-                        english
-                            ? 'Writing is unavailable.'
-                            : 'Hiện không thể viết lời nhắn.',
+                      'SIGN_IN' => vi.app.profile.dangNhapDeViet,
+                      'GUESTBOOK_DISABLED' => vi.app.profile.soLuuButDa,
+                      'GUESTBOOK_DAILY_LIMIT' => vi.app.profile.banDaVietHom,
+                      'GUESTBOOK_BLOCKED' => vi.app.profile.banKhongTheViet,
+                      'GUESTBOOK_OWN' => vi.app.profile.dayLaSoLuu,
+                      _ => vi.app.profile.hienKhongTheViet,
                     }),
                     if (reason == 'SIGN_IN')
                       TextButton(
                         onPressed: () => context.push('/login'),
-                        child: Text(english ? 'Sign in' : 'Đăng nhập'),
+                        child: Text(vi.common.dangNhap),
                       ),
                   ],
                   if (reason != null && _draft.text.isNotEmpty)
@@ -333,13 +300,12 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                       minLines: 2,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        labelText: english ? 'Saved draft' : 'Bản nháp đã giữ',
+                        labelText: vi.app.profile.banNhapDaGiu,
                       ),
                     ),
                   if (_error != null)
                     Text(_error!, style: TextStyle(color: colors.red)),
-                  if (entries.isEmpty)
-                    Text(english ? 'No messages yet' : 'Chưa có lời nhắn'),
+                  if (entries.isEmpty) Text(vi.app.profile.chuaCoLoiNhan),
                   for (final entry in entries)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -366,12 +332,12 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                                 ),
                                 if (entry.createdAt != null)
                                   Text(
-                                    DateFormat.yMd(english ? 'en' : 'vi')
+                                    DateFormat.yMd(vi.app.profile.vi)
                                         .format(entry.createdAt!.toLocal()),
                                     style: VnlfTypography.meta(colors.muted),
                                   ),
                                 if (entry.status == GuestbookStatus.hidden)
-                                  Text(english ? 'Hidden' : 'Đang ẩn'),
+                                  Text(vi.app.profile.dangAn),
                                 const SizedBox(height: 6),
                                 Text(
                                   entry.content,
@@ -409,32 +375,24 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                                         : 'hide',
                                     child: Text(
                                       entry.status == GuestbookStatus.hidden
-                                          ? (english ? 'Show' : 'Hiện lại')
-                                          : (english ? 'Hide' : 'Ẩn'),
+                                          ? vi.guestbook.hienLai
+                                          : vi.app.profile.an,
                                     ),
                                   ),
                                 if (owner || entry.mine)
                                   PopupMenuItem(
                                     value: 'delete',
-                                    child: Text(english ? 'Delete' : 'Xóa'),
+                                    child: Text(vi.common.xoa),
                                   ),
                                 if (owner && !entry.mine)
                                   PopupMenuItem(
                                     value: 'block',
-                                    child: Text(
-                                      english
-                                          ? 'Block this person'
-                                          : 'Chặn người này',
-                                    ),
+                                    child: Text(vi.guestbook.chanNguoiNay),
                                   ),
                                 if (!entry.mine && viewer != entry.author.id)
                                   PopupMenuItem(
                                     value: 'report',
-                                    child: Text(
-                                      english
-                                          ? 'Report message'
-                                          : 'Báo cáo lời nhắn',
-                                    ),
+                                    child: Text(vi.guestbook.baoCaoLoiNhan),
                                   ),
                               ],
                             ),
@@ -446,7 +404,7 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                       alignment: Alignment.centerLeft,
                       child: TextButton(
                         onPressed: _busy ? null : () => _loadMore(cursor),
-                        child: Text(english ? 'Load more' : 'Xem thêm'),
+                        child: Text(vi.guestbook.xemThem),
                       ),
                     ),
                   if (_busy) const LinearProgressIndicator(),

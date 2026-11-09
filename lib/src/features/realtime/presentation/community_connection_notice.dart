@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../design_system/tokens/vnlf_colors.dart';
 import '../../../design_system/tokens/vnlf_dimensions.dart';
 import '../../../design_system/tokens/vnlf_typography.dart';
+import '../../../i18n/vi.dart';
 import '../domain/community_status.dart';
 
 /// A compact, localized notice for connection states that need attention.
@@ -26,9 +27,8 @@ final class CommunityConnectionNotice extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final isEnglish = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
-    final message = _message(phase, isEnglish);
+    final message = _message(phase);
     final iconColor = switch (phase) {
       CommunityConnectionPhase.failed => colors.red,
       CommunityConnectionPhase.revoked => colors.orange,
@@ -90,7 +90,7 @@ final class CommunityConnectionNotice extends StatelessWidget {
                   ),
                   minimumSize: const Size(48, 48),
                 ),
-                child: Text(isEnglish ? 'Retry' : 'Thử lại'),
+                child: Text(vi.common.thuLai),
               ),
             ),
         ],
@@ -98,27 +98,13 @@ final class CommunityConnectionNotice extends StatelessWidget {
     );
   }
 
-  static String _message(CommunityConnectionPhase phase, bool isEnglish) {
-    return switch ((phase, isEnglish)) {
-      (CommunityConnectionPhase.connecting, true) =>
-        'Connecting to update messages.',
-      (CommunityConnectionPhase.reconnecting, true) =>
-        'Reconnecting to update messages.',
-      (CommunityConnectionPhase.failed, true) =>
-        'Incoming messages cannot update right now.',
-      (CommunityConnectionPhase.revoked, true) =>
-        'Your session has expired. Please sign in again.',
-      (CommunityConnectionPhase.connecting, false) =>
-        'Đang kết nối để cập nhật tin nhắn.',
-      (CommunityConnectionPhase.reconnecting, false) =>
-        'Đang kết nối lại để cập nhật tin nhắn.',
-      (CommunityConnectionPhase.failed, false) =>
-        'Tin nhắn mới chưa thể cập nhật lúc này.',
-      (CommunityConnectionPhase.revoked, false) =>
-        'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-      _ => '',
-    };
-  }
+  static String _message(CommunityConnectionPhase phase) => switch (phase) {
+    CommunityConnectionPhase.connecting => vi.app.realtime.dangKetNoiDe,
+    CommunityConnectionPhase.reconnecting => vi.app.realtime.dangKetNoiLai,
+    CommunityConnectionPhase.failed => vi.app.realtime.tinNhanMoiChua,
+    CommunityConnectionPhase.revoked => vi.app.common.phienDangNhapDa,
+    _ => '',
+  };
 }
 
 final class _StatusGlyph extends StatelessWidget {

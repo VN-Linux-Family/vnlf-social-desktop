@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/activity_models.dart';
 import '../domain/activity_service.dart';
 
@@ -35,7 +36,6 @@ class ActivityCheckInCelebration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final year = int.parse(acknowledgment.date.substring(0, 4));
     final month = int.parse(acknowledgment.date.substring(5, 7));
@@ -60,7 +60,7 @@ class ActivityCheckInCelebration extends StatelessWidget {
     }
 
     return AlertDialog(
-      title: Text(english ? 'Daily check-in' : 'Điểm danh hàng ngày'),
+      title: Text(vi.app.activity.diemDanhHangNgay),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(
@@ -69,9 +69,9 @@ class ActivityCheckInCelebration extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                english
-                    ? 'You checked in for ${acknowledgment.currentStreak} days in a row.'
-                    : 'Bạn đã điểm danh ${acknowledgment.currentStreak} ngày liên tiếp.',
+                format(vi.app.activity.banDaDiemDanh, {
+                  'currentStreak': acknowledgment.currentStreak,
+                }),
                 style: VnlfTypography.body(colors.ink),
               ),
               const SizedBox(height: 16),
@@ -82,7 +82,6 @@ class ActivityCheckInCelebration extends StatelessWidget {
                   days: days,
                   today: acknowledgment.date,
                   selectedDate: null,
-                  english: english,
                   colors: colors,
                   selectable: false,
                   onSelect: (_) {},
@@ -96,11 +95,11 @@ class ActivityCheckInCelebration extends StatelessWidget {
         if (onViewActivity != null)
           TextButton(
             onPressed: onViewActivity,
-            child: Text(english ? 'View activity' : 'Xem lịch hoạt động'),
+            child: Text(vi.dailyCheckin.xemLichHoatDong),
           ),
         FilledButton(
           onPressed: onContinue ?? () => Navigator.of(context).pop(),
-          child: Text(english ? 'Continue' : 'Tiếp tục'),
+          child: Text(vi.dailyCheckin.tiepTuc),
         ),
       ],
     );
@@ -355,7 +354,6 @@ class _ActivityScreenState extends State<ActivityScreen>
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final isCurrentMonth = _year == _today.year && _month == _today.month;
     return ListView(
@@ -364,7 +362,7 @@ class _ActivityScreenState extends State<ActivityScreen>
         // On phones the top bar already names the page (website docs 41).
         if (VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
             VnlfViewportSize.mobile) ...[
-          VnlfCenterPageHeader(title: english ? 'Activity' : 'Hoạt động'),
+          VnlfCenterPageHeader(title: vi.app.common.hoatDong),
           const SizedBox(height: 12),
         ],
         FutureBuilder<ActivityCalendarData>(
@@ -379,7 +377,6 @@ class _ActivityScreenState extends State<ActivityScreen>
                   _StreakHero(
                     streak: data.currentStreak,
                     longest: data.longestStreak,
-                    english: english,
                     colors: colors,
                   ),
                   const SizedBox(height: 12),
@@ -387,21 +384,17 @@ class _ActivityScreenState extends State<ActivityScreen>
                 if (_storageError) ...[
                   Semantics(
                     liveRegion: true,
-                    child: Text(
-                      english
-                          ? 'Check-in storage is unavailable. Try again.'
-                          : 'Không thể lưu trạng thái điểm danh. Hãy thử lại.',
-                    ),
+                    child: Text(vi.app.activity.khongTheLuuTrang),
                   ),
                   OutlinedButton(
                     onPressed: _loadUncertainty,
-                    child: Text(english ? 'Retry storage' : 'Thử lại lưu trữ'),
+                    child: Text(vi.app.activity.thuLaiLuuTru),
                   ),
                   const SizedBox(height: 12),
                 ] else if (_checkingIn) ...[
                   FilledButton(
                     onPressed: null,
-                    child: Text(english ? 'Checking in…' : 'Đang điểm danh…'),
+                    child: Text(vi.app.activity.dangDiemDanh),
                   ),
                   const SizedBox(height: 12),
                 ] else if (_unconfirmed) ...[
@@ -409,21 +402,15 @@ class _ActivityScreenState extends State<ActivityScreen>
                     liveRegion: true,
                     child: Text(
                       _checkInMessage == 'confirmed'
-                          ? (english
-                                ? 'Check-in confirmed. Refresh activity to update the calendar.'
-                                : 'Đã xác nhận điểm danh. Hãy làm mới hoạt động để cập nhật lịch.')
-                          : (english
-                                ? 'Check-in could not be confirmed. Refresh activity before trying again.'
-                                : 'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.'),
+                          ? vi.app.activity.daXacNhanDiemDanh
+                          : vi.app.activity.chuaXacNhanDuoc,
                     ),
                   ),
                   OutlinedButton(
                     onPressed: _refreshingCheckIn || _checkingIn
                         ? null
                         : () => _refreshCheckIn(),
-                    child: Text(
-                      english ? 'Refresh activity' : 'Làm mới hoạt động',
-                    ),
+                    child: Text(vi.app.activity.lamMoiHoatDong),
                   ),
                   const SizedBox(height: 12),
                 ] else if (!_loadingUncertainty &&
@@ -440,34 +427,29 @@ class _ActivityScreenState extends State<ActivityScreen>
                         : _checkIn,
                     child: Text(
                       _checkingIn
-                          ? (english ? 'Checking in…' : 'Đang điểm danh…')
-                          : (english ? 'Check in today' : 'Điểm danh hôm nay'),
+                          ? vi.app.activity.dangDiemDanh
+                          : vi.app.activity.diemDanhHomNay,
                     ),
                   ),
                   if (_checkInMessage == 'confirmed')
                     Semantics(
                       liveRegion: true,
-                      child: Text(
-                        english
-                            ? 'Check-in confirmed.'
-                            : 'Đã xác nhận điểm danh.',
-                      ),
+                      child: Text(vi.app.activity.daXacNhanDiem),
                     ),
                   const SizedBox(height: 12),
                 ],
                 _ActivityPanel(
                   colors: colors,
-                  english: english,
                   year: _year,
                   month: _month,
                   isCurrentMonth: isCurrentMonth,
                   onPrevious: () => _moveMonth(-1),
                   onNext: () => _moveMonth(1),
-                  child: _calendarContent(snapshot, english, colors),
+                  child: _calendarContent(snapshot, colors),
                 ),
                 if (data != null && !snapshot.hasError) ...[
                   const SizedBox(height: 12),
-                  _TotalsPanel(data: data, english: english, colors: colors),
+                  _TotalsPanel(data: data, colors: colors),
                 ],
               ],
             );
@@ -479,7 +461,6 @@ class _ActivityScreenState extends State<ActivityScreen>
 
   Widget _calendarContent(
     AsyncSnapshot<ActivityCalendarData> snapshot,
-    bool english,
     VnlfColors colors,
   ) {
     if (snapshot.connectionState == ConnectionState.waiting &&
@@ -493,7 +474,7 @@ class _ActivityScreenState extends State<ActivityScreen>
               children: [
                 const CircularProgressIndicator(),
                 const SizedBox(height: 12),
-                Text(english ? 'Loading activity…' : 'Đang tải hoạt động…'),
+                Text(vi.app.activity.dangTaiHoatDong),
               ],
             ),
           ),
@@ -502,10 +483,8 @@ class _ActivityScreenState extends State<ActivityScreen>
     }
     if (snapshot.hasError) {
       return _ActivityError(
-        message: english
-            ? 'Could not load activity for this month.'
-            : 'Không tải được hoạt động trong tháng này.',
-        retryLabel: english ? 'Retry' : 'Thử lại',
+        message: vi.app.activity.khongTaiDuocHoat,
+        retryLabel: vi.common.thuLai,
         onRetry: _reload,
       );
     }
@@ -514,7 +493,7 @@ class _ActivityScreenState extends State<ActivityScreen>
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 22),
         child: Text(
-          english ? 'No activity in this period.' : 'Chưa có hoạt động.',
+          vi.app.activity.chuaCoHoatDong,
           textAlign: TextAlign.center,
           style: VnlfTypography.body(colors.muted),
         ),
@@ -528,7 +507,6 @@ class _ActivityScreenState extends State<ActivityScreen>
           today:
               '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
           selectedDate: _selectedDate,
-          english: english,
           colors: colors,
           onSelect: (date) => setState(() => _selectedDate = date),
         ),
@@ -537,7 +515,6 @@ class _ActivityScreenState extends State<ActivityScreen>
             day: data.days.firstWhere((day) => day.date == _selectedDate),
             today:
                 '${_today.year.toString().padLeft(4, '0')}-${_today.month.toString().padLeft(2, '0')}-${_today.day.toString().padLeft(2, '0')}',
-            english: english,
             colors: colors,
           ),
       ],
@@ -549,13 +526,11 @@ class _StreakHero extends StatelessWidget {
   const _StreakHero({
     required this.streak,
     required this.longest,
-    required this.english,
     required this.colors,
   });
 
   final int streak;
   final int longest;
-  final bool english;
   final VnlfColors colors;
 
   @override
@@ -575,26 +550,24 @@ class _StreakHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                english ? 'Daily check-in' : 'Điểm danh mỗi ngày',
+                vi.app.activity.diemDanhMoiNgay,
                 style: VnlfTypography.h2(colors.ink),
               ),
               const SizedBox(height: 4),
               Text(
-                english
-                    ? 'Longest streak: $longest days'
-                    : 'Chuỗi dài nhất: $longest ngày',
+                format(vi.app.activity.chuoiDaiNhatNgay, {'longest': longest}),
                 style: VnlfTypography.meta(colors.muted),
               ),
             ],
           ),
         ),
         Semantics(
-          label: english ? '$streak day streak' : 'Chuỗi $streak ngày',
+          label: format(vi.app.activity.chuoiNgay, {'streak': streak}),
           child: Column(
             children: [
               Text('$streak', style: VnlfTypography.number(colors.brand)),
               Text(
-                english ? 'days' : 'ngày',
+                vi.statsViews.ngay,
                 style: VnlfTypography.meta(colors.muted),
               ),
             ],
@@ -608,7 +581,6 @@ class _StreakHero extends StatelessWidget {
 class _ActivityPanel extends StatelessWidget {
   const _ActivityPanel({
     required this.colors,
-    required this.english,
     required this.year,
     required this.month,
     required this.isCurrentMonth,
@@ -618,7 +590,6 @@ class _ActivityPanel extends StatelessWidget {
   });
 
   final VnlfColors colors;
-  final bool english;
   final int year;
   final int month;
   final bool isCurrentMonth;
@@ -628,9 +599,10 @@ class _ActivityPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final monthLabel = english
-        ? '${_englishMonths[month - 1]} $year'
-        : 'Tháng $month, $year';
+    final monthLabel = format(vi.app.activity.thang, {
+      'month': month,
+      'year': year,
+    });
     return _Panel(
       colors: colors,
       child: Column(
@@ -642,14 +614,14 @@ class _ActivityPanel extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
-                english ? 'Activity calendar' : 'Lịch hoạt động',
+                vi.statsViews.lichHoatDong,
                 style: VnlfTypography.h2(colors.ink),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: english ? 'Previous month' : 'Tháng trước',
+                    tooltip: vi.app.activity.thangTruoc,
                     onPressed: onPrevious,
                     icon: const Icon(Icons.chevron_left),
                   ),
@@ -663,7 +635,7 @@ class _ActivityPanel extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: english ? 'Next month' : 'Tháng sau',
+                    tooltip: vi.app.activity.thangSau,
                     onPressed: isCurrentMonth ? null : onNext,
                     icon: const Icon(Icons.chevron_right),
                   ),
@@ -672,9 +644,7 @@ class _ActivityPanel extends StatelessWidget {
             ],
           ),
           Text(
-            english
-                ? 'Dates and streaks use Vietnam time (UTC+07).'
-                : 'Ngày và chuỗi điểm danh theo giờ Việt Nam (UTC+07).',
+            vi.app.activity.ngayVaChuoiDiem,
             style: VnlfTypography.meta(colors.muted),
           ),
           const SizedBox(height: 14),
@@ -690,7 +660,6 @@ class _CalendarGrid extends StatelessWidget {
     required this.days,
     required this.today,
     required this.selectedDate,
-    required this.english,
     required this.colors,
     this.selectable = true,
     required this.onSelect,
@@ -699,7 +668,6 @@ class _CalendarGrid extends StatelessWidget {
   final List<ActivityDay> days;
   final String today;
   final String? selectedDate;
-  final bool english;
   final VnlfColors colors;
   final bool selectable;
   final ValueChanged<String> onSelect;
@@ -707,7 +675,6 @@ class _CalendarGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const weekdaysVi = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-    const weekdaysEn = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
     final first = DateTime.parse('${days.first.date}T00:00:00Z');
     final offset = first.weekday - 1;
     final cells = <ActivityDay?>[
@@ -731,7 +698,7 @@ class _CalendarGrid extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        for (final label in english ? weekdaysEn : weekdaysVi)
+                        for (final label in weekdaysVi)
                           Expanded(
                             child: Center(
                               child: Padding(
@@ -770,7 +737,7 @@ class _CalendarGrid extends StatelessWidget {
                         final foreground = day.checkedIn
                             ? colors.paper
                             : colors.ink;
-                        final label = _daySemantics(day, today, english);
+                        final label = _daySemantics(day, today);
                         return Semantics(
                           button: selectable,
                           label: label,
@@ -819,9 +786,7 @@ class _CalendarGrid extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      english
-                          ? 'Swipe horizontally to see all 7 days.'
-                          : 'Vuốt ngang để xem đủ 7 ngày.',
+                      vi.app.activity.vuotNgangDeXem,
                       style: VnlfTypography.caption(colors.muted),
                     ),
                   ),
@@ -837,17 +802,17 @@ class _CalendarGrid extends StatelessWidget {
           children: [
             _LegendDot(
               color: colors.surfaceSoft,
-              label: english ? 'No check-in' : 'Chưa điểm danh',
+              label: vi.activityCalendar.chuaDiemDanh,
               colors: colors,
             ),
             _LegendDot(
               color: colors.brand,
-              label: english ? 'Checked in' : 'Đã điểm danh',
+              label: vi.activityCalendar.daDiemDanh,
               colors: colors,
             ),
             _LegendDot(
               color: colors.brandSoft,
-              label: english ? 'Earned points' : 'Có điểm',
+              label: vi.app.activity.coDiem,
               colors: colors,
             ),
           ],
@@ -890,12 +855,10 @@ class _SelectedDay extends StatelessWidget {
   const _SelectedDay({
     required this.day,
     required this.today,
-    required this.english,
     required this.colors,
   });
   final ActivityDay day;
   final String today;
-  final bool english;
   final VnlfColors colors;
 
   @override
@@ -905,12 +868,12 @@ class _SelectedDay extends StatelessWidget {
         '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/${date.year}';
     final status = day.date.compareTo(today) > 0
-        ? (english ? 'Not yet' : 'Chưa đến ngày')
+        ? vi.app.activity.chuaDenNgay2
         : day.checkedIn
-        ? (english
-              ? 'Checked in, streak day ${day.streakDay}'
-              : 'Đã điểm danh, ngày thứ ${day.streakDay}')
-        : (english ? 'Not checked in' : 'Chưa điểm danh');
+        ? format(vi.app.activity.daDiemDanhNgayThu, {
+            'streakDay': day.streakDay,
+          })
+        : vi.activityCalendar.chuaDiemDanh;
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Semantics(
@@ -925,13 +888,8 @@ class _SelectedDay extends StatelessWidget {
 }
 
 class _TotalsPanel extends StatelessWidget {
-  const _TotalsPanel({
-    required this.data,
-    required this.english,
-    required this.colors,
-  });
+  const _TotalsPanel({required this.data, required this.colors});
   final ActivityCalendarData? data;
-  final bool english;
   final VnlfColors colors;
 
   @override
@@ -941,24 +899,24 @@ class _TotalsPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          english ? 'Points this month' : 'Điểm trong tháng',
+          vi.app.activity.diemTrongThang,
           style: VnlfTypography.h2(colors.ink),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             _Total(
-              label: english ? 'Total' : 'Tổng điểm',
+              label: vi.app.activity.tongDiem,
               value: data?.totalPoints,
               colors: colors,
             ),
             _Total(
-              label: english ? 'Earned' : 'Điểm nhận',
+              label: vi.app.activity.diemNhan,
               value: data?.earnedPoints,
               colors: colors,
             ),
             _Total(
-              label: english ? 'Adjusted' : 'Điều chỉnh',
+              label: vi.app.activity.dieuChinh,
               value: data?.reversedPoints,
               colors: colors,
             ),
@@ -1043,32 +1001,13 @@ class _Panel extends StatelessWidget {
   );
 }
 
-const _englishMonths = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-String _daySemantics(ActivityDay day, String today, bool english) {
+String _daySemantics(ActivityDay day, String today) {
   final date = DateTime.parse('${day.date}T00:00:00Z');
-  final dateLabel = english
-      ? '${_englishMonths[date.month - 1]} ${date.day}, ${date.year}'
-      : '${date.day}/${date.month}/${date.year}';
+  final dateLabel = '${date.day}/${date.month}/${date.year}';
   final state = day.date.compareTo(today) > 0
-      ? (english ? 'not yet' : 'chưa đến ngày')
+      ? vi.app.activity.chuaDenNgay
       : day.checkedIn
-      ? (english
-            ? 'checked in, streak day ${day.streakDay}'
-            : 'đã điểm danh, ngày thứ ${day.streakDay}')
-      : (english ? 'not checked in' : 'chưa điểm danh');
+      ? format(vi.app.activity.daDiemDanhNgay, {'streakDay': day.streakDay})
+      : vi.app.activity.chuaDiemDanh;
   return '$dateLabel, $state, ${day.points} XP';
 }

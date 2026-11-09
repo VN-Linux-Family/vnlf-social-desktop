@@ -62,8 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (login.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage =
-            'Vui lòng nhập đầy đủ email/tên người dùng và mật khẩu.';
+        _errorMessage = vi.app.auth.vuiLongNhapDay;
       });
       return;
     }
@@ -80,7 +79,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Chào mừng trở lại, ${session.displayName}!'),
+          content: Text(
+            format(vi.app.auth.chaoMungTroLai, {
+              'displayName': session.displayName,
+            }),
+          ),
           backgroundColor: VnlfColors.of(context).brand,
         ),
       );
@@ -107,14 +110,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (email.isEmpty || username.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage = 'Vui lòng điền đầy đủ tất cả các trường.';
+        _errorMessage = vi.app.auth.vuiLongDienDay;
       });
       return;
     }
 
     if (password != confirm) {
       setState(() {
-        _errorMessage = 'Mật khẩu xác nhận không trùng khớp.';
+        _errorMessage = vi.app.auth.matKhauXacNhan;
       });
       return;
     }
@@ -132,7 +135,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Tạo tài khoản thành công! Chào mừng ${session.displayName}.',
+            format(vi.app.auth.taoTaiKhoanThanh, {
+              'displayName': session.displayName,
+            }),
           ),
           backgroundColor: VnlfColors.of(context).brand,
         ),
@@ -155,7 +160,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final english = Localizations.localeOf(context).languageCode == 'en';
     var canPop = false;
     try {
       canPop = context.canPop();
@@ -172,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         backgroundColor: colors.surface,
         elevation: 0,
         leading: IconButton(
-          tooltip: english ? 'Back' : 'Quay lại',
+          tooltip: vi.app.common.quayLai,
           icon: Icon(Icons.arrow_back_rounded, color: colors.ink),
           onPressed: () {
             if (canPop) {
@@ -183,9 +187,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           },
         ),
         title: Text(
-          _tabIndex == 0
-              ? (english ? 'Log In' : 'Đăng nhập')
-              : (english ? 'Register' : 'Đăng ký'),
+          _tabIndex == 0 ? vi.common.dangNhap : vi.miscViews.dangKy,
           style: VnlfTypography.h3(colors.ink),
         ),
       ),
@@ -222,9 +224,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      english
-                          ? 'Vietnamese Linux & Open Source Community'
-                          : 'Cộng đồng Linux & Mã nguồn mở Việt Nam',
+                      vi.app.auth.congDongLinuxMa,
                       textAlign: TextAlign.center,
                       style: VnlfTypography.meta(colors.muted),
                     ),
@@ -273,7 +273,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       : null,
                                 ),
                                 child: Text(
-                                  english ? 'Log In' : 'Đăng nhập',
+                                  vi.common.dangNhap,
                                   textAlign: TextAlign.center,
                                   style: VnlfTypography.control(
                                     _tabIndex == 0
@@ -318,7 +318,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       : null,
                                 ),
                                 child: Text(
-                                  english ? 'Register' : 'Đăng ký',
+                                  vi.miscViews.dangKy,
                                   textAlign: TextAlign.center,
                                   style: VnlfTypography.control(
                                     _tabIndex == 1
@@ -386,9 +386,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 AutofillHints.email,
                               ],
                               decoration: InputDecoration(
-                                labelText: english
-                                    ? 'Email or Username'
-                                    : 'Email hoặc Tên người dùng',
+                                labelText: vi.app.auth.emailHoacTenNguoi,
                                 prefixIcon: const Icon(Icons.person_outline),
                                 border: const OutlineInputBorder(),
                               ),
@@ -405,7 +403,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               obscureText: _loginObscure,
                               autofillHints: const [AutofillHints.password],
                               decoration: InputDecoration(
-                                labelText: english ? 'Password' : 'Mật khẩu',
+                                labelText: vi.miscViews.matKhau2,
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -451,9 +449,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     )
                                   : Text(
-                                      english
-                                          ? 'Enter VNLF Social'
-                                          : 'Vào VNLF Social',
+                                      vi.miscViews.vaoVnlfSocial,
                                       style: VnlfTypography.control(
                                         Theme.of(context).colorScheme.onPrimary,
                                         fontWeight: FontWeight.w700,
@@ -492,9 +488,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               focusNode: _regUsernameFocus,
                               autofillHints: const [AutofillHints.newUsername],
                               decoration: InputDecoration(
-                                labelText: english
-                                    ? 'Username'
-                                    : 'Tên người dùng',
+                                labelText: vi.app.common.tenNguoiDung,
                                 prefixIcon: const Icon(Icons.alternate_email),
                                 border: const OutlineInputBorder(),
                               ),
@@ -510,7 +504,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               obscureText: _regObscure,
                               autofillHints: const [AutofillHints.newPassword],
                               decoration: InputDecoration(
-                                labelText: english ? 'Password' : 'Mật khẩu',
+                                labelText: vi.miscViews.matKhau2,
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
                                   icon: Icon(
@@ -536,9 +530,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               obscureText: _regObscure,
                               autofillHints: const [AutofillHints.newPassword],
                               decoration: InputDecoration(
-                                labelText: english
-                                    ? 'Confirm Password'
-                                    : 'Nhập lại mật khẩu',
+                                labelText: vi.miscViews.nhapLaiMatKhau,
                                 prefixIcon: const Icon(Icons.lock_reset),
                                 border: const OutlineInputBorder(),
                               ),
@@ -574,9 +566,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       ),
                                     )
                                   : Text(
-                                      english
-                                          ? 'Create Account'
-                                          : 'Tạo tài khoản',
+                                      vi.miscViews.taoTaiKhoan,
                                       style: VnlfTypography.control(
                                         Theme.of(context).colorScheme.onPrimary,
                                         fontWeight: FontWeight.w700,

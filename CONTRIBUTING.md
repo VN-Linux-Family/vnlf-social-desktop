@@ -66,7 +66,8 @@ Keep the repository clean and predictable:
   ```sh
   python3 tool/sync_vi_strings.py --web ../vnlf-social
   ```
-  Copy that exists only in the native app goes in `ViApp` at the end of the file.
+  Copy that exists only in the native app goes in `ViApp` at the end of the file, grouped by feature (`vi.app.settings.…`, `vi.app.voice.…`). When a screen moves to the website's wording, use the website key and delete the `vi.app` entry it replaces.
+- Never write a Vietnamese sentence in a widget or pick copy from the device language; `test/locale_test.dart` fails on both. Sample content for the offline fixtures stays in the `*_samples.dart` files.
 - Test Vietnamese diacritics (`Tiếng Việt: ặ ữ ờ ẫ ệ`) and ensure UTF-16 length formatters (`Utf16LengthFormatter`) never split surrogate pairs or emoji clusters.
 
 ---

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../search/presentation/search_providers.dart';
 import '../../shared/presentation/author_mapper.dart';
 import 'direct_message_feedback.dart';
@@ -93,9 +94,7 @@ class _NewDmRecipientDialogState extends ConsumerState<NewDmRecipientDialog> {
     return PopScope(
       canPop: !_opening,
       child: AlertDialog(
-        title: Text(
-          dmText(context, 'Bắt đầu cuộc trò chuyện', 'Start a conversation'),
-        ),
+        title: Text(vi.app.directMessages.batDauCuocTro),
         content: SizedBox(
           width: 480,
           height: 400,
@@ -110,12 +109,8 @@ class _NewDmRecipientDialogState extends ConsumerState<NewDmRecipientDialog> {
                 style: VnlfTypography.body(colors.ink),
                 onChanged: _search,
                 decoration: InputDecoration(
-                  labelText: dmText(context, 'Tìm thành viên', 'Find a member'),
-                  hintText: dmText(
-                    context,
-                    'Tên hoặc tên người dùng',
-                    'Name or username',
-                  ),
+                  labelText: vi.app.directMessages.timThanhVien,
+                  hintText: vi.app.directMessages.tenHoacTenNguoi,
                   prefixIcon: const Icon(Icons.search),
                   counterText: '',
                 ),
@@ -134,40 +129,20 @@ class _NewDmRecipientDialogState extends ConsumerState<NewDmRecipientDialog> {
                 child: debouncing
                     ? const Center(child: CircularProgressIndicator())
                     : _query.isEmpty
-                    ? Center(
-                        child: Text(
-                          dmText(
-                            context,
-                            'Nhập ít nhất 2 ký tự để tìm thành viên.',
-                            'Enter at least 2 characters to find a member.',
-                          ),
-                        ),
-                      )
+                    ? Center(child: Text(vi.app.directMessages.nhapItNhat2))
                     : results!.hasError
                     ? Center(
                         child: TextButton(
                           onPressed: () =>
                               ref.invalidate(searchResultsProvider(_query)),
-                          child: Text(
-                            dmText(
-                              context,
-                              'Không tải được thành viên. Thử lại',
-                              'Could not load members. Try again',
-                            ),
-                          ),
+                          child: Text(vi.app.directMessages.khongTaiDuocThanh),
                         ),
                       )
                     : results.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : members!.isEmpty
                     ? Center(
-                        child: Text(
-                          dmText(
-                            context,
-                            'Không tìm thấy thành viên',
-                            'No members found',
-                          ),
-                        ),
+                        child: Text(vi.app.directMessages.khongTimThayThanh),
                       )
                     : ListView.builder(
                         itemCount: members.length,
@@ -199,7 +174,7 @@ class _NewDmRecipientDialogState extends ConsumerState<NewDmRecipientDialog> {
         actions: [
           TextButton(
             onPressed: _opening ? null : () => Navigator.pop(context),
-            child: Text(dmText(context, 'Hủy', 'Cancel')),
+            child: Text(vi.common.huy),
           ),
         ],
       ),

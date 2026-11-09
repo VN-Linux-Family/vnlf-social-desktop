@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../app/providers.dart';
+import '../../../i18n/vi.dart';
 import 'dm_attachment_picker.dart';
 import '../domain/direct_message_models.dart';
-import 'direct_message_feedback.dart';
 import 'direct_message_state.dart';
 
 class DirectMessageComposer extends ConsumerStatefulWidget {
@@ -30,7 +30,6 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
     final controller = ref.read(
       dmTimelineProvider(widget.conversationId).notifier,
     );
-    final en = Localizations.localeOf(context).languageCode == 'en';
     bool current() =>
         mounted &&
         ref.read(sessionStateProvider)?.userId == owner &&
@@ -52,11 +51,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
               .pendingAttachments
               .length;
       if (files.length > remaining) {
-        setState(
-          () => _pickerError = en
-              ? 'Attach up to four images per message.'
-              : 'Mỗi tin nhắn có tối đa bốn ảnh.',
-        );
+        setState(() => _pickerError = vi.app.directMessages.moiTinNhanCo);
         return;
       }
       for (final file in files) {
@@ -72,11 +67,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
       }
     } catch (_) {
       if (current()) {
-        setState(
-          () => _pickerError = en
-              ? 'Could not open the selected images. Please try again.'
-              : 'Không mở được ảnh đã chọn. Vui lòng thử lại.',
-        );
+        setState(() => _pickerError = vi.app.directMessages.khongMoDuocAnh);
       }
     } finally {
       if (mounted) setState(() => _selecting = false);
@@ -129,11 +120,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
       return _LockedComposerCard(
         key: const Key('dm-blocked-banner'),
         icon: Icons.block_outlined,
-        message: dmText(
-          context,
-          'Bạn đã chặn người dùng này. Bỏ chặn để có thể gửi lại yêu cầu trò chuyện.',
-          'You blocked this user. Unblock them to send a new message request.',
-        ),
+        message: vi.app.directMessages.banDaChanNguoi,
         actions: <Widget>[
           OutlinedButton.icon(
             key: const Key('dm-unblock-button'),
@@ -141,7 +128,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 ? null
                 : controller.unblockPeer,
             icon: const Icon(Icons.lock_open_outlined, size: 18),
-            label: Text(dmText(context, 'Bỏ chặn', 'Unblock')),
+            label: Text(vi.directMessageLiveView.boChan),
           ),
         ],
       );
@@ -151,11 +138,9 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
       return _LockedComposerCard(
         key: const Key('dm-incoming-request-banner'),
         icon: Icons.mark_chat_unread_outlined,
-        message: dmText(
-          context,
-          '${conversation.peer.displayName} muốn nhắn tin cho bạn. Chấp nhận để bắt đầu trò chuyện hoặc từ chối yêu cầu này.',
-          '${conversation.peer.displayName} wants to message you. Accept to start chatting or decline this request.',
-        ),
+        message: format(vi.app.directMessages.muonNhanTinCho, {
+          'displayName': conversation.peer.displayName,
+        }),
         actions: <Widget>[
           FilledButton.icon(
             key: const Key('dm-accept-request-button'),
@@ -163,7 +148,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 ? null
                 : controller.acceptRequest,
             icon: const Icon(Icons.check_rounded, size: 18),
-            label: Text(dmText(context, 'Chấp nhận', 'Accept')),
+            label: Text(vi.app.directMessages.chapNhan),
           ),
           OutlinedButton.icon(
             key: const Key('dm-decline-request-button'),
@@ -171,7 +156,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 ? null
                 : controller.declineRequest,
             icon: const Icon(Icons.close_rounded, size: 18),
-            label: Text(dmText(context, 'Từ chối', 'Decline')),
+            label: Text(vi.app.directMessages.tuChoi),
           ),
         ],
       );
@@ -181,11 +166,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
       return _LockedComposerCard(
         key: const Key('dm-request-required-banner'),
         icon: Icons.outgoing_mail,
-        message: dmText(
-          context,
-          'Cuộc trò chuyện này cần gửi lại yêu cầu nhắn tin trước khi tiếp tục.',
-          'A new message request is required before continuing this conversation.',
-        ),
+        message: vi.app.directMessages.cuocTroChuyenNay,
         actions: <Widget>[
           FilledButton.icon(
             key: const Key('dm-send-request-button'),
@@ -193,9 +174,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 ? null
                 : controller.sendNewRequest,
             icon: const Icon(Icons.send_outlined, size: 18),
-            label: Text(
-              dmText(context, 'Gửi yêu cầu nhắn tin', 'Send message request'),
-            ),
+            label: Text(vi.app.directMessages.guiYeuCauNhan),
           ),
         ],
       );
@@ -206,16 +185,8 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
         key: const Key('dm-awaiting-acceptance-banner'),
         icon: Icons.hourglass_top_rounded,
         message: viewerState == DmViewerState.awaitingAcceptance
-            ? dmText(
-                context,
-                'Đang chờ người nhận chấp nhận yêu cầu nhắn tin của bạn.',
-                'Waiting for the recipient to accept your message request.',
-              )
-            : dmText(
-                context,
-                'Hiện không thể gửi tin nhắn trong cuộc trò chuyện này.',
-                'You cannot send messages in this conversation right now.',
-              ),
+            ? vi.app.directMessages.dangChoNguoiNhan
+            : vi.app.directMessages.hienKhongTheGui,
       );
     }
 
@@ -254,11 +225,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Text(
-                dmText(
-                  context,
-                  'Bạn có thể gửi tin nhắn mở đầu cho yêu cầu trò chuyện này.',
-                  'You can send an opening message with this chat request.',
-                ),
+                vi.app.directMessages.banCoTheGui,
                 style: VnlfTypography.caption(colors.muted),
               ),
             ),
@@ -269,14 +236,14 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      '${dmText(context, 'Đang trả lời', 'Replying to')} ${reply.author.displayName}: ${reply.content}',
+                      '${'Đang trả lời'} ${reply.author.displayName}: ${reply.content}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: VnlfTypography.caption(colors.muted),
                     ),
                   ),
                   IconButton(
-                    tooltip: dmText(context, 'Hủy trả lời', 'Cancel reply'),
+                    tooltip: vi.chatUi.huyTraLoi,
                     onPressed: state.sending
                         ? null
                         : () => controller.setReplyTarget(null),
@@ -296,7 +263,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                     InputChip(
                       label: Text(
                         asset.fileName.isEmpty
-                            ? dmText(context, 'Ảnh đính kèm', 'Attached image')
+                            ? vi.common.anhDinhKem
                             : asset.fileName,
                       ),
                       onDeleted: state.sending
@@ -313,7 +280,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
             children: <Widget>[
               IconButton(
                 key: const Key('dm-attach-button'),
-                tooltip: dmText(context, 'Đính kèm ảnh', 'Attach images'),
+                tooltip: vi.chatUi.dinhKemAnh,
                 onPressed:
                     _selecting ||
                         state.uploadingAttachment ||
@@ -335,12 +302,8 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                   onChanged: controller.updateDraft,
                   decoration: InputDecoration(
                     hintText: peerName.isEmpty
-                        ? dmText(
-                            context,
-                            'Nhập tin nhắn...',
-                            'Write a message...',
-                          )
-                        : '${dmText(context, 'Nhắn tin cho', 'Message')} $peerName...',
+                        ? vi.app.directMessages.nhapTinNhan
+                        : '${'Nhắn tin cho'} $peerName...',
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -351,7 +314,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
               ),
               IconButton(
                 key: const Key('dm-send-button'),
-                tooltip: dmText(context, 'Gửi tin nhắn', 'Send message'),
+                tooltip: vi.chatUi.guiTinNhan,
                 onPressed: canSubmit ? controller.send : null,
                 icon: state.sending
                     ? const SizedBox(

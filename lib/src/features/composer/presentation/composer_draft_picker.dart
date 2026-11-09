@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../i18n/vi.dart';
 import 'composer_providers.dart';
 
 Future<String?> chooseServerDraft(BuildContext context) {
@@ -18,21 +19,11 @@ Future<String?> chooseServerDraft(BuildContext context) {
               error: (_, _) => Center(
                 child: TextButton(
                   onPressed: () => ref.invalidate(composerDraftsProvider),
-                  child: Text(
-                    Localizations.localeOf(context).languageCode == 'en'
-                        ? 'Retry loading drafts'
-                        : 'Tải lại bản nháp',
-                  ),
+                  child: Text(vi.app.composer.taiLaiBanNhap),
                 ),
               ),
               data: (items) => items.isEmpty
-                  ? Center(
-                      child: Text(
-                        Localizations.localeOf(context).languageCode == 'en'
-                            ? 'No server drafts yet'
-                            : 'Chưa có bản nháp trên máy chủ',
-                      ),
-                    )
+                  ? Center(child: Text(vi.app.composer.chuaCoBanNhap))
                   : ListView(
                       children: [
                         for (final draft in items)
@@ -40,11 +31,7 @@ Future<String?> chooseServerDraft(BuildContext context) {
                             title: Text(
                               draft.title.isEmpty
                                   ? draft.excerpt.isEmpty
-                                        ? (Localizations.localeOf(context)
-                                                      .languageCode ==
-                                                  'en'
-                                              ? 'Untitled draft'
-                                              : 'Bản nháp chưa có tiêu đề')
+                                        ? vi.app.composer.banNhapChuaCo
                                         : draft.excerpt
                                   : draft.title,
                             ),

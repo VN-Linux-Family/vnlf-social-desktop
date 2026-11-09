@@ -25,7 +25,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Sign in to view activity'), findsOneWidget);
+    expect(find.text('Đăng nhập để xem hoạt động'), findsOneWidget);
     expect(calls, 0);
   });
 
@@ -63,7 +63,7 @@ void main() {
       ('GET', '/api/v1/me/activity-calendar'),
     ]);
     expect(
-      find.text('Could not load activity for this month.'),
+      find.text('Không tải được hoạt động trong tháng này.'),
       findsOneWidget,
     );
   });

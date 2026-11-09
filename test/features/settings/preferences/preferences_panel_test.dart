@@ -71,14 +71,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show online status'));
+    await tester.tap(find.text('Hiển thị trạng thái trực tuyến'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Save'));
-    await tester.tap(find.text('Save'));
+    await tester.ensureVisible(find.text('Lưu'));
+    await tester.tap(find.text('Lưu'));
     await tester.pumpAndSettle();
     final write = requests.singleWhere((request) => request.method == 'PATCH');
     expect(jsonDecode(write.body!), {'onlineVisible': false});
-    expect(find.text('Settings saved.'), findsOneWidget);
+    expect(find.text('Đã lưu cài đặt.'), findsOneWidget);
   });
 
   testWidgets(
@@ -122,7 +122,10 @@ void main() {
       expect(
         tester
             .widget<SwitchListTile>(
-              find.widgetWithText(SwitchListTile, 'Show online status'),
+              find.widgetWithText(
+                SwitchListTile,
+                'Hiển thị trạng thái trực tuyến',
+              ),
             )
             .value,
         isFalse,
@@ -133,7 +136,7 @@ void main() {
         displayName: 'Second',
       );
       await tester.pump();
-      expect(find.text('Show online status'), findsNothing);
+      expect(find.text('Hiển thị trạng thái trực tuyến'), findsNothing);
       next.complete(
         ApiResponse(statusCode: 200, body: '{"onlineVisible":true}'),
       );
@@ -141,7 +144,10 @@ void main() {
       expect(
         tester
             .widget<SwitchListTile>(
-              find.widgetWithText(SwitchListTile, 'Show online status'),
+              find.widgetWithText(
+                SwitchListTile,
+                'Hiển thị trạng thái trực tuyến',
+              ),
             )
             .value,
         isTrue,

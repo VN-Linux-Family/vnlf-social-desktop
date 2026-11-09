@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/voice_models.dart';
 import 'live_voice_controls.dart';
@@ -44,7 +45,6 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final account = ref.watch(voiceAccountIdProvider);
     final state = ref.watch(voiceSessionProvider);
@@ -64,15 +64,13 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                 const Icon(Icons.headphones_rounded),
                 const SizedBox(height: 8),
                 Text(
-                  english
-                      ? 'Sign in to join Voice'
-                      : 'Đăng nhập để tham gia Voice',
+                  vi.app.voice.dangNhapDeThamGia,
                   style: VnlfTypography.h3(colors.ink),
                 ),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: () => context.push('/login'),
-                  child: Text(english ? 'Sign in' : 'Đăng nhập'),
+                  child: Text(vi.common.dangNhap),
                 ),
               ],
             ),
@@ -86,15 +84,13 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      english
-                          ? 'Unable to load voice rooms.'
-                          : 'Không tải được danh sách kênh thoại.',
+                      vi.app.voice.khongTaiDuocDanh,
                       style: VnlfTypography.body(colors.muted),
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
                       onPressed: () => ref.invalidate(voiceRoomsProvider),
-                      child: Text(english ? 'Try again' : 'Thử lại'),
+                      child: Text(vi.common.thuLai),
                     ),
                   ],
                 ),
@@ -102,9 +98,7 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
               data: (items) => items.isEmpty
                   ? Center(
                       child: Text(
-                        english
-                            ? 'No voice rooms available.'
-                            : 'Chưa có kênh thoại nào khả dụng.',
+                        vi.app.voice.chuaCoKenhThoai,
                         style: VnlfTypography.body(colors.muted),
                       ),
                     )
@@ -122,9 +116,9 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                           Text(room.name, style: VnlfTypography.h3(colors.ink)),
                           const SizedBox(height: 2),
                           Text(
-                            english
-                                ? '${_count(room, state)} participants'
-                                : '${_count(room, state)} người tham gia',
+                            format(vi.app.voice.nguoiThamGia, {
+                              'inRoom': _count(room, state),
+                            }),
                             style: VnlfTypography.meta(colors.muted),
                           ),
                           const SizedBox(height: 12),
@@ -132,9 +126,7 @@ class _LiveVoiceScreenState extends ConsumerState<LiveVoiceScreen>
                             _Participants(members: state.participants)
                           else
                             Text(
-                              english
-                                  ? 'Connect to see room participants.'
-                                  : 'Kết nối để xem thành viên trong phòng.',
+                              vi.app.voice.ketNoiDeXem,
                               style: VnlfTypography.meta(colors.muted),
                             ),
                         ],
@@ -178,7 +170,6 @@ class _RoomDirectory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return FeatureSurface(
       child: Column(
         children: [
@@ -202,9 +193,9 @@ class _RoomDirectory extends StatelessWidget {
               subtitle: Text(
                 rooms[index].description.isNotEmpty
                     ? rooms[index].description
-                    : (english
-                          ? '${_count(rooms[index], state)} participants'
-                          : '${_count(rooms[index], state)} người tham gia'),
+                    : format(vi.app.voice.nguoiThamGia, {
+                        'inRoom': _count(rooms[index], state),
+                      }),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: VnlfTypography.caption(colors.muted),

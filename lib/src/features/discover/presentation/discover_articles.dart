@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
@@ -24,7 +25,6 @@ class DiscoverArticles extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final visible = posts.where((post) {
       final text =
           '${post.title ?? ''} ${post.excerpt} ${post.contentText} ${post.tags.join(' ')}'
@@ -38,10 +38,8 @@ class DiscoverArticles extends ConsumerWidget {
         if (visible.isEmpty)
           VnlfStateCard(
             icon: Icons.search_off,
-            title: english ? 'No results' : 'Không có kết quả',
-            message: english
-                ? 'Try another search or tag.'
-                : 'Hãy thử từ khóa hoặc chủ đề khác.',
+            title: vi.app.discover.khongCoKetQua,
+            message: vi.app.discover.hayThuTuKhoa,
           ),
         for (final post in visible)
           Padding(
@@ -55,10 +53,7 @@ class DiscoverArticles extends ConsumerWidget {
                     : PollCard(poll: post.poll!, authorId: post.author.id),
                 post: ref
                     .watch(postInteractionProvider(post.id))
-                    .apply(
-                      presentPost(post, english: english),
-                      english: english,
-                    ),
+                    .apply(presentPost(post)),
                 onVoteChanged: (vote) => ref
                     .read(postInteractionsProvider.notifier)
                     .vote(post.id, vote),
@@ -68,12 +63,12 @@ class DiscoverArticles extends ConsumerWidget {
                       post.id,
                       initialValue: post.viewerBookmarked,
                     ),
-                upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
-                downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
-                bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
-                commentSemanticLabel: english ? 'Comments' : 'Bình luận',
+                upvoteSemanticLabel: vi.app.common.ungHo,
+                downvoteSemanticLabel: vi.app.common.phanDoi,
+                bookmarkSemanticLabel: vi.app.common.luuBaiViet,
+                commentSemanticLabel: vi.common.binhLuan,
                 onShareTap: () => copyPostLink(context, post),
-                shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
+                shareSemanticLabel: vi.miscViews.chiaSe,
                 onCommentTap: () =>
                     context.push('/thread/${Uri.encodeComponent(post.id)}'),
                 onAuthorTap: () => context.push(

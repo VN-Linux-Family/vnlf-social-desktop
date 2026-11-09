@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/search_results.dart';
@@ -70,14 +71,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final mobile =
         VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         VnlfViewportSize.mobile;
     final colors = VnlfColors.of(context);
-    final labels = english
-        ? ['All', 'Posts', 'Projects', 'Users', 'Topics']
-        : ['Tất cả', 'Bài viết', 'Dự án', 'Thành viên', 'Chủ đề'];
+    final labels = [
+      vi.common.tatCa,
+      vi.common.baiViet,
+      vi.searchView.duAn,
+      vi.common.roleMember,
+      vi.searchView.chuDe,
+    ];
     final query = _activeQuery;
     final results = query == null
         ? null
@@ -87,10 +91,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       children: [
         if (!mobile) ...[
           VnlfCenterPageHeader(
-            title: english ? 'Search' : 'Tìm kiếm',
+            title: vi.common.timKiem,
             leading: context.canPop()
                 ? IconButton(
-                    tooltip: english ? 'Back' : 'Quay lại',
+                    tooltip: vi.app.common.quayLai,
                     icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => context.pop(),
                   )
@@ -106,13 +110,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onChanged: _changed,
           onSubmitted: (_) => _searchNow(),
           decoration: InputDecoration(
-            labelText: english ? 'Search the community' : 'Tìm trong cộng đồng',
+            labelText: vi.app.search.timTrongCongDong,
             counterText: '',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _query.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: english ? 'Clear search' : 'Xóa tìm kiếm',
+                    tooltip: vi.app.search.xoaTimKiem,
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       _query.clear();
@@ -146,15 +150,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         if (offlineFeatures)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              english ? 'Sample community search' : 'Tìm kiếm cộng đồng mẫu',
-            ),
+            child: Text(vi.app.search.timKiemCongDong),
           ),
         Expanded(
           child: results == null
               ? _query.text.trim().length >= 2
                     ? const Center(child: CircularProgressIndicator())
-                    : _suggestions(english)
+                    : _suggestions()
               : results.when(
                   skipLoadingOnReload: false,
                   loading: () =>
@@ -178,22 +180,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _suggestions(bool english) {
+  Widget _suggestions() {
     final topics = ref.watch(popularTopicsProvider);
     return ListView(
       children: [
         Text(
           _query.text.trim().isEmpty
-              ? english
-                    ? 'Find posts, projects, members and topics.'
-                    : 'Tìm bài viết, dự án, thành viên và chủ đề.'
-              : english
-              ? 'Enter at least 2 characters.'
-              : 'Nhập ít nhất 2 ký tự.',
+              ? vi.app.search.timBaiVietDu
+              : vi.app.search.nhapItNhat2,
         ),
         const SizedBox(height: 16),
         Text(
-          english ? 'Popular tags' : 'Chủ đề phổ biến',
+          vi.app.common.chuDePhoBien,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
@@ -201,7 +199,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => TextButton(
             onPressed: () => ref.invalidate(popularTopicsProvider),
-            child: Text(english ? 'Retry topics' : 'Tải lại chủ đề'),
+            child: Text(vi.app.search.taiLaiChuDe),
           ),
           data: (items) => Wrap(
             spacing: 8,

@@ -12,7 +12,7 @@ void main() {
     (tester) async {
       final playback = _Playback();
       await _pump(tester, playback);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       expect(find.byKey(const Key('native-video-surface')), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -30,14 +30,14 @@ void main() {
       final old = _Playback();
       final next = _Playback();
       await _pump(tester, old);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       await _pump(tester, next, url: 'https://media.example.test/second.mp4');
       old.frame.complete();
       await tester.pumpAndSettle();
       expect(old.disposals, 1);
       expect(old.plays, 0);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       next.frame.complete();
       await tester.pumpAndSettle();
@@ -49,7 +49,7 @@ void main() {
     (tester) async {
       final playback = _Playback();
       await _pump(tester, playback);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       playback.frame.complete();
@@ -64,7 +64,7 @@ void main() {
   ) async {
     final playback = _Playback();
     await _pump(tester, playback);
-    await tester.tap(find.byTooltip('Play video'));
+    await tester.tap(find.byTooltip('Phát video'));
     await tester.pump();
     playback.frame.complete();
     await tester.pumpAndSettle();
@@ -72,20 +72,23 @@ void main() {
     await _pump(tester, playback, state: 'FAILED');
     await tester.pumpAndSettle();
     expect(playback.disposals, 1);
-    expect(find.text('Video unavailable'), findsOneWidget);
+    expect(find.text('Video không khả dụng'), findsOneWidget);
   });
   testWidgets(
     'missing decoded frames time out with retry and release the failed player',
     (tester) async {
       final playback = _Playback();
       await _pump(tester, playback);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       await tester.pump(const Duration(seconds: 21));
       await tester.pumpAndSettle();
       expect(playback.disposals, 1);
-      expect(find.text('Video unavailable. Tap to retry.'), findsOneWidget);
-      expect(find.byTooltip('Play video'), findsOneWidget);
+      expect(
+        find.text('Không phát được video. Bấm để thử lại.'),
+        findsOneWidget,
+      );
+      expect(find.byTooltip('Phát video'), findsOneWidget);
       expect(playback.plays, 0);
     },
   );
@@ -94,7 +97,7 @@ void main() {
     (tester) async {
       final playback = _Playback()..opening = Completer<void>();
       await _pump(tester, playback);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       await tester.pumpWidget(const SizedBox());
       playback.opening!.complete();

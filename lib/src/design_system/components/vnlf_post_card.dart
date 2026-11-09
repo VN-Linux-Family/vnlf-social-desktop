@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 
 import '../../core/vnlf_navigation_helper.dart';
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -719,7 +720,7 @@ class _PostMoreButton extends StatelessWidget {
                 child: Center(child: icon),
               )
             : PopupMenuButton<String>(
-                tooltip: semanticLabel ?? 'Tùy chọn',
+                tooltip: semanticLabel ?? vi.app.designSystem.tuyChon,
                 padding: EdgeInsets.zero,
                 icon: icon,
                 color: colors.surface,
@@ -739,7 +740,9 @@ class _PostMoreButton extends StatelessWidget {
                     height: 42,
                     child: item(
                       VnlfLucide.bookmark,
-                      isBookmarked ? 'Bỏ lưu bài' : 'Lưu bài',
+                      isBookmarked
+                          ? vi.common.boLuuBaiViet
+                          : vi.common.luuBaiViet,
                       colors.ink,
                     ),
                   ),
@@ -748,7 +751,7 @@ class _PostMoreButton extends StatelessWidget {
                     height: 42,
                     child: item(
                       VnlfLucide.link2,
-                      'Sao chép liên kết',
+                      vi.socialOverlays.saoChepLienKet,
                       colors.ink,
                     ),
                   ),
@@ -758,7 +761,7 @@ class _PostMoreButton extends StatelessWidget {
                     height: 42,
                     child: item(
                       VnlfLucide.messageSquareText,
-                      'Báo cáo',
+                      vi.common.baoCao,
                       colors.red,
                     ),
                   ),

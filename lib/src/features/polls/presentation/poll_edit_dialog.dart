@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/utf16_length_formatter.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/poll_models.dart';
 import 'poll_feedback.dart';
 import 'poll_state.dart';
@@ -39,13 +40,8 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
       _question.text,
       _options.map((option) => option.text).toList(),
     );
-    final en = Localizations.localeOf(context).languageCode == 'en';
     if (input == null) {
-      setState(
-        () => _validation = en
-            ? 'Add a question and two to six different choices within the length limits.'
-            : 'Cần câu hỏi và từ hai đến sáu lựa chọn khác nhau, trong giới hạn độ dài.',
-      );
+      setState(() => _validation = vi.app.polls.canCauHoiVa);
       return;
     }
     setState(() => _validation = null);
@@ -59,7 +55,6 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     ref.listen(sessionStateProvider.select((session) => session?.userId), (
       before,
@@ -75,7 +70,7 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
     final pending = state?.pending ?? false;
     final locked = (state?.poll ?? widget.poll).totalVotes > 0;
     return AlertDialog(
-      title: Text(en ? 'Edit poll' : 'Sửa bình chọn'),
+      title: Text(vi.poll.suaBinhChon),
       content: SizedBox(
         width: 480,
         child: SingleChildScrollView(
@@ -84,9 +79,7 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                en
-                    ? 'You can edit a poll until its first vote.'
-                    : 'Chỉ sửa được khi chưa có ai bình chọn.',
+                vi.app.polls.chiSuaDuocKhi,
                 style: VnlfTypography.meta(colors.muted),
               ),
               const SizedBox(height: 12),
@@ -104,9 +97,7 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                 inputFormatters: [
                   Utf16LengthFormatter(PollInput.questionLimit),
                 ],
-                decoration: InputDecoration(
-                  labelText: en ? 'Question' : 'Câu hỏi',
-                ),
+                decoration: InputDecoration(labelText: vi.poll.cauHoi),
               ),
               for (var i = 0; i < _options.length; i++)
                 Row(
@@ -128,18 +119,16 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                           Utf16LengthFormatter(PollInput.optionLimit),
                         ],
                         decoration: InputDecoration(
-                          labelText: en
-                              ? 'Choice ${i + 1}'
-                              : 'Lựa chọn ${i + 1}',
+                          labelText: format(vi.poll.luaChonSo, {
+                            'value': i + 1,
+                          }),
                         ),
                       ),
                     ),
                     if (_options.length > PollInput.minOptions)
                       IconButton(
                         key: ValueKey('poll-edit-remove-$i'),
-                        tooltip: en
-                            ? 'Remove choice ${i + 1}'
-                            : 'Bỏ lựa chọn ${i + 1}',
+                        tooltip: format(vi.poll.boLuaChon, {'value': i + 1}),
                         onPressed: pending || locked
                             ? null
                             : () {
@@ -160,7 +149,7 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                           () => _options.add(TextEditingController()),
                         ),
                   icon: const Icon(Icons.add, size: 16),
-                  label: Text(en ? 'Add choice' : 'Thêm lựa chọn'),
+                  label: Text(vi.poll.themLuaChon),
                 ),
               if (_validation != null)
                 Text(
@@ -170,9 +159,7 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
                 ),
               if (locked)
                 Text(
-                  en
-                      ? 'This poll already has votes and can no longer be edited.'
-                      : 'Bình chọn đã có phiếu và không thể sửa.',
+                  vi.app.polls.binhChonDaCo,
                   style: VnlfTypography.meta(colors.red),
                 ),
               if (state?.failure case final failure?)
@@ -187,14 +174,12 @@ class _PollEditDialogState extends ConsumerState<PollEditDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(en ? 'Cancel' : 'Hủy'),
+          child: Text(vi.common.huy),
         ),
         FilledButton(
           key: const Key('poll-edit-save'),
           onPressed: pending || locked ? null : _save,
-          child: Text(
-            pending ? (en ? 'Saving…' : 'Đang lưu…') : (en ? 'Save' : 'Lưu'),
-          ),
+          child: Text(pending ? vi.common.dangLuu : vi.common.luu),
         ),
       ],
     );

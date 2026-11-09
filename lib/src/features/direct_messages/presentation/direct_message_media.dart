@@ -5,6 +5,7 @@ import '../../../app/providers.dart';
 import '../../../design_system/components/vnlf_media_gallery.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_state.dart';
@@ -52,13 +53,7 @@ class DirectMessageMedia extends ConsumerWidget {
                   dmPrivateMediaUrlProvider(item.downloadPath),
                 ),
                 icon: const Icon(Icons.broken_image_outlined),
-                label: Text(
-                  dmText(
-                    context,
-                    'Không tải được ảnh riêng tư. Thử lại',
-                    'Private image unavailable. Retry',
-                  ),
-                ),
+                label: Text(vi.app.directMessages.khongTaiDuocAnh),
               ),
             ),
           );
@@ -127,7 +122,7 @@ class DirectMessageMediaTilePreview extends ConsumerWidget {
                 style: VnlfTypography.meta(colors.muted),
               ),
               IconButton(
-                tooltip: dmText(context, 'Đi tới tin nhắn', 'Jump to message'),
+                tooltip: vi.app.directMessages.diToiTinNhan,
                 onPressed: onJumpToMessage,
                 icon: const Icon(Icons.open_in_new, size: 18),
               ),
@@ -146,13 +141,7 @@ class DirectMessageMediaTilePreview extends ConsumerWidget {
                   dmPrivateMediaUrlProvider(item.downloadPath),
                 ),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text(
-                  dmText(
-                    context,
-                    'Không tải được ảnh. Thử lại',
-                    'Could not load image. Retry',
-                  ),
-                ),
+                label: Text(vi.app.common.khongTaiDuocAnh),
               ),
             ),
             data: (uri) => VnlfMediaGallery(

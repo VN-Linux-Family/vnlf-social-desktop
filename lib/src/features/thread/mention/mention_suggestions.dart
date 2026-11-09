@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../i18n/vi.dart';
 import 'mention_controller.dart';
 
 /// Place above the comment input and route its focus key events to handleKey.
@@ -11,21 +12,16 @@ final class MentionSuggestions extends StatelessWidget {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
-      final english = Localizations.localeOf(context).languageCode == 'en';
       if (controller.error != null) {
         return Semantics(
           liveRegion: true,
-          child: Text(
-            english
-                ? 'Could not load member suggestions.'
-                : 'Không tải được gợi ý thành viên.',
-          ),
+          child: Text(vi.app.thread.khongTaiDuocGoi),
         );
       }
       if (controller.items.isEmpty) return const SizedBox.shrink();
       final colors = Theme.of(context).colorScheme;
       return Semantics(
-        label: english ? 'Mention a member' : 'Nhắc đến thành viên',
+        label: vi.app.thread.nhacDenThanhVien,
         child: Material(
           color: colors.surface,
           shape: RoundedRectangleBorder(

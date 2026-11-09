@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../i18n/vi.dart';
 import '../../polls/domain/poll_models.dart';
 import '../domain/composer_draft.dart';
 import '../domain/composer_poll.dart';
@@ -18,7 +19,6 @@ class ComposerPollEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (draft.format != 'POST') return const SizedBox.shrink();
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final published = draft.publishedAt != null || draft.status == 'PUBLISHED';
     final locked = disabled || published;
     final input = draft.pollDraft;
@@ -35,7 +35,7 @@ class ComposerPollEditor extends StatelessWidget {
                     ? null
                     : () => change(ComposerPollDraft('', ['', ''])),
                 icon: const Icon(Icons.bar_chart_outlined),
-                label: Text(en ? 'Add poll' : 'Thêm bình chọn'),
+                label: Text(vi.poll.themBinhChon),
               ),
             );
     }
@@ -50,20 +50,20 @@ class ComposerPollEditor extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    en ? 'Poll' : 'Bình chọn',
+                    vi.app.composer.binhChon,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
                 if (!published)
                   TextButton(
                     onPressed: locked ? null : () => change(null),
-                    child: Text(en ? 'Remove poll' : 'Bỏ bình chọn'),
+                    child: Text(vi.poll.boBinhChon),
                   ),
               ],
             ),
             ComposerTextField(
               key: const Key('composer-poll-question'),
-              label: en ? 'Question' : 'Câu hỏi',
+              label: vi.poll.cauHoi,
               value: input.question,
               maxLength: PollInput.questionLimit,
               utf16Limit: true,
@@ -80,7 +80,7 @@ class ComposerPollEditor extends StatelessWidget {
                     Expanded(
                       child: ComposerTextField(
                         key: ValueKey('composer-poll-option-$i'),
-                        label: en ? 'Choice ${i + 1}' : 'Lựa chọn ${i + 1}',
+                        label: format(vi.poll.luaChonSo, {'value': i + 1}),
                         value: input.options[i],
                         maxLength: PollInput.optionLimit,
                         utf16Limit: true,
@@ -95,7 +95,7 @@ class ComposerPollEditor extends StatelessWidget {
                     ),
                     if (!published)
                       IconButton(
-                        tooltip: en ? 'Remove choice' : 'Bỏ lựa chọn',
+                        tooltip: vi.app.composer.boLuaChon,
                         onPressed:
                             locked ||
                                 input.options.length <= PollInput.minOptions
@@ -115,11 +115,7 @@ class ComposerPollEditor extends StatelessWidget {
                 ),
               ),
             if (published)
-              Text(
-                en
-                    ? 'This poll was published and cannot be replaced.'
-                    : 'Bình chọn đã đăng, không thể thay hoặc gỡ.',
-              )
+              Text(vi.app.composer.binhChonDaDang)
             else ...[
               Align(
                 alignment: Alignment.centerLeft,
@@ -135,15 +131,10 @@ class ComposerPollEditor extends StatelessWidget {
                           ]),
                         ),
                   icon: const Icon(Icons.add, size: 18),
-                  label: Text(en ? 'Add choice' : 'Thêm lựa chọn'),
+                  label: Text(vi.poll.themLuaChon),
                 ),
               ),
-              if (input.validated == null)
-                Text(
-                  en
-                      ? 'Enter a question and 2–6 distinct choices. Unfinished input is kept on this device.'
-                      : 'Nhập câu hỏi và 2–6 lựa chọn khác nhau. Nội dung chưa hoàn tất được giữ trên thiết bị.',
-                ),
+              if (input.validated == null) Text(vi.app.composer.nhapCauHoiVa2),
             ],
           ],
         ),

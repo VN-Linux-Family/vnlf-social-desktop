@@ -45,7 +45,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(FleatherEditor), findsNothing);
-    expect(find.text('Retry loading draft'), findsOneWidget);
+    expect(find.text('Tải lại bản nháp'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpAndSettle();
     expect(
@@ -106,10 +106,10 @@ void main() {
       final editor = tester.widget<FleatherEditor>(find.byType(FleatherEditor));
       editor.controller.replaceText(0, 0, 'Tiếng Việt: ặ ữ ờ ẫ ệ');
       await tester.pump();
-      await tester.tap(find.text('Publish'));
+      await tester.tap(find.text('Đăng'));
       await tester.pumpAndSettle();
       expect(requests.map((r) => r.method), ['POST', 'PATCH']);
-      expect(find.textContaining('Your draft is kept'), findsOneWidget);
+      expect(find.textContaining('Bản nháp vẫn được giữ'), findsOneWidget);
       expect(find.byType(FleatherEditor), findsOneWidget);
       expect(
         editor.controller.document.toPlainText(),
@@ -129,7 +129,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Sign in to write a post'), findsOneWidget);
+    expect(find.text('Đăng nhập để viết bài'), findsOneWidget);
     expect(find.byType(FleatherEditor), findsNothing);
   });
 }

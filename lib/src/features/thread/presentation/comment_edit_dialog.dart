@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../i18n/vi.dart';
 import '../domain/article_comment.dart';
 import 'comments_providers.dart';
 
@@ -9,28 +10,23 @@ Future<bool> confirmCommentDeletion(
   BuildContext context, {
   bool emptied = false,
 }) async {
-  final en = Localizations.localeOf(context).languageCode == 'en';
   return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(en ? 'Delete comment' : 'Xóa bình luận'),
+          title: Text(vi.commentsPanel.xoaBinhLuan2),
           content: Text(
             emptied
-                ? (en
-                      ? 'This comment has no text or media left. Delete it?'
-                      : 'Bình luận không còn nội dung hay ảnh. Xóa bình luận này?')
-                : (en
-                      ? 'Delete this comment? Its replies will remain.'
-                      : 'Xóa bình luận này? Các câu trả lời vẫn được giữ.'),
+                ? vi.app.thread.binhLuanKhongCon
+                : vi.app.thread.xoaBinhLuanNay,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(en ? 'Cancel' : 'Hủy'),
+              child: Text(vi.common.huy),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(en ? 'Delete comment' : 'Xóa bình luận'),
+              child: Text(vi.commentsPanel.xoaBinhLuan2),
             ),
           ],
         ),
@@ -86,7 +82,6 @@ class _CommentEditDialogState extends ConsumerState<CommentEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     ref.listen(sessionStateProvider, (before, after) {
       if (before?.userId != after?.userId && mounted) {
         Navigator.pop(context, false);
@@ -97,7 +92,7 @@ class _CommentEditDialogState extends ConsumerState<CommentEditDialog> {
     return PopScope(
       canPop: !busy,
       child: AlertDialog(
-        title: Text(en ? 'Edit comment' : 'Sửa bình luận'),
+        title: Text(vi.commentsPanel.suaBinhLuan),
         content: SizedBox(
           width: 480,
           child: Column(
@@ -116,7 +111,7 @@ class _CommentEditDialogState extends ConsumerState<CommentEditDialog> {
                 Semantics(
                   liveRegion: true,
                   child: Text(
-                    en ? 'Could not save. Your draft is kept; try again.' : 'Chưa lưu được thay đổi. Bản nháp vẫn được giữ; vui lòng thử lại.',
+                    vi.app.thread.chuaLuuDuocThay,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -128,11 +123,11 @@ class _CommentEditDialogState extends ConsumerState<CommentEditDialog> {
         actions: [
           TextButton(
             onPressed: busy ? null : () => Navigator.pop(context, false),
-            child: Text(en ? 'Cancel' : 'Hủy'),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             onPressed: busy ? null : _save,
-            child: Text(en ? 'Save' : 'Lưu'),
+            child: Text(vi.common.luu),
           ),
         ],
       ),

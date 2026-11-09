@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/api_client.dart';
 import '../../../core/session_storage_contract.dart';
+import '../../../i18n/vi.dart';
 
 const projectTypes = <String>[
   'APP',
@@ -248,20 +249,20 @@ final class ProjectSubmissionInput {
   Map<String, String> validate() {
     final errors = <String, String>{};
     if (name.trim().isEmpty || name.trim().length > 80) {
-      errors['name'] = 'Nhập tên dự án (tối đa 80 ký tự).';
+      errors['name'] = vi.app.projects.nhapTenDuAn;
     }
     if (tagline.trim().isEmpty || tagline.trim().length > 160) {
-      errors['tagline'] = 'Nhập mô tả ngắn (tối đa 160 ký tự).';
+      errors['tagline'] = vi.app.projects.nhapMoTaNgan;
     }
     if (intro.trim().length < 30 || intro.trim().length > 10000) {
-      errors['intro'] = 'Giới thiệu cần từ 30 đến 10.000 ký tự.';
+      errors['intro'] = vi.app.projects.gioiThieuCanTu;
     }
-    if (!projectTypes.contains(type)) errors['type'] = 'Chọn thể loại.';
+    if (!projectTypes.contains(type)) errors['type'] = vi.projects.canTheLoai;
     if (!projectRelations.contains(relation)) {
-      errors['relation'] = 'Chọn vai trò của bạn.';
+      errors['relation'] = vi.app.projects.chonVaiTroCua;
     }
     if (!noRepo && projectRepositoryUrl(repoUrl) == null) {
-      errors['repo'] = 'Nhập liên kết GitHub hợp lệ hoặc chọn không có kho mã.';
+      errors['repo'] = vi.app.projects.nhapLienKetGithub;
     }
     final used = links.where((link) => link.url.trim().isNotEmpty).toList();
     if (used.length > 8 ||
@@ -271,21 +272,20 @@ final class ProjectSubmissionInput {
               link.url.trim().length > 500 ||
               !_validLink(link.url),
         )) {
-      errors['links'] =
-          'Kiểm tra các liên kết (tối đa 8 liên kết HTTP hoặc HTTPS).';
+      errors['links'] = vi.app.projects.kiemTraCacLien;
     }
     if (noRepo && used.isEmpty) {
-      errors['links'] = 'Thêm ít nhất một liên kết khi không có kho mã.';
+      errors['links'] = vi.app.projects.themItNhatMot;
     }
     if (seekingNote.trim().length > 200) {
-      errors['seekingNote'] = 'Tối đa 200 ký tự.';
+      errors['seekingNote'] = vi.app.projects.toiDa200Ky;
     }
     if (logoAssetId != null && !_uuidRegex.hasMatch(logoAssetId!)) {
-      errors['logo'] = 'Logo không hợp lệ.';
+      errors['logo'] = vi.app.projects.logoKhongHopLe;
     }
     if (mediaAssetIds.length > projectMaxMedia ||
         mediaAssetIds.any((id) => !_uuidRegex.hasMatch(id))) {
-      errors['media'] = 'Ảnh chụp màn hình không hợp lệ (tối đa 6 ảnh).';
+      errors['media'] = vi.app.projects.anhChupManHinh;
     }
     return errors;
   }
@@ -799,9 +799,11 @@ final class ProjectSubmissionController extends ChangeNotifier {
       logoFileName = file.name;
       await persistDraft();
     } on HttpFailure catch (e) {
-      error = 'Không thể tải logo (${e.statusCode}).';
+      error = format(vi.app.projects.khongTheTaiLogo, {
+        'statusCode': e.statusCode,
+      });
     } catch (_) {
-      error = 'Tải logo không thành công.';
+      error = vi.app.projects.taiLogoKhongThanh;
     } finally {
       uploadingMedia = false;
       _notify();
@@ -823,7 +825,7 @@ final class ProjectSubmissionController extends ChangeNotifier {
       return;
     }
     if (mediaAssets.length >= projectMaxMedia) {
-      error = 'Tối đa 6 ảnh chụp màn hình.';
+      error = vi.app.projects.toiDa6Anh;
       _notify();
       return;
     }
@@ -843,9 +845,11 @@ final class ProjectSubmissionController extends ChangeNotifier {
       );
       await persistDraft();
     } on HttpFailure catch (e) {
-      error = 'Không thể tải ảnh (${e.statusCode}).';
+      error = format(vi.app.projects.khongTheTaiAnh, {
+        'statusCode': e.statusCode,
+      });
     } catch (_) {
-      error = 'Tải ảnh không thành công.';
+      error = vi.app.projects.taiAnhKhongThanh;
     } finally {
       uploadingMedia = false;
       _notify();
@@ -899,8 +903,9 @@ final class ProjectSubmissionController extends ChangeNotifier {
           failure.statusCode != 401 &&
           failure.statusCode != 408 &&
           failure.statusCode != 429) {
-        error =
-            'Máy chủ từ chối yêu cầu (${failure.statusCode}). Dữ liệu vẫn được giữ lại.';
+        error = format(vi.app.projects.mayChuTuChoi, {
+          'statusCode': failure.statusCode,
+        });
       } else {
         uncertain = true;
         await persistDraft();

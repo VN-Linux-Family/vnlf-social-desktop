@@ -1,84 +1,57 @@
+import '../../../i18n/vi.dart';
 import '../domain/profile_relationship.dart';
 import 'profile_relationship_controller.dart';
 
 /// Vietnamese-first copy for profile relationship actions.
 final class ProfileRelationshipCopy {
-  const ProfileRelationshipCopy({required this.english, required this.name});
-  final bool english;
+  const ProfileRelationshipCopy({required this.name});
   final String name;
 
-  String get follow => english ? 'Follow' : 'Theo dõi';
-  String get following => english ? 'Following' : 'Đang theo dõi';
+  String get follow => vi.common.theoDoi;
+  String get following => vi.accountViews.dangTheoDoi;
   String get signInToFollow =>
-      english ? 'Sign in to follow $name' : 'Đăng nhập để theo dõi $name';
-  String get updating => english ? 'Updating…' : 'Đang cập nhật…';
-  String get block => english ? 'Block this person' : 'Chặn người này';
-  String get unblock => english ? 'Unblock' : 'Bỏ chặn';
-  String get unblockLabel => english ? 'Unblock $name' : 'Bỏ chặn $name';
-  String get blockedHint =>
-      english ? 'You blocked this person.' : 'Bạn đã chặn người này.';
-  String get moreOptions => english ? 'Profile options' : 'Tùy chọn hồ sơ';
-  String get cancel => english ? 'Cancel' : 'Hủy';
-  String get confirmBlock => english ? 'Block' : 'Chặn';
-  String get blockTitle => english ? 'Block $name?' : 'Chặn $name?';
-  String get blockExplanation => english
-      ? 'You will stop seeing each other’s posts in feeds and cannot message, '
-            'follow or mention each other. $name is not notified.'
-      : 'Hai bạn sẽ không thấy bài của nhau trên bảng tin, không nhắn tin, '
-            'theo dõi hay mention được nhau. $name không nhận được thông báo '
-            'nào về việc này.';
+      format(vi.app.profile.dangNhapDeTheo, {'name': name});
+  String get updating => vi.accountViews.dangCapNhat;
+  String get block => vi.guestbook.chanNguoiNay;
+  String get unblock => vi.people.boChan;
+  String get unblockLabel => format(vi.app.profile.boChan, {'name': name});
+  String get blockedHint => vi.people.banDaChan;
+  String get moreOptions => vi.app.profile.tuyChonHoSo;
+  String get cancel => vi.common.huy;
+  String get confirmBlock => vi.common.chan;
+  String get blockTitle => format(vi.people.chanHoi, {'name': name});
+  String get blockExplanation =>
+      format(vi.people.chanGiaiThich, {'name': name});
   String followToggleLabel(bool followed) => followed
-      ? (english
-            ? 'Following $name. Tap to unfollow'
-            : 'Đang theo dõi $name. Chạm để bỏ theo dõi')
-      : (english ? 'Follow $name' : 'Theo dõi $name');
+      ? format(vi.app.profile.dangTheoDoiCham, {'name': name})
+      : format(vi.app.profile.theoDoi, {'name': name});
 
   String done(ProfileRelationshipAction action) => switch (action) {
-    ProfileRelationshipAction.follow =>
-      english ? 'Now following $name' : 'Đang theo dõi $name',
-    ProfileRelationshipAction.unfollow =>
-      english ? 'Unfollowed $name' : 'Đã bỏ theo dõi $name',
-    ProfileRelationshipAction.block =>
-      english ? 'Blocked $name' : 'Đã chặn $name',
-    ProfileRelationshipAction.unblock =>
-      english ? 'Unblocked $name' : 'Đã bỏ chặn $name',
+    ProfileRelationshipAction.follow => format(vi.app.profile.dangTheoDoi, {
+      'name': name,
+    }),
+    ProfileRelationshipAction.unfollow => format(vi.app.profile.daBoTheoDoi, {
+      'name': name,
+    }),
+    ProfileRelationshipAction.block => format(vi.people.daChan, {'name': name}),
+    ProfileRelationshipAction.unblock => format(vi.people.daBoChan, {
+      'name': name,
+    }),
   };
 
   String failure(
     ProfileRelationshipFailure failure,
     ProfileRelationshipAction? attempted,
   ) => switch (failure) {
-    RelationshipRejected() =>
-      english
-          ? 'This action is not available for this member.'
-          : 'Không thực hiện được với thành viên này.',
-    RelationshipUserMissing() =>
-      english ? 'This member was not found.' : 'Không tìm thấy thành viên này.',
-    RelationshipSignedOut() =>
-      english
-          ? 'Your session ended. Sign in again.'
-          : 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.',
-    RelationshipRateLimited() =>
-      english
-          ? 'Too many requests. Try again shortly.'
-          : 'Thao tác quá nhanh. Thử lại sau.',
-    RelationshipUnconfirmed() =>
-      english
-          ? 'The result is not confirmed. Reload the profile to check.'
-          : 'Chưa xác nhận được kết quả. Hãy tải lại hồ sơ để kiểm tra.',
+    RelationshipRejected() => vi.app.profile.khongThucHienDuoc,
+    RelationshipUserMissing() => vi.app.profile.khongTimThayThanh,
+    RelationshipSignedOut() => vi.app.profile.phienDangNhapDa,
+    RelationshipRateLimited() => vi.app.profile.thaoTacQuaNhanh,
+    RelationshipUnconfirmed() => vi.app.profile.chuaXacNhanDuocKet,
     RelationshipNetworkFailure() => switch (attempted) {
-      ProfileRelationshipAction.block =>
-        english
-            ? 'Could not block. Try again later.'
-            : 'Chưa chặn được. Thử lại sau.',
-      ProfileRelationshipAction.unblock =>
-        english
-            ? 'Could not unblock. Try again later.'
-            : 'Chưa bỏ chặn được. Thử lại sau.',
-      _ =>
-        english
-            ? 'Could not update following. Try again later.'
-            : 'Chưa cập nhật được theo dõi. Thử lại sau.',
+      ProfileRelationshipAction.block => vi.people.chuaChanDuoc,
+      ProfileRelationshipAction.unblock => vi.people.chuaBoChanDuoc,
+      _ => vi.app.profile.chuaCapNhatDuoc,
     },
   };
 }

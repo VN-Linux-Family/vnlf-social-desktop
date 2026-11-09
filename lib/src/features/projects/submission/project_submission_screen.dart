@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
+import '../../../i18n/vi.dart';
 import 'project_submission.dart';
 
 final projectSubmissionDraftStoreProvider =
@@ -213,8 +214,8 @@ class _ProjectSubmissionScreenState
       }
       setState(() {
         previewError = failure.code == 'PROJECT_REPO_NOT_FOUND'
-            ? 'Không tìm thấy kho mã công khai này.'
-            : 'Không thể xem kho mã lúc này. Bạn vẫn có thể gửi để máy chủ kiểm tra.';
+            ? vi.app.projects.khongTimThayKho
+            : vi.app.projects.khongTheXemKho;
         repoMissing = failure.code == 'PROJECT_REPO_NOT_FOUND';
       });
     } catch (_) {
@@ -227,7 +228,7 @@ class _ProjectSubmissionScreenState
         return;
       }
       setState(() {
-        previewError = 'Không thể xem kho mã lúc này. Bạn vẫn có thể gửi để máy chủ kiểm tra.';
+        previewError = vi.app.projects.khongTheXemKho;
       });
     } finally {
       if (mounted) {
@@ -242,12 +243,12 @@ class _ProjectSubmissionScreenState
     final current = controller!;
     final problems = input.validate();
     if (repoMissing && !noRepo) {
-      problems['repo'] = 'Không tìm thấy kho mã công khai này.';
+      problems['repo'] = vi.app.projects.khongTimThayKho;
     }
     if (preview?.duplicateName != null &&
         projectRepositoryUrl(repo.text) == preview?.url &&
         !noRepo) {
-      problems['repo'] = 'Kho mã này đã có trên VNLF.';
+      problems['repo'] = vi.app.projects.khoMaNayDa;
     }
     setState(() {
       errors = problems;
@@ -273,20 +274,14 @@ class _ProjectSubmissionScreenState
         ref.watch(sessionStateProvider) ??
         ref.watch(sessionProvider).valueOrNull;
     if (session == null) {
-      return const Scaffold(
-        body: Center(child: Text('Đăng nhập để gửi dự án.')),
-      );
+      return Scaffold(body: Center(child: Text(vi.app.projects.dangNhapDeGui)));
     }
     if (owner == null) {
       owner = session.userId;
       _initController(session.userId);
     } else if (owner != session.userId) {
-      return const Scaffold(
-        body: Center(
-          child: Text(
-            'Tài khoản đã thay đổi. Quay lại tài khoản ban đầu để xem bản nhập.',
-          ),
-        ),
+      return Scaffold(
+        body: Center(child: Text(vi.app.projects.taiKhoanDaThay)),
       );
     }
     final state = controller!;
@@ -295,7 +290,9 @@ class _ProjectSubmissionScreenState
         VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         VnlfViewportSize.mobile;
     return Scaffold(
-      appBar: mobile ? null : AppBar(title: const Text('Giới thiệu dự án')),
+      appBar: mobile
+          ? null
+          : AppBar(title: Text(vi.projects.gioiThieuNguoiKhac)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 780),
@@ -304,29 +301,25 @@ class _ProjectSubmissionScreenState
             builder: (context, _) => ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                const Text(
-                  'Dự án sẽ được kiểm duyệt trước khi hiển thị với cộng đồng.',
-                ),
+                Text(vi.app.projects.duAnSeDuoc),
                 const SizedBox(height: 16),
                 Text(
-                  'Bước ${step + 1} / 3',
+                  format(vi.app.projects.buoc3, {'step': step + 1}),
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
                 const SizedBox(height: 12),
                 if (state.uncertain)
-                  const Card(
+                  Card(
                     child: Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Chưa xác định được kết quả gửi. Dữ liệu vẫn còn ở đây. Hãy kiểm tra danh sách dự án của bạn trước khi thử lại để tránh gửi trùng.',
-                      ),
+                      child: Text(vi.app.projects.chuaXacDinhDuoc),
                     ),
                   ),
                 if (state.receipt != null)
-                  const Card(
+                  Card(
                     child: Padding(
                       padding: EdgeInsets.all(16),
-                      child: Text('Đã gửi dự án và đang chờ duyệt.'),
+                      child: Text(vi.app.projects.daGuiDuAn),
                     ),
                   ),
                 if (state.error != null)
@@ -355,7 +348,7 @@ class _ProjectSubmissionScreenState
                               onPressed: () => setState(() {
                                 step--;
                               }),
-                              child: const Text('Quay lại'),
+                              child: Text(vi.projects.quayLaiBuoc),
                             ),
                           const Spacer(),
                           if (step < 2)
@@ -382,27 +375,26 @@ class _ProjectSubmissionScreenState
                                     );
                                 if (step == 0 && !noRepo && repoMissing) {
                                   selected['repo'] =
-                                      'Không tìm thấy kho mã công khai này.';
+                                      vi.app.projects.khongTimThayKho;
                                 }
                                 if (step == 0 &&
                                     !noRepo &&
                                     preview?.duplicateName != null &&
                                     preview?.url ==
                                         projectRepositoryUrl(repo.text)) {
-                                  selected['repo'] =
-                                      'Kho mã này đã có trên VNLF.';
+                                  selected['repo'] = vi.app.projects.khoMaNayDa;
                                 }
                                 setState(() {
                                   errors = selected;
                                   if (selected.isEmpty) step++;
                                 });
                               },
-                              child: const Text('Tiếp tục'),
+                              child: Text(vi.projects.tiepTuc),
                             )
                           else
                             FilledButton(
                               onPressed: submit,
-                              child: const Text('Gửi duyệt'),
+                              child: Text(vi.projects.guiDuyet),
                             ),
                         ],
                       ),
@@ -453,6 +445,7 @@ class _ProjectSubmissionScreenState
     String label,
     String? value,
     List<String> values,
+    Map<String, String> labels,
     ValueChanged<String?> changed,
     String key,
   ) => Padding(
@@ -469,7 +462,7 @@ class _ProjectSubmissionScreenState
       ),
       items: [
         for (final item in values)
-          DropdownMenuItem(value: item, child: Text(_label(item))),
+          DropdownMenuItem(value: item, child: Text(labels[item] ?? item)),
       ],
       onChanged: (v) {
         changed(v);
@@ -482,9 +475,10 @@ class _ProjectSubmissionScreenState
     final state = controller;
     return [
       choice(
-        'Vai trò của bạn',
+        vi.projects.vaiTro,
         relation,
         projectRelations,
+        vi.projects.quanHe,
         (v) => setState(() {
           relation = v;
         }),
@@ -492,7 +486,7 @@ class _ProjectSubmissionScreenState
       ),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Dự án không có kho mã công khai'),
+        title: Text(vi.app.projects.duAnKhongCo),
         value: noRepo,
         onChanged: (v) => setState(() {
           noRepo = v;
@@ -504,7 +498,7 @@ class _ProjectSubmissionScreenState
       if (!noRepo) ...[
         field(
           repo,
-          'Liên kết kho mã GitHub',
+          vi.app.projects.lienKetKhoMa,
           'repo',
           maxLength: 300,
           onChanged: changeRepo,
@@ -515,7 +509,11 @@ class _ProjectSubmissionScreenState
             onPressed: previewBusy || projectRepositoryUrl(repo.text) == null
                 ? null
                 : loadPreview,
-            child: Text(previewBusy ? 'Đang kiểm tra…' : 'Xem kho mã'),
+            child: Text(
+              previewBusy
+                  ? vi.app.projects.dangKiemTra
+                  : vi.app.projects.xemKhoMa,
+            ),
           ),
         ),
         if (previewError != null) Text(previewError!),
@@ -524,28 +522,38 @@ class _ProjectSubmissionScreenState
             child: ListTile(
               title: Text(preview!.name),
               subtitle: Text(
-                '${preview!.description ?? ''}\n★ ${preview!.stars}  ·  Fork ${preview!.forks}${preview!.language == null ? '' : '  ·  ${preview!.language}'}${preview!.duplicateName == null ? '' : '\nĐã có trên VNLF: ${preview!.duplicateName}'}',
+                '${preview!.description ?? ''}\n★ ${preview!.stars}  ·  ${format(vi.app.projects.soFork, {'forks': preview!.forks})}${preview!.language == null ? '' : '  ·  ${preview!.language}'}${preview!.duplicateName == null ? '' : '\n${format(vi.app.projects.daCoTrenVnlf, {'name': preview!.duplicateName})}'}',
               ),
             ),
           ),
       ],
-      field(name, 'Tên dự án', 'name', maxLength: 80),
-      field(tagline, 'Mô tả ngắn', 'tagline', maxLength: 160),
+      field(name, vi.projects.ten, 'name', maxLength: 80),
+      field(tagline, vi.projects.moTaNgan, 'tagline', maxLength: 160),
       choice(
-        'Thể loại',
+        vi.projects.theLoai,
         type,
         projectTypes,
+        vi.projects.loai,
         (v) => setState(() {
           type = v;
         }),
         'type',
       ),
-      field(intro, 'Giới thiệu dự án', 'intro', maxLength: 10000, lines: 5),
+      field(
+        intro,
+        vi.projects.gioiThieuNguoiKhac,
+        'intro',
+        maxLength: 10000,
+        lines: 5,
+      ),
       const SizedBox(height: 8),
-      Text('Logo dự án', style: Theme.of(context).textTheme.titleSmall),
+      Text(
+        vi.app.projects.logoDuAn,
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
       const SizedBox(height: 4),
       Text(
-        'Định dạng PNG, JPG, WebP, GIF (tối đa 10 MB)',
+        vi.app.projects.dinhDangPngJpg,
         style: Theme.of(context).textTheme.bodySmall,
       ),
       const SizedBox(height: 8),
@@ -553,10 +561,10 @@ class _ProjectSubmissionScreenState
         Card(
           child: ListTile(
             leading: const Icon(Icons.image),
-            title: Text(state?.logoFileName ?? 'Logo đã tải lên'),
+            title: Text(state?.logoFileName ?? vi.app.projects.logoDaTaiLen),
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Xóa logo',
+              tooltip: vi.app.projects.xoaLogo,
               onPressed: locked ? null : () => state?.removeLogo(),
             ),
           ),
@@ -573,7 +581,7 @@ class _ProjectSubmissionScreenState
                     if (file != null) await state?.uploadLogo(file);
                   },
             icon: const Icon(Icons.upload_file),
-            label: const Text('Tải lên logo'),
+            label: Text(vi.app.projects.taiLenLogo),
           ),
         ),
       if (errors['logo'] != null)
@@ -586,12 +594,15 @@ class _ProjectSubmissionScreenState
         ),
       const SizedBox(height: 16),
       Text(
-        'Ảnh chụp màn hình (${state?.mediaAssets.length ?? 0}/$projectMaxMedia)',
+        format(vi.projects.anhChupTieuDe, {
+          'count': state?.mediaAssets.length ?? 0,
+          'max': projectMaxMedia,
+        }),
         style: Theme.of(context).textTheme.titleSmall,
       ),
       const SizedBox(height: 4),
       Text(
-        'Tối đa 6 ảnh chụp màn hình minh họa ứng dụng (tối đa 10 MB mỗi ảnh)',
+        vi.app.projects.toiDa6AnhChup,
         style: Theme.of(context).textTheme.bodySmall,
       ),
       const SizedBox(height: 8),
@@ -602,7 +613,7 @@ class _ProjectSubmissionScreenState
             title: Text(state!.mediaAssets[i].fileName),
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Xóa ảnh',
+              tooltip: vi.app.common.xoaAnh,
               onPressed: locked ? null : () => state.removeScreenshot(i),
             ),
           ),
@@ -619,11 +630,11 @@ class _ProjectSubmissionScreenState
                     if (file != null) await state?.uploadScreenshot(file);
                   },
             icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: const Text('Thêm ảnh chụp màn hình'),
+            label: Text(vi.app.projects.themAnhChupMan),
           ),
         ),
       if (state?.uploadingMedia == true)
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
@@ -633,7 +644,7 @@ class _ProjectSubmissionScreenState
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
               SizedBox(width: 8),
-              Text('Đang tải ảnh lên…'),
+              Text(vi.app.projects.dangTaiAnhLen),
             ],
           ),
         ),
@@ -649,7 +660,7 @@ class _ProjectSubmissionScreenState
   }
 
   List<Widget> _links() => [
-    Text('Liên kết', style: Theme.of(context).textTheme.titleMedium),
+    Text(vi.projects.lienKet, style: Theme.of(context).textTheme.titleMedium),
     if (errors['links'] != null)
       Text(
         errors['links']!,
@@ -660,9 +671,10 @@ class _ProjectSubmissionScreenState
         children: [
           Expanded(
             child: choice(
-              'Loại liên kết',
+              vi.app.projects.loaiLienKet,
               links[i].kind,
               projectLinkKinds,
+              vi.projects.linkLoai,
               (v) => setState(() {
                 links[i] = (kind: v!, text: links[i].text);
               }),
@@ -670,7 +682,7 @@ class _ProjectSubmissionScreenState
             ),
           ),
           IconButton(
-            tooltip: 'Xóa liên kết',
+            tooltip: vi.app.projects.xoaLienKet,
             onPressed: () => setState(() {
               links.removeAt(i).text.dispose();
               _syncDraft();
@@ -690,12 +702,12 @@ class _ProjectSubmissionScreenState
             _syncDraft();
           }),
           icon: const Icon(Icons.add),
-          label: const Text('Thêm liên kết'),
+          label: Text(vi.app.projects.themLienKet),
         ),
       ),
     SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: const Text('Tìm người đóng góp'),
+      title: Text(vi.projects.timNguoiDongGop),
       value: seeking,
       onChanged: (v) => setState(() {
         seeking = v;
@@ -703,13 +715,21 @@ class _ProjectSubmissionScreenState
       }),
     ),
     if (seeking)
-      field(seekingNote, 'Bạn cần giúp gì?', 'seekingNote', maxLength: 200),
+      field(
+        seekingNote,
+        vi.app.projects.banCanGiupGi,
+        'seekingNote',
+        maxLength: 200,
+      ),
   ];
 
   List<Widget> _review() {
     final state = controller;
     return [
-      Text('Xem trước', style: Theme.of(context).textTheme.titleMedium),
+      Text(
+        vi.app.projects.xemTruoc,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -719,19 +739,23 @@ class _ProjectSubmissionScreenState
               Text(name.text, style: Theme.of(context).textTheme.titleLarge),
               Text(tagline.text),
               const SizedBox(height: 8),
-              Text('${_label(type ?? '')} · ${_label(relation ?? '')}'),
+              Text(
+                '${vi.projects.loai[type] ?? type ?? ''} · ${vi.projects.quanHe[relation] ?? relation ?? ''}',
+              ),
               if (state?.logoFileName != null ||
                   state?.input.logoAssetId != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Logo: ${state?.logoFileName ?? "Đã chọn"}',
+                  'Logo: ${state?.logoFileName ?? vi.app.common.daChon}',
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ],
               if ((state?.mediaAssets.length ?? 0) > 0) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Ảnh chụp màn hình: ${state!.mediaAssets.length} ảnh',
+                  format(vi.app.projects.anhChupManHinhAnh, {
+                    'mediaAssets': state!.mediaAssets.length,
+                  }),
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ],
@@ -740,50 +764,23 @@ class _ProjectSubmissionScreenState
               if (!noRepo) Text(repo.text),
               for (final link in links)
                 if (link.text.text.trim().isNotEmpty)
-                  Text('${_label(link.kind)}: ${link.text.text}'),
+                  Text(
+                    '${vi.projects.linkLoai[link.kind] ?? link.kind}: ${link.text.text}',
+                  ),
             ],
           ),
         ),
       ),
       SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Đăng bài giới thiệu khi được duyệt'),
+        title: Text(vi.app.projects.dangBaiGioiThieu),
         value: announce,
         onChanged: (v) => setState(() {
           announce = v;
           _syncDraft();
         }),
       ),
-      const Text('Dự án mới sẽ ở trạng thái chờ duyệt.'),
+      Text(vi.app.projects.duAnMoiSe),
     ];
   }
 }
-
-String _label(String value) =>
-    const {
-      'AUTHOR': 'Tác giả',
-      'MAINTAINER': 'Người duy trì',
-      'CONTRIBUTOR': 'Người đóng góp',
-      'SHARED': 'Giới thiệu',
-      'APP': 'Ứng dụng',
-      'TOOL': 'Công cụ',
-      'LIBRARY': 'Thư viện',
-      'DISTRO': 'Bản phân phối',
-      'CUSTOMIZE': 'Tùy biến',
-      'EXTENSION': 'Tiện ích mở rộng',
-      'VIETNAMESE': 'Tiếng Việt',
-      'SYSTEM': 'Hệ thống',
-      'SELFHOST': 'Tự lưu trữ',
-      'GAME': 'Trò chơi',
-      'LEARNING': 'Học tập',
-      'OTHER': 'Khác',
-      'WEBSITE': 'Trang web',
-      'DOCS': 'Tài liệu',
-      'DOWNLOAD': 'Tải xuống',
-      'AUR': 'AUR',
-      'FLATHUB': 'Flathub',
-      'CHAT': 'Trò chuyện',
-      'VIDEO': 'Video',
-      'REPO': 'Kho mã',
-    }[value] ??
-    value;

@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
@@ -21,16 +22,12 @@ class ProfileContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return switch (tab) {
       0 => _section<FeedPage>(
         ref.watch(profilePostsProvider(username)),
         () => ref.invalidate(profilePostsProvider(username)),
         (page) => [
-          if (page.items.isEmpty)
-            _empty(
-              english ? 'No public posts yet' : 'Chưa có bài viết công khai',
-            ),
+          if (page.items.isEmpty) _empty(vi.app.profile.chuaCoBaiViet),
           for (final post in page.items)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -43,10 +40,7 @@ class ProfileContent extends ConsumerWidget {
                       : PollCard(poll: post.poll!, authorId: post.author.id),
                   post: ref
                       .watch(postInteractionProvider(post.id))
-                      .apply(
-                        presentPost(post, english: english),
-                        english: english,
-                      ),
+                      .apply(presentPost(post)),
                   onVoteChanged: (vote) => ref
                       .read(postInteractionsProvider.notifier)
                       .vote(post.id, vote),
@@ -56,38 +50,28 @@ class ProfileContent extends ConsumerWidget {
                         post.id,
                         initialValue: post.viewerBookmarked,
                       ),
-                  upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
-                  downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
-                  bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
-                  commentSemanticLabel: english ? 'Comments' : 'Bình luận',
+                  upvoteSemanticLabel: vi.app.common.ungHo,
+                  downvoteSemanticLabel: vi.app.common.phanDoi,
+                  bookmarkSemanticLabel: vi.app.common.luuBaiViet,
+                  commentSemanticLabel: vi.common.binhLuan,
                   onAuthorTap: () => context.push(
                     '/profile/${Uri.encodeComponent(post.author.username)}',
                   ),
                   onCommentTap: () =>
                       context.push('/thread/${Uri.encodeComponent(post.id)}'),
                   onShareTap: () => copyPostLink(context, post),
-                  shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
+                  shareSemanticLabel: vi.miscViews.chiaSe,
                 ),
               ),
             ),
-          if (page.nextCursor != null)
-            _empty(
-              english
-                  ? 'Showing the first 50 public posts.'
-                  : 'Đang hiển thị 50 bài viết công khai đầu tiên.',
-            ),
+          if (page.nextCursor != null) _empty(vi.app.profile.dangHienThi50Bai),
         ],
       ),
       1 => _section<ProfileCommentsPage>(
         ref.watch(profileCommentsProvider(username)),
         () => ref.invalidate(profileCommentsProvider(username)),
         (page) => [
-          if (page.items.isEmpty)
-            _empty(
-              english
-                  ? 'No public comments yet'
-                  : 'Chưa có bình luận công khai',
-            ),
+          if (page.items.isEmpty) _empty(vi.accountViews.chuaCoBinhLuanPublic),
           for (final comment in page.items)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -99,7 +83,7 @@ class ProfileContent extends ConsumerWidget {
                   subtitle: comment.createdAt == null
                       ? null
                       : Text(
-                          DateFormat.yMd(english ? 'en' : 'vi')
+                          DateFormat.yMd(vi.app.profile.vi)
                               .format(comment.createdAt!.toLocal()),
                         ),
                   trailing: const Icon(Icons.arrow_outward, size: 16),
@@ -111,20 +95,14 @@ class ProfileContent extends ConsumerWidget {
                 ),
               ),
             ),
-          if (page.nextCursor != null)
-            _empty(
-              english
-                  ? 'Showing the first 50 public comments.'
-                  : 'Đang hiển thị 50 bình luận công khai đầu tiên.',
-            ),
+          if (page.nextCursor != null) _empty(vi.app.profile.dangHienThi50),
         ],
       ),
       _ => _section<ProjectsPage>(
         ref.watch(profileProjectsProvider(username)),
         () => ref.invalidate(profileProjectsProvider(username)),
         (page) => [
-          if (page.items.isEmpty)
-            _empty(english ? 'No projects yet' : 'Chưa có dự án'),
+          if (page.items.isEmpty) _empty(vi.app.common.chuaCoDuAn),
           for (final item in page.items)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),

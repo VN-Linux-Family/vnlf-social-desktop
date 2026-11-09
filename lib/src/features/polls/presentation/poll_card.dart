@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/poll_models.dart';
 import 'poll_edit_dialog.dart';
 import 'poll_feedback.dart';
@@ -24,7 +25,6 @@ class PollCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = VnlfColors.of(context);
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final owner = ref.watch(
       sessionStateProvider.select((session) => session?.userId),
     );
@@ -193,7 +193,7 @@ class PollCard extends ConsumerWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      '${value.totalVotes} ${en ? 'votes' : 'lượt bình chọn'}${voted ? (en ? ' · Select again to remove' : ' · Bấm lại để bỏ') : ''}',
+                      '${value.totalVotes} ${vi.app.polls.luotBinhChon}${voted ? vi.app.polls.bamLaiDeBo : ''}',
                       style: VnlfTypography.meta(colors.muted),
                     ),
                     if (canEdit)
@@ -209,7 +209,7 @@ class PollCard extends ConsumerWidget {
                                 ),
                               ),
                         icon: const Icon(Icons.edit_outlined, size: 13),
-                        label: Text(en ? 'Edit poll' : 'Sửa bình chọn'),
+                        label: Text(vi.poll.suaBinhChon),
                       ),
                   ],
                 ),

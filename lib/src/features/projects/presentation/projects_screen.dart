@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../domain/project_directory.dart';
 import 'project_detail_sheet.dart';
 import 'project_directory_controller.dart';
@@ -22,55 +23,10 @@ class ProjectsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final directory = ref.watch(projectDirectoryProvider);
     final controller = ref.read(projectDirectoryProvider.notifier);
     final filters = directory.filters;
-    const typeLabels = {
-      'APP': 'Ứng dụng',
-      'TOOL': 'Công cụ',
-      'LIBRARY': 'Thư viện',
-      'DISTRO': 'Bản phân phối',
-      'CUSTOMIZE': 'Tùy biến',
-      'EXTENSION': 'Tiện ích',
-      'VIETNAMESE': 'Tiếng Việt',
-      'SYSTEM': 'Hệ thống',
-      'SELFHOST': 'Tự lưu trữ',
-      'GAME': 'Trò chơi',
-      'LEARNING': 'Học tập',
-      'OTHER': 'Khác',
-    };
-    const englishTypeLabels = {
-      'APP': 'Apps',
-      'TOOL': 'Tools',
-      'LIBRARY': 'Libraries',
-      'DISTRO': 'Distributions',
-      'CUSTOMIZE': 'Customization',
-      'EXTENSION': 'Extensions',
-      'VIETNAMESE': 'Vietnamese',
-      'SYSTEM': 'System',
-      'SELFHOST': 'Self-hosted',
-      'GAME': 'Games',
-      'LEARNING': 'Learning',
-      'OTHER': 'Other',
-    };
-    const englishSortLabels = {
-      'featured': 'Featured',
-      'new': 'Newest',
-      'stars': 'Most stars',
-      'rating': 'Rating',
-      'updated': 'Recently updated',
-      'trending': 'Trending',
-    };
-    const sortLabels = {
-      'featured': 'Nổi bật',
-      'new': 'Mới nhất',
-      'stars': 'Nhiều sao',
-      'rating': 'Đánh giá',
-      'updated': 'Cập nhật',
-      'trending': 'Đang lên',
-    };
     return RefreshIndicator(
       onRefresh: () async {
         HapticFeedback.lightImpact();
@@ -82,7 +38,7 @@ class ProjectsScreen extends ConsumerWidget {
           if (VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) !=
               VnlfViewportSize.mobile) ...[
             VnlfCenterPageHeader(
-              title: english ? 'Projects' : 'Dự án',
+              title: vi.projects.tabDuAn,
               trailing: OutlinedButton.icon(
                 onPressed: () {
                   final session =
@@ -92,7 +48,7 @@ class ProjectsScreen extends ConsumerWidget {
                       ?.push(session == null ? '/login' : '/projects/submit');
                 },
                 icon: const Icon(Icons.add, size: 18),
-                label: Text(english ? 'Submit project' : 'Giới thiệu dự án'),
+                label: Text(vi.projects.gioiThieuNguoiKhac),
               ),
             ),
             const SizedBox(height: 12),
@@ -104,7 +60,7 @@ class ProjectsScreen extends ConsumerWidget {
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 key: const ValueKey('submit-project-mobile-button'),
-                tooltip: english ? 'Submit project' : 'Giới thiệu dự án',
+                tooltip: vi.projects.gioiThieuNguoiKhac,
                 icon: Icon(
                   Icons.add_circle_outline_rounded,
                   color: colors.brand,
@@ -118,7 +74,7 @@ class ProjectsScreen extends ConsumerWidget {
                       ?.push(session == null ? '/login' : '/projects/submit');
                 },
               ),
-              labelText: english ? 'Search projects' : 'Tìm dự án',
+              labelText: vi.projects.timKiem,
               counterText: '',
             ),
           ),
@@ -140,7 +96,7 @@ class ProjectsScreen extends ConsumerWidget {
                           DropdownMenuItem(
                             value: sort,
                             child: Text(
-                              (english ? englishSortLabels : sortLabels)[sort]!,
+                              vi.projects.sapXep[sort]!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -162,7 +118,7 @@ class ProjectsScreen extends ConsumerWidget {
                         DropdownMenuItem(
                           value: '',
                           child: Text(
-                            english ? 'All languages' : 'Tất cả ngôn ngữ',
+                            vi.app.projects.tatCaNgonNgu,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -209,13 +165,7 @@ class ProjectsScreen extends ConsumerWidget {
                             filters.copyWith(seeking: value ?? false),
                           ),
                         ),
-                        Expanded(
-                          child: Text(
-                            english
-                                ? 'Seeking contributors'
-                                : 'Tìm người đóng góp',
-                          ),
-                        ),
+                        Expanded(child: Text(vi.projects.timNguoiDongGop)),
                       ],
                     ),
                   ),
@@ -232,7 +182,7 @@ class ProjectsScreen extends ConsumerWidget {
                 checkmarkColor: colors.brand,
                 side: BorderSide(color: colors.line),
                 labelStyle: VnlfTypography.control(colors.ink),
-                label: Text(english ? 'All' : 'Tất cả'),
+                label: Text(vi.common.tatCa),
                 selected: filters.type.isEmpty,
                 onSelected: (_) {
                   HapticFeedback.selectionClick();
@@ -248,7 +198,7 @@ class ProjectsScreen extends ConsumerWidget {
                     side: BorderSide(color: colors.line),
                     labelStyle: VnlfTypography.control(colors.ink),
                     label: Text(
-                      '${(english ? englishTypeLabels : typeLabels)[type]} (${directory.types.where((f) => f.name == type).fold<int>(0, (n, f) => n + f.count)})',
+                      '${vi.projects.loai[type]} (${directory.types.where((f) => f.name == type).fold<int>(0, (n, f) => n + f.count)})',
                     ),
                     selected: filters.type == type,
                     onSelected: (_) {
@@ -270,10 +220,8 @@ class ProjectsScreen extends ConsumerWidget {
               directory.error == null)
             VnlfStateCard(
               icon: Icons.workspaces_outline,
-              title: english
-                  ? 'No matching projects'
-                  : 'Không có dự án phù hợp',
-              message: english ? 'Try another filter.' : 'Thử bộ lọc khác.',
+              title: vi.app.projects.khongCoDuAn,
+              message: vi.app.projects.thuBoLocKhac,
             ),
           for (var index = 0; index < directory.items.length; index++) ...[
             if (filters.sort == 'featured' &&
@@ -284,8 +232,8 @@ class ProjectsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(switch (directory.items[index].tier) {
                   'VNLF' => 'VNLF',
-                  'PARTNER' => english ? 'Partners' : 'Đối tác',
-                  _ => english ? 'Community' : 'Cộng đồng',
+                  'PARTNER' => vi.app.projects.doiTac,
+                  _ => vi.projects.phanCongDong,
                 }, style: Theme.of(context).textTheme.titleMedium),
               ),
             Builder(
@@ -328,11 +276,9 @@ class ProjectsScreen extends ConsumerWidget {
           if (directory.error != null)
             VnlfStateCard(
               icon: Icons.error_outline,
-              title: english
-                  ? 'Unable to load projects'
-                  : 'Không tải được dự án',
-              message: english ? 'Please try again.' : 'Vui lòng thử lại.',
-              actionLabel: english ? 'Retry' : 'Thử lại',
+              title: vi.app.projects.khongTaiDuocDu,
+              message: vi.app.common.vuiLongThuLai,
+              actionLabel: vi.common.thuLai,
               onAction: () => controller.load(
                 more:
                     directory.items.isNotEmpty && directory.nextCursor != null,
@@ -345,9 +291,7 @@ class ProjectsScreen extends ConsumerWidget {
                   ? null
                   : () => controller.load(more: true),
               child: Text(
-                directory.loading
-                    ? (english ? 'Loading…' : 'Đang tải…')
-                    : (english ? 'Show more' : 'Xem thêm'),
+                directory.loading ? vi.common.dangTai : vi.projects.xemThem,
               ),
             ),
         ],

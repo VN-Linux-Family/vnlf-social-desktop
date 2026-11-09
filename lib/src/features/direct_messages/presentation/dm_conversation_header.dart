@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../domain/direct_message_models.dart';
-import 'direct_message_feedback.dart';
 
 class DmConversationHeader extends StatelessWidget {
   const DmConversationHeader({
@@ -44,11 +44,7 @@ class DmConversationHeader extends StatelessWidget {
                 if (!wide)
                   IconButton(
                     key: const Key('dm-open-inbox-sheet-button'),
-                    tooltip: dmText(
-                      context,
-                      'Danh sách cuộc trò chuyện',
-                      'Conversation list',
-                    ),
+                    tooltip: vi.app.directMessages.danhSachCuocTro,
                     onPressed: onBack,
                     icon: const Icon(Icons.arrow_back, size: 20),
                   ),
@@ -75,7 +71,7 @@ class DmConversationHeader extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${peer.username.isEmpty ? '' : '@${peer.username} · '}${peer.isOnline ? dmText(context, 'Trực tuyến', 'Online') : dmText(context, 'Ngoại tuyến', 'Offline')}',
+                        '${peer.username.isEmpty ? '' : '@${peer.username} · '}${peer.isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: VnlfTypography.meta(colors.muted)
@@ -86,39 +82,27 @@ class DmConversationHeader extends StatelessWidget {
                 ),
                 IconButton(
                   key: const Key('dm-search-button'),
-                  tooltip: dmText(
-                    context,
-                    'Tìm trong cuộc trò chuyện',
-                    'Search in conversation',
-                  ),
+                  tooltip: vi.conversationSearch.timTrongHoiThoai,
                   onPressed: onSearch,
                   icon: const Icon(Icons.search, size: 20),
                 ),
                 if (!compact) ...[
                   IconButton(
                     key: const Key('dm-media-button'),
-                    tooltip: dmText(context, 'Ảnh đã chia sẻ', 'Shared media'),
+                    tooltip: vi.app.directMessages.anhDaChiaSe2,
                     onPressed: onMedia,
                     icon: const Icon(Icons.photo_library_outlined, size: 20),
                   ),
                   IconButton(
                     key: const Key('dm-refresh-timeline-button'),
-                    tooltip: dmText(
-                      context,
-                      'Làm mới tin nhắn',
-                      'Refresh messages',
-                    ),
+                    tooltip: vi.app.common.lamMoiTinNhan,
                     onPressed: loading ? null : onRefresh,
                     icon: const Icon(Icons.refresh, size: 20),
                   ),
                 ],
                 PopupMenuButton<String>(
                   key: const Key('dm-conversation-menu'),
-                  tooltip: dmText(
-                    context,
-                    'Tùy chọn cuộc trò chuyện',
-                    'Conversation options',
-                  ),
+                  tooltip: vi.directMessageLiveView.tuyChonHoiThoai,
                   enabled: !busy,
                   onSelected: (action) {
                     if (action == 'media') {
@@ -133,59 +117,33 @@ class DmConversationHeader extends StatelessWidget {
                     if (compact) ...[
                       PopupMenuItem(
                         value: 'media',
-                        child: Text(
-                          dmText(context, 'Ảnh đã chia sẻ', 'Shared media'),
-                        ),
+                        child: Text(vi.app.directMessages.anhDaChiaSe2),
                       ),
                       PopupMenuItem(
                         value: 'refresh',
                         enabled: !loading,
-                        child: Text(
-                          dmText(
-                            context,
-                            'Làm mới tin nhắn',
-                            'Refresh messages',
-                          ),
-                        ),
+                        child: Text(vi.app.common.lamMoiTinNhan),
                       ),
                     ],
                     PopupMenuItem(
                       value: 'mark_read',
-                      child: Text(
-                        dmText(context, 'Đánh dấu đã đọc', 'Mark as read'),
-                      ),
+                      child: Text(vi.app.directMessages.danhDauDaDoc),
                     ),
                     PopupMenuItem(
                       value: conversation.isBlockedByMe ? 'unblock' : 'block',
                       child: Text(
                         conversation.isBlockedByMe
-                            ? dmText(
-                                context,
-                                'Bỏ chặn người dùng',
-                                'Unblock user',
-                              )
-                            : dmText(context, 'Chặn người dùng', 'Block user'),
+                            ? vi.app.directMessages.boChanNguoiDung
+                            : vi.app.directMessages.chanNguoiDung2,
                       ),
                     ),
                     PopupMenuItem(
                       value: 'report',
-                      child: Text(
-                        dmText(
-                          context,
-                          'Báo cáo cuộc trò chuyện',
-                          'Report conversation',
-                        ),
-                      ),
+                      child: Text(vi.app.directMessages.baoCaoCuocTro),
                     ),
                     PopupMenuItem(
                       value: 'delete_conversation',
-                      child: Text(
-                        dmText(
-                          context,
-                          'Xóa cuộc trò chuyện',
-                          'Delete conversation',
-                        ),
-                      ),
+                      child: Text(vi.app.directMessages.xoaCuocTroChuyen2),
                     ),
                   ],
                 ),

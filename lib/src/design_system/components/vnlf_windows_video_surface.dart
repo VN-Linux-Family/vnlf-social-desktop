@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:video_player_win/video_player_win.dart';
 
+import '../../i18n/vi.dart';
+
 /// A borrowed controller keeps the same playback position in the expanded view.
 class VnlfWindowsVideoSurface extends StatefulWidget {
   const VnlfWindowsVideoSurface({
     super.key,
     required this.controller,
-    required this.english,
     required this.onFailure,
     required this.errorBuilder,
     this.onExpand,
   });
   final WinVideoPlayerController controller;
-  final bool english;
   final VoidCallback onFailure;
   final Widget Function() errorBuilder;
   final VoidCallback? onExpand;
@@ -49,7 +49,6 @@ class _VnlfWindowsVideoSurfaceState extends State<VnlfWindowsVideoSurface> {
       if (_failed || value.hasError || !value.isInitialized) {
         return widget.errorBuilder();
       }
-      final english = widget.english;
       final max = value.duration.inMilliseconds
           .toDouble()
           .clamp(1, double.infinity)
@@ -90,8 +89,8 @@ class _VnlfWindowsVideoSurfaceState extends State<VnlfWindowsVideoSurface> {
                     children: [
                       IconButton(
                         tooltip: value.isPlaying
-                            ? (english ? 'Pause' : 'Tạm dừng')
-                            : (english ? 'Play video' : 'Phát video'),
+                            ? vi.app.designSystem.tamDung
+                            : vi.app.designSystem.phatVideo,
                         color: Colors.white,
                         onPressed: _busy
                             ? null
@@ -114,8 +113,8 @@ class _VnlfWindowsVideoSurfaceState extends State<VnlfWindowsVideoSurface> {
                       ),
                       IconButton(
                         tooltip: value.volume == 0
-                            ? (english ? 'Unmute' : 'Bật âm thanh')
-                            : (english ? 'Mute' : 'Tắt âm thanh'),
+                            ? vi.app.designSystem.batAmThanh
+                            : vi.app.common.tatAmThanh,
                         color: Colors.white,
                         onPressed: _busy
                             ? null
@@ -132,7 +131,7 @@ class _VnlfWindowsVideoSurfaceState extends State<VnlfWindowsVideoSurface> {
                       ),
                       if (widget.onExpand != null)
                         IconButton(
-                          tooltip: english ? 'Expand video' : 'Phóng to video',
+                          tooltip: vi.app.designSystem.phongToVideo,
                           color: Colors.white,
                           onPressed: _busy ? null : widget.onExpand,
                           icon: const Icon(Icons.fullscreen),

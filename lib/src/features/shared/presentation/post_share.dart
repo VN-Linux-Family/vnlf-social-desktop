@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 
 /// The website's public article route uses the server-provided slug.
 Uri? canonicalPostUri(FeedPost post) => post.slug.isEmpty
@@ -13,19 +14,16 @@ Uri? canonicalPostUri(FeedPost post) => post.slug.isEmpty
       );
 
 Future<void> copyPostLink(BuildContext context, FeedPost post) async {
-  final english = Localizations.localeOf(context).languageCode == 'en';
   final uri = canonicalPostUri(post);
   String message;
   if (uri == null) {
-    message = english
-        ? 'This post has no public link'
-        : 'Bài viết chưa có liên kết công khai';
+    message = vi.app.shared.baiVietChuaCo;
   } else {
     try {
       await Clipboard.setData(ClipboardData(text: uri.toString()));
-      message = english ? 'Link copied' : 'Đã sao chép liên kết';
+      message = vi.socialOverlays.daSaoChepLienKet;
     } on PlatformException {
-      message = english ? 'Unable to copy link' : 'Không thể sao chép liên kết';
+      message = vi.app.shared.khongTheSaoChep;
     }
   }
   if (!context.mounted) return;

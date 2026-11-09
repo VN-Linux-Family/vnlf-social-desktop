@@ -33,14 +33,14 @@ void main() {
         ),
       );
       expect(created, 0);
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pumpAndSettle();
       expect(created, 1);
       expect(controller.playCalls, 1);
-      await tester.tap(find.byTooltip('Mute'));
+      await tester.tap(find.byTooltip('Tắt âm thanh'));
       await tester.pumpAndSettle();
       expect(controller.value.volume, 0);
-      await tester.tap(find.byTooltip('Pause'));
+      await tester.tap(find.byTooltip('Tạm dừng'));
       await tester.pumpAndSettle();
       expect(controller.value.isPlaying, isFalse);
       await tester.pumpWidget(const SizedBox());
@@ -62,9 +62,9 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Expand video'));
+      await tester.tap(find.byTooltip('Phóng to video'));
       await tester.pumpAndSettle();
       expect(find.byType(AppBar), findsOneWidget);
       expect(controller.disposals, 0);
@@ -92,7 +92,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.byTooltip('Play video'));
+      await tester.tap(find.byTooltip('Phát video'));
       await tester.pump();
       await tester.pumpWidget(const SizedBox());
       gate.complete();
@@ -115,7 +115,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byTooltip('Play video'));
+    await tester.tap(find.byTooltip('Phát video'));
     await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     gate.complete();
@@ -141,11 +141,11 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byTooltip('Play video'));
+    await tester.tap(find.byTooltip('Phát video'));
     await tester.pumpAndSettle();
     expect(controller.playCalls, 0);
-    expect(find.textContaining('Video unavailable'), findsOneWidget);
-    expect(find.byTooltip('Retry video'), findsOneWidget);
+    expect(find.textContaining('Không phát được video'), findsOneWidget);
+    expect(find.byTooltip('Thử lại video'), findsOneWidget);
   });
 }
 

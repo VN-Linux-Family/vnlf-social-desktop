@@ -63,7 +63,7 @@ void main() {
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     final background = button.style!.backgroundColor!.resolve({})!;
     _expectReadable(button.style!.foregroundColor!.resolve({})!, background);
-    final text = tester.widget<Text>(find.text('Enter VNLF Social'));
+    final text = tester.widget<Text>(find.text('Vào VNLF Social'));
     _expectReadable(text.style!.color!, background);
   });
 }

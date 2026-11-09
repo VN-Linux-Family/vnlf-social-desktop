@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../realtime/presentation/chat_realtime_bindings.dart';
 
 import 'package:flutter/material.dart';
@@ -28,17 +29,9 @@ class DirectMessagesScreen extends ConsumerWidget {
         child: SingleChildScrollView(
           child: VnlfStateCard(
             icon: Icons.mail_outline_rounded,
-            title: dmText(
-              context,
-              'Đăng nhập để xem tin nhắn trực tiếp',
-              'Sign in to view direct messages',
-            ),
-            message: dmText(
-              context,
-              'Tin nhắn riêng tư và yêu cầu kết nối chỉ dành cho thành viên đã đăng nhập.',
-              'Private conversations and message requests are available to signed-in members.',
-            ),
-            actionLabel: dmText(context, 'Đăng nhập', 'Sign in'),
+            title: vi.app.directMessages.dangNhapDeXem,
+            message: vi.app.directMessages.tinNhanRiengTu,
+            actionLabel: vi.common.dangNhap,
             onAction: () => context.push('/login'),
           ),
         ),
@@ -77,15 +70,7 @@ class DirectMessagesScreen extends ConsumerWidget {
               ],
               Expanded(
                 child: id == null
-                    ? Center(
-                        child: Text(
-                          dmText(
-                            context,
-                            'Chọn một cuộc trò chuyện',
-                            'Choose a conversation',
-                          ),
-                        ),
-                      )
+                    ? Center(child: Text(vi.app.directMessages.chonMotCuocTro))
                     : DmRealtimeBinding(
                         conversationId: id,
                         child: _DmConversationPane(
@@ -137,11 +122,7 @@ class _DmConversationPane extends ConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
-                tooltip: dmText(
-                  context,
-                  'Danh sách cuộc trò chuyện',
-                  'Conversation list',
-                ),
+                tooltip: vi.app.directMessages.danhSachCuocTro,
                 onPressed: onOpenInboxSheet,
                 icon: const Icon(Icons.arrow_back),
               ),
@@ -152,14 +133,10 @@ class _DmConversationPane extends ConsumerWidget {
                   ? const CircularProgressIndicator()
                   : VnlfStateCard(
                       icon: Icons.chat_bubble_outline,
-                      title: dmText(
-                        context,
-                        'Không mở được cuộc trò chuyện',
-                        'Could not open conversation',
-                      ),
+                      title: vi.app.directMessages.khongMoDuocCuoc,
                       message: dmFailureMessage(context, state.failure),
                       isError: true,
-                      actionLabel: dmText(context, 'Thử lại', 'Try again'),
+                      actionLabel: vi.common.thuLai,
                       onAction: controller.refresh,
                     ),
             ),
@@ -202,19 +179,13 @@ class _DmConversationPane extends ConsumerWidget {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    dmText(
-                      context,
-                      'Đang xem ngữ cảnh quanh tin nhắn đã chọn.',
-                      'Viewing context around selected message.',
-                    ),
+                    vi.app.directMessages.dangXemNguCanh,
                     style: VnlfTypography.caption(colors.ink),
                   ),
                 ),
                 TextButton(
                   onPressed: controller.returnToLatestMessages,
-                  child: Text(
-                    dmText(context, 'Về tin nhắn mới nhất', 'Return to latest'),
-                  ),
+                  child: Text(vi.app.directMessages.veTinNhanMoi),
                 ),
               ],
             ),
@@ -225,11 +196,7 @@ class _DmConversationPane extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             child: Text(
               state.confirmedRefreshFailed
-                  ? dmText(
-                      context,
-                      'Máy chủ đã xác nhận thao tác, nhưng chưa tải lại được lịch sử. Hãy làm mới; không cần gửi lại.',
-                      'The server confirmed the action, but history could not be reloaded. Refresh; do not send again.',
-                    )
+                  ? vi.app.common.mayChuDaXac
                   : dmFailureMessage(context, state.failure),
               style: TextStyle(color: colors.red),
             ),
@@ -248,11 +215,9 @@ class _DmConversationPane extends ConsumerWidget {
             key: const Key('dm-status-notice'),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Text(
-              dmText(
-                context,
-                'Đã gửi báo cáo cuộc trò chuyện (#${state.statusNotice}).',
-                'Conversation report submitted (#${state.statusNotice}).',
-              ),
+              format(vi.app.directMessages.daGuiBaoCao, {
+                'statusNotice': state.statusNotice,
+              }),
               style: VnlfTypography.caption(colors.brand),
             ),
           ),
@@ -282,13 +247,7 @@ class _DmConversationPane extends ConsumerWidget {
                             child: TextButton(
                               key: const Key('dm-load-older-button'),
                               onPressed: controller.loadOlder,
-                              child: Text(
-                                dmText(
-                                  context,
-                                  'Tải tin nhắn cũ hơn',
-                                  'Load older messages',
-                                ),
-                              ),
+                              child: Text(vi.app.common.taiTinNhanCu),
                             ),
                           );
                         }
@@ -297,11 +256,7 @@ class _DmConversationPane extends ConsumerWidget {
                             child: Padding(
                               padding: const EdgeInsets.all(24),
                               child: Text(
-                                dmText(
-                                  context,
-                                  'Chưa có tin nhắn trong cuộc trò chuyện này.',
-                                  'No messages in this conversation yet.',
-                                ),
+                                vi.app.directMessages.chuaCoTinNhan,
                                 style: VnlfTypography.body(colors.muted),
                               ),
                             ),
@@ -368,13 +323,11 @@ class _DmConversationPane extends ConsumerWidget {
       case 'block':
         final confirmed = await _confirmAction(
           context,
-          title: dmText(context, 'Chặn người dùng?', 'Block user?'),
-          message: dmText(
-            context,
-            'Bạn và ${conversation.peer.displayName} sẽ không thể nhắn tin cho nhau cho tới khi bỏ chặn.',
-            'You and ${conversation.peer.displayName} will not be able to message each other until unblocked.',
-          ),
-          confirmLabel: dmText(context, 'Chặn', 'Block'),
+          title: vi.app.directMessages.chanNguoiDung,
+          message: format(vi.app.directMessages.banVaSeKhong, {
+            'displayName': conversation.peer.displayName,
+          }),
+          confirmLabel: vi.common.chan,
         );
         if (confirmed) {
           await controller.blockPeer();
@@ -386,17 +339,9 @@ class _DmConversationPane extends ConsumerWidget {
       case 'delete_conversation':
         final confirmed = await _confirmAction(
           context,
-          title: dmText(
-            context,
-            'Xóa cuộc trò chuyện?',
-            'Delete conversation?',
-          ),
-          message: dmText(
-            context,
-            'Cuộc trò chuyện sẽ được ẩn khỏi hộp thư của bạn.',
-            'This conversation will be removed from your inbox.',
-          ),
-          confirmLabel: dmText(context, 'Xóa', 'Delete'),
+          title: vi.app.directMessages.xoaCuocTroChuyen,
+          message: vi.app.directMessages.cuocTroChuyenSe,
+          confirmLabel: vi.common.xoa,
         );
         if (confirmed) {
           await controller.deleteConversation();
@@ -413,9 +358,7 @@ class _DmConversationPane extends ConsumerWidget {
     final updated = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          dmText(dialogContext, 'Chỉnh sửa tin nhắn', 'Edit message'),
-        ),
+        title: Text(vi.app.common.chinhSuaTinNhan),
         content: TextField(
           key: const Key('dm-edit-message-input'),
           controller: textController,
@@ -427,13 +370,13 @@ class _DmConversationPane extends ConsumerWidget {
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(dmText(dialogContext, 'Hủy', 'Cancel')),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             key: const Key('dm-edit-message-save'),
             onPressed: () =>
                 Navigator.pop(dialogContext, textController.text.trim()),
-            child: Text(dmText(dialogContext, 'Lưu', 'Save')),
+            child: Text(vi.common.luu),
           ),
         ],
       ),
@@ -452,13 +395,9 @@ class _DmConversationPane extends ConsumerWidget {
   ) async {
     final confirmed = await _confirmAction(
       context,
-      title: dmText(context, 'Xóa tin nhắn?', 'Delete message?'),
-      message: dmText(
-        context,
-        'Tin nhắn này sẽ bị xóa khỏi cuộc trò chuyện.',
-        'This message will be deleted from the conversation.',
-      ),
-      confirmLabel: dmText(context, 'Xóa', 'Delete'),
+      title: vi.chatUi.xoaTinNhan,
+      message: vi.app.directMessages.tinNhanNaySe,
+      confirmLabel: vi.common.xoa,
     );
     if (confirmed) {
       await controller.deleteMessage(message.id);
@@ -479,7 +418,7 @@ class _DmConversationPane extends ConsumerWidget {
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(dmText(dialogContext, 'Hủy', 'Cancel')),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),

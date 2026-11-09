@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../domain/public_profile.dart';
 
@@ -18,7 +19,6 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final author = presentAuthor(profile.author);
     return DecoratedBox(
@@ -92,7 +92,7 @@ class ProfileHeader extends StatelessWidget {
                 if (profile.isSample) ...[
                   const SizedBox(height: 6),
                   Text(
-                    english ? 'Sample profile' : 'Hồ sơ mẫu',
+                    vi.app.profile.hoSoMau,
                     style: VnlfTypography.meta(colors.muted),
                   ),
                 ],
@@ -110,20 +110,20 @@ class ProfileHeader extends StatelessWidget {
                         : 4;
                     final stats = [
                       _Stat(
-                        label: english ? 'Total XP' : 'Tổng XP',
+                        label: vi.accountViews.xpTong,
                         value: profile.totalPoints,
                         level: profile.level,
                       ),
                       _Stat(
-                        label: english ? 'Day streak' : 'ngày liên tiếp',
+                        label: vi.accountViews.ngayStreak,
                         value: profile.currentStreak,
                       ),
                       _Stat(
-                        label: english ? 'Following' : 'đang theo dõi',
+                        label: vi.accountViews.dangTheoDoi2,
                         value: profile.followingCount,
                       ),
                       _Stat(
-                        label: english ? 'Followers' : 'người theo dõi',
+                        label: vi.accountViews.nguoiTheoDoi,
                         value: profile.followerCount,
                       ),
                     ];

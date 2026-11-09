@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/external_uri.dart';
+import '../../../i18n/vi.dart';
 
 class ComposerLinkDialog extends StatefulWidget {
   const ComposerLinkDialog({super.key, required this.initialValue});
@@ -28,9 +29,8 @@ class _ComposerLinkDialogState extends State<ComposerLinkDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     return AlertDialog(
-      title: Text(en ? 'Link' : 'Liên kết'),
+      title: Text(vi.articleEditor.lienKet),
       content: Form(
         key: _form,
         child: TextFormField(
@@ -49,22 +49,20 @@ class _ComposerLinkDialogState extends State<ComposerLinkDialog> {
             final emailLink = uri?.scheme == 'mailto' && uri!.path.isNotEmpty;
             return externalWebUri(value) != null || emailLink
                 ? null
-                : en
-                ? 'Enter a valid web or email link.'
-                : 'Nhập liên kết web hoặc email hợp lệ.';
+                : vi.app.composer.nhapLienKetWeb;
           },
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(en ? 'Cancel' : 'Hủy'),
+          child: Text(vi.common.huy),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, ''),
-          child: Text(en ? 'Remove link' : 'Gỡ liên kết'),
+          child: Text(vi.app.composer.goLienKet),
         ),
-        FilledButton(onPressed: _apply, child: Text(en ? 'Apply' : 'Áp dụng')),
+        FilledButton(onPressed: _apply, child: Text(vi.articleEditor.apDung)),
       ],
     );
   }

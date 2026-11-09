@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../leaderboard/presentation/leaderboard_screen.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -15,7 +16,6 @@ class ThreadSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final post = ref.watch(threadPostProvider(postId)).asData?.value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -33,7 +33,7 @@ class ThreadSidebar extends ConsumerWidget {
                   onPressed: () => context.push(
                     '/profile/${Uri.encodeComponent(post.author.username)}',
                   ),
-                  child: Text(english ? 'View profile' : 'Xem trang cá nhân'),
+                  child: Text(vi.app.thread.xemTrangCaNhan),
                 ),
               ],
             ),

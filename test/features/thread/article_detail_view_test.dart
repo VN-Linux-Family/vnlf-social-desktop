@@ -41,13 +41,13 @@ void main() {
           body: SingleChildScrollView(
             child: ArticleDetailCard(
               source: article,
-              post: presentPost(article, english: true, fullContent: true),
+              post: presentPost(article, fullContent: true),
             ),
           ),
         ),
       ),
     );
-    expect(find.text('2 min read'), findsOneWidget);
+    expect(find.text('2 phút đọc'), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('Bài viết có tiêu đề')).dy,
       lessThan(tester.getTopLeft(find.text('Thành viên thử')).dy),
@@ -78,11 +78,10 @@ void main() {
             body: SingleChildScrollView(
               child: ArticleDetailCard(
                 source: article,
-                post: presentPost(article, english: true, fullContent: true)
-                    .copyWith(
-                      actionPending: pending,
-                      actionError: pending ? 'Synthetic save error' : null,
-                    ),
+                post: presentPost(article, fullContent: true).copyWith(
+                  actionPending: pending,
+                  actionError: pending ? 'Synthetic save error' : null,
+                ),
                 onBookmark: () => saves++,
                 onShare: () => shares++,
                 onReport: () => reports++,
@@ -92,12 +91,12 @@ void main() {
         ),
       );
       await pump();
-      await tester.tap(find.text('Save'));
-      await tester.tap(find.text('Share'));
-      await tester.tap(find.text('Report'));
+      await tester.tap(find.text('Lưu'));
+      await tester.tap(find.text('Chia sẻ'));
+      await tester.tap(find.text('Báo cáo'));
       expect([saves, shares, reports], [1, 1, 1]);
       await pump(pending: true);
-      await tester.tap(find.text('Save'));
+      await tester.tap(find.text('Lưu'));
       expect(saves, 1);
       expect(find.text('Synthetic save error'), findsOneWidget);
     },

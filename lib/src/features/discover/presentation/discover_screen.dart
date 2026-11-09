@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_state.dart';
 
 import 'package:flutter/material.dart';
@@ -68,7 +69,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final discoverData = ref.watch(discoverDataProvider);
     final articles = ref.watch(discoverArticlesProvider);
@@ -99,7 +99,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           if (isDesktop) ...[
-            VnlfCenterPageHeader(title: english ? 'Discover' : 'Khám phá'),
+            VnlfCenterPageHeader(title: vi.feedViews.khamPha2),
             const SizedBox(height: 12),
           ],
           FeatureSurface(
@@ -108,7 +108,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               children: [
                 TextField(
                   decoration: InputDecoration(
-                    labelText: english ? 'Search articles' : 'Tìm bài viết',
+                    labelText: vi.app.discover.timBaiViet,
                     prefixIcon: const Icon(Icons.search),
                     border: const OutlineInputBorder(),
                   ),
@@ -116,7 +116,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  english ? 'Popular tags' : 'Chủ đề phổ biến',
+                  vi.app.common.chuDePhoBien,
                   style: VnlfTypography.h3(colors.ink),
                 ),
                 const SizedBox(height: 8),
@@ -144,7 +144,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            english ? 'Featured articles' : 'Bài viết nổi bật',
+            vi.app.discover.baiVietNoiBat,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 12),
@@ -166,7 +166,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            english ? 'Community projects' : 'Dự án cộng đồng',
+            vi.app.discover.duAnCongDong,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 8),
@@ -178,8 +178,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             data: (page) => FeatureSurface(
               child: Column(
                 children: [
-                  if (page.items.isEmpty)
-                    Text(english ? 'No projects yet' : 'Chưa có dự án'),
+                  if (page.items.isEmpty) Text(vi.app.common.chuaCoDuAn),
                   for (final project in page.items)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -194,7 +193,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            english ? 'Active contributors' : 'Thành viên tích cực',
+            vi.app.discover.thanhVienTichCuc,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 8),
@@ -206,10 +205,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             data: (page) => FeatureSurface(
               child: Column(
                 children: [
-                  if (page.items.isEmpty)
-                    Text(
-                      english ? 'No contributors yet' : 'Chưa có thành viên',
-                    ),
+                  if (page.items.isEmpty) Text(vi.app.discover.chuaCoThanhVien),
                   for (final member in page.items)
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(vertical: 4),

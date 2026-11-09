@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 
@@ -17,7 +18,6 @@ class LeaderboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final current = LeaderboardWeek.current(DateTime.now());
     final selected = ref.watch(selectedLeaderboardWeekProvider) ?? current;
@@ -31,9 +31,7 @@ class LeaderboardScreen extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         if (isDesktop) ...[
-          VnlfCenterPageHeader(
-            title: english ? 'Leaderboard' : 'Bảng xếp hạng',
-          ),
+          VnlfCenterPageHeader(title: vi.app.leaderboard.bangXepHang),
           const SizedBox(height: 12),
         ],
         Wrap(
@@ -42,7 +40,7 @@ class LeaderboardScreen extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             IconButton(
-              tooltip: english ? 'Previous week' : 'Tuần trước',
+              tooltip: vi.leaderboardView.tuanTruoc,
               icon: const Icon(Icons.chevron_left),
               onPressed: () =>
                   ref.read(selectedLeaderboardWeekProvider.notifier).state =
@@ -53,8 +51,8 @@ class LeaderboardScreen extends ConsumerWidget {
               children: [
                 Text(
                   isCurrent
-                      ? (english ? 'This week' : 'Tuần này')
-                      : (english ? 'Selected week' : 'Tuần đã chọn'),
+                      ? vi.leaderboardView.tuanNay
+                      : vi.leaderboardView.tuanDaChon,
                   style: VnlfTypography.control(colors.ink),
                 ),
                 Text(
@@ -63,7 +61,7 @@ class LeaderboardScreen extends ConsumerWidget {
               ],
             ),
             IconButton(
-              tooltip: english ? 'Next week' : 'Tuần sau',
+              tooltip: vi.leaderboardView.tuanSau,
               icon: const Icon(Icons.chevron_right),
               onPressed: isCurrent
                   ? null
@@ -78,28 +76,21 @@ class LeaderboardScreen extends ConsumerWidget {
                 onPressed: () =>
                     ref.read(selectedLeaderboardWeekProvider.notifier).state =
                         null,
-                child: Text(english ? 'This week' : 'Tuần này'),
+                child: Text(vi.leaderboardView.tuanNay),
               ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            english
-                ? 'Weeks start on Monday, Vietnam time (UTC+07).'
-                : 'Tuần bắt đầu từ thứ Hai, theo giờ Việt Nam (UTC+07).',
-          ),
+          child: Text(vi.app.leaderboard.tuanBatDauTu),
         ),
-        if (offlineFeatures)
-          Text(
-            english ? 'Sample community rankings' : 'Xếp hạng cộng đồng mẫu',
-          ),
+        if (offlineFeatures) Text(vi.app.leaderboard.xepHangCongDong),
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             onPressed: () => context.push('/activity'),
             icon: const Icon(Icons.calendar_month_outlined),
-            label: Text(english ? 'My activity' : 'Hoạt động của tôi'),
+            label: Text(vi.app.leaderboard.hoatDongCuaToi),
           ),
         ),
         const SizedBox(height: 12),
@@ -117,7 +108,6 @@ class LeaderboardPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final rankings = sidebar
         ? ref.watch(leaderboardProvider)
         : ref.watch(selectedWeekRankingsProvider);
@@ -141,21 +131,15 @@ class LeaderboardPanel extends ConsumerWidget {
             ),
           ),
       ],
-      title: english ? 'Weekly leaderboard' : 'Xếp hạng tuần',
-      viewAllLabel: sidebar ? (english ? 'View all' : 'Xem tất cả') : '',
+      title: vi.socialChrome.bangDiemTuan,
+      viewAllLabel: sidebar ? vi.socialChrome.xemTatCa : '',
       onViewAll: sidebar ? () => context.go('/leaderboard') : null,
       isLoading: rankings.isLoading,
-      errorTitle: english
-          ? 'Unable to load leaderboard'
-          : 'Không tải được bảng xếp hạng',
-      errorMessage: rankings.hasError
-          ? (english ? 'Please try again.' : 'Vui lòng thử lại.')
-          : null,
-      emptyTitle: english ? 'No rankings yet' : 'Chưa có xếp hạng',
-      emptyMessage: english
-          ? 'Community contributions will appear here.'
-          : 'Đóng góp của cộng đồng sẽ xuất hiện tại đây.',
-      retryLabel: english ? 'Retry' : 'Thử lại',
+      errorTitle: vi.app.leaderboard.khongTaiDuocBang,
+      errorMessage: rankings.hasError ? vi.app.common.vuiLongThuLai : null,
+      emptyTitle: vi.app.leaderboard.chuaCoXepHang,
+      emptyMessage: vi.app.leaderboard.dongGopCuaCong,
+      retryLabel: vi.common.thuLai,
       onRetry: () {
         if (sidebar || ref.read(selectedLeaderboardWeekProvider) == null) {
           ref.invalidate(leaderboardProvider);

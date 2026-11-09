@@ -4,6 +4,7 @@ import '../../../core/api_client.dart';
 import '../../../data/field_reader.dart';
 import '../../../data/profile_dto.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../domain/article_comment.dart';
 
 ArticleComment commentFromJson(Map<String, dynamic> json) {
@@ -169,10 +170,13 @@ final class FixtureCommentsRepository implements CommentsRepository {
         _articles.putIfAbsent(
           articleId,
           () => [
-            const ArticleComment(
+            ArticleComment(
               id: 'fixture-comment',
-              content: 'Cảm ơn bạn đã chia sẻ cùng cộng đồng!',
-              author: Author(username: 'thanhvien', displayName: 'Thành viên'),
+              content: vi.app.thread.camOnBanDa,
+              author: Author(
+                username: 'thanhvien',
+                displayName: vi.common.roleMember,
+              ),
             ),
           ],
         ),
@@ -250,7 +254,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
       content: content,
       parentId: parentId,
       createdAt: DateTime.now(),
-      author: const Author(username: 'fixture', displayName: 'Bạn'),
+      author: Author(username: 'fixture', displayName: vi.app.common.ban),
       canEdit: true,
       canDelete: true,
     );

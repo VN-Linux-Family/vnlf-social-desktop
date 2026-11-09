@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -45,7 +46,6 @@ class VnlfCommentTree extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final en = Localizations.localeOf(context).languageCode == 'en';
 
     final tree = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,7 +81,7 @@ class VnlfCommentTree extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${comment.relativeTime}${comment.edited ? (en ? ' · Edited' : ' · Đã sửa') : ''}',
+                        '${comment.relativeTime}${comment.edited ? vi.commentsPanel.daSua : ''}',
                         style: VnlfTypography.meta(colors.textSubtle),
                       ),
                     ],
@@ -90,7 +90,7 @@ class VnlfCommentTree extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        en ? 'Pinned' : 'Đã ghim',
+                        vi.commentsPanel.daGhim,
                         style: VnlfTypography.meta(colors.brand),
                       ),
                     ),
@@ -102,7 +102,7 @@ class VnlfCommentTree extends StatelessWidget {
                     ),
                   if (comment.hiddenSticker)
                     Text(
-                      en ? 'Sticker hidden' : 'Sticker đã bị ẩn',
+                      vi.stickers.stickerDaBiAn,
                       style: VnlfTypography.meta(colors.muted),
                     ),
                   if (comment.gif != null)
@@ -153,10 +153,9 @@ class VnlfCommentTree extends StatelessWidget {
                         compact: true,
                         semanticLabel: voteSemanticLabel,
                         upvoteSemanticLabel:
-                            upvoteSemanticLabel ?? (en ? 'Upvote' : 'Ủng hộ'),
+                            upvoteSemanticLabel ?? vi.app.common.ungHo,
                         downvoteSemanticLabel:
-                            downvoteSemanticLabel ??
-                            (en ? 'Downvote' : 'Phản đối'),
+                            downvoteSemanticLabel ?? vi.app.common.phanDoi,
                         onVoteChanged: comment.pending || onVote == null
                             ? null
                             : (value) => onVote!(comment.id, value),
@@ -195,14 +194,14 @@ class VnlfCommentTree extends StatelessWidget {
                           onPressed: comment.pending
                               ? null
                               : () => onEdit!(comment.id),
-                          child: Text(en ? 'Edit' : 'Sửa'),
+                          child: Text(vi.common.sua),
                         ),
                       if (comment.canDelete && onDelete != null)
                         TextButton(
                           onPressed: comment.pending
                               ? null
                               : () => onDelete!(comment.id),
-                          child: Text(en ? 'Delete' : 'Xóa'),
+                          child: Text(vi.common.xoa),
                         ),
                       if (comment.canPin && onPin != null)
                         TextButton(
@@ -211,8 +210,8 @@ class VnlfCommentTree extends StatelessWidget {
                               : () => onPin!(comment.id),
                           child: Text(
                             comment.pinned
-                                ? (en ? 'Unpin' : 'Bỏ ghim')
-                                : (en ? 'Pin' : 'Ghim'),
+                                ? vi.commentsPanel.boGhim
+                                : vi.commentsPanel.ghim,
                           ),
                         ),
                     ],

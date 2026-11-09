@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/security_sessions.dart';
 import 'security_sessions_controller.dart';
@@ -11,7 +12,6 @@ class SecuritySessionsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final state = ref.watch(securitySessionsControllerProvider);
     final controller = ref.read(securitySessionsControllerProvider.notifier);
@@ -20,14 +20,12 @@ class SecuritySessionsPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            en ? 'Sessions' : 'Phiên đăng nhập',
+            vi.settingsViews.phienDangNhap,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 8),
           Text(
-            en
-                ? 'Devices signed in to your account'
-                : 'Thiết bị đang đăng nhập vào tài khoản',
+            vi.app.settings.thietBiDangDang,
             style: VnlfTypography.meta(colors.muted),
           ),
           if (state.loading) const LinearProgressIndicator(),
@@ -35,16 +33,10 @@ class SecuritySessionsPanel extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               state.confirmed
-                  ? (en
-                        ? 'Sign-out was confirmed, but the session list could not be refreshed.'
-                        : 'Đã xác nhận đăng xuất, nhưng chưa tải lại được danh sách phiên.')
+                  ? vi.app.settings.daXacNhanDang
                   : state.uncertain
-                  ? (en
-                        ? 'The result could not be confirmed. Refresh before trying again.'
-                        : 'Chưa thể xác nhận kết quả. Hãy làm mới trước khi thử lại.')
-                  : (en
-                        ? 'Could not load sessions.'
-                        : 'Chưa tải được danh sách phiên đăng nhập.'),
+                  ? vi.app.settings.chuaTheXacNhan
+                  : vi.settingsViews.chuaTaiDuocDanhSach,
               style: VnlfTypography.meta(colors.red),
             ),
           ],
@@ -59,48 +51,37 @@ class SecuritySessionsPanel extends ConsumerWidget {
                     ? session.deviceName!
                     : ((session.userAgent?.isNotEmpty ?? false)
                           ? session.userAgent!
-                          : (en
-                                ? 'Unknown device'
-                                : 'Thiết bị không xác định')),
+                          : vi.settingsViews.thietBiKhongXacDinh),
               ),
               subtitle: Text(
                 session.lastSeenAt == null
-                    ? (en
-                          ? 'Last activity unknown'
-                          : 'Không rõ lần hoạt động cuối')
-                    : '${en ? 'Last active' : 'Hoạt động'}: ${MaterialLocalizations.of(context).formatMediumDate(session.lastSeenAt!.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(session.lastSeenAt!.toLocal()))}',
+                    ? vi.app.settings.khongRoLanHoat
+                    : '${vi.app.common.hoatDong}: ${MaterialLocalizations.of(context).formatMediumDate(session.lastSeenAt!.toLocal())} ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(session.lastSeenAt!.toLocal()))}',
               ),
               trailing: session.current
-                  ? Text(en ? 'Current' : 'Hiện tại')
+                  ? Text(vi.app.settings.hienTai)
                   : TextButton(
                       onPressed: state.loading || state.uncertain
                           ? null
                           : () => _confirm(
                               context,
-                              en,
                               () => controller.revoke(session),
                               false,
                             ),
-                      child: Text(en ? 'Log out' : 'Đăng xuất'),
+                      child: Text(vi.settingsViews.dangXuat),
                     ),
             ),
           if (state.items?.any((s) => !s.current) ?? false)
             OutlinedButton(
               onPressed: state.loading || state.uncertain
                   ? null
-                  : () => _confirm(
-                      context,
-                      en,
-                      () => controller.revoke(null),
-                      true,
-                    ),
-              child: Text(
-                en ? 'Log out other sessions' : 'Đăng xuất các phiên khác',
-              ),
+                  : () =>
+                        _confirm(context, () => controller.revoke(null), true),
+              child: Text(vi.app.settings.dangXuatCacPhienKhac),
             ),
           TextButton(
             onPressed: state.loading ? null : controller.refresh,
-            child: Text(en ? 'Refresh' : 'Làm mới'),
+            child: Text(vi.app.common.lamMoi),
           ),
         ],
       ),
@@ -109,7 +90,6 @@ class SecuritySessionsPanel extends ConsumerWidget {
 
   Future<void> _confirm(
     BuildContext context,
-    bool en,
     Future<void> Function() action,
     bool all,
   ) async {
@@ -118,22 +98,18 @@ class SecuritySessionsPanel extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: Text(
           all
-              ? (en ? 'Log out other sessions?' : 'Đăng xuất các phiên khác?')
-              : (en ? 'Log out this device?' : 'Đăng xuất thiết bị này?'),
+              ? vi.app.settings.dangXuatCacPhien
+              : vi.app.settings.dangXuatThietBi,
         ),
-        content: Text(
-          en
-              ? 'You will need to sign in again on the affected devices.'
-              : 'Bạn sẽ cần đăng nhập lại trên các thiết bị bị ảnh hưởng.',
-        ),
+        content: Text(vi.app.settings.banSeCanDang),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(en ? 'Cancel' : 'Hủy'),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(en ? 'Log out' : 'Đăng xuất'),
+            child: Text(vi.settingsViews.dangXuat),
           ),
         ],
       ),

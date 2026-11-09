@@ -138,7 +138,7 @@ void main() {
         ],
       }).toDomain();
       await pumpPost(tester, post);
-      expect(find.text('Video is processing'), findsOneWidget);
+      expect(find.text('Video đang được xử lý'), findsOneWidget);
       expect(find.byIcon(Icons.play_circle_fill_rounded), findsNothing);
     },
   );
@@ -275,7 +275,7 @@ Future<void> pumpPost(WidgetTester tester, FeedPost post) async {
       theme: VnlfTheme.light(),
       home: Scaffold(
         body: SingleChildScrollView(
-          child: VnlfPostCard(post: presentPost(post, english: false)),
+          child: VnlfPostCard(post: presentPost(post)),
         ),
       ),
     ),

@@ -48,14 +48,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Log out').first);
+    await tester.tap(find.widgetWithText(TextButton, 'Đăng xuất').first);
     await tester.pumpAndSettle();
     container.read(sessionStateProvider.notifier).state = const Session(
       userId: 'second',
       displayName: 'Second',
     );
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, 'Log out'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Đăng xuất'));
     await tester.pumpAndSettle();
     expect(repository.writes, 0);
   });
@@ -99,11 +99,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(reads, 2);
-    expect(find.text('Could not load sessions.'), findsNothing);
+    expect(find.text('Chưa tải được danh sách phiên đăng nhập.'), findsNothing);
     client.invalidateSession();
     await tester.pumpAndSettle();
     expect(reads, 3);
-    expect(find.text('Could not load sessions.'), findsNothing);
+    expect(find.text('Chưa tải được danh sách phiên đăng nhập.'), findsNothing);
   });
 
   test(

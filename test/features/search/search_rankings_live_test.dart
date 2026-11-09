@@ -105,7 +105,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Previous week'), findsOneWidget);
+    expect(find.byTooltip('Tuần trước'), findsOneWidget);
     expect(find.text('This month'), findsNothing);
   });
   testWidgets(
@@ -143,7 +143,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Newest result'), findsOneWidget);
       expect(find.text('Obsolete result'), findsNothing);
-      await tester.tap(find.byTooltip('Clear search'));
+      await tester.tap(find.byTooltip('Xóa tìm kiếm'));
       await tester.pumpAndSettle();
       expect(find.text('Newest result'), findsNothing);
       expect(queries, ['old', 'new']);
@@ -172,15 +172,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Recovered result'), findsNothing);
       expect(searches, 1);
-      await tester.tap(find.text('Retry'));
+      await tester.tap(find.text('Thử lại'));
       await tester.pumpAndSettle();
       expect(find.text('Recovered result'), findsOneWidget);
-      expect(find.text('1+ results'), findsOneWidget);
-      expect(find.textContaining('Showing the first matches'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Users'));
+      expect(find.text('1+ kết quả'), findsOneWidget);
+      expect(
+        find.textContaining('Đang hiển thị các kết quả đầu tiên'),
+        findsOneWidget,
+      );
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Thành viên'));
       await tester.pumpAndSettle();
-      expect(find.text('0 results'), findsOneWidget);
-      expect(find.textContaining('Showing the first matches'), findsNothing);
+      expect(find.text('0 kết quả'), findsOneWidget);
+      expect(
+        find.textContaining('Đang hiển thị các kết quả đầu tiên'),
+        findsNothing,
+      );
       expect(searches, 2);
     },
   );
@@ -241,7 +247,7 @@ void main() {
           .toList();
       expect(cards[0].entries.length, 4);
       expect(cards[1].entries.length, 3);
-      await tester.tap(find.byTooltip('Previous week'));
+      await tester.tap(find.byTooltip('Tuần trước'));
       await tester.pumpAndSettle();
       final updated = tester
           .widgetList<VnlfLeaderboardCard>(find.byType(VnlfLeaderboardCard))

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/external_uri.dart';
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import 'vnlf_video.dart';
@@ -79,7 +80,6 @@ class _RemoteImage extends StatelessWidget {
   final BoxFit fit;
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     Widget failure() => ColoredBox(
       color: VnlfColors.of(context).surfaceSoft,
       child: Center(
@@ -87,7 +87,7 @@ class _RemoteImage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.broken_image_outlined),
-            Text(english ? 'Image unavailable' : 'Không tải được ảnh'),
+            Text(vi.articleImageNode.khongTaiDuocAnh),
           ],
         ),
       ),
@@ -98,7 +98,7 @@ class _RemoteImage extends StatelessWidget {
       media.url,
       fit: fit,
       semanticLabel: media.alt.isEmpty
-          ? (english ? 'Post image' : 'Ảnh bài viết')
+          ? vi.app.designSystem.anhBaiViet
           : media.alt,
       cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
           .round()
@@ -153,7 +153,7 @@ class _ImageViewerState extends State<_ImageViewer> {
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton.filled(
-                tooltip: 'Ảnh trước',
+                tooltip: vi.mediaGallery.anhTruoc,
                 icon: const Icon(Icons.chevron_left),
                 onPressed: () => _controller.previousPage(
                   duration: MediaQuery.disableAnimationsOf(context)
@@ -167,7 +167,7 @@ class _ImageViewerState extends State<_ImageViewer> {
             Align(
               alignment: Alignment.centerRight,
               child: IconButton.filled(
-                tooltip: 'Ảnh sau',
+                tooltip: vi.app.designSystem.anhSau,
                 icon: const Icon(Icons.chevron_right),
                 onPressed: () => _controller.nextPage(
                   duration: MediaQuery.disableAnimationsOf(context)
