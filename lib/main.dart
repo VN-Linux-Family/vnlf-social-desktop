@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'src/domain/models.dart';
 import 'src/features/activity/automatic/automatic_checkin_binding.dart';
 import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/notifications/data/local_notification_service.dart';
+import 'src/features/notifications/presentation/legacy_push_cleanup_provider.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/features/realtime/presentation/community_realtime_binding.dart';
 import 'src/features/settings/preferences/preferences_controller.dart';
@@ -86,6 +88,23 @@ class _AppState extends ConsumerState<_App> {
     });
   }
 
+  /// One attempt per sign-in; a failure leaves the stored endpoint for the
+  /// next sign-in or launch instead of retrying the delete.
+  void _removeLegacyPushSubscription() {
+    if (offlineFeatures || ref.read(ioTransportProvider) == null) return;
+    unawaited(
+      ref
+          .read(legacyPushCleanupProvider)
+          .run()
+          .then<void>(
+            (_) {},
+            onError: (Object error) => debugPrint(
+              'Legacy push subscription cleanup failed: ${error.runtimeType}',
+            ),
+          ),
+    );
+  }
+
   @override
   void dispose() {
     _router.dispose();
@@ -100,6 +119,9 @@ class _AppState extends ConsumerState<_App> {
       final nextUser = next.valueOrNull?.userId;
       if (prevUser != nextUser) {
         _scaffoldMessengerKey.currentState?.clearSnackBars();
+        if (nextUser != null && nextUser.isNotEmpty) {
+          _removeLegacyPushSubscription();
+        }
       }
     });
 

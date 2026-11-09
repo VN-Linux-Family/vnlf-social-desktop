@@ -11,4 +11,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTitle => 'Vietnam Linux Family';
+
+  @override
+  String get backgroundNotificationsTitle => 'Background notifications';
+
+  @override
+  String get backgroundNotificationsSubtitle =>
+      'Keeps the connection open while the app runs in the background so new messages and activity can notify you. Nothing arrives after the app is fully closed.';
 }

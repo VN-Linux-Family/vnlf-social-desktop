@@ -1,8 +1,4 @@
-import 'push_subscription_models.dart';
-
 abstract interface class PushSubscriptionsRepository {
-  Future<PushConfig> fetchConfig();
-  Future<List<String>> listSubscriptions();
-  Future<void> registerSubscription(PushSubscriptionPayload subscription);
+  /// Deletes the signed-in account's Web Push subscription for [endpoint].
   Future<void> removeSubscription(String endpoint);
 }

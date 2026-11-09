@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/android_background_service.dart';
 import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
-import '../../notifications/presentation/push_notifications_providers.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -376,8 +376,7 @@ class SettingsScreen extends ConsumerWidget {
                       .setAutostart(val),
                 ),
               ],
-              if (AndroidBackgroundService.isAndroid ||
-                  (!offlineFeatures && session != null)) ...[
+              if (ref.watch(androidPlatformProvider)) ...[
                 const SizedBox(height: 16),
                 Text(
                   english ? 'Notifications' : 'Thông báo',
@@ -388,30 +387,18 @@ class SettingsScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: colors.brand,
                   title: Text(
-                    english ? 'Push notifications' : 'Thông báo đẩy',
+                    AppLocalizations.of(context)!.backgroundNotificationsTitle,
                     style: VnlfTypography.body(colors.ink),
                   ),
                   subtitle: Text(
-                    english
-                        ? 'Receive instant direct messages, mentions, and updates'
-                        : 'Nhận tin nhắn, phản hồi và cập nhật quan trọng tức thì',
+                    AppLocalizations.of(context)!
+                        .backgroundNotificationsSubtitle,
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(androidBackgroundSyncProvider),
-                  onChanged: (val) {
-                    ref
-                        .read(androidBackgroundSyncProvider.notifier)
-                        .toggle(val);
-                    if (val) {
-                      ref
-                          .read(pushRegistrationControllerProvider.notifier)
-                          .registerDevice(force: true);
-                    } else {
-                      ref
-                          .read(pushRegistrationControllerProvider.notifier)
-                          .unregisterDevice();
-                    }
-                  },
+                  onChanged: ref
+                      .read(androidBackgroundSyncProvider.notifier)
+                      .toggle,
                 ),
               ],
             ],

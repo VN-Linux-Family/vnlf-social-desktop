@@ -112,6 +112,15 @@ and logged out; it did not mark any notification read or seen.
   - On native desktop/mobile clients (Flutter), active real-time updates and notifications arrive directly over the persistent WebSocket connection (`/ws/community`) with topic subscriptions (`channel:join`, `conversation:join`, etc.).
   - For future background push on Android without Play Services or via UnifiedPush, the backend would need an upstream gateway or endpoint whitelist update.
 
+### Native client policy and v0.1.0 cleanup (2026-11-09)
+
+[CONFIRMED from source `ab23799`] details that matter for cleanup:
+- `POST` checks only the endpoint host, the 65-byte key starting with `0x04` and the 16-byte auth secret. It does not check that the key is a real P-256 point, and it caps an account at ten subscriptions.
+- `DELETE /api/v1/push/subscriptions` with `{ endpoint }` deletes the signed-in user's row for that endpoint and returns `{ ok: true }` even when no row matched. The website calls it the same way (`push-settings.tsx`, `push-sw.js`).
+- The worker deletes a subscription only after a 404 or 410 from the push service. Any other failure, such as an encryption error, keeps the row, marks the delivery failed and rethrows for a retry when no subscription succeeded.
+
+The native client registers no Web Push subscription, because no native push service can receive one. v0.1.0 did register one from the Settings switch, with random bytes as `p256dh`/`auth` and an invented `https://fcm.googleapis.com/fcm/send/<random>` endpoint cached in shared preferences (`vnlf_push_endpoint`). The server cannot encrypt for that key, so every delivery fails. When a member signs in or a session loads, the client now sends one `DELETE` for the cached endpoint. It forgets the cached values after `{ ok: true }` and keeps them after a failure for the next sign-in; the delete is never retried automatically.
+
 ## Read Receipts & Real-time Read State (2026-11-07)
 
 - `POST /api/v1/dm/conversations/:id/read` accepts `{ lastReadMessageId?: string }` and publishes `dm:peer-read` to peers.

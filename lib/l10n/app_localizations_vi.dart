@@ -11,4 +11,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get appTitle => 'Vietnam Linux Family';
+
+  @override
+  String get backgroundNotificationsTitle => 'Thông báo khi chạy nền';
+
+  @override
+  String get backgroundNotificationsSubtitle =>
+      'Giữ kết nối khi ứng dụng chạy nền để báo tin nhắn và hoạt động mới. Đóng hẳn ứng dụng thì sẽ không nhận được thông báo.';
 }

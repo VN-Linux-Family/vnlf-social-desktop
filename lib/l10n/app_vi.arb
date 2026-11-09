@@ -3,5 +3,13 @@
   "appTitle": "Vietnam Linux Family",
   "@appTitle": {
     "description": "The application title."
+  },
+  "backgroundNotificationsTitle": "Thông báo khi chạy nền",
+  "@backgroundNotificationsTitle": {
+    "description": "Android settings switch that keeps the realtime connection open while the app is in the background."
+  },
+  "backgroundNotificationsSubtitle": "Giữ kết nối khi ứng dụng chạy nền để báo tin nhắn và hoạt động mới. Đóng hẳn ứng dụng thì sẽ không nhận được thông báo.",
+  "@backgroundNotificationsSubtitle": {
+    "description": "Explains that notifications arrive only while the app process is alive; the server offers the app no push service."
   }
 }

@@ -1,4 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Vietnam Linux Family"
+  "appTitle": "Vietnam Linux Family",
+  "backgroundNotificationsTitle": "Background notifications",
+  "backgroundNotificationsSubtitle": "Keeps the connection open while the app runs in the background so new messages and activity can notify you. Nothing arrives after the app is fully closed."
 }

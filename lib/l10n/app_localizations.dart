@@ -103,6 +103,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vietnam Linux Family'**
   String get appTitle;
+
+  /// Android settings switch that keeps the realtime connection open while the app is in the background.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo khi chạy nền'**
+  String get backgroundNotificationsTitle;
+
+  /// Explains that notifications arrive only while the app process is alive; the server offers the app no push service.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ kết nối khi ứng dụng chạy nền để báo tin nhắn và hoạt động mới. Đóng hẳn ứng dụng thì sẽ không nhận được thông báo.'**
+  String get backgroundNotificationsSubtitle;
 }
 
 class _AppLocalizationsDelegate
