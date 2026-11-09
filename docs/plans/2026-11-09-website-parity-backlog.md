@@ -74,10 +74,12 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ Edit a submitted project (`/projects/[slug]/edit`).
 - ⬜ CaramOS support tickets, Help, Community guidelines and Privacy. The app opens these on the website today.
 - ⬜ Keyboard shortcuts (`keyboard-shortcuts.tsx`).
+- ⬜ The "Góp ý & báo lỗi" launcher (`feedback-widget.tsx`, `feedback-entry.tsx`): a tab on the right edge on desktop, and entries in the sidebar, on phones and on the sign-in page.
 
 ### 9. Push notifications when the app is closed
 - ⏸ The server sends Web Push only to browser push services, so a closed app cannot be woken. Today the app gets notices while it runs, or in the background on Android when the user turns that on.
-- ⬜ Prepare the client so that a server change can be plugged in: one place that turns a push payload into a local notification and a route, and a registration interface tied to the session. Do not call or invent an endpoint until the server has one.
+- ✅ The client is ready for a server change (#12): `PushMessage` and `PushMessagePresenter` read and show the worker's payload like `push-sw.js`, `PushRegistration` follows `push-settings.tsx` with a `PushDistributor` in place of the browser's `PushManager`, and `docs/contracts/native-push.md` lists what is left on each side.
+- ⬜ A `PushDistributor` on the `unifiedpush` package, which needs the owner's approval, then the Settings switch.
 
 ## Not planned
 

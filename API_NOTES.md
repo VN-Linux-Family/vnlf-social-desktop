@@ -106,7 +106,7 @@ and logged out; it did not mark any notification read or seen.
   - `GET /api/v1/push/subscriptions` lists active endpoints for the current session.
   - `POST /api/v1/push/subscriptions` accepts `{ endpoint, keys: { p256dh, auth } }`.
   - Allowed push endpoints are restricted strictly to browser push services: `fcm.googleapis.com`, `updates.push.services.mozilla.com`, `web.push.apple.com`, and `*.notify.windows.com`.
-  - Push delivery worker (`apps/worker/src/processors/push.ts`) uses npm `web-push` via BullMQ queues.
+  - Push delivery worker (`apps/worker/src/push.ts`) uses npm `web-push` via BullMQ queues.
 - **Native Android / Client Implications**:
   - The server repo has **NO native Firebase Cloud Messaging (FCM HTTP v1 / google-services.json)** or APNs or UnifiedPush server integration configured.
   - On native desktop/mobile clients (Flutter), active real-time updates and notifications arrive directly over the persistent WebSocket connection (`/ws/community`) with topic subscriptions (`channel:join`, `conversation:join`, etc.).
@@ -120,6 +120,26 @@ and logged out; it did not mark any notification read or seen.
 - The worker deletes a subscription only after a 404 or 410 from the push service. Any other failure, such as an encryption error, keeps the row, marks the delivery failed and rethrows for a retry when no subscription succeeded.
 
 The native client registers no Web Push subscription, because no native push service can receive one. v0.1.0 did register one from the Settings switch, with random bytes as `p256dh`/`auth` and an invented `https://fcm.googleapis.com/fcm/send/<random>` endpoint cached in shared preferences (`vnlf_push_endpoint`). The server cannot encrypt for that key, so every delivery fails. When a member signs in or a session loads, the client now sends one `DELETE` for the cached endpoint. It forgets the cached values after `{ ok: true }` and keeps them after a failure for the next sign-in; the delete is never retried automatically.
+
+### Push client ready for native endpoints (2026-11-09)
+
+[CONFIRMED from source] for the calls `push-settings.tsx` makes, now all in
+`LivePushSubscriptionsRepository`:
+- `GET /api/v1/push/config` answers `{enabled, publicKey}`; `enabled` is
+  false and the key empty when the server has no VAPID key.
+- `GET /api/v1/push/subscriptions` answers `{endpoints: string[]}`, the rows
+  of the current login session only.
+- `POST /api/v1/push/subscriptions` answers `201 {ok: true}`, or
+  `503 PUSH_DISABLED`, `400 PUSH_ENDPOINT_INVALID`, `400 PUSH_KEYS_INVALID`,
+  `429 PUSH_DEVICE_LIMIT` (ten per account). It is never retried.
+- The worker's body is `{title, body, url, tag, urgent, requireInteraction}`
+  (`pushCopy`), and `push-sw.js` falls back to `/notifications` and the
+  `vnlf-notification` tag. `PushMessage.decode` and `PushMessagePresenter`
+  read and show it the same way.
+
+The app still registers nothing: `PushRegistration` needs a
+`PushDistributor`, and no build has one. `docs/contracts/native-push.md`
+lists the server and app changes that would complete it.
 
 ## Read Receipts & Real-time Read State (2026-11-07)
 

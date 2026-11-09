@@ -83,4 +83,14 @@ final class _Repository implements PushSubscriptionsRepository {
     removed.add(endpoint);
     if (failure case final failure?) throw failure;
   }
+
+  @override
+  Future<PushServerConfig> config() => fail('the cleanup reads no config');
+
+  @override
+  Future<List<String>> endpoints() => fail('the cleanup lists no endpoints');
+
+  @override
+  Future<void> addSubscription(WebPushSubscription subscription) =>
+      fail('the cleanup registers nothing');
 }

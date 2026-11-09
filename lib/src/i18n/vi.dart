@@ -5136,6 +5136,9 @@ final class ViAppNotifications {
   final danhDauDaDoc = 'Đánh dấu đã đọc tất cả';
   final moiLoai = 'Mọi loại';
   final dangNhapDeXem = 'Đăng nhập để xem thông báo';
+  // The website's service worker (`push-sw.js`) shows these for a push.
+  final tieuDeThongBaoDay = 'VNLF Social';
+  final banCoHoatDongMoiDay = 'Bạn có hoạt động mới.';
 }
 
 final class ViAppPolls {

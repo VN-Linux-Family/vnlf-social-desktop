@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'src/app/app_router.dart';
 import 'src/app/providers.dart';
@@ -14,6 +15,7 @@ import 'src/features/activity/automatic/automatic_checkin_binding.dart';
 import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/notifications/data/local_notification_service.dart';
 import 'src/features/notifications/presentation/legacy_push_cleanup_provider.dart';
+import 'src/features/notifications/presentation/notification_tap.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/i18n/vi.dart';
 import 'src/features/realtime/presentation/android_background_service_binding.dart';
@@ -75,11 +77,12 @@ class _AppState extends ConsumerState<_App> {
       ref
           .read(localNotificationServiceProvider)
           .initialize(
-            onSelectNotification: (payload) {
-              if (payload != null && payload.isNotEmpty) {
-                _router.go(payload);
-              }
-            },
+            onSelectNotification: (payload) => openNotificationTarget(
+              payload,
+              go: _router.go,
+              openWebsite: (page) =>
+                  launchUrl(page, mode: LaunchMode.externalApplication),
+            ),
           );
     });
   }
