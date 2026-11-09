@@ -41,7 +41,7 @@ void main() {
           ++requests == 1 ? _page('', count: 0) : _page('Bài viết mới'),
     );
     expect(find.byType(VnlfFeedEmptyState), findsOneWidget);
-    await tester.tap(find.text('Làm mới'));
+    await tester.tap(find.text('Thử lại'));
     await tester.pumpAndSettle();
     expect(find.text('Bài viết mới'), findsOneWidget);
   });
@@ -84,7 +84,7 @@ void main() {
     expect(find.text('Article từ máy chủ'), findsOneWidget);
     await tester.tap(find.text('Đang theo dõi'));
     await tester.pumpAndSettle();
-    expect(find.text('Yêu cầu đăng nhập'), findsOneWidget);
+    expect(find.text('Chưa có bài nào'), findsOneWidget);
   });
 
   testWidgets('scroll appends the next cursor page and stops at the end', (
@@ -143,7 +143,10 @@ void main() {
           .loadMore();
       await tester.pumpAndSettle();
       expect(find.text('Đã tải'), findsOneWidget);
-      expect(find.text('Không tải được bài viết tiếp theo'), findsOneWidget);
+      expect(
+        find.text('Chưa kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'),
+        findsOneWidget,
+      );
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -100));
       await tester.pumpAndSettle();
       expect(pageRequests, 1);

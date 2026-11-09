@@ -158,6 +158,7 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
           )
         else
           VnlfPostCard(
+            framed: true,
             poll: source.poll == null
                 ? null
                 : PollCard(poll: source.poll!, authorId: source.author.id),

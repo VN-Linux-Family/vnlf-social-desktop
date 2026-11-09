@@ -231,8 +231,9 @@ class _WardrobeAttrRow extends StatelessWidget {
     final colors = VnlfColors.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      spacing: 8,
       children: [
-        Text(label, style: VnlfTypography.meta(colors.muted)),
+        Flexible(child: Text(label, style: VnlfTypography.meta(colors.muted))),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
           decoration: BoxDecoration(

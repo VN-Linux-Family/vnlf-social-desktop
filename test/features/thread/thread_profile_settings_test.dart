@@ -99,7 +99,17 @@ void main() {
       router.routerDelegate.currentConfiguration.last.matchedLocation,
       '/',
     );
-    await tester.tap(find.byIcon(Icons.mode_comment_outlined));
+    // The sidebar's "Tin nhắn" item draws the same icon, as on the website.
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(VnlfPostCard),
+            matching: find.byWidgetPredicate(
+              (w) => w is VnlfIcon && w.icon == VnlfLucide.messageCircle,
+            ),
+          )
+          .first,
+    );
     await tester.pumpAndSettle();
     expect(
       router.routerDelegate.currentConfiguration.last.matchedLocation,

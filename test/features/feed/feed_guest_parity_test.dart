@@ -27,11 +27,12 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Following'), findsOneWidget);
-      expect(find.text('What would you like to share today?'), findsOneWidget);
-      await tester.tap(find.text('Following'));
+      expect(find.text('Đang theo dõi'), findsOneWidget);
+      expect(find.text('Hôm nay bạn muốn chia sẻ điều gì?'), findsOneWidget);
+      await tester.tap(find.text('Đang theo dõi'));
       await tester.pumpAndSettle();
-      expect(find.text('Sign in required'), findsOneWidget);
+      expect(find.text('Chưa có bài nào'), findsOneWidget);
+      expect(find.text('Đăng nhập'), findsOneWidget);
     },
   );
 }

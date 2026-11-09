@@ -76,7 +76,11 @@ void main() {
       ),
     );
     final router = await _pumpApp(tester);
-    await tester.tap(find.byIcon(Icons.link_rounded).first);
+    await tester.tap(
+      find
+          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
+          .first,
+    );
     await tester.pumpAndSettle();
     expect(
       copied,
@@ -88,7 +92,11 @@ void main() {
     copied = null;
     router.go('/thread/fixture-post-1');
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.link_rounded).first);
+    await tester.tap(
+      find
+          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
+          .first,
+    );
     await tester.pumpAndSettle();
     expect(
       copied,
@@ -115,7 +123,11 @@ void main() {
       ),
     );
     final router = await _pumpApp(tester);
-    await tester.tap(find.byIcon(Icons.link_rounded).first);
+    await tester.tap(
+      find
+          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
+          .first,
+    );
     await tester.pumpAndSettle();
     expect(find.text('Không thể sao chép liên kết'), findsOneWidget);
     expect(router.routeInformationProvider.value.uri.path, '/');

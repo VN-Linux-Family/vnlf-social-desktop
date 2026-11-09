@@ -6,6 +6,7 @@ export 'components/vnlf_comment_tree.dart';
 export 'components/vnlf_leaderboard_card.dart';
 export 'components/vnlf_media_preview.dart';
 export 'components/vnlf_post_card.dart';
+export 'icons/vnlf_icon.dart';
 export 'components/vnlf_shell.dart';
 export 'components/vnlf_skeleton.dart';
 export 'components/vnlf_state_cards.dart';

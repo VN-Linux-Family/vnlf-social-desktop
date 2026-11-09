@@ -43,7 +43,7 @@ abstract final class VnlfGalleryFixtures {
 
   // Leaderboard sample labels
   static const String leaderboardTitle = 'Xếp hạng tuần';
-  static const String leaderboardViewAllLabel = 'Xem tất cả ↗';
+  static const String leaderboardViewAllLabel = 'Xem tất cả';
   static const String footerCopyright = 'VNLF Social · 2026';
   static const String communityRulesLabel = 'Quy chuẩn cộng đồng';
   static const String privacyLabel = 'Riêng tư';

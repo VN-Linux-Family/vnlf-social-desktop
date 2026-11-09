@@ -64,13 +64,17 @@ void main() {
       // Verify that interactive buttons inside the header and nav are below top inset and above bottom inset
       final searchButton = find.descendant(
         of: find.byType(VnlfMobileStickyHeader),
-        matching: find.byIcon(Icons.search_rounded),
+        matching: find.byWidgetPredicate(
+          (w) => w is VnlfIcon && w.icon == VnlfLucide.search,
+        ),
       );
       expect(searchButton, findsOneWidget);
       final searchTop = tester.getTopLeft(searchButton).dy;
       expect(searchTop, greaterThanOrEqualTo(insets.top));
 
-      final firstNavIcon = find.byIcon(Icons.grid_view_rounded);
+      final firstNavIcon = find.byWidgetPredicate(
+        (w) => w is VnlfIcon && w.icon == VnlfLucide.layoutGrid,
+      );
       expect(firstNavIcon, findsOneWidget);
       final navIconBottom = tester.getBottomRight(firstNavIcon).dy;
       expect(navIconBottom, lessThanOrEqualTo(844 - insets.bottom));

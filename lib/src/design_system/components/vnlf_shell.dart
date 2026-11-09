@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import '../icons/vnlf_icon.dart';
+
 import 'package:flutter/services.dart';
 
 import '../tokens/vnlf_colors.dart';
@@ -15,14 +18,16 @@ export 'shell/vnlf_sidebar.dart';
 
 /// Primary navigation destinations in the VNLF app shell.
 enum VnlfNavDestination {
-  feed(Icons.grid_view_rounded),
-  explore(Icons.explore_outlined),
-  messages(Icons.chat_bubble_outline_rounded),
-  voice(Icons.mic_none_rounded),
-  projects(Icons.workspaces_outline);
+  feed(VnlfLucide.layoutGrid),
+  explore(VnlfLucide.compass),
+  messages(VnlfLucide.messageCircle),
+  voice(VnlfLucide.micVocal),
+  projects(VnlfLucide.folderGit2);
 
   const VnlfNavDestination(this.icon);
-  final IconData icon;
+
+  /// The lucide icon the website's navigation draws.
+  final VnlfLucide icon;
 }
 
 /// Adaptive application shell with the website's geometry
@@ -36,6 +41,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     super.key,
     required this.centerChild,
     this.rightSidebarChild,
+    this.rightSidebarFooter,
     this.centerChildHandlesScroll = false,
     this.centerPadding,
     this.centerMaxWidth = 1053,
@@ -51,6 +57,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onComposeTap,
     this.composeSemanticLabel = '',
     this.accountAvatar,
+    this.sidebarAvatar,
     this.onBack,
     this.backTooltip = '',
     this.backSemanticLabel,
@@ -108,6 +115,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final bool centerChildHandlesScroll;
   final bool showMobileHeader;
   final Widget? rightSidebarChild;
+
+  /// The website's rail footer (copyright and policy links).
+  final Widget? rightSidebarFooter;
   final EdgeInsets? centerPadding;
   final double centerMaxWidth;
   final bool showMobileBottomNav;
@@ -125,6 +135,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
 
   /// The signed-in member's avatar for the phone menu button.
   final Widget? accountAvatar;
+
+  /// The member's avatar for the sidebar profile card.
+  final Widget? sidebarAvatar;
   final VoidCallback? onBack;
   final String backTooltip;
   final String? backSemanticLabel;
@@ -188,6 +201,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     themeMode: themeMode,
     onThemeModeChanged: onThemeModeChanged,
     onProfileTap: onProfileTap,
+    profileAvatar: sidebarAvatar,
     onSettingsTap: onSettingsTap,
     onLogoutTap: onLogoutTap,
     logoutLabel: logoutLabel,
@@ -248,46 +262,26 @@ class VnlfAdaptiveShell extends StatelessWidget {
                     child: _scrollArea(
                       padding:
                           centerPadding ??
-                          const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 20,
-                          ),
+                          const EdgeInsets.fromLTRB(38, 34, 38, 80),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: centerMaxWidth),
-                          child: Row(
-                            crossAxisAlignment: centerChildHandlesScroll
-                                ? CrossAxisAlignment.stretch
-                                : CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: centerMaxWidth == double.infinity
-                                        ? double.infinity
-                                        : VnlfDimensions.centerFeedMaxWidth,
-                                  ),
-                                  child: centerChild,
-                                ),
-                              ),
-                              if (rightSidebarChild != null) ...[
-                                const SizedBox(width: 28),
-                                VnlfDesktopRightSidebar(
-                                  width: VnlfDimensions.rightSidebarWidth,
-                                  semanticLabel: rightSidebarSemanticLabel,
-                                  child: centerChildHandlesScroll
-                                      ? SingleChildScrollView(
-                                          child: rightSidebarChild!,
-                                        )
-                                      : rightSidebarChild!,
-                                ),
-                              ],
-                            ],
+                          constraints: BoxConstraints(
+                            maxWidth: centerMaxWidth == double.infinity
+                                ? double.infinity
+                                : VnlfDimensions.mainContentMaxWidth,
                           ),
+                          child: centerChild,
                         ),
                       ),
                     ),
                   ),
+                  if (rightSidebarChild != null)
+                    VnlfDesktopRightSidebar(
+                      width: VnlfDimensions.rightSidebarWidth,
+                      semanticLabel: rightSidebarSemanticLabel,
+                      footer: rightSidebarFooter,
+                      child: rightSidebarChild!,
+                    ),
                 ],
               ),
             ),
@@ -416,6 +410,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
 }
 
 /// Feed Tab Bar matching `reference_feed_desktop.png`.
+/// The website's feed tabs. Wider screens lay them out 25px apart over a
+/// hairline; phones split the width into equal cells on the surface. The
+/// active tab is ink and bold with a 2px brand underline.
 class VnlfFeedTabBar extends StatelessWidget {
   const VnlfFeedTabBar({
     super.key,
@@ -435,61 +432,76 @@ class VnlfFeedTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final phone =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
 
-    final bar = Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.line)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (var i = 0; i < tabs.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(right: 22),
-                child: Semantics(
-                  button: true,
-                  selected: i == selectedIndex,
-                  label:
-                      (tabSemanticLabels != null &&
-                          i < tabSemanticLabels!.length)
-                      ? tabSemanticLabels![i]
-                      : tabs[i],
-                  child: InkWell(
-                    onTap: onTabSelected == null
-                        ? null
-                        : () {
-                            HapticFeedback.selectionClick();
-                            onTabSelected!(i);
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.only(top: 12, bottom: 10),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: i == selectedIndex
-                                ? colors.ink
-                                : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        tabs[i],
-                        style: VnlfTypography.control(
-                          i == selectedIndex ? colors.ink : colors.muted,
-                          fontWeight: i == selectedIndex
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
+    Widget tab(int i) {
+      final selected = i == selectedIndex;
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: (tabSemanticLabels != null && i < tabSemanticLabels!.length)
+            ? tabSemanticLabels![i]
+            : tabs[i],
+        child: InkWell(
+          onTap: onTabSelected == null
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  onTabSelected!(i);
+                },
+          child: Container(
+            constraints: BoxConstraints(minHeight: phone ? 44 : 0),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 11),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: selected ? colors.brand : Colors.transparent,
+                  width: 2,
                 ),
               ),
-          ],
+            ),
+            child: ExcludeSemantics(
+              child: Text(
+                tabs[i],
+                textAlign: TextAlign.center,
+                style: VnlfTypography.body(selected ? colors.ink : colors.muted)
+                    .copyWith(
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                    ),
+              ),
+            ),
+          ),
         ),
+      );
+    }
+
+    final bar = Container(
+      padding: EdgeInsets.symmetric(horizontal: phone ? 8 : 15),
+      decoration: BoxDecoration(
+        color: phone ? colors.surface : null,
+        border: Border(bottom: BorderSide(color: colors.line)),
       ),
+      // Equal cells share one height, so every underline sits on the
+      // hairline even when a label wraps.
+      child: phone
+          ? IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < tabs.length; i++) Expanded(child: tab(i)),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: 25,
+                children: [for (var i = 0; i < tabs.length; i++) tab(i)],
+              ),
+            ),
     );
 
     if (semanticLabel == null) {

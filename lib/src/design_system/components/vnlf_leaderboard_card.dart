@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../models/vnlf_models.dart';
+import '../icons/vnlf_icon.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
@@ -97,7 +99,7 @@ class VnlfLeaderboardCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
                 border: Border.all(color: colors.line),
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(17, 17, 17, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -107,13 +109,13 @@ class VnlfLeaderboardCard extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 1.5),
-                          child: Icon(
-                            Icons.emoji_events_outlined,
+                          child: VnlfIcon(
+                            VnlfLucide.trophy,
                             size: 17,
                             color: colors.ink,
                           ),
                         ),
-                        const SizedBox(width: 7),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Wrap(
                             alignment: WrapAlignment.spaceBetween,
@@ -134,13 +136,23 @@ class VnlfLeaderboardCard extends StatelessWidget {
                                   label: viewAllSemanticLabel ?? viewAllLabel,
                                   child: InkWell(
                                     onTap: onViewAll,
-                                    child: Text(
-                                      viewAllLabel,
-                                      softWrap: true,
-                                      style: VnlfTypography.meta(
-                                        colors.brand,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                    child: Wrap(
+                                      spacing: 3,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        Text(
+                                          viewAllLabel,
+                                          style: VnlfTypography.body(
+                                            colors.brand,
+                                          ),
+                                        ),
+                                        VnlfIcon(
+                                          VnlfLucide.arrowUpRight,
+                                          size: 14,
+                                          color: colors.brand,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -149,7 +161,7 @@ class VnlfLeaderboardCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 13),
                   ],
                   if (errorMessage != null)
                     VnlfLeaderboardErrorState(
@@ -248,58 +260,48 @@ class _LeaderboardRow extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
       onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 20,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          spacing: 8,
+          children: [
+            SizedBox(
+              width: 26,
               child: Text(
                 '${entry.rank}',
-                softWrap: true,
-                style: VnlfTypography.meta(
-                  colors.muted,
-                  fontWeight: FontWeight.w600,
-                ),
+                textAlign: TextAlign.center,
+                style: VnlfTypography.number(colors.muted)
+                    .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
-          ),
-          const SizedBox(width: 4),
-          VnlfAvatar(author: entry.author, size: 34),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                VnlfAuthorNameRow(
-                  author: entry.author,
-                  showHandleInline: false,
-                  fontSize: 13,
-                  allowWrap: true,
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  '@${entry.author.username}',
-                  softWrap: true,
-                  style: VnlfTypography.meta(colors.muted),
-                ),
-              ],
+            VnlfAvatar(
+              author: entry.author,
+              size: 31,
+              cornerRadius: VnlfDimensions.radiusMd,
             ),
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              '${entry.points}',
-              softWrap: true,
-              style: VnlfTypography.control(
-                colors.brand,
-                fontWeight: FontWeight.w700,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 2,
+                children: [
+                  VnlfAuthorNameRow(
+                    author: entry.author,
+                    showHandleInline: false,
+                  ),
+                  Text(
+                    '@${entry.author.username}',
+                    softWrap: true,
+                    style: VnlfTypography.meta(colors.muted),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Text(
+              NumberFormat.decimalPattern('vi').format(entry.points),
+              style: VnlfTypography.number(colors.brand),
+            ),
+          ],
+        ),
       ),
     );
   }

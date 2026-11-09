@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../icons/vnlf_icon.dart';
+
 import 'package:flutter/services.dart';
 
 import '../../tokens/vnlf_colors.dart';
@@ -100,17 +103,17 @@ class VnlfMobileStickyHeader extends StatelessWidget {
               ),
               if (onComposeTap != null)
                 _HeaderIconButton(
-                  icon: Icons.add_box_outlined,
+                  icon: VnlfLucide.squarePlus,
                   semanticLabel: composeSemanticLabel,
                   onTap: onComposeTap,
                 ),
               _HeaderIconButton(
-                icon: Icons.search_rounded,
+                icon: VnlfLucide.search,
                 semanticLabel: searchSemanticLabel,
                 onTap: onSearchTap,
               ),
               _HeaderIconButton(
-                icon: Icons.notifications_none_rounded,
+                icon: VnlfLucide.bell,
                 semanticLabel: notificationsSemanticLabel,
                 badgeCount: notificationBadgeCount,
                 onTap: onNotificationsTap,
@@ -137,7 +140,7 @@ class _HeaderIconButton extends StatelessWidget {
     this.badgeCount = 0,
   });
 
-  final IconData icon;
+  final VnlfLucide icon;
   final String semanticLabel;
   final VoidCallback? onTap;
   final int badgeCount;
@@ -159,7 +162,11 @@ class _HeaderIconButton extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, size: 22, color: colors.ink),
+                VnlfIcon(
+                  icon,
+                  size: icon == VnlfLucide.bell ? 20 : 22,
+                  color: colors.ink,
+                ),
                 if (badgeCount > 0)
                   Positioned(
                     top: -1,
@@ -256,9 +263,10 @@ class VnlfMobileBottomNav extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Icon(
+                      VnlfIcon(
                         dest.icon,
                         size: 24,
+                        strokeWidth: dest == activeDestination ? 2.3 : 1.8,
                         color: dest == activeDestination
                             ? colors.brand
                             : colors.muted,

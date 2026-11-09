@@ -64,7 +64,7 @@ void main() {
         child: VnlfLeaderboardCard(
           width: 304,
           title: 'Xếp hạng tuần',
-          viewAllLabel: 'Xem tất cả ↗',
+          viewAllLabel: 'Xem tất cả',
           footerCopyright: 'VNLF Social · 2026',
           communityRulesLabel: 'Quy chuẩn cộng đồng',
           privacyLabel: 'Riêng tư',
@@ -76,10 +76,10 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Xếp hạng tuần'), findsOneWidget);
-    expect(find.text('Xem tất cả ↗'), findsOneWidget);
+    expect(find.text('Xem tất cả'), findsOneWidget);
 
     final titleTop = tester.getTopLeft(find.text('Xếp hạng tuần')).dy;
-    final linkTop = tester.getTopLeft(find.text('Xem tất cả ↗')).dy;
+    final linkTop = tester.getTopLeft(find.text('Xem tất cả')).dy;
     expect(linkTop, greaterThan(titleTop));
 
     final displayNameHeight = tester.getSize(find.text(displayName)).height;

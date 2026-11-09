@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../design_system/design_system.dart';
 import '../core/request_identity.dart';
 import '../domain/models.dart';
+import '../i18n/vi.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/activity/presentation/activity_page.dart';
 import '../features/composer/presentation/composer_screen.dart';
@@ -28,7 +29,7 @@ import '../features/notifications/presentation/notifications_controller.dart';
 import '../features/projects/presentation/projects_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/shared/presentation/author_mapper.dart';
+import '../features/shared/presentation/session_avatar.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
@@ -229,9 +230,11 @@ GoRouter createMainRouter({
                 centerMaxWidth: communication ? double.infinity : 1053,
                 showMobileBottomNav: !communicationDetail,
                 titleText: titleText,
+                // Phones show chats, threads and the home feed full-bleed,
+                // as the website does below 841px.
                 centerPadding:
                     communication ||
-                        threadId != null &&
+                        (threadId != null || state.uri.path == '/') &&
                             VnlfViewportSize.fromWidth(
                                   MediaQuery.sizeOf(context).width,
                                 ) ==
@@ -267,18 +270,13 @@ GoRouter createMainRouter({
                 composeSemanticLabel: english ? 'Create post' : 'Tạo bài đăng',
                 accountAvatar: session == null
                     ? null
-                    : VnlfAvatar(
-                        author: presentAuthor(
-                          Author(
-                            id: session.userId,
-                            username: session.username,
-                            displayName: session.displayName,
-                            avatarUrl: session.avatarUrl,
-                            role: session.role,
-                            style: session.style,
-                          ),
-                        ),
-                        size: 28,
+                    : sessionAvatar(session, size: 28),
+                sidebarAvatar: session == null
+                    ? null
+                    : sessionAvatar(
+                        session,
+                        size: 38,
+                        cornerRadius: VnlfDimensions.radiusMd,
                       ),
                 onSettingsTap: () => context.push('/settings'),
                 onLogoutTap: session == null
@@ -329,6 +327,22 @@ GoRouter createMainRouter({
                     state.uri.path == '/feedback' ||
                     state.uri.path.startsWith('/feedback/') ||
                     state.uri.path.startsWith('/projects/'),
+                rightSidebarFooter: VnlfRailFooter(
+                  copyright: vi.socialChrome.vnlfSocial2026,
+                  links: [
+                    (
+                      vi.common.quyChuanCongDong,
+                      () => _launchWeb(
+                        'https://vietnamlinuxfamily.net/community-guidelines',
+                      ),
+                    ),
+                    (
+                      vi.common.riengTu,
+                      () =>
+                          _launchWeb('https://vietnamlinuxfamily.net/privacy'),
+                    ),
+                  ],
+                ),
                 rightSidebarChild: threadId != null && !articleDetail
                     ? ThreadSidebar(postId: threadId)
                     : state.uri.path == '/'

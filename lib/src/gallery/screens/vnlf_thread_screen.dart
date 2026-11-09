@@ -121,6 +121,7 @@ class _VnlfThreadScreenState extends State<VnlfThreadScreen> {
 
           // Full Post Detail Card
           VnlfPostCard(
+            framed: true,
             post: _post,
             onAuthorTap: widget.onOpenProfile,
             codeCopyLabel: VnlfGalleryFixtures.codeCopyLabel,

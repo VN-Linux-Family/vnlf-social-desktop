@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/services.dart';
 
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
+import '../icons/vnlf_icon.dart';
 
-/// Capsule containing Upvote Arrow, Score Counter, and Downvote Arrow.
+/// The website's vote control (content-vote): up arrow, score, down arrow.
 ///
-/// Matches the exact interaction bar capsule in `reference_feed_desktop.png`:
-/// - Upvoted state: Upvote arrow colored `--brand`, score colored `--brand`.
-/// - Downvoted state: Downvote arrow colored `--red`, score colored `--red`.
+/// On wider screens it is a `--surface-soft` pill with 36px round buttons;
+/// on phones it has no pill, and each 40px button keeps a 48px touch target.
+/// An active arrow is filled: brand on brand-soft for up, red on a 12% red
+/// tint for down. The score stays ink.
 class VnlfVoteCapsule extends StatelessWidget {
   const VnlfVoteCapsule({
     super.key,
@@ -26,6 +29,8 @@ class VnlfVoteCapsule extends StatelessWidget {
   final int score;
   final VoteState voteState;
   final ValueChanged<VoteState>? onVoteChanged;
+
+  /// Comments use the same control with tighter spacing around the score.
   final bool compact;
   final String? semanticLabel;
   final String? upvoteSemanticLabel;
@@ -34,122 +39,101 @@ class VnlfVoteCapsule extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final phone =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
+    final visual = phone ? 40.0 : 36.0;
+    final target = phone ? 48.0 : 36.0;
 
-    final Color upColor = voteState == VoteState.upvoted
-        ? colors.brand
-        : colors.muted;
-    final Color downColor = voteState == VoteState.downvoted
-        ? colors.red
-        : colors.muted;
-    final Color scoreColor = switch (voteState) {
-      VoteState.upvoted => colors.brand,
-      VoteState.downvoted => colors.red,
-      VoteState.neutral => colors.ink,
-    };
-    final Color bgColor = switch (voteState) {
-      VoteState.upvoted => colors.brandSoft,
-      VoteState.downvoted => colors.red.withValues(alpha: 0.12),
-      VoteState.neutral => colors.surfaceSoft,
-    };
-    final Color borderColor = switch (voteState) {
-      VoteState.upvoted => colors.brand.withValues(alpha: 0.35),
-      VoteState.downvoted => colors.red.withValues(alpha: 0.35),
-      VoteState.neutral => colors.line,
-    };
+    Widget arrow({required bool up}) {
+      final state = up ? VoteState.upvoted : VoteState.downvoted;
+      final active = voteState == state;
+      final tint = up
+          ? colors.brandSoft
+          : Color.alphaBlend(
+              colors.red.withValues(alpha: 0.12),
+              colors.surface,
+            );
+      return Semantics(
+        button: true,
+        enabled: onVoteChanged != null,
+        toggled: active,
+        label: up ? upvoteSemanticLabel : downvoteSemanticLabel,
+        child: SizedBox(
+          width: target,
+          height: target,
+          child: Center(
+            child: Material(
+              color: active ? tint : Colors.transparent,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                hoverColor: colors.brandSoft,
+                onTap: onVoteChanged == null
+                    ? null
+                    : () {
+                        HapticFeedback.lightImpact();
+                        onVoteChanged!(active ? VoteState.neutral : state);
+                      },
+                child: SizedBox.square(
+                  dimension: visual,
+                  child: Center(
+                    child: VnlfIcon(
+                      up ? VnlfLucide.arrowBigUp : VnlfLucide.arrowBigDown,
+                      size: 20,
+                      filled: active,
+                      color: active
+                          ? (up ? colors.brand : colors.red)
+                          : colors.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 2,
+      children: [
+        arrow(up: true),
+        ConstrainedBox(
+          constraints: BoxConstraints(minWidth: compact ? 16 : 20),
+          child: Text(
+            '$score',
+            textAlign: TextAlign.center,
+            style: VnlfTypography.number(colors.ink)
+                .copyWith(fontWeight: FontWeight.w600),
+          ),
+        ),
+        arrow(up: false),
+      ],
+    );
     return Semantics(
       label: semanticLabel,
       container: true,
-      child: AnimatedContainer(
-        duration: VnlfDimensions.resolveDuration(
-          context,
-          VnlfDimensions.motionFast,
-        ),
-        constraints: const BoxConstraints(minHeight: 48),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Semantics(
-              button: true,
-              enabled: onVoteChanged != null,
-              toggled: voteState == VoteState.upvoted,
-              label: upvoteSemanticLabel,
-              child: InkWell(
+      child: phone
+          ? row
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.surfaceSoft,
                 borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
-                onTap: onVoteChanged == null
-                    ? null
-                    : () {
-                        HapticFeedback.lightImpact();
-                        final next = voteState == VoteState.upvoted
-                            ? VoteState.neutral
-                            : VoteState.upvoted;
-                        onVoteChanged!(next);
-                      },
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: Center(
-                    child: CustomPaint(
-                      size: const Size(13, 13),
-                      painter: _HollowVoteArrowPainter(
-                        color: upColor,
-                        isUp: true,
-                        filled: voteState == VoteState.upvoted,
-                      ),
-                    ),
-                  ),
-                ),
               ),
+              child: row,
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6),
-              child: Text('$score', style: VnlfTypography.number(scoreColor)),
-            ),
-            Semantics(
-              button: true,
-              enabled: onVoteChanged != null,
-              toggled: voteState == VoteState.downvoted,
-              label: downvoteSemanticLabel,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
-                onTap: onVoteChanged == null
-                    ? null
-                    : () {
-                        HapticFeedback.lightImpact();
-                        final next = voteState == VoteState.downvoted
-                            ? VoteState.neutral
-                            : VoteState.downvoted;
-                        onVoteChanged!(next);
-                      },
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: Center(
-                    child: CustomPaint(
-                      size: const Size(13, 13),
-                      painter: _HollowVoteArrowPainter(
-                        color: downColor,
-                        isUp: false,
-                        filled: voteState == VoteState.downvoted,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-/// Full post footer bar with Vote Capsule, Comment count, Copy link, and Bookmark toggle.
+/// The website's post action row: vote, comments, copy link, bookmark.
+///
+/// Wider screens keep every action left-aligned 13px apart. Phones bleed
+/// the row 10px into the card padding so the vote arrow and the bookmark
+/// line up with the text, and push the bookmark to the far right.
 class VnlfPostInteractionBar extends StatelessWidget {
   const VnlfPostInteractionBar({
     super.key,
@@ -186,175 +170,140 @@ class VnlfPostInteractionBar extends StatelessWidget {
   final String? shareSemanticLabel;
   final String? bookmarkSemanticLabel;
 
+  static const _phoneBleed = 10.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final phone =
+        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+        VnlfViewportSize.mobile;
 
-    final bar = Wrap(
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        VnlfVoteCapsule(
-          score: voteScore,
-          voteState: voteState,
-          onVoteChanged: onVoteChanged,
-          semanticLabel: voteSemanticLabel,
-          upvoteSemanticLabel: upvoteSemanticLabel,
-          downvoteSemanticLabel: downvoteSemanticLabel,
-        ),
-        Semantics(
-          button: true,
-          enabled: onCommentTap != null,
-          label: commentSemanticLabel,
+    Widget action({
+      required VnlfLucide icon,
+      required VoidCallback? onTap,
+      required String? label,
+      String? count,
+      bool? toggled,
+      bool active = false,
+      bool haptic = false,
+    }) {
+      final color = active ? colors.brand : colors.muted;
+      return Semantics(
+        button: true,
+        enabled: onTap != null,
+        toggled: toggled,
+        label: label,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onCommentTap == null
+            hoverColor: colors.brandSoft,
+            onTap: onTap == null
                 ? null
                 : () {
-                    HapticFeedback.selectionClick();
-                    onCommentTap!();
+                    haptic
+                        ? HapticFeedback.lightImpact()
+                        : HapticFeedback.selectionClick();
+                    onTap();
                   },
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: ConstrainedBox(
+              constraints: phone
+                  ? const BoxConstraints(minWidth: 48, minHeight: 48)
+                  : const BoxConstraints(minHeight: 31),
+              child: Padding(
+                padding: EdgeInsets.all(phone ? 4 : 5),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 5,
+                  children: [
+                    VnlfIcon(
+                      icon,
+                      size: 19,
+                      color: color,
+                      filled: active && icon == VnlfLucide.bookmark,
+                    ),
+                    if (count != null)
+                      Text(count, style: VnlfTypography.meta(color)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final vote = VnlfVoteCapsule(
+      score: voteScore,
+      voteState: voteState,
+      onVoteChanged: onVoteChanged,
+      semanticLabel: voteSemanticLabel,
+      upvoteSemanticLabel: upvoteSemanticLabel,
+      downvoteSemanticLabel: downvoteSemanticLabel,
+    );
+    final comment = action(
+      icon: VnlfLucide.messageCircle,
+      count: '$commentCount',
+      onTap: onCommentTap,
+      label: commentSemanticLabel,
+    );
+    final share = action(
+      icon: VnlfLucide.link2,
+      onTap: onShareTap,
+      label: shareSemanticLabel,
+    );
+    final bookmark = action(
+      icon: VnlfLucide.bookmark,
+      onTap: onBookmarkToggle,
+      label: bookmarkSemanticLabel,
+      toggled: isBookmarked,
+      active: isBookmarked,
+      haptic: true,
+    );
+
+    final Widget bar;
+    if (phone) {
+      bar = LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth + _phoneBleed * 2;
+          return Transform.translate(
+            offset: const Offset(-_phoneBleed, 0),
+            child: OverflowBox(
+              alignment: Alignment.centerLeft,
+              minWidth: width,
+              maxWidth: width,
+              fit: OverflowBoxFit.deferToChild,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.mode_comment_outlined,
-                    size: 15,
-                    color: colors.muted,
+                  Expanded(
+                    child: Wrap(
+                      spacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [vote, comment, share],
+                    ),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$commentCount',
-                    style: VnlfTypography.meta(colors.muted),
-                  ),
+                  bookmark,
                 ],
               ),
             ),
-          ),
-        ),
-        Semantics(
-          button: true,
-          enabled: onShareTap != null,
-          label: shareSemanticLabel,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onShareTap == null
-                ? null
-                : () {
-                    HapticFeedback.selectionClick();
-                    onShareTap!();
-                  },
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(6),
-              child: Icon(Icons.link_rounded, size: 17, color: colors.muted),
-            ),
-          ),
-        ),
-        Semantics(
-          button: true,
-          enabled: onBookmarkToggle != null,
-          toggled: isBookmarked,
-          label: bookmarkSemanticLabel,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
-            onTap: onBookmarkToggle == null
-                ? null
-                : () {
-                    HapticFeedback.lightImpact();
-                    onBookmarkToggle!();
-                  },
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(6),
-              child: Icon(
-                isBookmarked
-                    ? Icons.bookmark_rounded
-                    : Icons.bookmark_border_rounded,
-                size: 16,
-                color: isBookmarked ? colors.brand : colors.muted,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+          );
+        },
+      );
+    } else {
+      bar = Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 13,
+        runSpacing: 8,
+        children: [vote, comment, share, bookmark],
+      );
+    }
 
     if (semanticLabel == null) {
       return bar;
     }
     return Semantics(label: semanticLabel, container: true, child: bar);
   }
-}
-
-class _HollowVoteArrowPainter extends CustomPainter {
-  const _HollowVoteArrowPainter({
-    required this.color,
-    required this.isUp,
-    required this.filled,
-  });
-
-  final Color color;
-  final bool isUp;
-  final bool filled;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final path = Path();
-
-    if (isUp) {
-      path.moveTo(w * 0.5, h * 0.12);
-      path.lineTo(w * 0.9, h * 0.52);
-      path.lineTo(w * 0.66, h * 0.52);
-      path.lineTo(w * 0.66, h * 0.88);
-      path.lineTo(w * 0.34, h * 0.88);
-      path.lineTo(w * 0.34, h * 0.52);
-      path.lineTo(w * 0.1, h * 0.52);
-      path.close();
-    } else {
-      path.moveTo(w * 0.5, h * 0.88);
-      path.lineTo(w * 0.9, h * 0.48);
-      path.lineTo(w * 0.66, h * 0.48);
-      path.lineTo(w * 0.66, h * 0.12);
-      path.lineTo(w * 0.34, h * 0.12);
-      path.lineTo(w * 0.34, h * 0.48);
-      path.lineTo(w * 0.1, h * 0.48);
-      path.close();
-    }
-
-    if (filled) {
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.fill,
-      );
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..strokeWidth = 1.35
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _HollowVoteArrowPainter oldDelegate) =>
-      oldDelegate.color != color ||
-      oldDelegate.isUp != isUp ||
-      oldDelegate.filled != filled;
 }
