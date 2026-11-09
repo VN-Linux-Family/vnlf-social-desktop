@@ -183,30 +183,41 @@ class _ArticleCard extends ConsumerWidget {
             child: Row(
               spacing: 9,
               children: [
-                InkWell(
-                  onTap: () => openAuthorProfile(context, post),
-                  child: VnlfAvatar(
-                    author: detail.author,
-                    size: 38,
-                    cornerRadius: phone ? null : 10,
+                VnlfProfilePreview.wrap(
+                  context,
+                  post.author.username,
+                  InkWell(
+                    onTap: () => openAuthorProfile(context, post),
+                    child: VnlfAvatar(
+                      author: detail.author,
+                      size: 38,
+                      cornerRadius: phone ? null : 10,
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: InkWell(
-                    onTap: () => openAuthorProfile(context, post),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 3,
-                      children: [
-                        VnlfAuthorNameRow(
-                          author: detail.author,
-                          showHandleInline: false,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: VnlfProfilePreview.wrap(
+                      context,
+                      post.author.username,
+                      InkWell(
+                        onTap: () => openAuthorProfile(context, post),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: 3,
+                          children: [
+                            VnlfAuthorNameRow(
+                              author: detail.author,
+                              showHandleInline: false,
+                            ),
+                            Text(
+                              '@${post.author.username}',
+                              style: body.copyWith(color: colors.muted),
+                            ),
+                          ],
                         ),
-                        Text(
-                          '@${post.author.username}',
-                          style: body.copyWith(color: colors.muted),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

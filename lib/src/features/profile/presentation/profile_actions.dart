@@ -295,15 +295,19 @@ class _MenuButton extends StatelessWidget {
 class ProfileOutlineButton extends StatelessWidget {
   const ProfileOutlineButton({
     super.key,
-    required this.icon,
     required this.label,
     required this.onPressed,
+    this.icon,
     this.semanticLabel,
     this.tooltip,
     this.toggled,
+    this.minHeight,
   });
 
-  final VnlfLucide icon;
+  final VnlfLucide? icon;
+
+  /// 34 by default (48 on phones).
+  final double? minHeight;
   final String label;
   final VoidCallback? onPressed;
   final String? semanticLabel;
@@ -334,7 +338,9 @@ class ProfileOutlineButton extends StatelessWidget {
             borderRadius: radius,
             onTap: onPressed,
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: phone ? 48 : 34),
+              constraints: BoxConstraints(
+                minHeight: minHeight ?? (phone ? 48 : 34),
+              ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -344,7 +350,8 @@ class ProfileOutlineButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   spacing: 6,
                   children: [
-                    VnlfIcon(icon, size: 15, color: colors.ink),
+                    if (icon case final icon?)
+                      VnlfIcon(icon, size: 15, color: colors.ink),
                     Flexible(
                       child: Text(
                         label,

@@ -12,6 +12,7 @@ import '../tokens/vnlf_typography.dart';
 import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
 import 'vnlf_post_attachment.dart';
+import 'vnlf_profile_preview.dart';
 import 'vnlf_rich_content.dart';
 import 'vnlf_skeleton.dart';
 import 'vnlf_state_cards.dart';
@@ -376,12 +377,16 @@ class VnlfPostCard extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final phone = VnlfViewportSize.fromWidth(width) == VnlfViewportSize.mobile;
 
-    final avatar = GestureDetector(
-      onTap: onAuthorTap,
-      child: VnlfAvatar(
-        author: loadedPost.author,
-        size: phone ? 40 : 43,
-        semanticLabel: authorAvatarSemanticLabel,
+    final avatar = VnlfProfilePreview.wrap(
+      context,
+      loadedPost.author.username,
+      GestureDetector(
+        onTap: onAuthorTap,
+        child: VnlfAvatar(
+          author: loadedPost.author,
+          size: phone ? 40 : 43,
+          semanticLabel: authorAvatarSemanticLabel,
+        ),
       ),
     );
     final head = Row(
@@ -390,11 +395,18 @@ class VnlfPostCard extends StatelessWidget {
           : CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: GestureDetector(
-            onTap: onAuthorTap,
-            child: _FeedAuthorLine(
-              author: loadedPost.author,
-              stacked: width <= 520,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: VnlfProfilePreview.wrap(
+              context,
+              loadedPost.author.username,
+              GestureDetector(
+                onTap: onAuthorTap,
+                child: _FeedAuthorLine(
+                  author: loadedPost.author,
+                  stacked: width <= 520,
+                ),
+              ),
             ),
           ),
         ),

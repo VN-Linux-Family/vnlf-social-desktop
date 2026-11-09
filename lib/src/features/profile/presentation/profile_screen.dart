@@ -8,6 +8,7 @@ import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/public_profile.dart';
 import 'profile_actions.dart';
+import 'profile_card.dart';
 import 'profile_content.dart';
 import 'profile_data.dart';
 import 'profile_guestbook.dart';
@@ -56,7 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       profile.valueOrNull?.decor ?? const ProfileDecor(),
     );
     final gutter = VnlfDimensions.mobileGutter(width);
-    return ColoredBox(
+    final page = ColoredBox(
       color: palette.canvas,
       child: ListView(
         padding: phone
@@ -106,6 +107,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
+    );
+    return ProfilePageScope(
+      username: profile.valueOrNull?.author.username ?? widget.username,
+      child: page,
     );
   }
 

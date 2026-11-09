@@ -32,7 +32,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ The website's "…" menu everywhere a post appears: save, copy link, edit and delete for the author, hide and report for everyone else (#8).
 - ✅ Share dialog: message, Facebook, Telegram, Email and copy (#8).
 - ✅ Sticker and GIF picker in comments: KLIPY search, saved stickers, installed packs, recent stickers (#11). The pack dialog and sticker pages still open the website.
-- ⬜ Profile hover card on desktop (`profile-card.tsx`).
+- ✅ Profile card like `profile-card.tsx` (#16): with a mouse it opens 450 ms over a name or avatar and closes 250 ms after leaving both; on touch a 500 ms press opens it as a sheet. It shows the profile's theme, cover, level, status, bio, links, follow, "Nhắn tin" and "Xem trang cá nhân". Post cards, comments, post and article authors and guestbook entries have it; @mentions inside text do not yet.
 
 ### 2. Sign-in pages
 - ✅ Login and register pages like the website's `AuthView` (#11).

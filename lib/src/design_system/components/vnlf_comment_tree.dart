@@ -9,6 +9,7 @@ import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
+import 'vnlf_profile_preview.dart';
 import 'vnlf_vote_capsule.dart';
 import 'vnlf_media_gallery.dart';
 
@@ -113,13 +114,17 @@ class _CommentRow extends StatelessWidget {
               'displayName': comment.author.displayName,
             }),
             excludeSemantics: true,
-            child: InkWell(
-              onTap: author,
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-              child: VnlfAvatar(
-                author: comment.author,
-                size: reply ? 28 : 31,
-                cornerRadius: VnlfDimensions.radiusMd,
+            child: VnlfProfilePreview.wrap(
+              context,
+              comment.author.username,
+              InkWell(
+                onTap: author,
+                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+                child: VnlfAvatar(
+                  author: comment.author,
+                  size: reply ? 28 : 31,
+                  cornerRadius: VnlfDimensions.radiusMd,
+                ),
               ),
             ),
           ),
@@ -132,11 +137,15 @@ class _CommentRow extends StatelessWidget {
                   runSpacing: 2,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    InkWell(
-                      onTap: author,
-                      child: VnlfAuthorNameRow(
-                        author: comment.author,
-                        showHandleInline: false,
+                    VnlfProfilePreview.wrap(
+                      context,
+                      comment.author.username,
+                      InkWell(
+                        onTap: author,
+                        child: VnlfAuthorNameRow(
+                          author: comment.author,
+                          showHandleInline: false,
+                        ),
                       ),
                     ),
                     Text(

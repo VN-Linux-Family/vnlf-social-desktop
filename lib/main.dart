@@ -16,6 +16,7 @@ import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/notifications/data/local_notification_service.dart';
 import 'src/features/notifications/presentation/legacy_push_cleanup_provider.dart';
 import 'src/features/notifications/presentation/notification_tap.dart';
+import 'src/features/profile/presentation/profile_card.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/i18n/vi.dart';
 import 'src/features/realtime/presentation/android_background_service_binding.dart';
@@ -140,57 +141,59 @@ class _AppState extends ConsumerState<_App> {
         : false;
     return MaterialApp.router(
       scaffoldMessengerKey: _scaffoldMessengerKey,
-      builder: (context, child) => MotionPreferenceScope(
-        reduceMotion: reduceMotion,
-        child: TextSizeScope(
-          child: AutomaticCheckInBinding(
-            client: client,
-            storage: storage,
-            tracker: _modalTracker,
-            navigatorKey: _navigatorKey,
-            ownerId: hasConfirmedSession ? session.userId : null,
-            confirmation: hasConfirmedSession ? auth : null,
-            live: live,
-            onViewActivity: () => _router.go('/activity'),
-            onAcknowledged: (owner) =>
-                ref.invalidate(activityServiceProvider(owner)),
-            onProblem: (owner) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted || !identical(ref.read(sessionProvider), auth)) {
-                  return;
-                }
-                final messenger = _scaffoldMessengerKey.currentState;
-                if (messenger == null) return;
-                final context = _navigatorKey.currentContext;
-                final english =
-                    context != null &&
-                    Localizations.localeOf(context).languageCode == 'en';
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      english
-                          ? 'Could not complete or confirm daily check-in.'
-                          : 'Không thể hoàn tất hoặc xác nhận điểm danh hôm nay.',
+      builder: (context, child) => ProfileCardScope(
+        child: MotionPreferenceScope(
+          reduceMotion: reduceMotion,
+          child: TextSizeScope(
+            child: AutomaticCheckInBinding(
+              client: client,
+              storage: storage,
+              tracker: _modalTracker,
+              navigatorKey: _navigatorKey,
+              ownerId: hasConfirmedSession ? session.userId : null,
+              confirmation: hasConfirmedSession ? auth : null,
+              live: live,
+              onViewActivity: () => _router.go('/activity'),
+              onAcknowledged: (owner) =>
+                  ref.invalidate(activityServiceProvider(owner)),
+              onProblem: (owner) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted || !identical(ref.read(sessionProvider), auth)) {
+                    return;
+                  }
+                  final messenger = _scaffoldMessengerKey.currentState;
+                  if (messenger == null) return;
+                  final context = _navigatorKey.currentContext;
+                  final english =
+                      context != null &&
+                      Localizations.localeOf(context).languageCode == 'en';
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        english
+                            ? 'Could not complete or confirm daily check-in.'
+                            : 'Không thể hoàn tất hoặc xác nhận điểm danh hôm nay.',
+                      ),
+                      action: SnackBarAction(
+                        label: english ? 'Activity' : 'Hoạt động',
+                        onPressed: () {
+                          final current = ref.read(sessionProvider);
+                          if (identical(current, auth) &&
+                              current.valueOrNull?.userId == owner) {
+                            _router.go('/activity');
+                          }
+                        },
+                      ),
                     ),
-                    action: SnackBarAction(
-                      label: english ? 'Activity' : 'Hoạt động',
-                      onPressed: () {
-                        final current = ref.read(sessionProvider);
-                        if (identical(current, auth) &&
-                            current.valueOrNull?.userId == owner) {
-                          _router.go('/activity');
-                        }
-                      },
-                    ),
+                  );
+                });
+                WidgetsBinding.instance.ensureVisualUpdate();
+              },
+              child: CommunityAppBinding(
+                child: AndroidBackgroundServiceBinding(
+                  child: AppUpdateNotifier(
+                    child: child ?? const SizedBox.shrink(),
                   ),
-                );
-              });
-              WidgetsBinding.instance.ensureVisualUpdate();
-            },
-            child: CommunityAppBinding(
-              child: AndroidBackgroundServiceBinding(
-                child: AppUpdateNotifier(
-                  child: child ?? const SizedBox.shrink(),
                 ),
               ),
             ),
