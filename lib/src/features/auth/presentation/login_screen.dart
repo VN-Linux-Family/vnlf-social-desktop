@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
+import '../../../domain/models.dart' show StorageFailure;
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -90,14 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = switch (e) {
-          HttpFailure(statusCode: 401) =>
-            'Email/tên người dùng hoặc mật khẩu không chính xác.',
-          HttpFailure(statusCode: 422) =>
-            'Thông tin không hợp lệ. Vui lòng kiểm tra lại.',
-          AppFailure() => 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.',
-          _ => 'Đã có lỗi xảy ra: $e',
-        };
+        _errorMessage = authErrorMessage(e);
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -150,14 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = switch (e) {
-          HttpFailure(statusCode: 409) =>
-            'Email hoặc tên người dùng này đã được sử dụng.',
-          HttpFailure(statusCode: 422) =>
-            'Thông tin đăng ký không hợp lệ (mật khẩu cần tối thiểu 6 ký tự).',
-          AppFailure() => 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.',
-          _ => 'Đã có lỗi xảy ra: $e',
-        };
+        _errorMessage = authErrorMessage(e);
       });
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -609,3 +597,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+
+/// Như website: câu báo lỗi của máy chủ theo mã lỗi; không có phản hồi thì
+/// báo chưa kết nối được máy chủ.
+String authErrorMessage(Object error) => switch (error) {
+  HttpFailure(code: 'INVALID_CREDENTIALS') ||
+  HttpFailure(statusCode: 401) => vi.api.auth.emailHoacMatKhauKhong,
+  HttpFailure(code: 'IDENTITY_TAKEN') ||
+  HttpFailure(statusCode: 409) => vi.api.auth.emailHoacUsernameDaDuoc,
+  HttpFailure(code: 'ACCOUNT_PENDING_DELETION') =>
+    vi.api.auth.taiKhoanDangChoXoa,
+  HttpFailure(code: 'ACCOUNT_RESTRICTED') => vi.api.auth.taiKhoanHienKhongThe,
+  RateLimited() ||
+  HttpFailure(code: 'RATE_LIMITED') ||
+  HttpFailure(statusCode: 429) => vi.api.rateLimit.banThaoTacQuaNhanh,
+  HttpFailure(code: 'RATE_LIMIT_UNAVAILABLE') =>
+    vi.api.rateLimit.dichVuTamThoiChua,
+  HttpFailure(statusCode: 422) => vi.miscViews.kiemTraLaiThongTin,
+  StorageFailure() => vi.app.chuaLuuDuocPhien,
+  HttpFailure(:final statusCode) => format(vi.common.yeuCauThatBai, {
+    'status': statusCode,
+  }),
+  _ => vi.miscViews.chuaKetNoiDuocMayChu,
+};
