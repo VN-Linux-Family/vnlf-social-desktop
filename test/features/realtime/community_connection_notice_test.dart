@@ -43,7 +43,7 @@ void main() {
       expect(find.textContaining('WebSocket'), findsNothing);
     });
 
-    testWidgets('uses English progress copy for an English locale', (
+    testWidgets('keeps Vietnamese progress copy on an English device', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -57,7 +57,10 @@ void main() {
         ),
       );
 
-      expect(find.text('Reconnecting to update messages.'), findsOneWidget);
+      expect(
+        find.text('Đang kết nối lại để cập nhật tin nhắn.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('offers retry only for failure and invokes its callback', (

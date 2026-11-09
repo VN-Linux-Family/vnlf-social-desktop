@@ -17,16 +17,16 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: ActivityScreen(service: ActivityService(repository))),
     );
-    expect(find.text('Longest streak: 0 days'), findsNothing);
-    expect(find.text('Points this month'), findsNothing);
+    expect(find.text('Chuỗi dài nhất: 0 ngày'), findsNothing);
+    expect(find.text('Điểm trong tháng'), findsNothing);
     repository.pending.completeError(Exception('offline'));
     await tester.pump();
     expect(
-      find.text('Could not load activity for this month.'),
+      find.text('Không tải được hoạt động trong tháng này.'),
       findsOneWidget,
     );
-    expect(find.text('Longest streak: 0 days'), findsNothing);
-    expect(find.text('Points this month'), findsNothing);
+    expect(find.text('Chuỗi dài nhất: 0 ngày'), findsNothing);
+    expect(find.text('Điểm trong tháng'), findsNothing);
   });
 
   testWidgets('check-in is explicit, single flight, and reconciles failure', (
@@ -46,35 +46,35 @@ void main() {
     );
     await tester.pump();
     expect(repository.writes, 0);
-    await tester.tap(find.text('Check in today'));
+    await tester.tap(find.text('Điểm danh hôm nay'));
     await tester.pump();
     expect(repository.writes, 1);
     expect(
       tester
           .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Checking in…'),
+            find.widgetWithText(FilledButton, 'Đang điểm danh…'),
           )
           .onPressed,
       isNull,
     );
     repository.write.completeError(Exception('connection lost'));
     await tester.pump();
-    expect(find.textContaining('could not be confirmed'), findsOneWidget);
-    expect(find.text('Check in today'), findsNothing);
+    expect(find.textContaining('Chưa xác nhận được điểm danh'), findsOneWidget);
+    expect(find.text('Điểm danh hôm nay'), findsNothing);
     repository.failReads = true;
-    await tester.tap(find.text('Refresh activity'));
+    await tester.tap(find.text('Làm mới hoạt động'));
     await tester.pump();
-    expect(find.textContaining('could not be confirmed'), findsOneWidget);
+    expect(find.textContaining('Chưa xác nhận được điểm danh'), findsOneWidget);
     repository.failReads = false;
     repository.checkedIn = true;
-    await tester.tap(find.text('Refresh activity'));
+    await tester.tap(find.text('Làm mới hoạt động'));
     await tester.pump();
     await tester.pump();
-    expect(find.textContaining('could not be confirmed'), findsNothing);
+    expect(find.textContaining('Chưa xác nhận được điểm danh'), findsNothing);
     expect(
       tester
           .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Check in today'),
+            find.widgetWithText(FilledButton, 'Điểm danh hôm nay'),
           )
           .onPressed,
       isNull,
@@ -98,7 +98,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('Check in today'));
+    await tester.tap(find.text('Điểm danh hôm nay'));
     repository.checkedIn = true;
     repository.write.complete(
       CheckInAcknowledgment(
@@ -132,7 +132,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('Check in today'));
+    await tester.tap(find.text('Điểm danh hôm nay'));
     repository.failReads = true;
     repository.write.complete(
       CheckInAcknowledgment(
@@ -146,21 +146,21 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(
-      find.textContaining('Check-in confirmed. Refresh activity'),
+      find.textContaining('Đã xác nhận điểm danh. Hãy làm mới hoạt động'),
       findsOneWidget,
     );
-    expect(find.textContaining('could not be confirmed'), findsNothing);
-    expect(find.text('Check in today'), findsNothing);
+    expect(find.textContaining('Chưa xác nhận được điểm danh'), findsNothing);
+    expect(find.text('Điểm danh hôm nay'), findsNothing);
     expect(repository.writes, 1);
     repository.failReads = false;
     repository.checkedIn = true;
-    await tester.tap(find.text('Refresh activity'));
+    await tester.tap(find.text('Làm mới hoạt động'));
     await tester.pump();
     await tester.pump();
     expect(
       tester
           .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Check in today'),
+            find.widgetWithText(FilledButton, 'Điểm danh hôm nay'),
           )
           .onPressed,
       isNull,
@@ -185,17 +185,20 @@ void main() {
       );
       await tester.pumpWidget(screen('owner-a'));
       await tester.pump();
-      await tester.tap(find.text('Check in today'));
+      await tester.tap(find.text('Điểm danh hôm nay'));
       await tester.pump();
       expect(repository.writes, 1);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpWidget(screen('owner-a'));
       await tester.pump();
-      expect(find.textContaining('could not be confirmed'), findsOneWidget);
+      expect(
+        find.textContaining('Chưa xác nhận được điểm danh'),
+        findsOneWidget,
+      );
       await tester.pumpWidget(screen('owner-b'));
       await tester.pump();
-      expect(find.text('Check in today'), findsOneWidget);
-      expect(find.textContaining('could not be confirmed'), findsNothing);
+      expect(find.text('Điểm danh hôm nay'), findsOneWidget);
+      expect(find.textContaining('Chưa xác nhận được điểm danh'), findsNothing);
       repository.write.completeError(Exception('interrupted'));
       await tester.pump();
     },
@@ -231,9 +234,9 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('Check in today').first);
+    await tester.tap(find.text('Điểm danh hôm nay').first);
     await tester.pump();
-    await tester.tap(find.text('Check in today').last);
+    await tester.tap(find.text('Điểm danh hôm nay').last);
     await tester.pump();
     expect(repository.writes, 1);
     repository.write.completeError(Exception('interrupted'));
@@ -258,7 +261,7 @@ void main() {
       );
       await tester.pump();
       repository.delayReads = true;
-      await tester.tap(find.text('Refresh activity'));
+      await tester.tap(find.text('Làm mới hoạt động'));
       await tester.pump();
       now = DateTime.utc(2026, 11, 7);
       repository.delayedRead.complete(
@@ -266,7 +269,10 @@ void main() {
       );
       await tester.pump();
       expect(await uncertainty.read(), isTrue);
-      expect(find.textContaining('could not be confirmed'), findsOneWidget);
+      expect(
+        find.textContaining('Chưa xác nhận được điểm danh'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -285,10 +291,13 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.tap(find.text('Check in today'));
+    await tester.tap(find.text('Điểm danh hôm nay'));
     await tester.pump();
     expect(repository.writes, 0);
-    expect(find.textContaining('storage is unavailable'), findsOneWidget);
+    expect(
+      find.textContaining('Không thể lưu trạng thái điểm danh'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('resume advances the current Vietnam month and reloads', (
@@ -309,7 +318,7 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
     expect(repository.requests, ['2026-01-01', '2026-02-01']);
-    expect(find.text('February 2026'), findsOneWidget);
+    expect(find.text('Tháng 2, 2026'), findsOneWidget);
   });
 }
 

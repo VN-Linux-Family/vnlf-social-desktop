@@ -149,9 +149,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('All types'));
+    await tester.tap(find.text('Mọi loại'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Comments').last);
+    await tester.tap(find.text('Bình luận').last);
     await tester.pumpAndSettle();
     expect(
       requests.where((r) => r.method == 'GET').last.query['kind'],
@@ -189,7 +189,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Sign in to view notifications'), findsOneWidget);
+    expect(find.text('Đăng nhập để xem thông báo'), findsOneWidget);
     expect(find.textContaining('Welcome'), findsNothing);
     expect(calls, 0);
   });

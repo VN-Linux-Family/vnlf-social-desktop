@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../projects/presentation/project_detail_sheet.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../domain/search_results.dart';
@@ -19,7 +20,6 @@ class SearchResultsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     bool visible(SearchScope group) =>
         scope == SearchScope.all || scope == group;
     final posts = visible(SearchScope.posts)
@@ -46,31 +46,21 @@ class SearchResultsList extends StatelessWidget {
     return ListView(
       children: [
         Text(
-          english
-              ? '$count${capped ? '+' : ''} results'
-              : '$count${capped ? '+' : ''} kết quả',
+          format(vi.app.search.ketQua, {
+            'count': count,
+            'capped': capped ? '+' : '',
+          }),
           style: Theme.of(context).textTheme.bodySmall,
         ),
-        if (capped)
-          Text(
-            english
-                ? 'Showing the first matches. Use a more specific keyword for other results.'
-                : 'Đang hiển thị các kết quả đầu tiên. Nhập từ khóa cụ thể hơn để tìm thêm.',
-          ),
+        if (capped) Text(vi.app.search.dangHienThiCac),
         if (count == 0)
           VnlfStateCard(
             icon: Icons.search_off,
-            title: english ? 'No results found' : 'Không tìm thấy kết quả',
-            message: english
-                ? 'Try another keyword or search scope.'
-                : 'Thử từ khóa khác hoặc đổi phạm vi tìm kiếm.',
+            title: vi.searchView.chuaTimThayKetQua,
+            message: vi.app.search.thuTuKhoaKhac,
           ),
         if (users.isNotEmpty) ...[
-          heading(
-            english ? 'Users' : 'Thành viên',
-            users.length,
-            SearchScope.users,
-          ),
+          heading(vi.common.roleMember, users.length, SearchScope.users),
           for (final user in users)
             ListTile(
               leading: VnlfAvatar(author: presentAuthor(user)),
@@ -86,11 +76,7 @@ class SearchResultsList extends StatelessWidget {
             ),
         ],
         if (posts.isNotEmpty) ...[
-          heading(
-            english ? 'Posts' : 'Bài viết',
-            posts.length,
-            SearchScope.posts,
-          ),
+          heading(vi.common.baiViet, posts.length, SearchScope.posts),
           for (final post in posts)
             ListTile(
               leading: VnlfAvatar(author: presentAuthor(post.author)),
@@ -109,11 +95,7 @@ class SearchResultsList extends StatelessWidget {
             ),
         ],
         if (projects.isNotEmpty) ...[
-          heading(
-            english ? 'Projects' : 'Dự án',
-            projects.length,
-            SearchScope.projects,
-          ),
+          heading(vi.searchView.duAn, projects.length, SearchScope.projects),
           for (final project in projects)
             ListTile(
               leading: const Icon(Icons.workspaces_outline),
@@ -127,11 +109,7 @@ class SearchResultsList extends StatelessWidget {
             ),
         ],
         if (topics.isNotEmpty) ...[
-          heading(
-            english ? 'Topics' : 'Chủ đề',
-            topics.length,
-            SearchScope.topics,
-          ),
+          heading(vi.searchView.chuDe, topics.length, SearchScope.topics),
           Wrap(
             spacing: 8,
             runSpacing: 8,

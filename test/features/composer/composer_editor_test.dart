@@ -60,7 +60,7 @@ void main() {
         selection: TextSelection(baseOffset: 0, extentOffset: text.length),
       );
       await tester.pump();
-      await tester.tap(find.byTooltip('Bold'));
+      await tester.tap(find.byTooltip('Đậm'));
       await tester.pump();
       expect(changed!['content'][0]['content'][0]['marks'], [
         {'type': 'bold'},
@@ -97,7 +97,7 @@ void main() {
     );
     final bold = tester.widget<IconButton>(
       find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == 'Bold',
+        (widget) => widget is IconButton && widget.tooltip == 'Đậm',
       ),
     );
     expect(bold.onPressed, isNull);

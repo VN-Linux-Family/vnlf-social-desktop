@@ -87,7 +87,7 @@ void main() {
       await tester.pumpAndSettle();
       final semantics = tester.ensureSemantics();
       try {
-        await tester.tap(find.bySemanticsLabel('Ủng hộ').last);
+        await tester.tap(find.bySemanticsLabel('Upvote bình luận').last);
       } finally {
         semantics.dispose();
       }

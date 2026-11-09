@@ -1,6 +1,7 @@
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 
+import '../../../i18n/vi.dart';
 import 'composer_link_dialog.dart';
 
 class ComposerToolbar extends StatelessWidget {
@@ -15,7 +16,6 @@ class ComposerToolbar extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: controller,
     builder: (context, _) {
-      final en = Localizations.localeOf(context).languageCode == 'en';
       final style = controller.getSelectionStyle();
       Widget toggle(
         String label,
@@ -34,72 +34,72 @@ class ComposerToolbar extends StatelessWidget {
       return Wrap(
         children: [
           IconButton(
-            tooltip: en ? 'Undo' : 'Hoàn tác',
+            tooltip: vi.articleEditor.hoanTac,
             onPressed: !readOnly && controller.canUndo ? controller.undo : null,
             icon: const Icon(Icons.undo),
           ),
           IconButton(
-            tooltip: en ? 'Redo' : 'Làm lại',
+            tooltip: vi.articleEditor.lamLai,
             onPressed: !readOnly && controller.canRedo ? controller.redo : null,
             icon: const Icon(Icons.redo),
           ),
           toggle(
-            en ? 'Bold' : 'Đậm',
+            vi.articleEditor.dam,
             const Icon(Icons.format_bold),
             ParchmentAttribute.bold,
           ),
           toggle(
-            en ? 'Italic' : 'Nghiêng',
+            vi.articleEditor.nghieng,
             const Icon(Icons.format_italic),
             ParchmentAttribute.italic,
           ),
           toggle(
-            en ? 'Strikethrough' : 'Gạch ngang',
+            vi.app.composer.gachNgang,
             const Icon(Icons.strikethrough_s),
             ParchmentAttribute.strikethrough,
           ),
           toggle(
-            en ? 'Inline code' : 'Mã trong dòng',
+            vi.app.composer.maTrongDong,
             const Icon(Icons.code),
             ParchmentAttribute.inlineCode,
           ),
           toggle(
-            en ? 'Large heading' : 'Tiêu đề lớn',
+            vi.articleEditor.headingLon,
             const Text('H2'),
             ParchmentAttribute.h2,
           ),
           toggle(
-            en ? 'Small heading' : 'Tiêu đề nhỏ',
+            vi.articleEditor.headingNho,
             const Text('H3'),
             ParchmentAttribute.h3,
           ),
           toggle(
-            en ? 'Bullet list' : 'Danh sách',
+            vi.articleEditor.danhSach,
             const Icon(Icons.format_list_bulleted),
             ParchmentAttribute.ul,
           ),
           toggle(
-            en ? 'Numbered list' : 'Danh sách đánh số',
+            vi.app.composer.danhSachDanhSo,
             const Icon(Icons.format_list_numbered),
             ParchmentAttribute.ol,
           ),
           toggle(
-            en ? 'Quote' : 'Trích dẫn',
+            vi.articleEditor.trichDan,
             const Icon(Icons.format_quote),
             ParchmentAttribute.bq,
           ),
           toggle(
-            en ? 'Code block' : 'Khối mã',
+            vi.app.composer.khoiMa,
             const Icon(Icons.terminal),
             ParchmentAttribute.code,
           ),
           IconButton(
-            tooltip: en ? 'Link' : 'Liên kết',
+            tooltip: vi.articleEditor.lienKet,
             icon: const Icon(Icons.link),
             onPressed: readOnly ? null : () => _link(context),
           ),
           IconButton(
-            tooltip: en ? 'Horizontal rule' : 'Đường phân cách',
+            tooltip: vi.articleEditor.duongPhanCach,
             icon: const Icon(Icons.horizontal_rule),
             onPressed: readOnly
                 ? null

@@ -238,8 +238,10 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 | `POST` | `/api/v1/articles/{id}/publish` | [INFERRED] | Yes | Write endpoint: publish drafted post. |
 | `PUT` | `/api/v1/articles/{id}/vote` | [INFERRED] | Yes | Write endpoint: `{"value": 1 \| 0 \| -1}`. |
 | `POST` | `/api/v1/articles/{id}/like` | [INFERRED] | Yes | Write endpoint: toggle like. |
-| `POST` | `/api/v1/articles/{id}/bookmark` | [INFERRED] | Yes | Write endpoint: toggle bookmark. |
-| `DELETE`| `/api/v1/articles/{id}` | [INFERRED] | Yes | Write endpoint: delete authored post. |
+| `POST` | `/api/v1/articles/{id}/bookmark` | [CONFIRMED - website source] | Yes | Adds a bookmark; it never removes one. See 2026-11-09 below. |
+| `DELETE` | `/api/v1/articles/{id}/bookmark` | [CONFIRMED - website source] | Yes | Removes the viewer's bookmark. |
+| `DELETE`| `/api/v1/articles/{id}` | [CONFIRMED - website source] | Yes | Deletes the author's own article (status `REMOVED`). |
+| `POST` | `/api/v1/articles/{id}/hide` | [CONFIRMED - website source] | Yes | Hides a published article from the viewer's feed. |
 | `GET` | `/api/v1/articles/{id}/comments`| [INFERRED] | Optional | Fetch comment hierarchy for article. |
 | `POST` | `/api/v1/articles/{id}/comments`| [INFERRED] | Yes | Write endpoint: create comment. |
 
@@ -747,3 +749,45 @@ The account's blocked-people list uses `GET /api/v1/me/blocks`; unblocking uses
 The native panel refreshes related profile, feed and inbox state after a possible
 change. An owner-account list read succeeded and its temporary session was
 logged out; unblock behavior has synthetic coverage and was not exercised live.
+
+## Post menu, share dialog and link previews — 2026-11-09
+
+Confirmed from the website source checked out beside this repository
+(`apps/web/components/social-overlays.tsx`, `apps/web/lib/article-cache.ts`,
+`apps/web/components/social/chat/link-preview.tsx`) and the routes in
+`apps/api/src/modules/articles.ts` and `link-preview.ts`:
+
+- `POST /api/v1/articles/:id/bookmark` only inserts a bookmark
+  (`onConflictDoNothing`); `DELETE /api/v1/articles/:id/bookmark` removes it.
+  Both return `{ok: true}`. Native builds before this note sent `POST` to
+  unsave as well, so unsaving never reached the server.
+- `DELETE /api/v1/articles/:id` is limited to the author and marks the article
+  `REMOVED`, returning `{ok: true}`. The website asks for confirmation first,
+  then refreshes feed, profile and bookmark lists and leaves the detail page.
+- `POST /api/v1/articles/:id/hide` hides a published article for the signed-in
+  viewer (`404 ARTICLE_NOT_FOUND` otherwise). The website offers it to everyone
+  except the author.
+- Sharing has no endpoint. Facebook
+  (`https://www.facebook.com/sharer/sharer.php?u=`), Telegram
+  (`https://t.me/share/url?url=`) and Email (`mailto:`) links are built on the
+  client from `https://vietnamlinuxfamily.net/a/:slug`. The "Tin nhắn" option
+  only opens `/messages`: the website passes `?share=` but nothing reads it.
+- `GET /api/v1/link-preview?url=` returns
+  `{preview: {url, title, description, siteName, imageUrl} | null}` for the
+  first link of a post without photos or a poll; photos and YouTube thumbnails
+  load through `GET /api/v1/link-preview/image?url=`.
+
+None of these writes was exercised live: no test account was authorized for
+this change. They have synthetic coverage through a fake transport and widget
+tests, and failed writes are never retried.
+
+## Comment mentions and sticker kinds — 2026-11-09
+
+Comment payloads from `GET /api/v1/articles/:id/comments` carry
+`mentions: [{token, username, displayName}]` for the @mentions the server
+matched, and `gif.kind: "sticker"` for KLIPY stickers (VNLF stickers have
+`provider: "VNLF"`). The website bolds and links only those server-known
+mentions, draws stickers without a frame (at most 160px) and labels KLIPY media
+with its provider. The native app reads both fields from 2026-11-09 and treats
+missing values as none.
+

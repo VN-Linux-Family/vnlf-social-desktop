@@ -77,3 +77,16 @@ const sampleComments = [
     ],
   ),
 ];
+
+/// Phòng voice mẫu (tên, mô tả) cho chế độ offline fixture.
+const sampleVoiceRooms = [
+  (
+    'Kênh đàm thoại chung',
+    'Cùng gặp gỡ và trò chuyện cùng cộng đồng Linux Việt Nam.',
+  ),
+  (
+    'Trà đá chém gió Linux',
+    'Chuyện trò sau giờ làm, chia sẻ kinh nghiệm và công nghệ.',
+  ),
+  ('Kênh Code & Học tập', 'Tập trung, học hỏi và cùng nhau viết mã nguồn mở.'),
+];

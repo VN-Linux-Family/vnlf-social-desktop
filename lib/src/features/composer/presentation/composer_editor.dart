@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/external_uri.dart';
 import '../../../design_system/components/vnlf_rich_content.dart';
+import '../../../i18n/vi.dart';
 import '../domain/composer_draft.dart';
 import '../domain/tiptap_delta_codec.dart';
 import 'composer_toolbar.dart';
@@ -165,11 +166,7 @@ class ComposerEditorState extends State<ComposerEditor> {
             TextButton.icon(
               onPressed: () => _imageSettings(node.documentOffset, raw),
               icon: const Icon(Icons.tune),
-              label: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Image settings'
-                    : 'Tùy chỉnh ảnh',
-              ),
+              label: Text(vi.app.composer.tuyChinhAnh),
             ),
         ],
       );
@@ -193,9 +190,7 @@ class ComposerEditorState extends State<ComposerEditor> {
               postStyle: widget.postStyle,
             ),
             Text(
-              Localizations.localeOf(context).languageCode == 'en'
-                  ? 'This content is preserved when saved.'
-                  : 'Nội dung này được giữ nguyên khi lưu.',
+              vi.app.composer.noiDungNayDuoc,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -205,7 +200,6 @@ class ComposerEditorState extends State<ComposerEditor> {
   }
 
   Future<void> _imageSettings(int offset, Map<String, dynamic> node) async {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final attrs = Map<String, dynamic>.from(node['attrs'] as Map? ?? const {});
     final alt = TextEditingController(text: attrs['alt'] as String? ?? '');
     final caption = TextEditingController(
@@ -218,7 +212,7 @@ class ComposerEditorState extends State<ComposerEditor> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, update) => AlertDialog(
-          title: Text(en ? 'Image settings' : 'Tùy chỉnh ảnh'),
+          title: Text(vi.app.composer.tuyChinhAnh),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -228,13 +222,13 @@ class ComposerEditorState extends State<ComposerEditor> {
                   controller: alt,
                   maxLength: 300,
                   decoration: InputDecoration(
-                    labelText: en ? 'Alternative text' : 'Văn bản thay thế',
+                    labelText: vi.app.composer.vanBanThayThe,
                   ),
                 ),
                 TextField(
                   controller: caption,
                   decoration: InputDecoration(
-                    labelText: en ? 'Caption' : 'Chú thích',
+                    labelText: vi.app.composer.chuThich,
                   ),
                 ),
                 DropdownButtonFormField<String>(
@@ -242,15 +236,15 @@ class ComposerEditorState extends State<ComposerEditor> {
                   items: [
                     DropdownMenuItem(
                       value: 'normal',
-                      child: Text(en ? 'Normal' : 'Bình thường'),
+                      child: Text(vi.app.composer.binhThuong),
                     ),
                     DropdownMenuItem(
                       value: 'wide',
-                      child: Text(en ? 'Wide' : 'Rộng'),
+                      child: Text(vi.articleImageNode.rong),
                     ),
                     DropdownMenuItem(
                       value: 'full',
-                      child: Text(en ? 'Full width' : 'Toàn chiều rộng'),
+                      child: Text(vi.app.composer.toanChieuRong),
                     ),
                   ],
                   onChanged: (value) => update(() => layout = value!),
@@ -261,7 +255,7 @@ class ComposerEditorState extends State<ComposerEditor> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(en ? 'Cancel' : 'Hủy'),
+              child: Text(vi.common.huy),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, {
@@ -273,7 +267,7 @@ class ComposerEditorState extends State<ComposerEditor> {
                   'layout': layout,
                 },
               }),
-              child: Text(en ? 'Apply' : 'Áp dụng'),
+              child: Text(vi.articleEditor.apDung),
             ),
           ],
         ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../core/vnlf_navigation_helper.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/notifications_repository.dart';
 import 'notice_copy.dart';
 import 'notifications_controller.dart';
@@ -13,7 +14,6 @@ class NotificationsSheet extends ConsumerWidget {
   const NotificationsSheet({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final signedIn = ref.watch(sessionStateProvider) != null;
     final state = ref.watch(notificationsControllerProvider);
     final controller = ref.read(notificationsControllerProvider.notifier);
@@ -30,13 +30,13 @@ class NotificationsSheet extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      english ? 'Notifications' : 'Thông báo',
+                      vi.common.thongBao,
                       style: VnlfTypography.h2(VnlfColors.of(context).ink),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    tooltip: english ? 'Close' : 'Đóng',
+                    tooltip: vi.common.dong,
                     icon: const Icon(Icons.close),
                   ),
                 ],
@@ -49,11 +49,7 @@ class NotificationsSheet extends ConsumerWidget {
                         Navigator.pop(context);
                         router.push('/login');
                       },
-                      child: Text(
-                        english
-                            ? 'Sign in to view notifications'
-                            : 'Đăng nhập để xem thông báo',
-                      ),
+                      child: Text(vi.app.notifications.dangNhapDeXem),
                     ),
                   ),
                 )
@@ -62,7 +58,7 @@ class NotificationsSheet extends ConsumerWidget {
                   spacing: 8,
                   children: [
                     FilterChip(
-                      label: Text(english ? 'Unread only' : 'Chưa đọc'),
+                      label: Text(vi.notificationCenter.chuaDoc),
                       selected: state.unreadOnly,
                       onSelected: state.loading || state.busy
                           ? null
@@ -77,35 +73,35 @@ class NotificationsSheet extends ConsumerWidget {
                           DropdownMenuItem(
                             value: NotificationKind.all,
                             child: Text(
-                              english ? 'All types' : 'Mọi loại',
+                              vi.app.notifications.moiLoai,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: NotificationKind.like,
                             child: Text(
-                              english ? 'Likes' : 'Lượt thích',
+                              vi.notificationCenter.luotThich,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: NotificationKind.comment,
                             child: Text(
-                              english ? 'Comments' : 'Bình luận',
+                              vi.common.binhLuan,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: NotificationKind.follow,
                             child: Text(
-                              english ? 'Follows' : 'Theo dõi',
+                              vi.common.theoDoi,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           DropdownMenuItem(
                             value: NotificationKind.system,
                             child: Text(
-                              english ? 'System' : 'Hệ thống',
+                              vi.notificationCenter.heThong,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -124,15 +120,13 @@ class NotificationsSheet extends ConsumerWidget {
                           state.busy || state.loading || state.unreadCount == 0
                           ? null
                           : controller.markAllRead,
-                      child: Text(
-                        english ? 'Mark all as read' : 'Đánh dấu đã đọc tất cả',
-                      ),
+                      child: Text(vi.app.notifications.danhDauDaDoc),
                     ),
                     IconButton(
                       onPressed: state.loading || state.busy
                           ? null
                           : controller.refresh,
-                      tooltip: english ? 'Refresh' : 'Làm mới',
+                      tooltip: vi.app.common.lamMoi,
                       icon: const Icon(Icons.refresh),
                     ),
                   ],
@@ -142,9 +136,7 @@ class NotificationsSheet extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          english
-                              ? 'Could not complete the request. Try again.'
-                              : 'Không thực hiện được yêu cầu. Vui lòng thử lại.',
+                          vi.app.notifications.khongThucHienDuoc,
                           style: TextStyle(color: VnlfColors.of(context).red),
                         ),
                       ),
@@ -152,7 +144,7 @@ class NotificationsSheet extends ConsumerWidget {
                         onPressed: state.loading || state.busy
                             ? null
                             : controller.refresh,
-                        child: Text(english ? 'Retry' : 'Thử lại'),
+                        child: Text(vi.common.thuLai),
                       ),
                     ],
                   ),
@@ -162,11 +154,7 @@ class NotificationsSheet extends ConsumerWidget {
                       state.items.isEmpty &&
                           !state.loading &&
                           state.failure == null
-                      ? Center(
-                          child: Text(
-                            english ? 'No notifications' : 'Chưa có thông báo',
-                          ),
-                        )
+                      ? Center(child: Text(vi.app.notifications.chuaCoThongBao))
                       : ListView.builder(
                           itemCount:
                               state.items.length +
@@ -177,7 +165,7 @@ class NotificationsSheet extends ConsumerWidget {
                                 onPressed: state.loading
                                     ? null
                                     : controller.loadMore,
-                                child: Text(english ? 'Load more' : 'Tải thêm'),
+                                child: Text(vi.app.notifications.taiThem),
                               );
                             }
                             final item = state.items[index];
@@ -236,17 +224,17 @@ class NotificationsSheet extends ConsumerWidget {
                                         item.href,
                                       );
                                       if (!opened && context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              english
-                                                  ? 'Could not open notification'
-                                                  : 'Không mở được thông báo',
-                                            ),
-                                          ),
-                                        );
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  vi
+                                                      .app
+                                                      .notifications
+                                                      .khongMoDuocThong,
+                                                ),
+                                              ),
+                                            );
                                       }
                                     },
                             );

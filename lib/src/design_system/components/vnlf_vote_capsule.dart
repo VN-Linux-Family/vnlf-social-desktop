@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
 import 'package:flutter/services.dart';
 
@@ -116,7 +117,8 @@ class VnlfVoteCapsule extends StatelessWidget {
     return Semantics(
       label: semanticLabel,
       container: true,
-      child: phone
+      // Posts on phones drop the pill; comments keep it, as on the website.
+      child: phone && !compact
           ? row
           : DecoratedBox(
               decoration: BoxDecoration(
@@ -152,6 +154,9 @@ class VnlfPostInteractionBar extends StatelessWidget {
     this.commentSemanticLabel,
     this.shareSemanticLabel,
     this.bookmarkSemanticLabel,
+    this.viewCount,
+    this.viewsLabel,
+    this.viewsTooltip,
   });
 
   final int voteScore;
@@ -169,6 +174,11 @@ class VnlfPostInteractionBar extends StatelessWidget {
   final String? commentSemanticLabel;
   final String? shareSemanticLabel;
   final String? bookmarkSemanticLabel;
+
+  /// The author's view count, shown between share and save.
+  final int? viewCount;
+  final String? viewsLabel;
+  final String? viewsTooltip;
 
   static const _phoneBleed = 10.0;
 
@@ -255,6 +265,35 @@ class VnlfPostInteractionBar extends StatelessWidget {
       onTap: onShareTap,
       label: shareSemanticLabel,
     );
+    final views = viewCount == null
+        ? null
+        : Tooltip(
+            message: viewsTooltip ?? '',
+            child: Semantics(
+              label: viewsLabel,
+              excludeSemantics: true,
+              child: ConstrainedBox(
+                constraints: phone
+                    ? const BoxConstraints(minWidth: 48, minHeight: 48)
+                    : const BoxConstraints(minHeight: 31),
+                child: Padding(
+                  padding: EdgeInsets.all(phone ? 4 : 5),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 5,
+                    children: [
+                      VnlfIcon(VnlfLucide.eye, size: 19, color: colors.muted),
+                      Text(
+                        NumberFormat.decimalPattern('vi').format(viewCount),
+                        style: VnlfTypography.meta(colors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
     final bookmark = action(
       icon: VnlfLucide.bookmark,
       onTap: onBookmarkToggle,
@@ -282,7 +321,7 @@ class VnlfPostInteractionBar extends StatelessWidget {
                     child: Wrap(
                       spacing: 4,
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [vote, comment, share],
+                      children: [vote, comment, share, ?views],
                     ),
                   ),
                   bookmark,
@@ -297,7 +336,7 @@ class VnlfPostInteractionBar extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 13,
         runSpacing: 8,
-        children: [vote, comment, share, bookmark],
+        children: [vote, comment, share, ?views, bookmark],
       );
     }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../../thread/presentation/thread_post_provider.dart';
 import '../data/post_actions_repository.dart';
@@ -35,7 +36,7 @@ class PostInteraction {
   final bool pending;
   final AppFailure? failure;
 
-  PostData apply(PostData source, {bool english = false}) => source.copyWith(
+  PostData apply(PostData source) => source.copyWith(
     viewerVote: vote,
     voteScore:
         source.voteScore +
@@ -47,12 +48,8 @@ class PostInteraction {
         ? null
         : failure is HttpFailure &&
               [401, 403].contains((failure as HttpFailure).statusCode)
-        ? (english
-              ? 'Sign in to save this change.'
-              : 'Vui lòng đăng nhập để lưu thay đổi.')
-        : (english
-              ? 'Change could not be saved. Please try again.'
-              : 'Không lưu được thay đổi. Vui lòng thử lại.'),
+        ? vi.app.shared.vuiLongDangNhap
+        : vi.app.shared.khongLuuDuocThay,
   );
 }
 
@@ -125,7 +122,9 @@ class PostInteractions extends Notifier<Map<String, PostInteraction>> {
       id: PostInteraction(vote: previous.vote, bookmarked: next, pending: true),
     };
     try {
-      await ref.read(postActionsRepositoryProvider).toggleBookmark(id);
+      await ref
+          .read(postActionsRepositoryProvider)
+          .setBookmark(id, saved: next);
       if (!_current(generation)) return;
       state = {
         ...state,

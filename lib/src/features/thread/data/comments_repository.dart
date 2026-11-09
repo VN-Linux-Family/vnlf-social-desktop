@@ -4,6 +4,7 @@ import '../../../core/api_client.dart';
 import '../../../data/field_reader.dart';
 import '../../../data/profile_dto.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../domain/article_comment.dart';
 
 ArticleComment commentFromJson(Map<String, dynamic> json) {
@@ -36,6 +37,11 @@ ArticleComment commentFromJson(Map<String, dynamic> json) {
       ),
     ),
     gif: _gif(json['gif']),
+    mentions: List.unmodifiable(
+      objectList(json['mentions'], 'comment.mentions')
+          .map((m) => stringValue(m['username'], 'mention.username'))
+          .where((username) => username.isNotEmpty),
+    ),
   );
 }
 
@@ -48,6 +54,7 @@ CommentGif? _gif(Object? raw) {
     provider: stringValue(json['provider'], 'gif.provider'),
     id: stringValue(json['id'], 'gif.id'),
     packSlug: stringValue(json['packSlug'], 'gif.packSlug'),
+    kind: stringValue(json['kind'], 'gif.kind'),
     hidden: boolValue(json['hidden'], 'gif.hidden'),
     width: nullableInt(json['width'], 'gif.width'),
     height: nullableInt(json['height'], 'gif.height'),
@@ -169,10 +176,13 @@ final class FixtureCommentsRepository implements CommentsRepository {
         _articles.putIfAbsent(
           articleId,
           () => [
-            const ArticleComment(
+            ArticleComment(
               id: 'fixture-comment',
-              content: 'Cảm ơn bạn đã chia sẻ cùng cộng đồng!',
-              author: Author(username: 'thanhvien', displayName: 'Thành viên'),
+              content: vi.app.thread.camOnBanDa,
+              author: Author(
+                username: 'thanhvien',
+                displayName: vi.common.roleMember,
+              ),
             ),
           ],
         ),
@@ -205,6 +215,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
       canPin: old.canPin,
       attachments: old.attachments,
       gif: old.gif,
+      mentions: old.mentions,
     );
   }
 
@@ -250,7 +261,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
       content: content,
       parentId: parentId,
       createdAt: DateTime.now(),
-      author: const Author(username: 'fixture', displayName: 'Bạn'),
+      author: Author(username: 'fixture', displayName: vi.app.common.ban),
       canEdit: true,
       canDelete: true,
     );

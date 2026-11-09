@@ -1,5 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../i18n/vi.dart';
+import '../icons/vnlf_icon.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
@@ -9,7 +12,8 @@ import 'vnlf_avatar.dart';
 import 'vnlf_vote_capsule.dart';
 import 'vnlf_media_gallery.dart';
 
-/// Hierarchical comment node with nested replies and vertical thread guide lines.
+/// A comment and its replies, laid out like the website's comments panel:
+/// rows separated by hairlines, replies indented behind a brand-soft rule.
 class VnlfCommentTree extends StatelessWidget {
   const VnlfCommentTree({
     super.key,
@@ -27,12 +31,16 @@ class VnlfCommentTree extends StatelessWidget {
     this.onDelete,
     this.onPin,
     this.onAuthor,
+    this.onLink,
   });
 
   final void Function(String id)? onReply;
   final void Function(String id, VoteState vote)? onVote;
   final void Function(String id)? onEdit, onDelete, onPin;
   final void Function(String username)? onAuthor;
+
+  /// Opens a link from the text, a GIF or a sticker.
+  final void Function(String url)? onLink;
   final CommentNodeData comment;
   final int depth;
   final String replyLabel;
@@ -44,86 +52,161 @@ class VnlfCommentTree extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = VnlfColors.of(context);
-    final en = Localizations.localeOf(context).languageCode == 'en';
-
-    final tree = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final rows = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: onAuthor == null
-                  ? null
-                  : () => onAuthor!(comment.author.username),
+        _CommentRow(tree: this, comment: comment, reply: depth > 0),
+        for (final reply in comment.replies)
+          VnlfCommentTree(
+            comment: reply,
+            depth: depth + 1,
+            onReply: onReply,
+            onVote: onVote,
+            onEdit: onEdit,
+            onDelete: onDelete,
+            onPin: onPin,
+            onAuthor: onAuthor,
+            onLink: onLink,
+            replyLabel: replyLabel,
+            replySemanticLabel: replySemanticLabel,
+            voteSemanticLabel: voteSemanticLabel,
+            upvoteSemanticLabel: upvoteSemanticLabel,
+            downvoteSemanticLabel: downvoteSemanticLabel,
+          ),
+      ],
+    );
+    if (semanticLabel == null) return rows;
+    return Semantics(label: semanticLabel, container: true, child: rows);
+  }
+}
+
+class _CommentRow extends StatelessWidget {
+  const _CommentRow({
+    required this.tree,
+    required this.comment,
+    required this.reply,
+  });
+
+  final VnlfCommentTree tree;
+  final CommentNodeData comment;
+  final bool reply;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final muted = VnlfTypography.body(colors.muted);
+    final author = tree.onAuthor == null
+        ? null
+        : () => tree.onAuthor!(comment.author.username);
+    final row = Container(
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.line)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 9,
+        children: [
+          Semantics(
+            button: author != null,
+            label: format(vi.commentsPanel.xemHoSo, {
+              'displayName': comment.author.displayName,
+            }),
+            excludeSemantics: true,
+            child: InkWell(
+              onTap: author,
+              borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
               child: VnlfAvatar(
                 author: comment.author,
-                size: depth == 0 ? 34 : 28,
+                size: reply ? 28 : 31,
+                cornerRadius: VnlfDimensions.radiusMd,
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: onAuthor == null
-                              ? null
-                              : () => onAuthor!(comment.author.username),
-                          child: VnlfAuthorNameRow(
-                            author: comment.author,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${comment.relativeTime}${comment.edited ? (en ? ' · Edited' : ' · Đã sửa') : ''}',
-                        style: VnlfTypography.meta(colors.textSubtle),
-                      ),
-                    ],
-                  ),
-                  if (comment.pinned)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        en ? 'Pinned' : 'Đã ghim',
-                        style: VnlfTypography.meta(colors.brand),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    InkWell(
+                      onTap: author,
+                      child: VnlfAuthorNameRow(
+                        author: comment.author,
+                        showHandleInline: false,
                       ),
                     ),
-                  const SizedBox(height: 5),
-                  if (comment.body.isNotEmpty)
-                    SelectableText(
-                      comment.body,
-                      style: VnlfTypography.body(colors.ink),
-                    ),
-                  if (comment.hiddenSticker)
                     Text(
-                      en ? 'Sticker hidden' : 'Sticker đã bị ẩn',
-                      style: VnlfTypography.meta(colors.muted),
+                      '${comment.date.isEmpty ? comment.relativeTime : comment.date}'
+                      '${comment.edited ? vi.commentsPanel.daSua : ''}',
+                      style: muted,
                     ),
-                  if (comment.gif != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 280),
-                          child: VnlfMediaGallery(items: [comment.gif!]),
+                    if (comment.pinned)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 3,
+                        children: [
+                          VnlfIcon(
+                            VnlfLucide.pin,
+                            size: 12,
+                            color: colors.brand,
+                          ),
+                          Text(
+                            vi.commentsPanel.daGhim,
+                            style: VnlfTypography.body(colors.brand)
+                                .copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                if (comment.body.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 8),
+                    child: _CommentText(comment: comment, tree: tree),
+                  )
+                else
+                  const SizedBox(height: 6),
+                if (comment.hiddenSticker)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: colors.line),
+                        borderRadius: BorderRadius.circular(
+                          VnlfDimensions.radiusMd,
                         ),
                       ),
+                      child: Text(
+                        vi.stickers.stickerDaBiAn,
+                        style: muted.copyWith(fontStyle: FontStyle.italic),
+                      ),
                     ),
-                  if (comment.media.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: VnlfMediaGallery(items: comment.media),
+                  ),
+                if (comment.gif != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _CommentGif(comment: comment, onLink: tree.onLink),
+                  ),
+                if (comment.media.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: VnlfMediaGallery(
+                      items: comment.media,
+                      compact: true,
                     ),
-                  if (comment.inlineCode != null) ...[
-                    const SizedBox(height: 8),
-                    Container(
+                  ),
+                if (comment.inlineCode != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -140,137 +223,299 @@ class VnlfCommentTree extends StatelessWidget {
                         style: VnlfTypography.code(colors.codeBlockText),
                       ),
                     ),
-                  ],
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      VnlfVoteCapsule(
-                        score: comment.voteScore,
-                        voteState: comment.viewerVote,
-                        compact: true,
-                        semanticLabel: voteSemanticLabel,
-                        upvoteSemanticLabel:
-                            upvoteSemanticLabel ?? (en ? 'Upvote' : 'Ủng hộ'),
-                        downvoteSemanticLabel:
-                            downvoteSemanticLabel ??
-                            (en ? 'Downvote' : 'Phản đối'),
-                        onVoteChanged: comment.pending || onVote == null
-                            ? null
-                            : (value) => onVote!(comment.id, value),
-                      ),
-                      if (replyLabel.isNotEmpty) ...[
-                        Semantics(
-                          button: true,
-                          label: replySemanticLabel ?? replyLabel,
-                          child: InkWell(
-                            onTap: onReply == null
-                                ? null
-                                : () => onReply!(comment.id),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.reply_rounded,
-                                  size: 14,
-                                  color: colors.muted,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  replyLabel,
-                                  style: VnlfTypography.meta(
-                                    colors.muted,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (comment.canEdit && onEdit != null)
-                        TextButton(
-                          onPressed: comment.pending
-                              ? null
-                              : () => onEdit!(comment.id),
-                          child: Text(en ? 'Edit' : 'Sửa'),
-                        ),
-                      if (comment.canDelete && onDelete != null)
-                        TextButton(
-                          onPressed: comment.pending
-                              ? null
-                              : () => onDelete!(comment.id),
-                          child: Text(en ? 'Delete' : 'Xóa'),
-                        ),
-                      if (comment.canPin && onPin != null)
-                        TextButton(
-                          onPressed: comment.pending
-                              ? null
-                              : () => onPin!(comment.id),
-                          child: Text(
-                            comment.pinned
-                                ? (en ? 'Unpin' : 'Bỏ ghim')
-                                : (en ? 'Pin' : 'Ghim'),
-                          ),
-                        ),
-                    ],
                   ),
-                  if (comment.actionError != null)
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        comment.actionError!,
-                        style: VnlfTypography.meta(colors.red),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    VnlfVoteCapsule(
+                      score: comment.voteScore,
+                      voteState: comment.viewerVote,
+                      compact: true,
+                      semanticLabel: tree.voteSemanticLabel,
+                      upvoteSemanticLabel:
+                          tree.upvoteSemanticLabel ??
+                          format(vi.contentVote.upvote, {
+                            'label': vi.contentVote.binhLuan,
+                          }),
+                      downvoteSemanticLabel:
+                          tree.downvoteSemanticLabel ??
+                          format(vi.contentVote.downvote, {
+                            'label': vi.contentVote.binhLuan,
+                          }),
+                      onVoteChanged: comment.pending || tree.onVote == null
+                          ? null
+                          : (value) => tree.onVote!(comment.id, value),
+                    ),
+                    if (tree.replyLabel.isNotEmpty)
+                      _CommentAction(
+                        label: tree.replyLabel,
+                        semanticLabel: tree.replySemanticLabel,
+                        onPressed: tree.onReply == null
+                            ? null
+                            : () => tree.onReply!(comment.id),
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        if (comment.replies.isNotEmpty)
-          Padding(
-            padding: EdgeInsets.only(left: depth < 3 ? 16 : 0, top: 12),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: colors.line, width: 1.5),
-                ),
-              ),
-              padding: EdgeInsets.only(left: depth < 3 ? 14 : 4),
-              child: Column(
-                children: [
-                  for (var i = 0; i < comment.replies.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 12),
-                    VnlfCommentTree(
-                      comment: comment.replies[i],
-                      depth: depth + 1,
-                      onReply: onReply,
-                      onVote: onVote,
-                      onEdit: onEdit,
-                      onDelete: onDelete,
-                      onPin: onPin,
-                      onAuthor: onAuthor,
-                      replyLabel: replyLabel,
-                      replySemanticLabel: replySemanticLabel,
-                      voteSemanticLabel: voteSemanticLabel,
-                      upvoteSemanticLabel: upvoteSemanticLabel,
-                      downvoteSemanticLabel: downvoteSemanticLabel,
-                    ),
+                    if (comment.canEdit && tree.onEdit != null)
+                      _CommentAction(
+                        label: vi.common.sua,
+                        onPressed: comment.pending
+                            ? null
+                            : () => tree.onEdit!(comment.id),
+                      ),
+                    if (comment.canDelete && tree.onDelete != null)
+                      _CommentAction(
+                        label: vi.common.xoa,
+                        onPressed: comment.pending
+                            ? null
+                            : () => tree.onDelete!(comment.id),
+                      ),
+                    if (comment.canPin && tree.onPin != null)
+                      _CommentAction(
+                        label: comment.pinned
+                            ? vi.commentsPanel.boGhim
+                            : vi.commentsPanel.ghim,
+                        onPressed: comment.pending
+                            ? null
+                            : () => tree.onPin!(comment.id),
+                      ),
                   ],
-                ],
-              ),
+                ),
+                if (comment.actionError != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      comment.actionError!,
+                      style: VnlfTypography.body(colors.red),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!reply) return row;
+    return Container(
+      margin: const EdgeInsets.only(left: 38),
+      padding: const EdgeInsets.only(left: 12),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: colors.brandSoft, width: 2)),
+      ),
+      child: row,
+    );
+  }
+}
+
+/// The comment text: server-known @mentions in bold and links that open.
+class _CommentText extends StatefulWidget {
+  const _CommentText({required this.comment, required this.tree});
+
+  final CommentNodeData comment;
+  final VnlfCommentTree tree;
+
+  @override
+  State<_CommentText> createState() => _CommentTextState();
+}
+
+class _CommentTextState extends State<_CommentText> {
+  static final _token = RegExp(
+    '@([A-Za-z0-9_.]+)|\\b(?:https?://|www\\.)[^\\s<>"\']+',
+  );
+  final _recognizers = <TapGestureRecognizer>[];
+
+  void _clear() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  @override
+  void dispose() {
+    _clear();
+    super.dispose();
+  }
+
+  TapGestureRecognizer? _tap(VoidCallback? onTap) {
+    if (onTap == null) return null;
+    final recognizer = TapGestureRecognizer()..onTap = onTap;
+    _recognizers.add(recognizer);
+    return recognizer;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _clear();
+    final colors = VnlfColors.of(context);
+    final body = widget.comment.body;
+    final mentions = {
+      for (final mention in widget.comment.mentions) mention.toLowerCase(),
+    };
+    final spans = <InlineSpan>[];
+    var last = 0;
+    for (final match in _token.allMatches(body)) {
+      final username = match[1];
+      if (username != null && !mentions.contains(username.toLowerCase())) {
+        continue;
+      }
+      if (match.start > last) {
+        spans.add(TextSpan(text: body.substring(last, match.start)));
+      }
+      final onAuthor = widget.tree.onAuthor;
+      final onLink = widget.tree.onLink;
+      if (username != null) {
+        spans.add(
+          TextSpan(
+            text: match[0],
+            style: const TextStyle(fontWeight: FontWeight.w700),
+            recognizer: _tap(
+              onAuthor == null ? null : () => onAuthor(username),
+            ),
+          ),
+        );
+      } else {
+        final raw = match[0]!;
+        final url = raw.replaceFirst(RegExp(r'[.,!?;:]+$'), '');
+        final target = url.toLowerCase().startsWith('www.')
+            ? 'https://$url'
+            : url;
+        spans.add(
+          TextSpan(
+            text: url,
+            style: TextStyle(
+              color: colors.brand,
+              decoration: TextDecoration.underline,
+            ),
+            recognizer: _tap(onLink == null ? null : () => onLink(target)),
+          ),
+        );
+        if (url.length < raw.length) {
+          spans.add(TextSpan(text: raw.substring(url.length)));
+        }
+      }
+      last = match.end;
+    }
+    if (last < body.length) spans.add(TextSpan(text: body.substring(last)));
+    return SelectableText.rich(
+      TextSpan(children: spans),
+      style: VnlfTypography.body(colors.ink).copyWith(height: 1.6),
+    );
+  }
+}
+
+/// A GIF names its provider; a sticker has no frame and is smaller.
+class _CommentGif extends StatelessWidget {
+  const _CommentGif({required this.comment, required this.onLink});
+
+  final CommentNodeData comment;
+  final void Function(String url)? onLink;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final gif = comment.gif!;
+    final sticker = comment.gifSticker;
+    final image = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: sticker ? 160 : 320,
+        maxHeight: sticker ? 160 : 300,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          sticker ? 0 : VnlfDimensions.radiusMd,
+        ),
+        child: Image.network(
+          gif.url,
+          fit: BoxFit.contain,
+          semanticLabel: gif.alt,
+          errorBuilder: (_, _, _) => Text(
+            vi.app.designSystem.anhKhongConTrong,
+            style: VnlfTypography.body(colors.muted),
+          ),
+        ),
+      ),
+    );
+    final provider = comment.gifProvider;
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 4,
+      children: [
+        image,
+        if (provider != null && provider.isNotEmpty && provider != 'VNLF')
+          Opacity(
+            opacity: sticker ? .6 : 1,
+            child: Text(
+              provider,
+              style: VnlfTypography.body(colors.muted)
+                  .copyWith(fontSize: 11, fontWeight: FontWeight.w600),
             ),
           ),
       ],
     );
+    final link = comment.gifLink;
+    final open = onLink;
+    if (link == null || open == null) return content;
+    return InkWell(
+      onTap: () => open(link),
+      borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+      child: content,
+    );
+  }
+}
 
-    if (semanticLabel == null) {
-      return tree;
-    }
-    return Semantics(label: semanticLabel, container: true, child: tree);
+/// A text action under a comment: Trả lời, Sửa, Xóa, Ghim.
+class _CommentAction extends StatefulWidget {
+  const _CommentAction({
+    required this.label,
+    required this.onPressed,
+    this.semanticLabel,
+  });
+
+  final String label;
+  final String? semanticLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_CommentAction> createState() => _CommentActionState();
+}
+
+class _CommentActionState extends State<_CommentAction> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final color = widget.onPressed == null
+        ? colors.muted.withValues(alpha: .5)
+        : _hovered
+        ? colors.brand
+        : colors.muted;
+    return Semantics(
+      button: true,
+      label: widget.semanticLabel ?? widget.label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: widget.onPressed,
+        onHover: (value) => setState(() => _hovered = value),
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusSm),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 36),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 9),
+            child: Align(
+              widthFactor: 1,
+              child: Text(
+                widget.label,
+                style: VnlfTypography.body(color)
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

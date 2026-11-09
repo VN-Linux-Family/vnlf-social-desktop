@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../core/api_client.dart';
+import '../../../i18n/vi.dart';
 import '../data/live_report_repository.dart';
 import '../domain/report_repository.dart';
 
@@ -75,20 +76,14 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
     super.dispose();
   }
 
-  Future<void> _submit(bool english) async {
+  Future<void> _submit() async {
     if (_busy) return;
     if (!_isOpeningSession()) {
-      setState(
-        () => _error = english
-            ? 'Your account changed. Close this report and open it again.'
-            : 'Tài khoản đã thay đổi. Hãy đóng và mở lại báo cáo.',
-      );
+      setState(() => _error = vi.app.moderation.taiKhoanDaThay);
       return;
     }
     if (_reason.text.trim().isEmpty) {
-      setState(
-        () => _error = english ? 'Enter a reason.' : 'Vui lòng nhập lý do.',
-      );
+      setState(() => _error = vi.app.moderation.vuiLongNhapLy);
       return;
     }
     final account = ref.read(sessionStateProvider)?.userId;
@@ -112,11 +107,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
       }
     } catch (_) {
       if (mounted && _isOpeningSession()) {
-        setState(
-          () => _error = english
-              ? 'Could not send report. Your draft is kept; try again.'
-              : 'Không gửi được báo cáo. Bản nháp vẫn được giữ; vui lòng thử lại.',
-        );
+        setState(() => _error = vi.app.moderation.khongGuiDuocBao);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -125,19 +116,14 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return AlertDialog(
       title: Text(
         _confirmed
-            ? (english ? 'Report received' : 'Đã nhận báo cáo')
-            : (english ? 'Report content' : 'Báo cáo nội dung'),
+            ? vi.app.moderation.daNhanBaoCao
+            : vi.app.moderation.baoCaoNoiDung,
       ),
       content: _confirmed
-          ? Text(
-              english
-                  ? 'The moderation team will review your report.'
-                  : 'Đội ngũ kiểm duyệt sẽ xem xét báo cáo của bạn.',
-            )
+          ? Text(vi.app.moderation.doiNguKiemDuyet)
           : SizedBox(
               width: 420,
               child: SingleChildScrollView(
@@ -150,7 +136,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
                       enabled: !_busy,
                       maxLength: 60,
                       decoration: InputDecoration(
-                        labelText: english ? 'Reason' : 'Lý do',
+                        labelText: vi.socialOverlays.lyDo,
                       ),
                     ),
                     TextField(
@@ -161,9 +147,7 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
                       minLines: 3,
                       maxLines: 6,
                       decoration: InputDecoration(
-                        labelText: english
-                            ? 'Details (optional)'
-                            : 'Chi tiết (không bắt buộc)',
+                        labelText: vi.app.moderation.chiTietKhongBat,
                       ),
                     ),
                     if (_error != null)
@@ -178,22 +162,18 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          child: Text(
-            _confirmed
-                ? (english ? 'Done' : 'Hoàn tất')
-                : (english ? 'Cancel' : 'Hủy'),
-          ),
+          child: Text(_confirmed ? vi.app.moderation.hoanTat : vi.common.huy),
         ),
         if (!_confirmed)
           FilledButton(
-            onPressed: _busy ? null : () => _submit(english),
+            onPressed: _busy ? null : () => _submit(),
             child: _busy
                 ? const SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : Text(english ? 'Send report' : 'Gửi báo cáo'),
+                : Text(vi.socialOverlays.guiBaoCao),
           ),
       ],
     );

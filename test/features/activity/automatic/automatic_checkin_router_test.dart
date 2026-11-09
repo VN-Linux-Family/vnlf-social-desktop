@@ -71,11 +71,11 @@ void main() {
     await tester.pumpWidget(app(true));
     await tester.pumpAndSettle();
     expect(claims, [false]);
-    expect(find.text('Continue'), findsNothing);
+    expect(find.text('Tiếp tục'), findsNothing);
     router.go('/');
     await tester.pumpAndSettle();
     expect(claims, [false, true]);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Tiếp tục'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     router.dispose();
     tracker.dispose();
@@ -155,7 +155,7 @@ void main() {
         '2026-11-07:recorded',
       );
       expect(refreshes, 1);
-      expect(find.text('Continue'), findsNothing);
+      expect(find.text('Tiếp tục'), findsNothing);
       Navigator.of(feedContext).pop();
       await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
@@ -166,8 +166,8 @@ void main() {
       ], reason: 'storage=${storage.values}, refreshes=$refreshes');
       expect(paths, ['/api/v1/me/check-in', '/api/v1/me/check-in']);
       expect(refreshes, 2);
-      expect(find.text('View activity'), findsOneWidget);
-      await tester.tap(find.text('View activity'));
+      expect(find.text('Xem lịch hoạt động'), findsOneWidget);
+      await tester.tap(find.text('Xem lịch hoạt động'));
       await tester.pumpAndSettle();
       expect(router.routeInformationProvider.value.uri.path, '/activity');
       await tester.pumpWidget(const SizedBox());

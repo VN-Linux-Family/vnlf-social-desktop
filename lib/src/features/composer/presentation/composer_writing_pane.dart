@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/components/vnlf_rich_content.dart';
+import '../../../i18n/vi.dart';
 import '../domain/composer_draft.dart';
 import 'composer_controller.dart';
 import 'composer_editor.dart';
@@ -21,7 +22,6 @@ class ComposerWritingPane extends StatelessWidget {
   final Future<void> Function(String placement, bool video) onPick;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final draft = controller.draft;
     final locked = controller.publishUncertain;
     return LayoutBuilder(
@@ -34,7 +34,7 @@ class ComposerWritingPane extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ComposerTextField(
-                  label: en ? 'Article title' : 'Tiêu đề Article',
+                  label: vi.app.composer.tieuDeArticle,
                   value: draft.title,
                   maxLength: 180,
                   disabled: locked,
@@ -77,7 +77,7 @@ class ComposerWritingPane extends StatelessWidget {
                             false,
                           ),
                     icon: const Icon(Icons.add_photo_alternate_outlined),
-                    label: Text(en ? 'Add images' : 'Thêm ảnh'),
+                    label: Text(vi.articleEditor.themAnh),
                   ),
                   if (draft.format == 'POST')
                     TextButton.icon(
@@ -88,7 +88,7 @@ class ComposerWritingPane extends StatelessWidget {
                           ? null
                           : () => onPick('ATTACHMENT', true),
                       icon: const Icon(Icons.video_library_outlined),
-                      label: Text(en ? 'Add video' : 'Thêm video'),
+                      label: Text(vi.articleEditor.themVideo),
                     ),
                 ],
               ),
@@ -136,32 +136,20 @@ class ComposerWritingPane extends StatelessWidget {
                                     size: 40,
                                   ),
                                 if (media.isProcessing)
-                                  Text(
-                                    en
-                                        ? 'Video is processing'
-                                        : 'Video đang được xử lý',
-                                  ),
+                                  Text(vi.app.common.videoDangDuocXu),
                                 if (media.state == 'FAILED')
-                                  Text(
-                                    en
-                                        ? 'Video processing failed'
-                                        : 'Xử lý video thất bại',
-                                  ),
+                                  Text(vi.app.composer.xuLyVideoThat),
                                 if (!media.isReady)
                                   TextButton(
                                     onPressed: controller.busy
                                         ? null
                                         : () => controller.refreshMedia(media),
                                     child: Text(
-                                      en
-                                          ? 'Check status'
-                                          : 'Kiểm tra trạng thái',
+                                      vi.app.composer.kiemTraTrangThai,
                                     ),
                                   ),
                                 ComposerTextField(
-                                  label: en
-                                      ? 'Alternative text'
-                                      : 'Văn bản thay thế',
+                                  label: vi.app.composer.vanBanThayThe,
                                   value: media.alt,
                                   maxLength: 300,
                                   disabled: locked,
@@ -182,7 +170,7 @@ class ComposerWritingPane extends StatelessWidget {
                                   onPressed: controller.busy || locked
                                       ? null
                                       : () => controller.removeMedia(media.id),
-                                  child: Text(en ? 'Remove' : 'Gỡ'),
+                                  child: Text(vi.articleEditor.go),
                                 ),
                               ],
                             ),

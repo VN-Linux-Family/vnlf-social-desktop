@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player_win/video_player_win.dart';
 
 import '../../core/external_uri.dart';
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import 'vnlf_windows_video_surface.dart';
@@ -141,35 +142,32 @@ class _VnlfWindowsVideoState extends State<VnlfWindowsVideo>
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final controller = _controller;
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: AspectRatio(
         aspectRatio: widget.media.aspectRatio,
         child: controller == null || _failed || _loading
-            ? _preview(english)
-            : _surface(controller, english),
+            ? _preview()
+            : _surface(controller),
       ),
     );
   }
 
   Widget _surface(
-    WinVideoPlayerController controller,
-    bool english, {
+    WinVideoPlayerController controller, {
     bool expanded = false,
   }) => VnlfWindowsVideoSurface(
     controller: controller,
-    english: english,
     onFailure: () {
       if (mounted && identical(controller, _controller)) {
         setState(() => _failed = true);
       }
     },
-    errorBuilder: () => _preview(english, failed: true),
-    onExpand: expanded ? null : () => _expand(controller, english),
+    errorBuilder: () => _preview(failed: true),
+    onExpand: expanded ? null : () => _expand(controller),
   );
-  void _expand(WinVideoPlayerController controller, bool english) {
+  void _expand(WinVideoPlayerController controller) {
     if (_expandedRoute != null) return;
     final route = MaterialPageRoute<void>(
       builder: (_) => Scaffold(
@@ -183,7 +181,7 @@ class _VnlfWindowsVideoState extends State<VnlfWindowsVideo>
           child: Center(
             child: AspectRatio(
               aspectRatio: widget.media.aspectRatio,
-              child: _surface(controller, english, expanded: true),
+              child: _surface(controller, expanded: true),
             ),
           ),
         ),
@@ -209,7 +207,7 @@ class _VnlfWindowsVideoState extends State<VnlfWindowsVideo>
     });
   }
 
-  Widget _preview(bool english, {bool failed = false}) => ColoredBox(
+  Widget _preview({bool failed = false}) => ColoredBox(
     color: VnlfColors.of(context).surfaceSoft,
     child: Stack(
       fit: StackFit.expand,
@@ -231,17 +229,13 @@ class _VnlfWindowsVideoState extends State<VnlfWindowsVideo>
                     IconButton(
                       iconSize: 48,
                       tooltip: _failed || failed
-                          ? (english ? 'Retry video' : 'Thử lại video')
-                          : (english ? 'Play video' : 'Phát video'),
+                          ? vi.app.designSystem.thuLaiVideo
+                          : vi.app.designSystem.phatVideo,
                       onPressed: _start,
                       icon: const Icon(Icons.play_circle_fill_rounded),
                     ),
                     if (_failed || failed)
-                      Text(
-                        english
-                            ? 'Video unavailable. Tap to retry.'
-                            : 'Không phát được video. Bấm để thử lại.',
-                      ),
+                      Text(vi.app.designSystem.khongPhatDuocVideo),
                   ],
                 ),
         ),

@@ -14,7 +14,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../design_system/design_system.dart';
 import '../core/request_identity.dart';
 import '../domain/models.dart';
-import '../i18n/vi.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/activity/presentation/activity_page.dart';
 import '../features/composer/presentation/composer_screen.dart';
@@ -33,8 +32,8 @@ import '../features/shared/presentation/session_avatar.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
-import '../features/thread/presentation/thread_sidebar.dart';
 import '../gallery/gallery_page.dart';
+import '../i18n/vi.dart';
 import 'providers.dart';
 
 const _paths = <VnlfNavDestination, String>{
@@ -131,22 +130,13 @@ GoRouter createMainRouter({
       ShellRoute(
         observers: shellObservers,
         builder: (context, state, child) {
-          final english = Localizations.localeOf(context).languageCode == 'en';
-          final labels = english
-              ? const <VnlfNavDestination, String>{
-                  VnlfNavDestination.feed: 'Feed',
-                  VnlfNavDestination.explore: 'Discover',
-                  VnlfNavDestination.messages: 'Messages',
-                  VnlfNavDestination.voice: 'Voice',
-                  VnlfNavDestination.projects: 'Projects',
-                }
-              : const <VnlfNavDestination, String>{
-                  VnlfNavDestination.feed: 'Bảng tin',
-                  VnlfNavDestination.explore: 'Khám phá',
-                  VnlfNavDestination.messages: 'Tin nhắn',
-                  VnlfNavDestination.voice: 'Voice',
-                  VnlfNavDestination.projects: 'Dự án',
-                };
+          final labels = <VnlfNavDestination, String>{
+            VnlfNavDestination.feed: vi.socialChrome.bangTin,
+            VnlfNavDestination.explore: vi.feedViews.khamPha2,
+            VnlfNavDestination.messages: vi.common.tinNhan,
+            VnlfNavDestination.voice: 'Voice',
+            VnlfNavDestination.projects: vi.projects.tabDuAn,
+          };
           final communication =
               state.uri.path == '/channels' ||
               state.uri.path.startsWith('/channels/') ||
@@ -154,15 +144,15 @@ GoRouter createMainRouter({
               state.uri.path.startsWith('/messages/');
           final communicationDetail =
               communication && state.uri.path.split('/').length > 2;
-          final active = communication
+          final matched = communication
               ? VnlfNavDestination.messages
               : state.uri.path.startsWith('/projects/')
               ? VnlfNavDestination.projects
               : destinations.entries
-                        .where((entry) => entry.value == state.uri.path)
-                        .map((entry) => entry.key)
-                        .firstOrNull ??
-                    VnlfNavDestination.feed;
+                    .where((entry) => entry.value == state.uri.path)
+                    .map((entry) => entry.key)
+                    .firstOrNull;
+          final active = matched ?? VnlfNavDestination.feed;
           return Consumer(
             builder: (context, ref, _) {
               final session =
@@ -178,10 +168,6 @@ GoRouter createMainRouter({
               final threadId = isArticleOrThread
                   ? state.pathParameters['id']
                   : null;
-              final articleDetail =
-                  threadId != null &&
-                  ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
-                      'ARTICLE';
               final isDetailRoute =
                   threadId != null ||
                   state.uri.path.startsWith('/projects/') ||
@@ -195,23 +181,23 @@ GoRouter createMainRouter({
                   state.uri.path.startsWith('/feedback/') ||
                   state.uri.path == '/search';
               final titleText = threadId != null
-                  ? (english ? 'Post' : 'Bài viết')
+                  ? vi.common.baiViet
                   : state.uri.path == '/settings'
-                  ? (english ? 'Settings' : 'Cài đặt')
+                  ? vi.common.caiDat
                   : state.uri.path == '/feedback' ||
                         state.uri.path.startsWith('/feedback/')
-                  ? (english ? 'My feedback' : 'Góp ý của tôi')
+                  ? vi.app.common.gopYCuaToi
                   : state.uri.path.startsWith('/profile/') ||
                         state.uri.path.startsWith('/user/') ||
                         state.uri.path.startsWith('/users/') ||
                         state.uri.path.startsWith('/u/')
-                  ? (english ? 'Profile' : 'Hồ sơ')
+                  ? vi.common.hoSo
                   : state.uri.path == '/search'
-                  ? (english ? 'Search' : 'Tìm kiếm')
+                  ? vi.common.timKiem
                   : state.uri.path == '/leaderboard'
-                  ? (english ? 'Weekly ranking' : 'Xếp hạng tuần')
+                  ? vi.socialChrome.bangDiemTuan
                   : state.uri.path == '/activity'
-                  ? (english ? 'Activity' : 'Hoạt động')
+                  ? vi.app.common.hoatDong
                   : null;
               final dmInbox = ref.watch(dmInboxProvider);
               final channels =
@@ -245,9 +231,11 @@ GoRouter createMainRouter({
                 onThemeModeChanged: (mode) =>
                     ref.read(themeModeProvider.notifier).setThemeMode(mode),
                 activeDestination: active,
+                highlightActiveDestination: matched != null,
                 onDestinationSelected: (destination) =>
                     context.go(destinations[destination]!),
-                onBack: !isDetailRoute
+                // Posts carry their own "Quay lại bảng tin" bar, as on the website.
+                onBack: !isDetailRoute || threadId != null
                     ? null
                     : () {
                         final router = GoRouter.maybeOf(context);
@@ -262,12 +250,12 @@ GoRouter createMainRouter({
                           router?.go('/');
                         }
                       },
-                backTooltip: english ? 'Back' : 'Quay lại',
+                backTooltip: vi.projects.quayLaiBuoc,
                 onSearchTap: () => context.push('/search'),
                 onNotificationsTap: () => _showNotificationsModal(context, ref),
                 onComposeTap: () =>
                     context.push(session == null ? '/login' : '/compose'),
-                composeSemanticLabel: english ? 'Create post' : 'Tạo bài đăng',
+                composeSemanticLabel: vi.articleEditor.taoBaiDang,
                 accountAvatar: session == null
                     ? null
                     : sessionAvatar(session, size: 28),
@@ -282,7 +270,7 @@ GoRouter createMainRouter({
                 onLogoutTap: session == null
                     ? null
                     : () => logoutWithFeedback(context, ref),
-                logoutLabel: english ? 'Log out' : 'Đăng xuất',
+                logoutLabel: vi.settingsViews.dangXuat,
                 onHelpTap: () =>
                     _launchWeb('https://vietnamlinuxfamily.net/help'),
                 onFeedbackTap: () => showFeedbackDialog(context, ref),
@@ -343,9 +331,8 @@ GoRouter createMainRouter({
                     ),
                   ],
                 ),
-                rightSidebarChild: threadId != null && !articleDetail
-                    ? ThreadSidebar(postId: threadId)
-                    : state.uri.path == '/'
+                // Detail pages are wide on the website: no right rail.
+                rightSidebarChild: state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
                     : null,
                 destinationLabels: labels,
@@ -354,32 +341,24 @@ GoRouter createMainRouter({
                 brandLogoSemanticLabel: 'VNLF Social',
                 loginLabel: session != null
                     ? session.displayName
-                    : (english ? 'Log in' : 'Đăng nhập'),
+                    : vi.common.dangNhap,
                 loginSubtitleLabel: session != null
                     ? '@${session.username}'
-                    : (english
-                          ? 'Access all community features'
-                          : 'Để dùng đầy đủ tính năng'),
-                supportLabel: english ? 'Support CaramOS' : 'Hỗ trợ CaramOS',
-                feedbackLabel: english ? 'Feedback' : 'Góp ý & báo lỗi',
-                socialSectionLabel: english
-                    ? 'VNLF on social networks'
-                    : 'VNLF trên các mạng xã hội khác',
-                settingsLabel: english ? 'Settings' : 'Cài đặt',
-                helpLabel: english ? 'Help' : 'Trợ giúp',
-                lightThemeTooltip: english ? 'Light' : 'Sáng',
-                darkThemeTooltip: english ? 'Dark' : 'Tối',
-                systemThemeTooltip: english ? 'System' : 'Tự động',
-                openDrawerTooltip: english ? 'Open menu' : 'Mở menu',
-                searchSemanticLabel: english ? 'Open search' : 'Mở tìm kiếm',
-                notificationsSemanticLabel: english
-                    ? 'Notifications'
-                    : 'Thông báo',
-                profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
-                leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
-                mobileBottomNavSemanticLabel: english
-                    ? 'Phone navigation'
-                    : 'Điều hướng trên điện thoại',
+                    : vi.socialChrome.dungDayDuTinhNang,
+                supportLabel: vi.caramosSupport.tieuDe,
+                feedbackLabel: vi.common.gopYBaoLoi,
+                socialSectionLabel: vi.socialChrome.cacMangXaHoiKhac,
+                settingsLabel: vi.common.caiDat,
+                helpLabel: vi.socialChrome.troGiup,
+                lightThemeTooltip: vi.app.common.sang,
+                darkThemeTooltip: vi.app.common.toi,
+                systemThemeTooltip: vi.settingsViews.tuDong,
+                openDrawerTooltip: vi.socialChrome.moMenu,
+                searchSemanticLabel: vi.socialChrome.moTimKiem,
+                notificationsSemanticLabel: vi.common.thongBao,
+                profileSemanticLabel: vi.app.shell.taiKhoanCaNhan,
+                leftSidebarSemanticLabel: vi.app.shell.dieuHuong,
+                mobileBottomNavSemanticLabel: vi.socialChrome.dieuHuongMobile,
                 centerChild: child,
               );
             },
@@ -570,7 +549,6 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
         .whenComplete(() => _feedbackDialogOpen = false);
     return;
   }
-  final english = Localizations.localeOf(context).languageCode == 'en';
   final colors = VnlfColors.of(context);
   final session =
       ref.read(sessionStateProvider) ?? ref.read(sessionProvider).valueOrNull;
@@ -619,15 +597,13 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    english ? 'Feedback Received!' : 'Đã ghi nhận phản hồi!',
+                    vi.app.common.daGhiNhanPhan,
                     style: VnlfTypography.h2(colors.ink),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    english
-                        ? 'Thank you for helping make Vietnam Linux Family better.'
-                        : 'Cảm ơn bạn đã đóng góp giúp VNLF ngày càng hoàn thiện hơn.',
+                    vi.app.shell.camOnBanDa,
                     style: VnlfTypography.body(colors.muted),
                     textAlign: TextAlign.center,
                   ),
@@ -647,7 +623,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                       ),
                     ),
                     onPressed: () => Navigator.of(ctx).pop(),
-                    child: Text(english ? 'Done' : 'Hoàn tất'),
+                    child: Text(vi.feedbackWidget.hoanTat),
                   ),
                 ],
               ),
@@ -694,19 +670,13 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                english
-                                    ? 'Help Make VNLF Better'
-                                    : 'Giúp VNLF tốt hơn',
+                                vi.feedbackWidget.giupVnlfTotHon,
                                 style: VnlfTypography.h3(colors.ink),
                               ),
                               Text(
                                 tabIndex == 0
-                                    ? (english
-                                          ? 'Community feedback & ideas'
-                                          : 'Đóng góp ý kiến & đề xuất')
-                                    : (english
-                                          ? 'Issue & bug report'
-                                          : 'Báo cáo lỗi & sự cố'),
+                                    ? vi.app.shell.dongGopYKien
+                                    : vi.app.shell.baoCaoLoiSu,
                                 style: VnlfTypography.caption(colors.muted),
                               ),
                             ],
@@ -714,7 +684,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close_rounded, size: 20),
-                          tooltip: english ? 'Close' : 'Đóng',
+                          tooltip: vi.common.dong,
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),
                       ],
@@ -728,9 +698,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                             context.push('/feedback');
                           },
                           icon: const Icon(Icons.history),
-                          label: Text(
-                            english ? 'My feedback' : 'Góp ý của tôi',
-                          ),
+                          label: Text(vi.app.common.gopYCuaToi),
                         ),
                       ),
                     const SizedBox(height: 18),
@@ -767,7 +735,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  english ? 'Feedback' : 'Góp ý',
+                                  vi.feedbackWidget.gopY,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -801,7 +769,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  english ? 'Bug Report' : 'Báo lỗi',
+                                  vi.feedbackWidget.baoLoi,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -839,9 +807,9 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                english
-                                    ? 'Sending as @${session.username} · XP reward eligible'
-                                    : 'Gửi với tài khoản @${session.username} · Nhận thưởng điểm XP',
+                                format(vi.app.shell.guiVoiTaiKhoan, {
+                                  'username': session.username,
+                                }),
                                 style: VnlfTypography.caption(colors.brand),
                               ),
                             ),
@@ -852,12 +820,8 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     const SizedBox(height: 14),
                     Text(
                       tabIndex == 0
-                          ? (english
-                                ? 'Description of feedback'
-                                : 'Mô tả ý kiến hoặc đề xuất')
-                          : (english
-                                ? 'Issue description & reproduction steps'
-                                : 'Mô tả chi tiết lỗi gặp phải'),
+                          ? vi.app.shell.moTaYKien
+                          : vi.app.shell.moTaChiTiet,
                       style: VnlfTypography.meta(colors.ink),
                     ),
                     const SizedBox(height: 6),
@@ -869,12 +833,8 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                       style: VnlfTypography.body(colors.ink),
                       decoration: InputDecoration(
                         hintText: tabIndex == 0
-                            ? (english
-                                  ? 'Tell us what could be improved (20–4000 characters)...'
-                                  : 'Hãy cho chúng mình biết điều gì cần cải thiện (20–4000 ký tự)...')
-                            : (english
-                                  ? 'Steps to reproduce the bug (20–4000 characters)...'
-                                  : 'Các bước để tái hiện lỗi (20–4000 ký tự)...'),
+                            ? vi.app.shell.hayChoChungMinh
+                            : vi.app.shell.cacBuocDeTai,
                         hintStyle: TextStyle(color: colors.muted, fontSize: 13),
                         filled: true,
                         fillColor: colors.surfaceSoft,
@@ -904,9 +864,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      english
-                          ? 'Email or contact (optional)'
-                          : 'Email hoặc liên hệ (không bắt buộc)',
+                      vi.app.shell.emailHoacLienHe,
                       style: VnlfTypography.meta(colors.ink),
                     ),
                     const SizedBox(height: 6),
@@ -963,7 +921,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                           style: TextButton.styleFrom(
                             foregroundColor: colors.muted,
                           ),
-                          child: Text(english ? 'Cancel' : 'Hủy'),
+                          child: Text(vi.common.huy),
                         ),
                         const SizedBox(width: 8),
                         FilledButton.icon(
@@ -988,9 +946,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                   if (detail.length < 20 ||
                                       detail.length > 4000) {
                                     setDialogState(
-                                      () => error = english
-                                          ? 'Enter 20–4000 characters.'
-                                          : 'Vui lòng nhập 20–4000 ký tự.',
+                                      () => error = vi.app.common.vuiLongNhap20,
                                     );
                                     return;
                                   }
@@ -1052,12 +1008,8 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                       setDialogState(() {
                                         uncertain = uncertain || ambiguous;
                                         error = uncertain
-                                            ? (english
-                                                  ? 'The result is unconfirmed. Retry this unchanged feedback to check.'
-                                                  : 'Chưa xác nhận được kết quả. Hãy gửi lại góp ý không thay đổi để kiểm tra.')
-                                            : (english
-                                                  ? 'Could not send feedback. Your draft is kept; try again.'
-                                                  : 'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.');
+                                            ? vi.app.shell.chuaXacNhanDuoc
+                                            : vi.app.shell.khongGuiDuocGop;
                                       });
                                     }
                                   } finally {
@@ -1068,7 +1020,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                                 },
                           icon: const Icon(Icons.send_rounded, size: 16),
                           label: Text(
-                            english ? 'Send Feedback' : 'Gửi cho VNLF',
+                            vi.feedbackWidget.guiChoVnlf,
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),

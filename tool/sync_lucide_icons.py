@@ -23,13 +23,15 @@ OUT = pathlib.Path('lib/src/design_system/icons/vnlf_lucide.dart')
 
 # Icons the ported screens use, by their lucide (kebab-case) name.
 ICONS = [
-    'arrow-big-down', 'arrow-big-up', 'arrow-up-right', 'bell', 'book-open',
-    'bookmark', 'chevron-down', 'chevron-left', 'chevron-right', 'circle-help',
-    'compass', 'ellipsis', 'eye', 'flame', 'folder-git-2', 'headphones',
-    'image-plus', 'layout-grid', 'link-2', 'log-out', 'message-circle',
-    'message-square-text', 'mic-vocal', 'monitor', 'moon', 'radio',
-    'refresh-cw', 'search', 'settings', 'shield-check', 'square-plus', 'sun',
-    'trophy', 'x', 'zap',
+    'arrow-big-down', 'arrow-big-up', 'arrow-left', 'arrow-up-right', 'bell',
+    'book-open', 'bookmark', 'check', 'chevron-down', 'chevron-left',
+    'chevron-right', 'circle-check', 'circle-help', 'compass', 'ellipsis',
+    'eye', 'flag', 'flame', 'folder-git-2', 'headphones', 'image-plus',
+    'layout-grid', 'link-2', 'log-out', 'mail', 'message-circle',
+    'message-square-text', 'mic-vocal', 'monitor', 'moon', 'pen-line', 'pin',
+    'play', 'plus', 'radio', 'refresh-cw', 'reply', 'rotate-ccw', 'search',
+    'send', 'settings', 'shield-check', 'square-plus', 'sticker', 'store',
+    'sun', 'trash-2', 'trophy', 'user-check', 'user-plus', 'users', 'x', 'zap',
 ]
 
 

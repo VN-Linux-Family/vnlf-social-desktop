@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
@@ -69,7 +70,7 @@ class DirectMessageTile extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text(
-                    dmText(context, 'Tin nhắn chưa đọc', 'Unread messages'),
+                    vi.app.directMessages.tinNhanChuaDoc,
                     style: VnlfTypography.meta(colors.brand),
                   ),
                 ),
@@ -112,11 +113,7 @@ class DirectMessageTile extends StatelessWidget {
                           Text(time, style: VnlfTypography.meta(colors.muted)),
                         if (!deleted)
                           PopupMenuButton<String>(
-                            tooltip: dmText(
-                              context,
-                              'Thao tác tin nhắn',
-                              'Message actions',
-                            ),
+                            tooltip: vi.app.common.thaoTacTinNhan,
                             enabled: !busy,
                             padding: EdgeInsets.zero,
                             iconSize: 18,
@@ -135,21 +132,17 @@ class DirectMessageTile extends StatelessWidget {
                             itemBuilder: (_) => <PopupMenuEntry<String>>[
                               PopupMenuItem<String>(
                                 value: 'copy',
-                                child: Text(
-                                  dmText(context, 'Sao chép', 'Copy'),
-                                ),
+                                child: Text(vi.chatUi.saoChep),
                               ),
                               if (canEdit)
                                 PopupMenuItem<String>(
                                   value: 'edit',
-                                  child: Text(
-                                    dmText(context, 'Chỉnh sửa', 'Edit'),
-                                  ),
+                                  child: Text(vi.app.common.chinhSua),
                                 ),
                               if (own && canAct)
                                 PopupMenuItem<String>(
                                   value: 'delete',
-                                  child: Text(dmText(context, 'Xóa', 'Delete')),
+                                  child: Text(vi.common.xoa),
                                 ),
                             ],
                           ),
@@ -183,24 +176,12 @@ class DirectMessageTile extends StatelessWidget {
                               ),
                               Text(
                                 reply.deleted
-                                    ? dmText(
-                                        context,
-                                        'Tin nhắn đã bị xóa',
-                                        'Message deleted',
-                                      )
+                                    ? vi.common.tinNhanDaDuocXoa
                                     : reply.content.isNotEmpty
                                     ? reply.content
                                     : reply.hasGif
-                                    ? dmText(
-                                        context,
-                                        '[GIF / Nhãn dán]',
-                                        '[GIF / Sticker]',
-                                      )
-                                    : dmText(
-                                        context,
-                                        '[Ảnh đính kèm]',
-                                        '[Attachment]',
-                                      ),
+                                    ? vi.app.directMessages.gifNhanDan
+                                    : vi.app.directMessages.anhDinhKem,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: VnlfTypography.caption(colors.muted),
@@ -211,13 +192,7 @@ class DirectMessageTile extends StatelessWidget {
                       ),
                     if (deleted || message.content.isNotEmpty)
                       SelectableText(
-                        deleted
-                            ? dmText(
-                                context,
-                                'Tin nhắn đã bị xóa',
-                                'Message deleted',
-                              )
-                            : message.content,
+                        deleted ? vi.common.tinNhanDaDuocXoa : message.content,
                         style: VnlfTypography.body(
                           deleted ? colors.muted : colors.ink,
                         ),
@@ -225,7 +200,7 @@ class DirectMessageTile extends StatelessWidget {
                     if (!deleted) ...<Widget>[
                       if (message.editedAt != null)
                         Text(
-                          dmText(context, 'Đã chỉnh sửa', 'Edited'),
+                          vi.chatUi.daChinhSua,
                           style: VnlfTypography.meta(colors.muted),
                         ),
                       if (media.isNotEmpty)
@@ -240,18 +215,10 @@ class DirectMessageTile extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             attachment.state == 'PROCESSING'
-                                ? dmText(
-                                    context,
-                                    'Tệp đính kèm đang được xử lý',
-                                    'Attachment is processing',
-                                  )
+                                ? vi.app.directMessages.tepDinhKemDang
                                 : attachment.state == 'FAILED'
-                                ? dmText(
-                                    context,
-                                    'Không xử lý được tệp đính kèm',
-                                    'Attachment processing failed',
-                                  )
-                                : '${dmText(context, 'Tệp đính kèm', 'Attachment')} · ${attachment.mime}',
+                                ? vi.app.directMessages.khongXuLyDuoc
+                                : '${'Tệp đính kèm'} · ${attachment.mime}',
                             style: VnlfTypography.caption(colors.muted),
                           ),
                         ),
@@ -260,22 +227,10 @@ class DirectMessageTile extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             gif.hidden
-                                ? dmText(
-                                    context,
-                                    'Nhãn dán từ bộ đã ngừng phát hành',
-                                    'Sticker from a retired pack',
-                                  )
+                                ? vi.app.directMessages.nhanDanTuBo
                                 : gif.isSticker
-                                ? dmText(
-                                    context,
-                                    'Tin nhắn có nhãn dán',
-                                    'Message contains a sticker',
-                                  )
-                                : dmText(
-                                    context,
-                                    'Tin nhắn có GIF',
-                                    'Message contains a GIF',
-                                  ),
+                                ? vi.app.directMessages.tinNhanCoNhan
+                                : vi.app.directMessages.tinNhanCoGif,
                             style: VnlfTypography.caption(colors.muted),
                           ),
                         ),
@@ -303,16 +258,12 @@ class DirectMessageTile extends StatelessWidget {
                             ),
                           if (canAct) ...<Widget>[
                             IconButton(
-                              tooltip: dmText(context, 'Trả lời', 'Reply'),
+                              tooltip: vi.chatUi.traLoi,
                               onPressed: busy ? null : onReply,
                               icon: const Icon(Icons.reply_outlined, size: 18),
                             ),
                             PopupMenuButton<String>(
-                              tooltip: dmText(
-                                context,
-                                'Thả cảm xúc',
-                                'Add reaction',
-                              ),
+                              tooltip: vi.chatUi.bayToCamXuc,
                               enabled: !busy,
                               icon: const Icon(
                                 Icons.add_reaction_outlined,
@@ -343,7 +294,7 @@ class DirectMessageTile extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            dmText(context, 'Đã xem', 'Seen'),
+                            vi.chatUi.daXem,
                             style: VnlfTypography.meta(colors.muted),
                           ),
                         ),

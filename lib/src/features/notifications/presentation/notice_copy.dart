@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../domain/notifications_repository.dart';
 
 /// The in-app location for [item], or null when only its link can open it.
@@ -40,11 +41,11 @@ String? noticeRoute(CommunityNotice item) {
 
 /// The action phrase the notifications list shows for a notice type.
 String noticeAction(String type) => switch (type) {
-  'article-liked' => 'Đã thích bài viết của bạn',
-  'comment-liked' => 'Đã thích bình luận của bạn',
-  'comment-created' => 'Đã bình luận bài viết của bạn',
-  'comment-replied' => 'Đã trả lời bình luận của bạn',
-  'user-followed' => 'Đã theo dõi bạn',
-  'guestbook-signed' => 'Đã viết vào sổ lưu bút của bạn',
-  _ => 'Cập nhật cộng đồng',
+  'article-liked' => vi.app.notifications.daThichBaiViet,
+  'comment-liked' => vi.app.notifications.daThichBinhLuan,
+  'comment-created' => vi.app.notifications.daBinhLuanBai,
+  'comment-replied' => vi.app.notifications.daTraLoiBinh,
+  'user-followed' => vi.app.notifications.daTheoDoiBan,
+  'guestbook-signed' => vi.app.notifications.daVietVaoSo,
+  _ => vi.app.notifications.capNhatCongDong,
 };

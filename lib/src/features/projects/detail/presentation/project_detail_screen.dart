@@ -1,3 +1,4 @@
+import '../../../../i18n/vi.dart';
 import '../rating/project_rating_control.dart';
 
 import 'package:flutter/material.dart';
@@ -78,31 +79,29 @@ class ProjectDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(projectDetailProvider(slug));
-    final en = Localizations.localeOf(context).languageCode == 'en';
     return switch (state) {
       ProjectDetailLoading() => const Center(
         child: CircularProgressIndicator(),
       ),
       ProjectDetailEmpty() => Center(
-        child: Text(en ? 'Project unavailable' : 'Không tìm thấy dự án'),
+        child: Text(vi.app.projects.khongTimThayDu),
       ),
       ProjectDetailError() => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(en ? 'Could not load project' : 'Không tải được dự án'),
+            Text(vi.app.projects.khongTaiDuocDu),
             TextButton(
               onPressed: () => ref
                   .read(projectDetailProvider(slug).notifier)
                   .load(refresh: true),
-              child: Text(en ? 'Retry' : 'Thử lại'),
+              child: Text(vi.common.thuLai),
             ),
           ],
         ),
       ),
       ProjectDetailLoaded(:final project) => _Detail(
         project: project,
-        en: en,
         onRefresh: () {
           ref.read(projectDetailProvider(slug).notifier).load(refresh: true);
         },
@@ -112,13 +111,8 @@ class ProjectDetailScreen extends ConsumerWidget {
 }
 
 class _Detail extends StatelessWidget {
-  const _Detail({
-    required this.project,
-    required this.en,
-    required this.onRefresh,
-  });
+  const _Detail({required this.project, required this.onRefresh});
   final ProjectDetail project;
-  final bool en;
   final VoidCallback onRefresh;
   @override
   Widget build(BuildContext context) {
@@ -131,7 +125,7 @@ class _Detail extends StatelessWidget {
             url: m.fullUrl,
             width: m.width,
             height: m.height,
-            alt: '${en ? 'Screenshot' : 'Ảnh chụp'} · ${project.name}',
+            alt: '${vi.app.projects.anhChup} · ${project.name}',
           ),
         )
         .toList();
@@ -145,22 +139,16 @@ class _Detail extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (project.status != 'APPROVED' && project.status.isNotEmpty)
-                  _section(context, en ? 'Review status' : 'Trạng thái duyệt', [
-                    Text(_status(project.status, en)),
+                  _section(context, vi.app.projects.trangThaiDuyet, [
+                    Text(_status(project.status)),
                     if (project.reviewNote != null &&
                         project.reviewNote!.isNotEmpty)
                       Text(project.reviewNote!),
                   ]),
                 if (project.hasPendingChanges)
-                  Text(
-                    en ? 'Changes awaiting review' : 'Thay đổi đang chờ duyệt',
-                  ),
+                  Text(vi.app.projects.thayDoiDangCho),
                 if (repo?.unavailable == true)
-                  Text(
-                    en
-                        ? 'Repository unavailable'
-                        : 'Kho mã nguồn không còn khả dụng',
-                  ),
+                  Text(vi.app.projects.khoMaNguonKhong),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -186,7 +174,7 @@ class _Detail extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${_tier(project.tier, en)} · ${_type(project.type, en)}',
+                            '${_tier(project.tier)} · ${_type(project.type)}',
                             style: VnlfTypography.meta(colors.muted),
                           ),
                           Text(
@@ -208,19 +196,16 @@ class _Detail extends StatelessWidget {
                   runSpacing: 4,
                   children: [
                     if (repo != null)
-                      _Link(
-                        label: en ? 'Source repository' : 'Kho mã nguồn',
-                        url: repo.url,
-                      ),
+                      _Link(label: vi.app.projects.khoMaNguon, url: repo.url),
                     if (repo?.homepage != null)
                       _Link(
-                        label: en ? 'Website' : 'Trang web',
+                        label: vi.app.common.trangWeb,
                         url: repo!.homepage!,
                       ),
                     if (repo?.releaseUrl != null)
                       _Link(
                         label:
-                            '${en ? 'Release' : 'Bản phát hành'} ${repo!.releaseTag ?? ''}',
+                            '${vi.projects.banPhatHanh} ${repo!.releaseTag ?? ''}',
                         url: repo.releaseUrl!,
                       ),
                   ],
@@ -236,7 +221,7 @@ class _Detail extends StatelessWidget {
                         if (repo.forks != null) Text('${repo.forks} forks'),
                         if (repo.contributors != null)
                           Text(
-                            '${repo.contributors} ${en ? 'contributors' : 'người đóng góp'}',
+                            '${repo.contributors} ${vi.app.projects.nguoiDongGop2}',
                           ),
                         if (repo.openIssues != null)
                           Text('${repo.openIssues} issues'),
@@ -252,12 +237,12 @@ class _Detail extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (images.isNotEmpty)
-                          _section(context, en ? 'Screenshots' : 'Ảnh chụp', [
+                          _section(context, vi.app.projects.anhChup, [
                             VnlfMediaGallery(items: images),
                           ]),
-                        _section(context, en ? 'Introduction' : 'Giới thiệu', [
+                        _section(context, vi.projects.gioiThieu, [
                           if (project.intro.trim().isEmpty)
-                            Text(en ? 'No introduction' : 'Chưa có giới thiệu')
+                            Text(vi.app.projects.chuaCoGioiThieu)
                           else
                             VnlfRichContent(
                               document: composeDocument(project.intro),
@@ -266,11 +251,9 @@ class _Detail extends StatelessWidget {
                         ]),
                         if (project.discussionSlug != null &&
                             project.discussionSlug!.isNotEmpty)
-                          _section(context, en ? 'Discussion' : 'Thảo luận', [
+                          _section(context, vi.projects.thaoLuan, [
                             _Link(
-                              label: en
-                                  ? 'Open discussion'
-                                  : 'Mở bài thảo luận',
+                              label: vi.app.projects.moBaiThaoLuan,
                               url:
                                   'https://vietnamlinuxfamily.net/a/${Uri.encodeComponent(project.discussionSlug!)}',
                             ),
@@ -281,7 +264,7 @@ class _Detail extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (project.status == 'APPROVED')
-                          _section(context, en ? 'Ratings' : 'Đánh giá', [
+                          _section(context, vi.projects.danhGia, [
                             ProjectRatingControl(
                               key: ObjectKey(project),
                               projectId: project.id,
@@ -293,25 +276,23 @@ class _Detail extends StatelessWidget {
                               onRefresh: onRefresh,
                             ),
                           ]),
-                        _section(context, en ? 'Posted by' : 'Người đăng', [
+                        _section(context, vi.projects.nguoiDang, [
                           Text(project.ownerName),
                           if (project.ownerUsername.isNotEmpty)
                             Text(
                               [
                                 '@${project.ownerUsername}',
                                 if (project.relation.isNotEmpty)
-                                  _relation(project.relation, en),
+                                  _relation(project.relation),
                               ].join(' · '),
                             ),
                         ]),
                         if (project.seeking)
-                          _section(
-                            context,
-                            en ? 'Seeking contributors' : 'Tìm người đóng góp',
-                            [Text(project.seekingNote)],
-                          ),
+                          _section(context, vi.projects.timNguoiDongGop, [
+                            Text(project.seekingNote),
+                          ]),
                         if (repo != null || project.links.isNotEmpty)
-                          _section(context, en ? 'Information' : 'Thông tin', [
+                          _section(context, vi.projects.thongTin, [
                             if (repo != null)
                               _Link(
                                 label: '${repo.owner}/${repo.name}',
@@ -319,15 +300,12 @@ class _Detail extends StatelessWidget {
                               ),
                             if (repo?.license != null)
                               Text(
-                                '${en ? 'License' : 'Giấy phép'}: ${repo!.license}',
+                                '${vi.app.projects.giayPhep}: ${repo!.license}',
                               ),
                             if (repo != null && repo.topics.isNotEmpty)
                               Text(repo.topics.join(' · ')),
                             for (final link in project.links)
-                              _Link(
-                                label: _linkKind(link.kind, en),
-                                url: link.url,
-                              ),
+                              _Link(label: _linkKind(link.kind), url: link.url),
                           ]),
                       ],
                     );
@@ -380,13 +358,7 @@ class _Link extends StatelessWidget {
         } catch (_) {}
         if (!opened && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                Localizations.localeOf(context).languageCode == 'en'
-                    ? 'Could not open link'
-                    : 'Không mở được liên kết',
-              ),
-            ),
+            SnackBar(content: Text(vi.app.common.khongMoDuocLien)),
           );
         }
       },
@@ -395,47 +367,47 @@ class _Link extends StatelessWidget {
   }
 }
 
-String _status(String value, bool en) => switch (value) {
-  'PENDING' => en ? 'Awaiting review' : 'Đang chờ duyệt',
-  'REJECTED' => en ? 'Rejected' : 'Đã bị từ chối',
-  'HIDDEN' => en ? 'Hidden' : 'Đã bị ẩn',
+String _status(String value) => switch (value) {
+  'PENDING' => vi.app.projects.dangChoDuyet,
+  'REJECTED' => vi.app.projects.daBiTuChoi,
+  'HIDDEN' => vi.app.projects.daBiAn,
   _ => value,
 };
-String _tier(String value, bool en) => switch (value) {
+String _tier(String value) => switch (value) {
   'VNLF' => 'VNLF',
-  'PARTNER' => en ? 'Partner' : 'Đối tác',
-  'COMMUNITY' => en ? 'Community' : 'Cộng đồng',
+  'PARTNER' => vi.app.projects.doiTac,
+  'COMMUNITY' => vi.projects.phanCongDong,
   _ => value,
 };
-String _relation(String value, bool en) => switch (value) {
-  'AUTHOR' => en ? 'Author' : 'Tác giả',
-  'MAINTAINER' => en ? 'Maintainer' : 'Người duy trì',
-  'CONTRIBUTOR' => en ? 'Contributor' : 'Người đóng góp',
-  'SHARED' => en ? 'Shared' : 'Giới thiệu',
+String _relation(String value) => switch (value) {
+  'AUTHOR' => vi.app.projects.tacGia,
+  'MAINTAINER' => vi.app.projects.nguoiDuyTri,
+  'CONTRIBUTOR' => vi.app.projects.nguoiDongGop,
+  'SHARED' => vi.projects.gioiThieu,
   _ => value,
 };
-String _type(String value, bool en) => switch (value) {
-  'APP' => en ? 'App' : 'Ứng dụng',
-  'TOOL' => en ? 'Tool' : 'Công cụ',
-  'LIBRARY' => en ? 'Library' : 'Thư viện',
+String _type(String value) => switch (value) {
+  'APP' => vi.app.projects.ungDung,
+  'TOOL' => vi.app.projects.congCu,
+  'LIBRARY' => vi.app.projects.thuVien,
   'DISTRO' => 'Distro',
-  'CUSTOMIZE' => en ? 'Customization' : 'Tùy biến',
-  'EXTENSION' => en ? 'Extension' : 'Tiện ích',
-  'VIETNAMESE' => en ? 'Vietnamese' : 'Tiếng Việt',
-  'SYSTEM' => en ? 'System' : 'Hệ thống',
+  'CUSTOMIZE' => vi.app.projects.tuyBien,
+  'EXTENSION' => vi.app.projects.tienIch,
+  'VIETNAMESE' => vi.app.projects.tiengViet,
+  'SYSTEM' => vi.app.projects.heThong,
   'SELFHOST' => 'Self-host',
-  'GAME' => en ? 'Game' : 'Trò chơi',
-  'LEARNING' => en ? 'Learning' : 'Học tập',
-  'OTHER' => en ? 'Other' : 'Khác',
+  'GAME' => vi.app.projects.troChoi,
+  'LEARNING' => vi.app.projects.hocTap,
+  'OTHER' => vi.projects.chiaSeKhac,
   _ => value,
 };
-String _linkKind(String value, bool en) => switch (value) {
-  'WEBSITE' => en ? 'Website' : 'Trang web',
-  'DOCS' => en ? 'Documentation' : 'Tài liệu',
-  'DOWNLOAD' => en ? 'Download' : 'Tải xuống',
-  'CHAT' => en ? 'Chat' : 'Trò chuyện',
+String _linkKind(String value) => switch (value) {
+  'WEBSITE' => vi.app.common.trangWeb,
+  'DOCS' => vi.app.projects.taiLieu,
+  'DOWNLOAD' => vi.app.projects.taiXuong,
+  'CHAT' => vi.app.projects.troChuyen,
   'VIDEO' => 'Video',
-  'REPO' => en ? 'Repository' : 'Kho mã nguồn',
-  'OTHER' => en ? 'Other link' : 'Liên kết khác',
+  'REPO' => vi.app.projects.khoMaNguon,
+  'OTHER' => vi.app.projects.lienKetKhac,
   _ => value,
 };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../i18n/vi.dart';
 import 'preferences.dart';
 import 'preferences_controller.dart';
 
@@ -10,7 +11,6 @@ final class PreferencesPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final state = ref.watch(preferencesControllerProvider);
     final controller = ref.read(preferencesControllerProvider.notifier);
     final draft = state.draft;
@@ -18,12 +18,10 @@ final class PreferencesPanel extends ConsumerWidget {
       if (state.loadFailed) {
         return Column(
           children: [
-            Text(
-              english ? 'Could not load settings.' : 'Không thể tải cài đặt.',
-            ),
+            Text(vi.app.settings.khongTheTaiCai),
             TextButton(
               onPressed: controller.refresh,
-              child: Text(english ? 'Retry' : 'Thử lại'),
+              child: Text(vi.common.thuLai),
             ),
           ],
         );
@@ -43,92 +41,69 @@ final class PreferencesPanel extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          english ? 'Privacy' : 'Riêng tư',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(vi.common.riengTu, style: Theme.of(context).textTheme.titleMedium),
         toggle(
-          english
-              ? 'Everyone can send private messages'
-              : 'Mọi người có thể gửi tin nhắn riêng',
+          vi.app.settings.moiNguoiCoThe,
           draft.dmPolicy == DmPolicy.everyone,
           (value) => draft.copyWith(
             dmPolicy: value ? DmPolicy.everyone : DmPolicy.following,
           ),
         ),
         toggle(
-          english ? 'Show on leaderboard' : 'Hiển thị trên bảng xếp hạng',
+          vi.app.settings.hienThiTrenBang,
           draft.leaderboardVisible,
           (value) => draft.copyWith(leaderboardVisible: value),
         ),
         toggle(
-          english ? 'Show online status' : 'Hiển thị trạng thái trực tuyến',
+          vi.app.settings.hienThiTrangThai,
           draft.onlineVisible,
           (value) => draft.copyWith(onlineVisible: value),
         ),
         Text(
-          english ? 'Notifications' : 'Thông báo',
+          vi.common.thongBao,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         toggle(
-          english ? 'Likes' : 'Lượt thích',
+          vi.settingsViews.luotThich,
           draft.likeNotifications,
           (value) => draft.copyWith(likeNotifications: value),
         ),
         toggle(
-          english ? 'New followers' : 'Theo dõi mới',
+          vi.settingsViews.theoDoiMoi,
           draft.followNotifications,
           (value) => draft.copyWith(followNotifications: value),
         ),
         toggle(
-          english
-              ? 'Comments, replies and messages'
-              : 'Bình luận, trả lời và tin nhắn',
+          vi.app.settings.binhLuanTraLoi,
           draft.messageNotifications,
           (value) => draft.copyWith(messageNotifications: value),
         ),
         toggle(
-          english
-              ? 'Message sound on the website'
-              : 'Âm báo tin nhắn trên trang web',
+          vi.app.settings.amBaoTinNhan,
           draft.messageSoundEnabled,
           (value) => draft.copyWith(messageSoundEnabled: value),
         ),
-        Text(
-          english ? 'Display' : 'Hiển thị',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(vi.common.hienThi, style: Theme.of(context).textTheme.titleMedium),
         toggle(
-          english ? 'Reduce motion' : 'Giảm chuyển động',
+          vi.settingsViews.giamChuyenDong,
           draft.reduceMotion,
           (value) => draft.copyWith(reduceMotion: value),
         ),
         if (state.uncertain) ...[
-          Text(
-            english ? 'The save could not be confirmed. Refresh to check.' : 'Chưa xác định được cài đặt đã lưu hay chưa. Hãy tải lại để kiểm tra.',
-          ),
+          Text(vi.app.settings.chuaXacDinhDuoc),
           TextButton(
             onPressed: state.busy ? null : controller.refresh,
-            child: Text(english ? 'Refresh' : 'Tải lại'),
+            child: Text(vi.app.settings.taiLai),
           ),
         ],
         if (state.loadFailed && state.uncertain)
-          Text(
-            english
-                ? 'Could not refresh settings.'
-                : 'Không thể tải lại cài đặt.',
-          ),
-        if (state.savedNotice)
-          Text(english ? 'Settings saved.' : 'Đã lưu cài đặt.'),
+          Text(vi.app.settings.khongTheTaiLai),
+        if (state.savedNotice) Text(vi.app.settings.daLuuCaiDat),
         Align(
           alignment: Alignment.centerRight,
           child: FilledButton(
             onPressed: enabled && state.dirty ? controller.save : null,
-            child: Text(
-              state.busy
-                  ? (english ? 'Working…' : 'Đang xử lý…')
-                  : (english ? 'Save' : 'Lưu'),
-            ),
+            child: Text(state.busy ? vi.common.dangXuLy : vi.common.luu),
           ),
         ),
       ],

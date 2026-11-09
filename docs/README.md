@@ -28,6 +28,7 @@ This directory contains developer guides, build/release documentation, API & UI 
 - [`plans/2026-11-06-community-realtime.md`](plans/2026-11-06-community-realtime.md) — Community realtime WebSocket implementation plan
 - [`plans/2026-11-06-messaging-integration.md`](plans/2026-11-06-messaging-integration.md) — Channels & direct messaging integration plan
 - [`plans/2026-11-06-shared-polls.md`](plans/2026-11-06-shared-polls.md) — Shared polls authoring and voting plan
+- [`plans/2026-11-09-website-parity-backlog.md`](plans/2026-11-09-website-parity-backlog.md) — Website pages and features still to port, in order
 
 ## Audits & Verification Reports (`docs/` & `docs/reports/`)
 - [`ux-ui-audit-2026-11-08.md`](ux-ui-audit-2026-11-08.md) — Comprehensive UX/UI, contrast, responsive & accessibility audit

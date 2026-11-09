@@ -26,11 +26,7 @@ class ProfileActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (profile.isSample) return const SizedBox.shrink();
-    final english = Localizations.localeOf(context).languageCode == 'en';
-    final copy = ProfileRelationshipCopy(
-      english: english,
-      name: profile.author.displayName,
-    );
+    final copy = ProfileRelationshipCopy(name: profile.author.displayName);
     final session = ref.watch(sessionStateProvider);
     if (session == null) {
       return Align(

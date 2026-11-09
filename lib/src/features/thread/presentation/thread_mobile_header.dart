@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 
 class ThreadMobileHeader extends StatelessWidget {
   const ThreadMobileHeader({
@@ -14,7 +15,6 @@ class ThreadMobileHeader extends StatelessWidget {
   final VoidCallback onNotifications;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     return Container(
       height: 54,
@@ -27,22 +27,22 @@ class ThreadMobileHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              en ? 'Post' : 'Bài viết',
+              vi.common.baiViet,
               style: VnlfTypography.pageTitle(colors.ink),
             ),
           ),
           IconButton(
-            tooltip: en ? 'Create post' : 'Tạo bài đăng',
+            tooltip: vi.socialChrome.taoBaiViet,
             onPressed: onCompose,
             icon: const Icon(Icons.add_box_outlined, size: 20),
           ),
           IconButton(
-            tooltip: en ? 'Search' : 'Tìm kiếm',
+            tooltip: vi.common.timKiem,
             onPressed: onSearch,
             icon: const Icon(Icons.search, size: 22),
           ),
           IconButton(
-            tooltip: en ? 'Notifications' : 'Thông báo',
+            tooltip: vi.common.thongBao,
             onPressed: onNotifications,
             icon: const Icon(Icons.notifications_none_outlined, size: 22),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utf16_length_formatter.dart';
 
+import '../../../i18n/vi.dart';
 import '../domain/composer_draft.dart';
 
 class ComposerMetadata extends StatelessWidget {
@@ -20,7 +21,6 @@ class ComposerMetadata extends StatelessWidget {
   final bool disabled;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -28,7 +28,7 @@ class ComposerMetadata extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            en ? 'Cover image' : 'Ảnh bìa',
+            vi.articleEditor.anhBia,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 12),
@@ -42,17 +42,17 @@ class ComposerMetadata extends StatelessWidget {
             ),
             TextButton(
               onPressed: onRemoveCover,
-              child: Text(en ? 'Remove cover' : 'Gỡ ảnh bìa'),
+              child: Text(vi.app.composer.goAnhBia),
             ),
           ],
           OutlinedButton.icon(
             onPressed: onCover,
             icon: const Icon(Icons.add_photo_alternate_outlined),
-            label: Text(en ? 'Choose cover' : 'Chọn ảnh bìa'),
+            label: Text(vi.articleEditor.chonAnhBia),
           ),
           const SizedBox(height: 16),
           ComposerTextField(
-            label: en ? 'Cover alternative text' : 'Văn bản thay thế ảnh bìa',
+            label: vi.app.composer.vanBanThayTheAnh,
             value: draft.coverAlt,
             maxLength: 300,
             disabled: disabled,
@@ -60,7 +60,7 @@ class ComposerMetadata extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ComposerTextField(
-            label: en ? 'Excerpt' : 'Mô tả ngắn',
+            label: vi.app.composer.moTaNgan,
             value: draft.excerpt,
             maxLength: 220,
             maxLines: 3,
@@ -69,9 +69,7 @@ class ComposerMetadata extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ComposerTextField(
-            label: en
-                ? 'Tags (up to 3, separated by commas)'
-                : 'Thẻ (tối đa 3, cách nhau bằng dấu phẩy)',
+            label: vi.app.composer.theToiDa3,
             value: draft.tags.join(', '),
             disabled: disabled,
             onChanged: (value) => onChanged(

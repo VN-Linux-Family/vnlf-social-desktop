@@ -1,74 +1,147 @@
 import 'package:flutter/material.dart';
 
 import '../../core/external_uri.dart';
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import 'vnlf_video.dart';
 
+/// Photos and videos under a post or comment, like the website's
+/// `.media-gallery`: one photo spans the width, two share it, more scroll
+/// sideways in a rail. [compact] is the smaller rail used in comments.
 class VnlfMediaGallery extends StatelessWidget {
-  const VnlfMediaGallery({super.key, required this.items});
+  const VnlfMediaGallery({
+    super.key,
+    required this.items,
+    this.compact = false,
+  });
   final List<PostMediaData> items;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
     final images = items.where((item) => !item.isVideo).toList();
     final videos = items.where((item) => item.isVideo).toList();
+    final screen = MediaQuery.sizeOf(context).width;
+    final narrow = screen <= 520;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final video in videos)
           Padding(
-            padding: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: 8),
             child: VnlfVideo(media: video),
           ),
-        if (images.isNotEmpty)
+        if (images.length == 1)
           LayoutBuilder(
             builder: (context, constraints) {
-              final columns = images.length > 1 ? 2 : 1;
-              final width =
-                  (constraints.maxWidth - (columns - 1) * 6) / columns;
-              return Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (var i = 0; i < images.length; i++)
-                    SizedBox(
-                      width: width,
-                      child: InkWell(
-                        onTap: externalWebUri(images[i].url) == null
-                            ? null
-                            : () => Navigator.of(context).push<void>(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      _ImageViewer(items: images, initial: i),
-                                ),
-                              ),
-                        borderRadius: BorderRadius.circular(10),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxHeight: 650),
-                            child: AspectRatio(
-                              aspectRatio: columns == 1
-                                  ? images[i].aspectRatio
-                                  : 1,
-                              child: _RemoteImage(
-                                media: images[i],
-                                fit: columns == 1
-                                    ? BoxFit.contain
-                                    : BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              final width = constraints.maxWidth;
+              final height = (width / images.first.aspectRatio)
+                  .clamp(180.0, compact ? 280.0 : 520.0)
+                  .toDouble();
+              return _GalleryTile(
+                images: images,
+                index: 0,
+                width: width,
+                height: height,
+                fit: BoxFit.contain,
+              );
+            },
+          )
+        else if (images.length > 1)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final height = compact
+                  ? 180.0
+                  : narrow
+                  ? 260.0
+                  : (screen * .42).clamp(240.0, 420.0).toDouble();
+              final tile = images.length == 2
+                  ? (width - 8) / 2
+                  : compact || !narrow
+                  ? (width * .78).clamp(0.0, 420.0).toDouble()
+                  : width * .82;
+              return SizedBox(
+                height: height + 4,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: images.length == 2
+                      ? const NeverScrollableScrollPhysics()
+                      : null,
+                  padding: const EdgeInsets.only(bottom: 4),
+                  itemCount: images.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) => _GalleryTile(
+                    images: images,
+                    index: i,
+                    width: tile,
+                    height: height,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               );
             },
           ),
       ],
+    );
+  }
+}
+
+class _GalleryTile extends StatelessWidget {
+  const _GalleryTile({
+    required this.images,
+    required this.index,
+    required this.width,
+    required this.height,
+    required this.fit,
+  });
+
+  final List<PostMediaData> images;
+  final int index;
+  final double width;
+  final double height;
+  final BoxFit fit;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final image = images[index];
+    final radius = BorderRadius.circular(14);
+    return Semantics(
+      button: true,
+      label: format(vi.mediaGallery.xemAnh, {
+        'value': index + 1,
+        'count': images.length,
+      }),
+      excludeSemantics: true,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: colors.surfaceSoft,
+          border: Border.all(color: colors.line),
+          borderRadius: radius,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: externalWebUri(image.url) == null
+                  ? null
+                  : () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            _ImageViewer(items: images, initial: index),
+                      ),
+                    ),
+              child: _RemoteImage(media: image, fit: fit),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -79,7 +152,6 @@ class _RemoteImage extends StatelessWidget {
   final BoxFit fit;
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     Widget failure() => ColoredBox(
       color: VnlfColors.of(context).surfaceSoft,
       child: Center(
@@ -87,7 +159,7 @@ class _RemoteImage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.broken_image_outlined),
-            Text(english ? 'Image unavailable' : 'Không tải được ảnh'),
+            Text(vi.articleImageNode.khongTaiDuocAnh),
           ],
         ),
       ),
@@ -98,7 +170,7 @@ class _RemoteImage extends StatelessWidget {
       media.url,
       fit: fit,
       semanticLabel: media.alt.isEmpty
-          ? (english ? 'Post image' : 'Ảnh bài viết')
+          ? vi.app.designSystem.anhBaiViet
           : media.alt,
       cacheWidth: (size.width * MediaQuery.devicePixelRatioOf(context))
           .round()
@@ -153,7 +225,7 @@ class _ImageViewerState extends State<_ImageViewer> {
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton.filled(
-                tooltip: 'Ảnh trước',
+                tooltip: vi.mediaGallery.anhTruoc,
                 icon: const Icon(Icons.chevron_left),
                 onPressed: () => _controller.previousPage(
                   duration: MediaQuery.disableAnimationsOf(context)
@@ -167,7 +239,7 @@ class _ImageViewerState extends State<_ImageViewer> {
             Align(
               alignment: Alignment.centerRight,
               child: IconButton.filled(
-                tooltip: 'Ảnh sau',
+                tooltip: vi.app.designSystem.anhSau,
                 icon: const Icon(Icons.chevron_right),
                 onPressed: () => _controller.nextPage(
                   duration: MediaQuery.disableAnimationsOf(context)

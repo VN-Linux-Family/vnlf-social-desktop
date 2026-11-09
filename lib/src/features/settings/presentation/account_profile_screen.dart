@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utf16_length_formatter.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/account_profile.dart';
 import 'account_profile_controller.dart';
 import 'account_profile_messages.dart';
@@ -12,18 +13,16 @@ class AccountProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final state = ref.watch(accountProfileControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ')),
+      appBar: AppBar(title: Text(vi.common.chinhSuaHoSo)),
       body: SafeArea(
         child: switch (state) {
           AccountProfileLoading() => const Center(
             child: CircularProgressIndicator(),
           ),
           AccountProfileLoadFailed(:final failure) => _LoadError(
-            message: profileFailureMessage(failure, english),
-            english: english,
+            message: profileFailureMessage(failure),
             onRetry: ref.read(accountProfileControllerProvider.notifier).load,
           ),
           AccountProfileEditing() => _ProfileForm(state: state),
@@ -34,14 +33,9 @@ class AccountProfileScreen extends ConsumerWidget {
 }
 
 class _LoadError extends StatelessWidget {
-  const _LoadError({
-    required this.message,
-    required this.english,
-    required this.onRetry,
-  });
+  const _LoadError({required this.message, required this.onRetry});
 
   final String message;
-  final bool english;
   final VoidCallback onRetry;
 
   @override
@@ -53,10 +47,7 @@ class _LoadError extends StatelessWidget {
         children: [
           Text(message, textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: onRetry,
-            child: Text(english ? 'Try again' : 'Thử lại'),
-          ),
+          OutlinedButton(onPressed: onRetry, child: Text(vi.common.thuLai)),
         ],
       ),
     ),
@@ -119,7 +110,6 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final state = widget.state;
     final controller = ref.read(accountProfileControllerProvider.notifier);
@@ -143,16 +133,14 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                     field != ProfileField.website,
                 inputFormatters: [Utf16LengthFormatter(_limits[field]!)],
                 decoration: InputDecoration(
-                  labelText: profileFieldLabel(field, english),
+                  labelText: profileFieldLabel(field),
                   prefixText: field == ProfileField.username ? '@' : null,
                   helperText: field == ProfileField.username
-                      ? (english
-                            ? 'Your old username is reserved for you for 90 days.'
-                            : 'Tên cũ được giữ chỗ cho bạn trong 90 ngày.')
+                      ? vi.app.settings.tenCuDuocGiu
                       : null,
                   errorText: state.errors[field] == null
                       ? null
-                      : profileFieldError(field, state.errors[field]!, english),
+                      : profileFieldError(field, state.errors[field]!),
                 ),
               ),
               const SizedBox(height: 12),
@@ -161,7 +149,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
               Semantics(
                 liveRegion: true,
                 child: Text(
-                  profileFailureMessage(state.failure!, english),
+                  profileFailureMessage(state.failure!),
                   style: VnlfTypography.meta(colors.red),
                 ),
               ),
@@ -169,7 +157,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
               Semantics(
                 liveRegion: true,
                 child: Text(
-                  english ? 'Profile saved.' : 'Đã lưu hồ sơ.',
+                  vi.app.settings.daLuuHoSo,
                   style: VnlfTypography.meta(colors.brand),
                 ),
               ),
@@ -179,11 +167,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                 onPressed: state.saving
                     ? null
                     : controller.verifyAfterUncertainWrite,
-                child: Text(
-                  english
-                      ? 'Check what the server has'
-                      : 'Kiểm tra dữ liệu trên máy chủ',
-                ),
+                child: Text(vi.app.settings.kiemTraDuLieu),
               )
             else
               FilledButton(
@@ -193,11 +177,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                 onPressed: state.saving
                     ? null
                     : () => controller.submit(_draft),
-                child: Text(
-                  state.saving
-                      ? (english ? 'Saving…' : 'Đang lưu…')
-                      : (english ? 'Save' : 'Lưu'),
-                ),
+                child: Text(state.saving ? vi.common.dangLuu : vi.common.luu),
               ),
           ],
         ),

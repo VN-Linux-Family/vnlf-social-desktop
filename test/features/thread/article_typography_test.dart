@@ -132,33 +132,16 @@ void main() {
         expect(heading.text.style!.fontWeight, FontWeight.w700);
         expect(paragraph.text.style!.fontSize, 13);
         expect(paragraph.text.style!.height, 1.7);
-        final headingPadding = tester.widget<Padding>(
-          find
-              .ancestor(
-                of: find.text('Tiêu đề nội dung', findRichText: true),
-                matching: find.byType(Padding),
-              )
-              .first,
-        );
-        final paragraphPadding = tester.widget<Padding>(
-          find
-              .ancestor(
-                of: find.text('Tiếng Việt: ặ ữ ờ ẫ ệ', findRichText: true),
-                matching: find.byType(Padding),
-              )
-              .first,
-        );
-        expect(
-          headingPadding.padding,
-          EdgeInsets.only(
-            top: width <= 840 ? 12 : 19,
-            bottom: width <= 840 ? 7 : 10,
-          ),
-        );
-        expect(
-          paragraphPadding.padding,
-          EdgeInsets.only(bottom: width <= 840 ? 12 : 18),
-        );
+        // The heading's bottom margin separates it from the paragraph; the
+        // first top and last bottom margins collapse into the page's spacing.
+        final gap =
+            tester
+                .getRect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ', findRichText: true))
+                .top -
+            tester
+                .getRect(find.text('Tiêu đề nội dung', findRichText: true))
+                .bottom;
+        expect(gap, width <= 840 ? 7 : 10);
       },
     );
   }

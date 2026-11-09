@@ -68,7 +68,8 @@ class VnlfDesktopSidebar extends StatelessWidget {
   /// Right complementary column width (`304px`) from `DESIGN_REFERENCE.md`.
   static const double rightSidebarWidth = VnlfDimensions.rightSidebarWidth;
 
-  final VnlfNavDestination activeDestination;
+  /// The highlighted item; null on pages that are not in the menu.
+  final VnlfNavDestination? activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final Set<VnlfNavDestination> unreadDestinations;
   final ThemeMode themeMode;

@@ -76,11 +76,11 @@ void main() {
       ),
     );
     final router = await _pumpApp(tester);
-    await tester.tap(
-      find
-          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
-          .first,
-    );
+    // Like the website, the link button opens the share dialog.
+    await tester.tap(find.bySemanticsLabel('Chia sẻ bài').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Chia sẻ bài này'), findsOneWidget);
+    await tester.tap(find.text('Sao chép').last);
     await tester.pumpAndSettle();
     expect(
       copied,
@@ -88,20 +88,21 @@ void main() {
     );
     expect(find.text('Đã sao chép liên kết'), findsOneWidget);
     expect(router.routeInformationProvider.value.uri.path, '/');
+    await tester.tap(find.byTooltip('Đóng hộp thoại'));
+    await tester.pumpAndSettle();
 
     copied = null;
     router.go('/thread/fixture-post-1');
     await tester.pumpAndSettle();
-    await tester.tap(
-      find
-          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
-          .first,
-    );
+    await tester.tap(find.bySemanticsLabel('Chia sẻ bài').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sao chép').last);
     await tester.pumpAndSettle();
     expect(
       copied,
       'https://vietnamlinuxfamily.net/a/chao-mung-cong-dong-linux-viet-nam',
     );
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('clipboard failure gives feedback without leaving the post', (
@@ -123,13 +124,12 @@ void main() {
       ),
     );
     final router = await _pumpApp(tester);
-    await tester.tap(
-      find
-          .byWidgetPredicate((w) => w is VnlfIcon && w.icon == VnlfLucide.link2)
-          .first,
-    );
+    await tester.tap(find.bySemanticsLabel('Chia sẻ bài').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sao chép').last);
     await tester.pumpAndSettle();
     expect(find.text('Không thể sao chép liên kết'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
     expect(router.routeInformationProvider.value.uri.path, '/');
     expect(tester.takeException(), isNull);
   });
@@ -150,7 +150,9 @@ void main() {
         tester.getSize(headerFinder).height,
         VnlfDimensions.mobileHeaderHeight + topInset,
       );
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      // Like the website, the page's own bar goes back, not the top bar.
+      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.bySemanticsLabel('Quay lại bảng tin'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

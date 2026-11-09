@@ -5,6 +5,7 @@ import '../../../app/providers.dart';
 import '../../../core/request_identity.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../domain/feedback_models.dart';
 import 'feedback_providers.dart';
 
@@ -16,24 +17,19 @@ class FeedbackHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final owner = ref.watch(sessionStateProvider)?.userId;
-    final en = Localizations.localeOf(context).languageCode == 'en';
     if (owner == null || owner.isEmpty) {
       return _FeedbackPage(
-        title: _text(en, 'Góp ý của tôi', 'My feedback'),
+        title: (vi.app.common.gopYCuaToi),
         child: _stateCard(
           context,
           Icons.lock_outline,
-          _text(
-            en,
-            'Đăng nhập để xem lịch sử góp ý của bạn.',
-            'Sign in to view your feedback history.',
-          ),
+          (vi.app.feedback.dangNhapDeXem),
         ),
       );
     }
     final history = ref.watch(feedbackHistoryProvider(owner));
     return _FeedbackPage(
-      title: _text(en, 'Góp ý của tôi', 'My feedback'),
+      title: (vi.app.common.gopYCuaToi),
       child: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
@@ -44,11 +40,7 @@ class FeedbackHistoryScreen extends ConsumerWidget {
             ? _stateCard(
                 context,
                 Icons.inbox_outlined,
-                _text(
-                  en,
-                  'Bạn chưa gửi góp ý nào.',
-                  'You have not sent any feedback yet.',
-                ),
+                (vi.app.feedback.banChuaGuiGop),
               )
             : RefreshIndicator(
                 onRefresh: () => ref
@@ -61,7 +53,6 @@ class FeedbackHistoryScreen extends ConsumerWidget {
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) => _TicketCard(
                     ticket: tickets[index],
-                    en: en,
                     onTap: onOpenThread == null
                         ? null
                         : () => onOpenThread!(tickets[index].id),
@@ -110,8 +101,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
   @override
   Widget build(BuildContext context) {
     final owner = ref.watch(sessionStateProvider)?.userId;
-    final en = Localizations.localeOf(context).languageCode == 'en';
-    final title = _text(en, 'Cuộc trò chuyện', 'Ticket conversation');
+    final title = (vi.app.feedback.cuocTroChuyen);
     ref.listen(sessionStateProvider.select((session) => session?.userId), (
       before,
       after,
@@ -131,11 +121,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
         child: _stateCard(
           context,
           Icons.lock_outline,
-          _text(
-            en,
-            'Đăng nhập để xem cuộc trò chuyện này.',
-            'Sign in to view this conversation.',
-          ),
+          (vi.app.feedback.dangNhapDeXemCuoc),
         ),
       );
     }
@@ -144,7 +130,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
     return _FeedbackPage(
       title: title,
       leading: IconButton(
-        tooltip: _text(en, 'Quay lại', 'Back'),
+        tooltip: (vi.app.common.quayLai),
         onPressed: widget.onBack ?? () => Navigator.maybePop(context),
         icon: const Icon(Icons.arrow_back),
       ),
@@ -161,10 +147,10 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 20),
             children: [
-              _TicketSummary(ticket: data.ticket, en: en),
+              _TicketSummary(ticket: data.ticket),
               const SizedBox(height: 14),
               Text(
-                _text(en, 'Thảo luận', 'Conversation'),
+                (vi.feedbackThread.thaoLuan),
                 style: VnlfTypography.h2(VnlfColors.of(context).ink),
               ),
               const SizedBox(height: 8),
@@ -172,17 +158,13 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
                 _stateCard(
                   context,
                   Icons.forum_outlined,
-                  _text(
-                    en,
-                    'Chưa có tin nhắn. Đội VNLF sẽ trả lời tại đây.',
-                    'No messages yet. The VNLF team will reply here.',
-                  ),
+                  (vi.app.feedback.chuaCoTinNhan),
                 )
               else
                 for (final message in data.messages)
-                  _MessageCard(message: message, en: en),
+                  _MessageCard(message: message),
               const SizedBox(height: 10),
-              _composer(context, ref, owner, key, en),
+              _composer(context, ref, owner, key),
             ],
           ),
         ),
@@ -195,7 +177,6 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
     WidgetRef ref,
     String owner,
     (String, String) key,
-    bool en,
   ) {
     final colors = VnlfColors.of(context);
     return Card(
@@ -217,11 +198,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
               enabled: !_sending,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
-                hintText: _text(
-                  en,
-                  'Viết tin nhắn cho Đội VNLF…',
-                  'Write a message to the VNLF team…',
-                ),
+                hintText: (vi.app.feedback.vietTinNhanCho),
                 border: const OutlineInputBorder(),
               ),
               onChanged: (_) {
@@ -243,7 +220,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
               child: FilledButton.icon(
                 onPressed: _sending || _input.text.trim().isEmpty
                     ? null
-                    : () => _send(ref, owner, key, en),
+                    : () => _send(ref, owner, key),
                 icon: _sending
                     ? const SizedBox(
                         width: 16,
@@ -251,7 +228,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.send, size: 18),
-                label: Text(_text(en, 'Gửi tin nhắn', 'Send message')),
+                label: Text((vi.app.feedback.guiTinNhan)),
               ),
             ),
           ],
@@ -260,12 +237,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
     );
   }
 
-  Future<void> _send(
-    WidgetRef ref,
-    String owner,
-    (String, String) key,
-    bool en,
-  ) async {
+  Future<void> _send(WidgetRef ref, String owner, (String, String) key) async {
     final content = _input.text.trim();
     if (content.isEmpty || content.length > 4000 || _sending) return;
     final clientId = _retryId ??= newRequestIdentity();
@@ -299,7 +271,7 @@ class _FeedbackThreadScreenState extends ConsumerState<FeedbackThreadScreen> {
       if (mounted &&
           widget.ticketId == key.$2 &&
           ref.read(sessionStateProvider)?.userId == owner) {
-        setState(() => _error = feedbackFailureMessage(error, en));
+        setState(() => _error = feedbackFailureMessage(error));
       }
     } finally {
       if (mounted &&
@@ -343,9 +315,8 @@ class _FeedbackPage extends StatelessWidget {
 }
 
 class _TicketCard extends StatelessWidget {
-  const _TicketCard({required this.ticket, required this.en, this.onTap});
+  const _TicketCard({required this.ticket, this.onTap});
   final FeedbackTicket ticket;
-  final bool en;
   final VoidCallback? onTap;
   @override
   Widget build(BuildContext context) {
@@ -372,7 +343,7 @@ class _TicketCard extends StatelessWidget {
                       style: VnlfTypography.h3(colors.ink),
                     ),
                   ),
-                  _StatusChip(status: ticket.status, en: en),
+                  _StatusChip(status: ticket.status),
                 ],
               ),
               const SizedBox(height: 8),
@@ -384,7 +355,7 @@ class _TicketCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${_date(ticket.createdAt, en)} · ${ticket.messageCount} ${_text(en, 'tin nhắn', 'messages')}${ticket.attachmentCount > 0 ? ' · ${ticket.attachmentCount} ${_text(en, 'tệp', 'files')}' : ''}',
+                '${_date(ticket.createdAt)} · ${format(vi.feedbackThread.soTinNhan, {'count': ticket.messageCount})}${ticket.attachmentCount > 0 ? ' · ${format(vi.feedbackThread.tepDinhKem, {'count': ticket.attachmentCount})}' : ''}',
                 style: VnlfTypography.caption(colors.muted),
               ),
             ],
@@ -396,9 +367,8 @@ class _TicketCard extends StatelessWidget {
 }
 
 class _TicketSummary extends StatelessWidget {
-  const _TicketSummary({required this.ticket, required this.en});
+  const _TicketSummary({required this.ticket});
   final FeedbackTicket ticket;
-  final bool en;
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
@@ -421,19 +391,21 @@ class _TicketSummary extends StatelessWidget {
                     style: VnlfTypography.h3(colors.ink),
                   ),
                 ),
-                _StatusChip(status: ticket.status, en: en),
+                _StatusChip(status: ticket.status),
               ],
             ),
             const SizedBox(height: 8),
             Text(ticket.detail, style: VnlfTypography.body(colors.ink)),
             const SizedBox(height: 8),
             Text(
-              '${_date(ticket.createdAt, en)} · ${ticket.pagePath}',
+              '${_date(ticket.createdAt)} · ${ticket.pagePath}',
               style: VnlfTypography.caption(colors.muted),
             ),
             if (ticket.attachmentCount > 0)
               Text(
-                '${ticket.attachmentCount} ${_text(en, 'tệp đính kèm', 'attachments')}',
+                format(vi.feedbackThread.tepDinhKem, {
+                  'count': ticket.attachmentCount,
+                }),
                 style: VnlfTypography.caption(colors.muted),
               ),
           ],
@@ -444,16 +416,15 @@ class _TicketSummary extends StatelessWidget {
 }
 
 class _MessageCard extends StatelessWidget {
-  const _MessageCard({required this.message, required this.en});
+  const _MessageCard({required this.message});
   final FeedbackMessage message;
-  final bool en;
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     final name = message.mine
-        ? _text(en, 'Bạn', 'You')
+        ? (vi.feedbackThread.ban)
         : message.staff
-        ? 'Đội VNLF'
+        ? vi.feedbackThread.doiVnlf
         : (message.authorName ?? 'VNLF');
     return Card(
       color: message.mine ? colors.brandSoft : colors.surface,
@@ -472,7 +443,7 @@ class _MessageCard extends StatelessWidget {
                   child: Text(name, style: VnlfTypography.h3(colors.ink)),
                 ),
                 Text(
-                  _date(message.createdAt, en),
+                  _date(message.createdAt),
                   style: VnlfTypography.caption(colors.muted),
                 ),
               ],
@@ -487,21 +458,20 @@ class _MessageCard extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status, required this.en});
+  const _StatusChip({required this.status});
   final FeedbackStatus status;
-  final bool en;
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     final label = switch (status) {
-      FeedbackStatus.open => _text(en, 'Đang mở', 'Open'),
-      FeedbackStatus.inReview => _text(en, 'Đang xem xét', 'In review'),
-      FeedbackStatus.resolved => _text(en, 'Đã giải quyết', 'Resolved'),
-      FeedbackStatus.closed => _text(en, 'Đã đóng', 'Closed'),
-      FeedbackStatus.deferred => _text(en, 'Để làm sau', 'Deferred'),
+      FeedbackStatus.open => (vi.app.feedback.dangMo),
+      FeedbackStatus.inReview => (vi.app.feedback.dangXemXet),
+      FeedbackStatus.resolved => (vi.app.feedback.daGiaiQuyet),
+      FeedbackStatus.closed => (vi.app.feedback.daDong),
+      FeedbackStatus.deferred => (vi.app.feedback.deLamSau),
     };
     return Semantics(
-      label: '${_text(en, 'Trạng thái', 'Status')}: $label',
+      label: format(vi.app.feedback.trangThaiNhan, {'label': label}),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
@@ -520,15 +490,14 @@ class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     return _stateCard(
       context,
       Icons.cloud_off_outlined,
-      feedbackFailureMessage(error, en),
+      feedbackFailureMessage(error),
       action: TextButton.icon(
         onPressed: onRetry,
         icon: const Icon(Icons.refresh),
-        label: Text(_text(en, 'Thử lại', 'Try again')),
+        label: Text((vi.common.thuLai)),
       ),
     );
   }
@@ -564,42 +533,21 @@ Widget _stateCard(
   );
 }
 
-String feedbackFailureMessage(Object failure, bool en) {
+String feedbackFailureMessage(Object failure) {
   if (failure is HttpFailure && failure.statusCode == 401) {
-    return _text(
-      en,
-      'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.',
-      'Your session expired. Please sign in again.',
-    );
+    return (vi.app.feedback.phienDangNhapDa);
   }
   if (failure is HttpFailure && failure.statusCode == 404) {
-    return _text(
-      en,
-      'Không tìm thấy góp ý này.',
-      'This feedback ticket was not found.',
-    );
+    return (vi.app.feedback.khongTimThayGop);
   }
   if (failure is ParseFailure) {
-    return _text(
-      en,
-      'Phản hồi từ máy chủ không hợp lệ. Hãy làm mới để thử lại.',
-      'The server returned invalid data. Refresh to try again.',
-    );
+    return (vi.app.feedback.phanHoiTuMay);
   }
   if (failure is TransportFailure) {
-    return _text(
-      en,
-      'Chưa xác nhận được tin nhắn. Bản nháp được giữ lại để bạn thử lại.',
-      'The message was not confirmed. Your draft is kept for a manual retry.',
-    );
+    return (vi.app.feedback.chuaXacNhanDuocTin);
   }
-  return _text(
-    en,
-    'Không tải được dữ liệu. Hãy thử lại sau.',
-    'Could not load this data. Please try again.',
-  );
+  return (vi.app.feedback.khongTaiDuocDu);
 }
 
-String _text(bool en, String vi, String english) => en ? english : vi;
-String _date(DateTime value, bool en) =>
+String _date(DateTime value) =>
     value.toLocal().toString().substring(0, 16).replaceFirst('T', ' ');

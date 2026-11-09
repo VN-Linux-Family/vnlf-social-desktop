@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/preferences_storage.dart';
+import '../../../i18n/vi.dart';
 
 const textSizeMinimum = 12;
 const textSizeMaximum = 18;
@@ -139,14 +140,13 @@ class TextSizeSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(textSizeProvider);
     final controller = ref.read(textSizeProvider.notifier);
-    final english = Localizations.maybeLocaleOf(context)?.languageCode == 'en';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(english ? 'Text size' : 'Cỡ chữ'),
+        Text(vi.settingsViews.coChu),
         Text('${value.size} px'),
         Semantics(
-          label: english ? 'Text size' : 'Cỡ chữ',
+          label: vi.settingsViews.coChu,
           child: Slider(
             value: value.size.toDouble(),
             min: textSizeMinimum.toDouble(),
@@ -162,13 +162,11 @@ class TextSizeSettings extends ConsumerWidget {
           onPressed: value.size == textSizeDefault && !value.storageFailure
               ? null
               : () => unawaited(controller.reset()),
-          child: Text(english ? 'Reset' : 'Đặt lại'),
+          child: Text(vi.miscViews.datLai),
         ),
         if (value.storageFailure)
           Text(
-            english
-                ? 'Could not save or load text size.'
-                : 'Không thể lưu hoặc tải cỡ chữ.',
+            vi.app.settings.khongTheLuuHoac,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
       ],

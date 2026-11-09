@@ -206,37 +206,34 @@ void main() {
     tester,
   ) async {
     final router = await _pump(tester, '/');
-    PostData post() =>
-        tester.widget<VnlfPostCard>(find.byType(VnlfPostCard)).post!;
-    Finder postAction(String label) => find.descendant(
-      of: find.byType(VnlfPostCard),
-      matching: find.bySemanticsLabel(label),
-    );
-    expect(post().voteScore, 3);
-    await tester.tap(postAction('Ủng hộ'));
+    int score() => tester
+        .widget<VnlfVoteCapsule>(find.byType(VnlfVoteCapsule).first)
+        .score;
+    Finder action(String label) => find.bySemanticsLabel(label).first;
+    expect(score(), 3);
+    await tester.tap(action('Upvote bài'));
     await tester.pumpAndSettle();
-    expect(post().voteScore, 2);
-    expect(post().viewerVote, VoteState.neutral);
-    await tester.tap(postAction('Phản đối'));
+    expect(score(), 2);
+    await tester.tap(action('Downvote bài'));
     await tester.pumpAndSettle();
-    expect(post().voteScore, 1);
-    await tester.tap(postAction('Ủng hộ'));
+    expect(score(), 1);
+    await tester.tap(action('Upvote bài'));
     await tester.pumpAndSettle();
-    expect(post().voteScore, 3);
-    await tester.tap(postAction('Lưu bài'));
+    expect(score(), 3);
+    await tester.tap(action('Lưu bài'));
     await tester.pumpAndSettle();
-    expect(post().isBookmarked, isTrue);
+    expect(find.bySemanticsLabel('Bỏ lưu bài'), findsWidgets);
     router.go('/thread/fixture-post-1');
     await tester.pumpAndSettle();
-    expect(post().voteScore, 3);
-    expect(post().isBookmarked, isTrue);
-    await tester.tap(postAction('Phản đối'));
+    expect(score(), 3);
+    expect(find.bySemanticsLabel('Bỏ lưu bài'), findsWidgets);
+    await tester.tap(action('Downvote bài'));
     await tester.pumpAndSettle();
-    expect(post().voteScore, 1);
+    expect(score(), 1);
     router.go('/');
     await tester.pumpAndSettle();
-    expect(post().voteScore, 1);
-    expect(post().isBookmarked, isTrue);
+    expect(score(), 1);
+    expect(find.bySemanticsLabel('Bỏ lưu bài'), findsWidgets);
   });
 
   testWidgets(

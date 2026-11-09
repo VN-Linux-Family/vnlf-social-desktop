@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/direct_message_models.dart';
 import 'direct_message_feedback.dart';
 import 'direct_message_media.dart';
@@ -27,13 +28,7 @@ Future<void> showDmReportDialog(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setModalState) => AlertDialog(
-        title: Text(
-          dmText(
-            dialogContext,
-            'Báo cáo cuộc trò chuyện',
-            'Report conversation',
-          ),
-        ),
+        title: Text(vi.app.directMessages.baoCaoCuocTro),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -60,11 +55,7 @@ Future<void> showDmReportDialog(
                 maxLines: 4,
                 maxLength: 2000,
                 decoration: InputDecoration(
-                  labelText: dmText(
-                    dialogContext,
-                    'Chi tiết bổ sung (tùy chọn)',
-                    'Additional details (optional)',
-                  ),
+                  labelText: vi.app.directMessages.chiTietBoSung,
                 ),
               ),
             ],
@@ -73,7 +64,7 @@ Future<void> showDmReportDialog(
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(dmText(dialogContext, 'Hủy', 'Cancel')),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             key: const Key('dm-report-submit-button'),
@@ -81,7 +72,7 @@ Future<void> showDmReportDialog(
               selectedReason,
               detailController.text.trim(),
             )),
-            child: Text(dmText(dialogContext, 'Gửi báo cáo', 'Submit report')),
+            child: Text(vi.socialOverlays.guiBaoCao),
           ),
         ],
       ),
@@ -96,18 +87,10 @@ Future<void> showDmReportDialog(
 
 String _reportReasonLabel(BuildContext context, DmReportReason reason) =>
     switch (reason) {
-      DmReportReason.spam => dmText(context, 'Tin nhắn rác (Spam)', 'Spam'),
-      DmReportReason.harassment => dmText(
-        context,
-        'Quấy rối hoặc xúc phạm',
-        'Harassment or abuse',
-      ),
-      DmReportReason.scam => dmText(
-        context,
-        'Lừa đảo hoặc giả mạo',
-        'Scam or impersonation',
-      ),
-      DmReportReason.other => dmText(context, 'Lý do khác', 'Other'),
+      DmReportReason.spam => vi.app.directMessages.tinNhanRacSpam,
+      DmReportReason.harassment => vi.app.directMessages.quayRoiHoacXuc,
+      DmReportReason.scam => vi.app.directMessages.luaDaoHoacGia,
+      DmReportReason.other => vi.app.directMessages.lyDoKhac,
     };
 
 Future<void> showDmSearchSheet(
@@ -165,11 +148,7 @@ class _DmSearchSheetState extends ConsumerState<_DmSearchSheet> {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  dmText(
-                    context,
-                    'Tìm trong cuộc trò chuyện',
-                    'Search in conversation',
-                  ),
+                  vi.conversationSearch.timTrongHoiThoai,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
@@ -189,11 +168,7 @@ class _DmSearchSheetState extends ConsumerState<_DmSearchSheet> {
                   textInputAction: TextInputAction.search,
                   onSubmitted: controller.searchMessages,
                   decoration: InputDecoration(
-                    hintText: dmText(
-                      context,
-                      'Nhập từ khóa (tối thiểu 2 ký tự)...',
-                      'Enter keyword (at least 2 characters)...',
-                    ),
+                    hintText: vi.app.directMessages.nhapTuKhoaToi,
                     prefixIcon: const Icon(Icons.search),
                   ),
                 ),
@@ -204,7 +179,7 @@ class _DmSearchSheetState extends ConsumerState<_DmSearchSheet> {
                 onPressed: state.searching
                     ? null
                     : () => controller.searchMessages(_queryController.text),
-                child: Text(dmText(context, 'Tìm', 'Search')),
+                child: Text(vi.app.directMessages.tim),
               ),
             ],
           ),
@@ -224,16 +199,8 @@ class _DmSearchSheetState extends ConsumerState<_DmSearchSheet> {
                 ? Center(
                     child: Text(
                       state.searchQuery.isEmpty
-                          ? dmText(
-                              context,
-                              'Nhập từ khóa để tìm tin nhắn trong cuộc trò chuyện.',
-                              'Enter a query to search messages in this conversation.',
-                            )
-                          : dmText(
-                              context,
-                              'Không tìm thấy tin nhắn phù hợp.',
-                              'No matching messages found.',
-                            ),
+                          ? vi.app.directMessages.nhapTuKhoaDe
+                          : vi.app.directMessages.khongTimThayTin,
                       style: VnlfTypography.body(colors.muted),
                     ),
                   )
@@ -324,16 +291,12 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  dmText(
-                    context,
-                    'Ảnh đã chia sẻ trong cuộc trò chuyện',
-                    'Shared media in conversation',
-                  ),
+                  vi.app.directMessages.anhDaChiaSe,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               IconButton(
-                tooltip: dmText(context, 'Làm mới', 'Refresh'),
+                tooltip: vi.app.common.lamMoi,
                 onPressed: state.loadingMedia
                     ? null
                     : () => controller.loadMedia(),
@@ -361,7 +324,7 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
                     const SizedBox(height: 8),
                     OutlinedButton(
                       onPressed: () => controller.loadMedia(),
-                      child: Text(dmText(context, 'Thử lại', 'Retry')),
+                      child: Text(vi.common.thuLai),
                     ),
                   ],
                 ),
@@ -371,11 +334,7 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
             Expanded(
               child: Center(
                 child: Text(
-                  dmText(
-                    context,
-                    'Chưa có ảnh nào được chia sẻ trong cuộc trò chuyện này.',
-                    'No images have been shared in this conversation yet.',
-                  ),
+                  vi.app.directMessages.chuaCoAnhNao,
                   style: VnlfTypography.body(colors.muted),
                 ),
               ),
@@ -394,13 +353,7 @@ class _DmMediaSheetState extends ConsumerState<_DmMediaSheet> {
                         onPressed: state.loadingMedia
                             ? null
                             : () => controller.loadMedia(loadMore: true),
-                        child: Text(
-                          dmText(
-                            context,
-                            'Tải thêm ảnh cũ hơn',
-                            'Load older media',
-                          ),
-                        ),
+                        child: Text(vi.app.directMessages.taiThemAnhCu),
                       ),
                     );
                   }
