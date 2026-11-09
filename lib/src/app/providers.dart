@@ -269,9 +269,10 @@ final channelsRepositoryProvider = Provider<ChannelsRepository>(
   (ref) => const FixtureCommunityRepository(),
 );
 final postRepositoryProvider = Provider<PostRepository>((ref) {
-  final fallback = FixturePostRepository(ref.watch(feedRepositoryProvider));
-  if (!_isLiveDefault()) return fallback;
-  return LivePostRepository(ref.watch(apiClientProvider), fallback);
+  if (!_isLiveDefault()) {
+    return FixturePostRepository(ref.watch(feedRepositoryProvider));
+  }
+  return LivePostRepository(ref.watch(apiClientProvider));
 });
 final discoverRepositoryProvider = Provider<DiscoverRepository>(
   (ref) => FixtureDiscoverRepository(ref.watch(apiClientProvider)),

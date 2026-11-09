@@ -82,8 +82,8 @@ class ThreadScreen extends ConsumerWidget {
                       ? 'Post unavailable'
                       : 'Không tìm thấy bài viết',
                   message: english
-                      ? 'This post is not in the loaded feed.'
-                      : 'Bài viết không có trong bảng tin đã tải.',
+                      ? 'This content is no longer available; it may have been deleted.'
+                      : 'Không tìm thấy nội dung này nữa, có thể đã bị xóa.',
                 )
               : ThreadContent(
                   key: ValueKey('$postId/${value.id}'),

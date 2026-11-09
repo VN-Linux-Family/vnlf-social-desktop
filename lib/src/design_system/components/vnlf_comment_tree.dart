@@ -137,8 +137,7 @@ class VnlfCommentTree extends StatelessWidget {
                       ),
                       child: Text(
                         comment.inlineCode!,
-                        style: VnlfTypography.code(colors.codeBlockText)
-                            .copyWith(fontSize: 11.5),
+                        style: VnlfTypography.code(colors.codeBlockText),
                       ),
                     ),
                   ],

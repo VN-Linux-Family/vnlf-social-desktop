@@ -365,10 +365,10 @@ final class FixturePostRepository implements PostRepository {
   const FixturePostRepository(this._feed);
   final FeedRepository _feed;
   @override
-  Future<FeedPost?> getPost(String id) async {
+  Future<FeedPost?> getPost(String idOrSlug) async {
     final page = await _feed.getFeed();
     for (final post in page.items) {
-      if (post.id == id) return post;
+      if (post.id == idOrSlug || post.slug == idOrSlug) return post;
     }
     return null;
   }

@@ -7,12 +7,10 @@ import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 import 'shell/vnlf_bottom_bar.dart';
-import 'shell/vnlf_rail.dart';
 import 'shell/vnlf_sidebar.dart';
 
 export 'shell/vnlf_bottom_bar.dart';
 export 'shell/vnlf_center_header.dart';
-export 'shell/vnlf_rail.dart';
 export 'shell/vnlf_sidebar.dart';
 
 /// Primary navigation destinations in the VNLF app shell.
@@ -27,11 +25,12 @@ enum VnlfNavDestination {
   final IconData icon;
 }
 
-/// Adaptive application shell implementing the 3 production viewports from
-/// `DESIGN_REFERENCE.md` and `reference_feed_desktop.png`:
-/// - Desktop (`>= 1181px`): 252px Left Sidebar + 717px Center Column + 304px Right Column.
-/// - Tablet (`840px <= width < 1181px`): Compact Navigation Rail + Center Column.
-/// - Mobile (`< 840px`): Sticky 64px Top Header + Full-Width Feed + Sticky 56px Bottom Nav + Drawer.
+/// Adaptive application shell with the website's geometry
+/// (`design-system/MASTER.md`, docs 41):
+/// - Desktop (`>= 1181px`): 252px sidebar + 717px centre column + 304px right column.
+/// - Tablet (`840px <= width < 1181px`): the same sidebar at 220px + centre column.
+/// - Mobile (`< 840px`): 54px top bar + content with 6/8px gutters + floating
+///   56px bottom bar whose avatar opens the sidebar as a drawer.
 class VnlfAdaptiveShell extends StatelessWidget {
   const VnlfAdaptiveShell({
     super.key,
@@ -49,6 +48,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.onProfileTap,
     this.onSearchTap,
     this.onNotificationsTap,
+    this.onComposeTap,
+    this.composeSemanticLabel = '',
+    this.accountAvatar,
     this.onBack,
     this.backTooltip = '',
     this.backSemanticLabel,
@@ -87,8 +89,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.darkThemeTooltip = '',
     this.systemThemeTooltip = '',
     this.themePickerSemanticLabel,
-    this.railThemeToggleTooltip = '',
-    this.railThemeToggleSemanticLabel,
     this.openDrawerTooltip = '',
     this.openDrawerSemanticLabel,
     this.titleText,
@@ -97,7 +97,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.profileSemanticLabel,
     this.leftSidebarSemanticLabel,
     this.rightSidebarSemanticLabel,
-    this.tabletRailSemanticLabel,
     this.mobileHeaderSemanticLabel,
     this.mobileBottomNavSemanticLabel,
     this.unreadDestinations = const {},
@@ -121,6 +120,11 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onComposeTap;
+  final String composeSemanticLabel;
+
+  /// The signed-in member's avatar for the phone menu button.
+  final Widget? accountAvatar;
   final VoidCallback? onBack;
   final String backTooltip;
   final String? backSemanticLabel;
@@ -159,8 +163,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String darkThemeTooltip;
   final String systemThemeTooltip;
   final String? themePickerSemanticLabel;
-  final String railThemeToggleTooltip;
-  final String? railThemeToggleSemanticLabel;
   final String openDrawerTooltip;
   final String? openDrawerSemanticLabel;
   final String? titleText;
@@ -169,7 +171,6 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final String? profileSemanticLabel;
   final String? leftSidebarSemanticLabel;
   final String? rightSidebarSemanticLabel;
-  final String? tabletRailSemanticLabel;
   final String? mobileHeaderSemanticLabel;
   final String? mobileBottomNavSemanticLabel;
   final String? semanticLabel;
@@ -178,6 +179,53 @@ class VnlfAdaptiveShell extends StatelessWidget {
       centerChildHandlesScroll
       ? Padding(padding: padding, child: child)
       : SingleChildScrollView(padding: padding, child: child);
+
+  Widget _sidebar(double width) => VnlfDesktopSidebar(
+    width: width,
+    activeDestination: activeDestination,
+    onDestinationSelected: onDestinationSelected,
+    unreadDestinations: unreadDestinations,
+    themeMode: themeMode,
+    onThemeModeChanged: onThemeModeChanged,
+    onProfileTap: onProfileTap,
+    onSettingsTap: onSettingsTap,
+    onLogoutTap: onLogoutTap,
+    logoutLabel: logoutLabel,
+    onHelpTap: onHelpTap,
+    onFeedbackTap: onFeedbackTap,
+    onSupportTap: onSupportTap,
+    onFacebookTap: onFacebookTap,
+    onTelegramTap: onTelegramTap,
+    onDiscordTap: onDiscordTap,
+    destinationLabels: destinationLabels,
+    destinationSemanticLabels: destinationSemanticLabels,
+    brandTitlePrefix: brandTitlePrefix,
+    brandTitleAccent: brandTitleAccent,
+    brandLogoSemanticLabel: brandLogoSemanticLabel,
+    loginLabel: loginLabel,
+    loginSubtitleLabel: loginSubtitleLabel,
+    supportLabel: supportLabel,
+    supportBadgeText: supportBadgeText,
+    supportSemanticLabel: supportSemanticLabel,
+    feedbackLabel: feedbackLabel,
+    feedbackSemanticLabel: feedbackSemanticLabel,
+    socialSectionLabel: socialSectionLabel,
+    facebookBadgeLabel: facebookBadgeLabel,
+    facebookSemanticLabel: facebookSemanticLabel,
+    telegramSemanticLabel: telegramSemanticLabel,
+    discordSemanticLabel: discordSemanticLabel,
+    settingsLabel: settingsLabel,
+    settingsSemanticLabel: settingsSemanticLabel,
+    helpLabel: helpLabel,
+    helpSemanticLabel: helpSemanticLabel,
+    loginUtilitySemanticLabel: loginUtilitySemanticLabel,
+    lightThemeTooltip: lightThemeTooltip,
+    darkThemeTooltip: darkThemeTooltip,
+    systemThemeTooltip: systemThemeTooltip,
+    themePickerSemanticLabel: themePickerSemanticLabel,
+    profileSemanticLabel: profileSemanticLabel,
+    semanticLabel: leftSidebarSemanticLabel,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -195,51 +243,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  VnlfDesktopSidebar(
-                    activeDestination: activeDestination,
-                    onDestinationSelected: onDestinationSelected,
-                    unreadDestinations: unreadDestinations,
-                    themeMode: themeMode,
-                    onThemeModeChanged: onThemeModeChanged,
-                    onProfileTap: onProfileTap,
-                    onSettingsTap: onSettingsTap,
-                    onLogoutTap: onLogoutTap,
-                    logoutLabel: logoutLabel,
-                    onHelpTap: onHelpTap,
-                    onFeedbackTap: onFeedbackTap,
-                    onSupportTap: onSupportTap,
-                    onFacebookTap: onFacebookTap,
-                    onTelegramTap: onTelegramTap,
-                    onDiscordTap: onDiscordTap,
-                    destinationLabels: destinationLabels,
-                    destinationSemanticLabels: destinationSemanticLabels,
-                    brandTitlePrefix: brandTitlePrefix,
-                    brandTitleAccent: brandTitleAccent,
-                    brandLogoSemanticLabel: brandLogoSemanticLabel,
-                    loginLabel: loginLabel,
-                    loginSubtitleLabel: loginSubtitleLabel,
-                    supportLabel: supportLabel,
-                    supportBadgeText: supportBadgeText,
-                    supportSemanticLabel: supportSemanticLabel,
-                    feedbackLabel: feedbackLabel,
-                    feedbackSemanticLabel: feedbackSemanticLabel,
-                    socialSectionLabel: socialSectionLabel,
-                    facebookBadgeLabel: facebookBadgeLabel,
-                    facebookSemanticLabel: facebookSemanticLabel,
-                    telegramSemanticLabel: telegramSemanticLabel,
-                    discordSemanticLabel: discordSemanticLabel,
-                    settingsLabel: settingsLabel,
-                    settingsSemanticLabel: settingsSemanticLabel,
-                    helpLabel: helpLabel,
-                    helpSemanticLabel: helpSemanticLabel,
-                    loginUtilitySemanticLabel: loginUtilitySemanticLabel,
-                    lightThemeTooltip: lightThemeTooltip,
-                    darkThemeTooltip: darkThemeTooltip,
-                    systemThemeTooltip: systemThemeTooltip,
-                    themePickerSemanticLabel: themePickerSemanticLabel,
-                    profileSemanticLabel: profileSemanticLabel,
-                    semanticLabel: leftSidebarSemanticLabel,
-                  ),
+                  _sidebar(VnlfDimensions.leftSidebarWidth),
                   Expanded(
                     child: _scrollArea(
                       padding:
@@ -295,23 +299,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  VnlfTabletRail(
-                    activeDestination: activeDestination,
-                    onDestinationSelected: onDestinationSelected,
-                    unreadDestinations: unreadDestinations,
-                    themeMode: themeMode,
-                    onThemeModeChanged: onThemeModeChanged,
-                    onProfileTap: onProfileTap,
-                    onLogoutTap: onLogoutTap,
-                    logoutLabel: logoutLabel,
-                    destinationLabels: destinationLabels,
-                    destinationSemanticLabels: destinationSemanticLabels,
-                    brandLogoSemanticLabel: brandLogoSemanticLabel,
-                    themeToggleTooltip: railThemeToggleTooltip,
-                    themeToggleSemanticLabel: railThemeToggleSemanticLabel,
-                    profileSemanticLabel: profileSemanticLabel,
-                    semanticLabel: tabletRailSemanticLabel,
-                  ),
+                  _sidebar(VnlfDimensions.tabletSidebarWidth),
                   Expanded(
                     child: _scrollArea(
                       padding:
@@ -391,6 +379,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
             searchSemanticLabel: searchSemanticLabel,
             onSearchTap: onSearchTap,
             onNotificationsTap: onNotificationsTap,
+            onComposeTap: onComposeTap,
+            composeSemanticLabel: composeSemanticLabel,
+            accountAvatar: accountAvatar,
             notificationBadgeCount: notificationBadgeCount,
             notificationsSemanticLabel: notificationsSemanticLabel,
             mobileHeaderSemanticLabel: mobileHeaderSemanticLabel,
@@ -566,6 +557,9 @@ class _MobileShellScaffold extends StatefulWidget {
     required this.searchSemanticLabel,
     required this.onSearchTap,
     required this.onNotificationsTap,
+    required this.onComposeTap,
+    required this.composeSemanticLabel,
+    required this.accountAvatar,
     required this.notificationBadgeCount,
     required this.notificationsSemanticLabel,
     required this.mobileHeaderSemanticLabel,
@@ -631,6 +625,9 @@ class _MobileShellScaffold extends StatefulWidget {
   final String searchSemanticLabel;
   final VoidCallback? onSearchTap;
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onComposeTap;
+  final String composeSemanticLabel;
+  final Widget? accountAvatar;
   final int notificationBadgeCount;
   final String notificationsSemanticLabel;
   final String? mobileHeaderSemanticLabel;
@@ -645,6 +642,7 @@ class _MobileShellScaffold extends StatefulWidget {
 
 class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  var _drawerOpen = false;
 
   @override
   void didUpdateWidget(covariant _MobileShellScaffold oldWidget) {
@@ -697,6 +695,7 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: widget.colors.bg,
+        onDrawerChanged: (open) => setState(() => _drawerOpen = open),
         drawer: SizedBox(
           width: math.min(
             VnlfDimensions.mobileDrawerMaxWidth,
@@ -795,22 +794,20 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
           children: [
             if (widget.showMobileHeader)
               VnlfMobileStickyHeader(
-                onProfileTap: widget.onProfileTap,
+                title:
+                    widget.titleText ??
+                    widget.destinationLabels[widget.activeDestination] ??
+                    '',
                 onBack: widget.onBack,
                 backTooltip: widget.backTooltip,
                 backSemanticLabel: widget.backSemanticLabel,
-                openDrawerTooltip: widget.openDrawerTooltip,
-                openDrawerSemanticLabel: widget.openDrawerSemanticLabel,
-                titleText: widget.titleText,
-                brandTitlePrefix: widget.brandTitlePrefix,
-                brandTitleAccent: widget.brandTitleAccent,
-                brandLogoSemanticLabel: widget.brandLogoSemanticLabel,
-                searchSemanticLabel: widget.searchSemanticLabel,
+                onComposeTap: widget.onComposeTap,
+                composeSemanticLabel: widget.composeSemanticLabel,
                 onSearchTap: widget.onSearchTap,
+                searchSemanticLabel: widget.searchSemanticLabel,
                 onNotificationsTap: widget.onNotificationsTap,
-                notificationBadgeCount: widget.notificationBadgeCount,
                 notificationsSemanticLabel: widget.notificationsSemanticLabel,
-                profileSemanticLabel: widget.profileSemanticLabel,
+                notificationBadgeCount: widget.notificationBadgeCount,
                 semanticLabel: widget.mobileHeaderSemanticLabel,
               )
             else
@@ -822,7 +819,16 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
                 child: _scrollArea(
                   padding:
                       widget.centerPadding ??
-                      const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                      EdgeInsets.fromLTRB(
+                        VnlfDimensions.mobileGutter(
+                          widget.constraints.maxWidth,
+                        ),
+                        10,
+                        VnlfDimensions.mobileGutter(
+                          widget.constraints.maxWidth,
+                        ),
+                        20,
+                      ),
                   child: widget.centerChild,
                 ),
               ),
@@ -839,6 +845,11 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
                 destinationLabels: widget.destinationLabels,
                 destinationSemanticLabels: widget.destinationSemanticLabels,
                 unreadDestinations: widget.unreadDestinations,
+                onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+                menuSemanticLabel:
+                    widget.openDrawerSemanticLabel ?? widget.openDrawerTooltip,
+                menuOpen: _drawerOpen,
+                accountAvatar: widget.accountAvatar,
                 semanticLabel: widget.mobileBottomNavSemanticLabel,
               ),
       ),

@@ -45,7 +45,9 @@ class ComposerPrompt extends StatelessWidget {
                       border: Border.all(color: colors.line),
                     ),
                     child: Text(
-                      isEn ? 'What’s on your mind?' : 'Bạn đang nghĩ gì?',
+                      isEn
+                          ? 'What would you like to share today?'
+                          : 'Hôm nay bạn muốn chia sẻ điều gì?',
                       style: VnlfTypography.caption(colors.muted),
                     ),
                   ),

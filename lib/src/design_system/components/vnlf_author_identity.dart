@@ -13,7 +13,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
     super.key,
     required this.author,
     this.showHandleInline = true,
-    this.fontSize = 13.5,
+    this.fontSize = VnlfTypography.baseSize,
     this.allowWrap = true,
     this.semanticLabel,
     this.distroBadgeTooltip,
@@ -46,7 +46,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
     final baseTextStyle = TextStyle(
       fontFamily: VnlfTypography.fontFamily,
       fontSize: fontSize,
-      height: 18 / 13.5,
+      height: 18 / 13,
       fontWeight: FontWeight.w700,
       color: resolvedNameColor,
     );
@@ -162,7 +162,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
             child: Text(
               '@${author.username}',
               softWrap: allowWrap,
-              style: VnlfTypography.meta(colors.muted).copyWith(fontSize: 12.5),
+              style: VnlfTypography.meta(colors.muted),
             ),
           ),
       ],

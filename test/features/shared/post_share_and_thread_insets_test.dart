@@ -33,10 +33,7 @@ void main() {
       throttleInterval: Duration.zero,
       hostKey: Object(),
     );
-    final repository = LivePostRepository(
-      client,
-      FixturePostRepository(FixtureFeedRepository(client)),
-    );
+    final repository = LivePostRepository(client);
     final post = await repository.getPost('article-1');
     expect(
       canonicalPostUri(post!).toString(),
@@ -136,9 +133,10 @@ void main() {
       await tester.pumpAndSettle();
       final headerFinder = find.byType(VnlfMobileStickyHeader);
       expect(headerFinder, findsOneWidget);
+      // 54px including the hairline, like the website's border-box bar.
       expect(
         tester.getSize(headerFinder).height,
-        VnlfDimensions.mobileHeaderHeight + topInset + 1.0,
+        VnlfDimensions.mobileHeaderHeight + topInset,
       );
       expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
       expect(tester.takeException(), isNull);

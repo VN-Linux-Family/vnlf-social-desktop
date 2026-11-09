@@ -41,7 +41,13 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
-    await tester.tap(find.text('Discover'));
+    // The phone bar is icon-only like the website; tooltips name each icon.
+    await tester.tap(
+      find.descendant(
+        of: find.byType(VnlfMobileBottomNav),
+        matching: find.byTooltip('Discover'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/discover');
     for (final entry in <String, Type>{

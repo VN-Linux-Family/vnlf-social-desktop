@@ -60,7 +60,7 @@ class VoiceParticipant extends StatelessWidget {
               child: VnlfAvatar(author: author, size: 42),
             ),
             const SizedBox(height: 8),
-            VnlfAuthorNameRow(author: author, fontSize: 12),
+            VnlfAuthorNameRow(author: author),
             const SizedBox(height: 4),
             Icon(
               muted

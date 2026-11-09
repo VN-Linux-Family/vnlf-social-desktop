@@ -64,11 +64,16 @@ void main() {
     tester,
   ) async {
     final router = await _pumpApp(tester);
+    // As on the website, Projects is reached from the menu behind the avatar.
     await tester.tap(
       find.descendant(
         of: find.byType(VnlfMobileBottomNav),
-        matching: find.text('Dự án'),
+        matching: find.byTooltip('Mở menu'),
       ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: find.byType(Drawer), matching: find.text('Dự án')),
     );
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/projects');

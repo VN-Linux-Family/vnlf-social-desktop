@@ -207,10 +207,7 @@ class VnlfProfileStatCell extends StatelessWidget {
 
     return Column(
       children: [
-        Text(
-          value,
-          style: VnlfTypography.h2(colors.ink).copyWith(fontSize: 16),
-        ),
+        Text(value, style: VnlfTypography.h2(colors.ink)),
         const SizedBox(height: 2),
         Text(label, style: VnlfTypography.caption(colors.muted)),
       ],

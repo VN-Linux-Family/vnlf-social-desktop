@@ -43,7 +43,9 @@ class VnlfCenterPageHeader extends StatelessWidget {
               leadingWidget,
               const SizedBox(width: 10),
             ],
-            Expanded(child: Text(title, style: VnlfTypography.h2(colors.ink))),
+            Expanded(
+              child: Text(title, style: VnlfTypography.pageTitle(colors.ink)),
+            ),
             ?trailing,
           ],
         ),

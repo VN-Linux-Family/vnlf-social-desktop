@@ -29,6 +29,7 @@ python3 -m unittest discover -s test/tool -p '*_test.py'
 - **Linux desktop dependencies**: Linux release archives require system `GTK 3`, `libmpv` (ABI 2), `libepoxy`, and `libsecret-1` runtimes (`python3 tool/install_linux_dependencies.py`).
 - **Secure session storage**: Persistent account sessions and encrypted draft recovery on Linux require an unlocked Secret Service provider (e.g., GNOME Keyring or KWallet). Credentials, cookies, tokens, and signing keys must never be stored in source files, fixtures, or logs.
 - **Android in-place upgrades**: Official `.apk` releases are signed with the permanent VNLF release keystore and monotonic ABI-split `versionCode` values so updates install directly over previous releases without uninstalling.
+- **macOS first launch**: macOS archives are signed ad hoc and not notarized. After unzipping, move the app to Applications and open it; if macOS blocks the first launch, choose System Settings > Privacy & Security > Open Anyway.
 
 ## Releases & Documentation
 

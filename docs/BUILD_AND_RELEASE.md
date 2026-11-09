@@ -108,10 +108,17 @@ short-lived development signature; those APKs are for internal testing and are
 never promoted as stable releases. See `release-signing.md` for the previously
 tracked key material and owner migration decision.
 
-macOS archives are architecture-specific builds with code signing disabled.
-They are not notarized distribution packages; Apple signing/notarization and
-physical-device validation remain separate release requirements. Windows code
-signing and all real-device platform checks are also unverified until performed.
+macOS archives are architecture-specific builds. Xcode runs with signing
+disabled, then the packaging step signs the bundle ad hoc, inside out
+(each framework, then the app with `Release.entitlements`), and fails unless
+`codesign --verify --deep --strict` passes. The v0.1.0 arm64 archive was
+unsigned apart from linker signatures; 17 media_kit libmpv frameworks had no
+signature at all, so Apple Silicon could not load them and the app could not
+open. Ad-hoc builds are still not notarized: on first launch macOS asks the
+user to allow the app in System Settings > Privacy & Security > Open Anyway.
+Developer ID signing, notarization and physical-device validation remain
+release requirements. Windows code signing and all real-device platform
+checks are also unverified until performed.
 
 ## Updater
 

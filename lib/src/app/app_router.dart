@@ -12,8 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../design_system/design_system.dart';
-import '../core/api_client.dart';
 import '../core/request_identity.dart';
+import '../domain/models.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/activity/presentation/activity_page.dart';
 import '../features/composer/presentation/composer_screen.dart';
@@ -28,6 +28,7 @@ import '../features/notifications/presentation/notifications_controller.dart';
 import '../features/projects/presentation/projects_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/shared/presentation/author_mapper.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
@@ -206,6 +207,10 @@ GoRouter createMainRouter({
                   ? (english ? 'Profile' : 'Hồ sơ')
                   : state.uri.path == '/search'
                   ? (english ? 'Search' : 'Tìm kiếm')
+                  : state.uri.path == '/leaderboard'
+                  ? (english ? 'Weekly ranking' : 'Xếp hạng tuần')
+                  : state.uri.path == '/activity'
+                  ? (english ? 'Activity' : 'Hoạt động')
                   : null;
               final dmInbox = ref.watch(dmInboxProvider);
               final channels =
@@ -257,12 +262,31 @@ GoRouter createMainRouter({
                 backTooltip: english ? 'Back' : 'Quay lại',
                 onSearchTap: () => context.push('/search'),
                 onNotificationsTap: () => _showNotificationsModal(context, ref),
+                onComposeTap: () =>
+                    context.push(session == null ? '/login' : '/compose'),
+                composeSemanticLabel: english ? 'Create post' : 'Tạo bài đăng',
+                accountAvatar: session == null
+                    ? null
+                    : VnlfAvatar(
+                        author: presentAuthor(
+                          Author(
+                            id: session.userId,
+                            username: session.username,
+                            displayName: session.displayName,
+                            avatarUrl: session.avatarUrl,
+                            role: session.role,
+                            style: session.style,
+                          ),
+                        ),
+                        size: 28,
+                      ),
                 onSettingsTap: () => context.push('/settings'),
                 onLogoutTap: session == null
                     ? null
                     : () => logoutWithFeedback(context, ref),
                 logoutLabel: english ? 'Log out' : 'Đăng xuất',
-                onHelpTap: () => _showHelpDialog(context),
+                onHelpTap: () =>
+                    _launchWeb('https://vietnamlinuxfamily.net/help'),
                 onFeedbackTap: () => showFeedbackDialog(context, ref),
                 onSupportTap: () =>
                     _launchWeb('https://vietnamlinuxfamily.net/caramos'),
@@ -332,18 +356,16 @@ GoRouter createMainRouter({
                 lightThemeTooltip: english ? 'Light' : 'Sáng',
                 darkThemeTooltip: english ? 'Dark' : 'Tối',
                 systemThemeTooltip: english ? 'System' : 'Tự động',
-                openDrawerTooltip: english
-                    ? 'Open navigation menu'
-                    : 'Mở menu điều hướng',
-                searchSemanticLabel: english ? 'Search' : 'Tìm kiếm',
+                openDrawerTooltip: english ? 'Open menu' : 'Mở menu',
+                searchSemanticLabel: english ? 'Open search' : 'Mở tìm kiếm',
                 notificationsSemanticLabel: english
                     ? 'Notifications'
                     : 'Thông báo',
                 profileSemanticLabel: english ? 'Profile' : 'Tài khoản cá nhân',
                 leftSidebarSemanticLabel: english ? 'Navigation' : 'Điều hướng',
                 mobileBottomNavSemanticLabel: english
-                    ? 'Navigation'
-                    : 'Điều hướng',
+                    ? 'Phone navigation'
+                    : 'Điều hướng trên điện thoại',
                 centerChild: child,
               );
             },
@@ -508,105 +530,6 @@ Future<void> _launchWeb(String url) async {
   try {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   } catch (_) {}
-}
-
-void _showHelpDialog(BuildContext context) {
-  final english = Localizations.localeOf(context).languageCode == 'en';
-  final colors = VnlfColors.of(context);
-  showDialog<void>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      backgroundColor: colors.surface,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
-        side: BorderSide(color: colors.line),
-      ),
-      title: Row(
-        children: [
-          BrandAssets.logo(size: 28),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              english
-                  ? 'Help & Community Guidelines'
-                  : 'Trợ giúp & Nguyên tắc VNLF',
-              style: VnlfTypography.h3(colors.ink),
-            ),
-          ),
-        ],
-      ),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                english
-                    ? 'About Vietnam Linux Family'
-                    : 'Về Vietnam Linux Family',
-                style: VnlfTypography.control(
-                  colors.ink,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                english
-                    ? 'A non-profit community for Linux & open source enthusiasts in Vietnam: sharing knowledge, technical articles, projects and discussions.'
-                    : 'Cộng đồng phi lợi nhuận dành cho người dùng, lập trình viên và những ai yêu thích Linux & Mã nguồn mở tại Việt Nam. Nơi chia sẻ bài viết kỹ thuật, dự án và giao lưu.',
-                style: VnlfTypography.body(colors.muted),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                english ? 'Community Guidelines' : 'Nguyên tắc cộng đồng',
-                style: VnlfTypography.control(
-                  colors.ink,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                english
-                    ? '• Respect all members and maintain civilized discussions.\n• Share constructive open source content.\n• No spam, piracy, or malicious code.'
-                    : '• Tôn trọng các thành viên, văn minh và cầu thị.\n• Chia sẻ kiến thức bổ ích về Linux & nguồn mở.\n• Không spam, không vi phạm bản quyền hay phần mềm độc hại.',
-                style: VnlfTypography.body(colors.muted),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                english
-                    ? 'Markdown & Code Formatting'
-                    : 'Định dạng bài viết & mã nguồn',
-                style: VnlfTypography.control(
-                  colors.ink,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                english
-                    ? 'You can format code blocks with triple backticks (```bash, ```python, etc.) and use standard Markdown syntax in posts and comments.'
-                    : 'Hỗ trợ cú pháp Markdown chuẩn: sử dụng ``` để định dạng khối code (```bash, ```python,...), định dạng trích dẫn và danh sách.',
-                style: VnlfTypography.body(colors.muted),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: colors.brand,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(english ? 'Understood' : 'Đã hiểu'),
-        ),
-      ],
-    ),
-  );
 }
 
 bool _feedbackDialogOpen = false;
@@ -929,7 +852,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                       enabled: !submitting && !uncertain,
                       maxLines: 4,
                       maxLength: 4000,
-                      style: TextStyle(color: colors.ink, fontSize: 14),
+                      style: VnlfTypography.body(colors.ink),
                       decoration: InputDecoration(
                         hintText: tabIndex == 0
                             ? (english
@@ -976,7 +899,7 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
                     TextField(
                       controller: contactController,
                       enabled: !submitting && !uncertain,
-                      style: TextStyle(color: colors.ink, fontSize: 14),
+                      style: VnlfTypography.body(colors.ink),
                       decoration: InputDecoration(
                         hintText: 'example@domain.com',
                         hintStyle: TextStyle(color: colors.muted, fontSize: 13),

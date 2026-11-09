@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
-import 'package:vnlfsocialapp/src/data/fixture_repositories.dart';
 import 'package:vnlfsocialapp/src/data/live_post_repository.dart';
 import 'package:vnlfsocialapp/src/features/thread/presentation/thread_comments.dart';
 import 'package:vnlfsocialapp/src/features/thread/presentation/comments_providers.dart';
@@ -58,10 +57,7 @@ void main() {
     final client = clientFor(
       (_) async => ApiResponse(statusCode: 200, body: jsonEncode(article)),
     );
-    final post = await LivePostRepository(
-      client,
-      FixturePostRepository(FixtureFeedRepository(client)),
-    ).getPost('test-article');
+    final post = await LivePostRepository(client).getPost('test-article');
     expect(post!.contentText, 'Nội dung đầy đủ');
     expect(post.contentJson?['type'], 'doc');
     expect(post.attachments.map((a) => a.mime), ['image/webp', 'video/mp4']);
@@ -76,10 +72,7 @@ void main() {
       final client = clientFor(
         (_) async => ApiResponse(statusCode: 403, body: '{}'),
       );
-      final repository = LivePostRepository(
-        client,
-        FixturePostRepository(FixtureFeedRepository(client)),
-      );
+      final repository = LivePostRepository(client);
       await expectLater(
         repository.getPost('test-article'),
         throwsA(isA<HttpFailure>()),

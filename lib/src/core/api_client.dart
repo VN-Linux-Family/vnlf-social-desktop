@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import '../domain/models.dart';
+import 'request_identity.dart';
 export '../domain/models.dart'
     show AppFailure, HttpFailure, ParseFailure, TransportFailure, RateLimited;
 
@@ -60,6 +61,10 @@ final class ApiSessionScope {
 
 final class ApiClient {
   static const userAgent = 'vlf-flutter-dev/0.1 (unofficial community client)';
+
+  /// Sent as `x-vnlf-client`, like the website's per-tab id. The server echoes
+  /// it as the `origin` of `read:synced`, which identifies this app's own reads.
+  static final clientId = newRequestIdentity();
   ApiClient({
     required ApiTransport transport,
     List<ApiInterceptor> interceptors = const [],
@@ -168,6 +173,7 @@ final class ApiClient {
       query: query,
       headers: {
         'User-Agent': userAgent,
+        'x-vnlf-client': clientId,
         'Accept': 'application/json',
         if (body != null) 'Content-Type': 'application/json',
         ...headers,
@@ -223,22 +229,14 @@ final class ApiClient {
           continue;
         }
         if (response.statusCode < 200 || response.statusCode >= 300) {
+          final error = _errorEnvelope(response.body);
+          // The server marks failures such as INTERNAL_ERROR `retryable: false`.
           final transient =
-              response.statusCode == 429 ||
-              (response.statusCode >= 500 && response.statusCode <= 599);
+              error.retryable != false &&
+              (response.statusCode == 429 ||
+                  (response.statusCode >= 500 && response.statusCode <= 599));
           if (!canRetry || !transient || attempt >= 2) {
-            String? code;
-            try {
-              final error = jsonDecode(response.body);
-              final value = error is Map ? error['code'] : null;
-              if (value is String &&
-                  RegExp(r'^[A-Z][A-Z0-9_]{0,79}$').hasMatch(value)) {
-                code = value;
-              }
-            } catch (_) {
-              // Proxy errors may be HTML. Preserve the HTTP status either way.
-            }
-            throw HttpFailure(response.statusCode, code: code);
+            throw HttpFailure(response.statusCode, code: error.code);
           }
           await _retryDelay(
             _retryAfter(response.headers['retry-after']) ?? _backoff(attempt),
@@ -262,6 +260,24 @@ final class ApiClient {
       rethrow;
     } catch (_) {
       throw const TransportFailure();
+    }
+  }
+
+  ({String? code, bool? retryable}) _errorEnvelope(String body) {
+    try {
+      final error = jsonDecode(body);
+      if (error is! Map) return (code: null, retryable: null);
+      final code = error['code'];
+      final retryable = error['retryable'];
+      return (
+        code: code is String && RegExp(r'^[A-Z][A-Z0-9_]{0,79}$').hasMatch(code)
+            ? code
+            : null,
+        retryable: retryable is bool ? retryable : null,
+      );
+    } catch (_) {
+      // Proxy errors may be HTML. Preserve the HTTP status either way.
+      return (code: null, retryable: null);
     }
   }
 

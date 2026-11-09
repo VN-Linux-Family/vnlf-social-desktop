@@ -4,48 +4,42 @@ import 'package:flutter/services.dart';
 import '../../tokens/vnlf_colors.dart';
 import '../../tokens/vnlf_dimensions.dart';
 import '../../tokens/vnlf_typography.dart';
-import '../brand_assets.dart';
 import '../vnlf_avatar.dart';
 import '../vnlf_shell.dart';
 
-/// Sticky mobile top header (`64px` height) for viewports `< 840px`.
+/// The website's `.nav-unread-dot` colour (`#d7473e`).
+const _unreadColor = Color(0xFFD7473E);
+
+/// Phone top bar (`54px`) for viewports `< 840px`, following the website's
+/// lean phone shell (docs 41): the page title on the left, then create,
+/// search and notifications. The menu opens from the bottom bar.
 class VnlfMobileStickyHeader extends StatelessWidget {
   const VnlfMobileStickyHeader({
     super.key,
-    this.onProfileTap,
-    this.onSearchTap,
-    this.onNotificationsTap,
+    required this.title,
     this.onBack,
     this.backTooltip = '',
     this.backSemanticLabel,
-    this.openDrawerTooltip = '',
-    this.openDrawerSemanticLabel,
-    this.titleText,
-    this.brandTitlePrefix = '',
-    this.brandTitleAccent = '',
-    this.brandLogoSemanticLabel,
+    this.onComposeTap,
+    this.composeSemanticLabel = '',
+    this.onSearchTap,
     this.searchSemanticLabel = '',
+    this.onNotificationsTap,
     this.notificationsSemanticLabel = '',
-    this.profileSemanticLabel,
     this.notificationBadgeCount = 0,
     this.semanticLabel,
   });
 
-  final VoidCallback? onProfileTap;
-  final VoidCallback? onSearchTap;
-  final VoidCallback? onNotificationsTap;
+  final String title;
   final VoidCallback? onBack;
   final String backTooltip;
   final String? backSemanticLabel;
-  final String openDrawerTooltip;
-  final String? openDrawerSemanticLabel;
-  final String? titleText;
-  final String brandTitlePrefix;
-  final String brandTitleAccent;
-  final String? brandLogoSemanticLabel;
+  final VoidCallback? onComposeTap;
+  final String composeSemanticLabel;
+  final VoidCallback? onSearchTap;
   final String searchSemanticLabel;
+  final VoidCallback? onNotificationsTap;
   final String notificationsSemanticLabel;
-  final String? profileSemanticLabel;
   final int notificationBadgeCount;
   final String? semanticLabel;
 
@@ -54,7 +48,9 @@ class VnlfMobileStickyHeader extends StatelessWidget {
     final colors = VnlfColors.of(context);
     final insets = MediaQuery.paddingOf(context);
 
+    // 54px including the 1px hairline, like the website's border-box bar.
     final header = Container(
+      height: VnlfDimensions.mobileHeaderHeight + insets.top,
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(bottom: BorderSide(color: colors.line)),
@@ -64,20 +60,18 @@ class VnlfMobileStickyHeader extends StatelessWidget {
         left: insets.left,
         right: insets.right,
       ),
-      child: SizedBox(
-        height: VnlfDimensions.mobileHeaderHeight,
+      child: SizedBox.expand(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: VnlfDimensions.mobileHeaderPaddingH,
+          padding: EdgeInsets.only(
+            // A back control sits in the start gutter, like an app bar.
+            left: onBack == null ? VnlfDimensions.mobileHeaderPaddingStart : 4,
+            right: VnlfDimensions.mobileHeaderPaddingEnd,
           ),
           child: Row(
             children: [
               if (onBack != null)
                 Semantics(
-                  button: true,
-                  label:
-                      backSemanticLabel ??
-                      (backTooltip.isNotEmpty ? backTooltip : null),
+                  label: backSemanticLabel,
                   child: IconButton(
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -92,84 +86,34 @@ class VnlfMobileStickyHeader extends StatelessWidget {
                     tooltip: backTooltip.isNotEmpty ? backTooltip : null,
                     onPressed: onBack,
                   ),
-                )
-              else
-                Semantics(
-                  button: true,
-                  label:
-                      openDrawerSemanticLabel ??
-                      (openDrawerTooltip.isNotEmpty ? openDrawerTooltip : null),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
-                    ),
-                    icon: Icon(Icons.menu_rounded, size: 22, color: colors.ink),
-                    tooltip: openDrawerTooltip.isNotEmpty
-                        ? openDrawerTooltip
-                        : null,
-                    onPressed: () => Scaffold.maybeOf(context)?.openDrawer(),
+                ),
+              Expanded(
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VnlfTypography.pageTitle(colors.ink),
                   ),
                 ),
-              const SizedBox(width: 8),
-              BrandAssets.logo(size: 26, semanticLabel: brandLogoSemanticLabel),
-              const SizedBox(width: 8),
-              Expanded(
-                child: titleText != null && titleText!.isNotEmpty
-                    ? Text(
-                        titleText!,
-                        overflow: TextOverflow.ellipsis,
-                        style: VnlfTypography.h3(colors.ink)
-                            .copyWith(fontWeight: FontWeight.w700),
-                      )
-                    : RichText(
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          style: VnlfTypography.h3(colors.ink)
-                              .copyWith(fontWeight: FontWeight.w700),
-                          children: [
-                            TextSpan(text: brandTitlePrefix),
-                            TextSpan(
-                              text: brandTitleAccent,
-                              style: TextStyle(
-                                color: colors.brand,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
               ),
-              _HeaderSquareIconButton(
+              if (onComposeTap != null)
+                _HeaderIconButton(
+                  icon: Icons.add_box_outlined,
+                  semanticLabel: composeSemanticLabel,
+                  onTap: onComposeTap,
+                ),
+              _HeaderIconButton(
                 icon: Icons.search_rounded,
                 semanticLabel: searchSemanticLabel,
                 onTap: onSearchTap,
               ),
-              const SizedBox(width: 8),
-              _HeaderSquareIconButton(
+              _HeaderIconButton(
                 icon: Icons.notifications_none_rounded,
                 semanticLabel: notificationsSemanticLabel,
                 badgeCount: notificationBadgeCount,
                 onTap: onNotificationsTap,
-              ),
-              const SizedBox(width: 8),
-              Semantics(
-                button: true,
-                label: profileSemanticLabel,
-                child: InkWell(
-                  onTap: onProfileTap,
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: Center(
-                      child: VnlfGuestAvatarBox(
-                        size: 36,
-                        semanticLabel: profileSemanticLabel,
-                      ),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
@@ -184,8 +128,9 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   }
 }
 
-class _HeaderSquareIconButton extends StatelessWidget {
-  const _HeaderSquareIconButton({
+/// Bare header icon with a 48px circular target, as on the website.
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
     required this.icon,
     required this.semanticLabel,
     required this.onTap,
@@ -205,40 +150,23 @@ class _HeaderSquareIconButton extends StatelessWidget {
       button: true,
       label: semanticLabel.isNotEmpty ? semanticLabel : null,
       child: InkWell(
-        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
         onTap: onTap,
+        customBorder: const CircleBorder(),
         child: SizedBox(
           width: 48,
           height: 48,
           child: Center(
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: colors.surfaceSoft,
-                borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Icon(icon, size: 18, color: colors.ink),
-                  if (badgeCount > 0)
-                    Positioned(
-                      top: 5,
-                      right: 5,
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD7473E),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: colors.surface, width: 1.5),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, size: 22, color: colors.ink),
+                if (badgeCount > 0)
+                  Positioned(
+                    top: -1,
+                    right: -1,
+                    child: _Dot(color: _unreadColor, ring: colors.surface),
+                  ),
+              ],
             ),
           ),
         ),
@@ -248,12 +176,13 @@ class _HeaderSquareIconButton extends StatelessWidget {
     if (semanticLabel.isNotEmpty) {
       button = Tooltip(message: semanticLabel, child: button);
     }
-
     return button;
   }
 }
 
-/// Sticky mobile bottom navigation bar (`56px` height) for viewports `< 840px`.
+/// Floating phone navigation (`56px`) from the website's lean shell: four
+/// destination icons and the account avatar, which opens the menu. Visible
+/// labels are omitted as on the website; they remain semantic labels.
 class VnlfMobileBottomNav extends StatelessWidget {
   const VnlfMobileBottomNav({
     super.key,
@@ -262,14 +191,32 @@ class VnlfMobileBottomNav extends StatelessWidget {
     this.destinationLabels = const {},
     this.destinationSemanticLabels = const {},
     this.unreadDestinations = const {},
+    this.onMenuTap,
+    this.menuSemanticLabel = '',
+    this.menuOpen = false,
+    this.accountAvatar,
     this.semanticLabel,
   });
+
+  /// Destinations in the bar; the others are reached through the menu.
+  static const destinations = [
+    VnlfNavDestination.feed,
+    VnlfNavDestination.explore,
+    VnlfNavDestination.messages,
+    VnlfNavDestination.voice,
+  ];
 
   final VnlfNavDestination activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;
   final Set<VnlfNavDestination> unreadDestinations;
+  final VoidCallback? onMenuTap;
+  final String menuSemanticLabel;
+  final bool menuOpen;
+
+  /// The signed-in member's avatar; a neutral placeholder is used otherwise.
+  final Widget? accountAvatar;
   final String? semanticLabel;
 
   @override
@@ -277,118 +224,85 @@ class VnlfMobileBottomNav extends StatelessWidget {
     final colors = VnlfColors.of(context);
     final insets = MediaQuery.paddingOf(context);
 
-    final nav = Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(top: BorderSide(color: colors.line)),
+    final nav = Padding(
+      padding: EdgeInsets.fromLTRB(
+        12 + insets.left,
+        0,
+        12 + insets.right,
+        6 + insets.bottom,
       ),
-      padding: EdgeInsets.only(
-        bottom: insets.bottom,
-        left: insets.left,
-        right: insets.right,
-      ),
-      child: SizedBox(
+      child: Container(
         height: VnlfDimensions.mobileBottomNavHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border.all(color: colors.line),
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusFull),
+          boxShadow: VnlfDimensions.hardShadow(isDark: colors.isDark),
+        ),
         child: Row(
           children: [
-            for (final dest in VnlfNavDestination.values)
+            for (final dest in destinations)
               Expanded(
-                child: Semantics(
-                  button: true,
-                  selected: dest == activeDestination,
+                child: _NavCell(
                   label:
                       destinationSemanticLabels[dest] ??
                       destinationLabels[dest],
-                  child: InkWell(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      onDestinationSelected?.call(dest);
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedScale(
-                          scale: dest == activeDestination ? 1.05 : 1.0,
-                          duration: VnlfDimensions.resolveDuration(
-                            context,
-                            VnlfDimensions.motionFast,
-                          ),
-                          curve: Curves.easeOutCubic,
-                          child: AnimatedContainer(
-                            duration: VnlfDimensions.resolveDuration(
-                              context,
-                              VnlfDimensions.motionFast,
-                            ),
-                            curve: Curves.easeOutCubic,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: dest == activeDestination
-                                  ? colors.brandSoft
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(
-                                VnlfDimensions.radiusFull,
-                              ),
-                            ),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Icon(
-                                  dest.icon,
-                                  size: 20,
-                                  color: dest == activeDestination
-                                      ? colors.brand
-                                      : colors.muted,
-                                ),
-                                if (unreadDestinations.contains(dest))
-                                  Positioned(
-                                    top: -2,
-                                    right: -3,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFD7473E),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: colors.surface,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                  selected: dest == activeDestination,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    onDestinationSelected?.call(dest);
+                  },
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        dest.icon,
+                        size: 24,
+                        color: dest == activeDestination
+                            ? colors.brand
+                            : colors.muted,
+                      ),
+                      if (unreadDestinations.contains(dest))
+                        Positioned(
+                          top: -3,
+                          right: -5,
+                          child: _Dot(
+                            color: _unreadColor,
+                            ring: colors.surface,
+                            size: 10,
+                            ringWidth: 2,
                           ),
                         ),
-                        if ((destinationLabels[dest] ?? '').isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          AnimatedDefaultTextStyle(
-                            duration: VnlfDimensions.resolveDuration(
-                              context,
-                              VnlfDimensions.motionFast,
-                            ),
-                            curve: Curves.easeOutCubic,
-                            style: VnlfTypography.caption(
-                              dest == activeDestination
-                                  ? colors.brand
-                                  : colors.muted,
-                              fontWeight: dest == activeDestination
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            child: Text(destinationLabels[dest]!),
-                          ),
-                        ],
-                      ],
+                    ],
+                  ),
+                ),
+              ),
+            Expanded(
+              child: _NavCell(
+                label: menuSemanticLabel.isNotEmpty ? menuSemanticLabel : null,
+                expanded: menuOpen,
+                onTap: onMenuTap,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: menuOpen ? colors.brand : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: SizedBox.square(
+                    dimension: 28,
+                    child: ClipOval(
+                      child:
+                          accountAvatar ??
+                          const VnlfGuestAvatarBox(size: 28, isCircle: true),
                     ),
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -399,4 +313,79 @@ class VnlfMobileBottomNav extends StatelessWidget {
     }
     return Semantics(label: semanticLabel, container: true, child: nav);
   }
+}
+
+class _NavCell extends StatelessWidget {
+  const _NavCell({
+    required this.label,
+    required this.onTap,
+    required this.child,
+    this.selected = false,
+    this.expanded,
+  });
+
+  final String? label;
+  final VoidCallback? onTap;
+  final Widget child;
+  final bool selected;
+  final bool? expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final shape = BorderRadius.circular(VnlfDimensions.radiusFull);
+    return Semantics(
+      button: true,
+      selected: selected,
+      expanded: expanded,
+      label: label,
+      child: Tooltip(
+        message: label ?? '',
+        excludeFromSemantics: true,
+        child: InkWell(
+          borderRadius: shape,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: VnlfDimensions.resolveDuration(
+              context,
+              VnlfDimensions.motionFast,
+            ),
+            curve: Curves.easeOutCubic,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected ? colors.brandSoft : Colors.transparent,
+              borderRadius: shape,
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({
+    required this.color,
+    required this.ring,
+    this.size = 8,
+    this.ringWidth = 1.5,
+  });
+
+  final Color color;
+  final Color ring;
+  final double size;
+  final double ringWidth;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(color: ring, width: ringWidth),
+    ),
+  );
 }

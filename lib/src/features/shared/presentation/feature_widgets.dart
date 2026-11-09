@@ -27,7 +27,9 @@ class FeatureHeader extends StatelessWidget {
             onPressed: () => context.canPop() ? context.pop() : context.go('/'),
           ),
           const SizedBox(width: 4),
-          Expanded(child: Text(title, style: VnlfTypography.h2(colors.ink))),
+          Expanded(
+            child: Text(title, style: VnlfTypography.pageTitle(colors.ink)),
+          ),
           if (showSettings)
             IconButton(
               tooltip: english ? 'Settings' : 'Cài đặt',

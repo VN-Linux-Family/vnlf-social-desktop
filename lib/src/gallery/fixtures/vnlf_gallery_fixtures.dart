@@ -36,8 +36,7 @@ abstract final class VnlfGalleryFixtures {
   static const String darkThemeTooltip = 'Tối';
   static const String systemThemeTooltip = 'Tự động';
   static const String themePickerSemanticLabel = 'Chọn giao diện sáng tối';
-  static const String railThemeToggleTooltip = 'Chế độ giao diện';
-  static const String openDrawerTooltip = 'Mở menu điều hướng';
+  static const String openDrawerTooltip = 'Mở menu';
   static const String searchSemanticLabel = 'Tìm kiếm';
   static const String notificationsSemanticLabel = 'Thông báo';
   static const String profileSemanticLabel = 'Tài khoản cá nhân';

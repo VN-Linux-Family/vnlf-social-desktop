@@ -108,13 +108,7 @@ class VnlfVoteCapsule extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6),
-              child: Text(
-                '$score',
-                style: VnlfTypography.meta(
-                  scoreColor,
-                  fontWeight: FontWeight.w700,
-                ).copyWith(fontSize: compact ? 11.5 : 12.5),
-              ),
+              child: Text('$score', style: VnlfTypography.number(scoreColor)),
             ),
             Semantics(
               button: true,

@@ -89,7 +89,6 @@ class _VnlfFeedScreenState extends State<VnlfFeedScreen> {
       darkThemeTooltip: VnlfGalleryFixtures.darkThemeTooltip,
       systemThemeTooltip: VnlfGalleryFixtures.systemThemeTooltip,
       themePickerSemanticLabel: VnlfGalleryFixtures.themePickerSemanticLabel,
-      railThemeToggleTooltip: VnlfGalleryFixtures.railThemeToggleTooltip,
       openDrawerTooltip: VnlfGalleryFixtures.openDrawerTooltip,
       searchSemanticLabel: VnlfGalleryFixtures.searchSemanticLabel,
       notificationsSemanticLabel:

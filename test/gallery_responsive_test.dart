@@ -7,7 +7,13 @@ import 'package:vnlfsocialapp/src/gallery/gallery_page.dart';
 void main() {
   setUpAll(() async {
     final loader = FontLoader('BeVietnamPro');
-    for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    for (final weight in [
+      'Regular',
+      'Medium',
+      'SemiBold',
+      'Bold',
+      'ExtraBold',
+    ]) {
       loader.addFont(rootBundle.load('assets/fonts/BeVietnamPro-$weight.ttf'));
     }
     await loader.load();
@@ -73,10 +79,13 @@ void main() {
     await openGallery(tester, const Size(360, 900));
 
     expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
-    expect(find.byType(VnlfTabletRail), findsNothing);
     expect(permanentDesktopSidebar(), findsNothing);
 
-    final menuButton = find.byTooltip('Mở menu điều hướng');
+    // As on the website, the menu opens from the avatar in the bottom bar.
+    final menuButton = find.descendant(
+      of: find.byType(VnlfMobileBottomNav),
+      matching: find.byTooltip('Mở menu'),
+    );
     expect(menuButton, findsOneWidget);
     await tester.tap(menuButton);
     await tester.pumpAndSettle();
@@ -87,12 +96,12 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('900px shows the tablet rail only', (tester) async {
+  testWidgets('900px shows the 220px tablet sidebar', (tester) async {
     await openGallery(tester, const Size(900, 1000));
 
-    expect(find.byType(VnlfTabletRail), findsOneWidget);
+    expect(permanentDesktopSidebar(), findsOneWidget);
+    expect(tester.getSize(permanentDesktopSidebar()).width, 220);
     expect(find.byType(VnlfMobileBottomNav), findsNothing);
-    expect(permanentDesktopSidebar(), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -102,8 +111,8 @@ void main() {
     await openGallery(tester, const Size(1440, 1000));
 
     expect(permanentDesktopSidebar(), findsOneWidget);
+    expect(tester.getSize(permanentDesktopSidebar()).width, 252);
     expect(find.byType(VnlfLeaderboardCard), findsOneWidget);
-    expect(find.byType(VnlfTabletRail), findsNothing);
     expect(find.byType(VnlfMobileBottomNav), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -118,7 +127,6 @@ void main() {
       await openGallery(tester, viewport.size);
 
       expect(find.byType(VnlfMobileBottomNav), findsOneWidget);
-      expect(find.byType(VnlfTabletRail), findsNothing);
       expect(permanentDesktopSidebar(), findsNothing);
       expect(tester.takeException(), isNull);
     });

@@ -29,8 +29,8 @@ abstract final class VnlfDimensions {
   /// Left navigation sidebar fixed width (`252px`).
   static const double leftSidebarWidth = 252.0;
 
-  /// Compact tablet navigation rail width (`72px`).
-  static const double tabletRailWidth = 72.0;
+  /// Tablet sidebar width (`220px` at 841-1180px on the website).
+  static const double tabletSidebarWidth = 220.0;
 
   /// Center feed container max width (`717px`).
   static const double centerFeedMaxWidth = 717.0;
@@ -38,17 +38,21 @@ abstract final class VnlfDimensions {
   /// Right complementary column width (`304px`).
   static const double rightSidebarWidth = 304.0;
 
-  /// Sticky mobile top header height (`64px`).
-  static const double mobileHeaderHeight = 64.0;
+  /// Sticky mobile top header height (`54px`).
+  static const double mobileHeaderHeight = 54.0;
 
-  /// Sticky mobile top header horizontal padding (`17px`).
-  static const double mobileHeaderPaddingH = 17.0;
+  /// Mobile top header padding (`0 6px 0 16px` on the website).
+  static const double mobileHeaderPaddingStart = 16.0;
+  static const double mobileHeaderPaddingEnd = 6.0;
 
   /// Sticky mobile bottom navigation bar height (`56px`).
   static const double mobileBottomNavHeight = 56.0;
 
   /// Mobile secondary drawer max width (`320px`).
   static const double mobileDrawerMaxWidth = 320.0;
+
+  /// Outer mobile content gutter: 6px up to 520px wide, 8px up to 840px.
+  static double mobileGutter(double width) => width <= 520 ? 6.0 : 8.0;
 
   // Motion Tokens (150-300ms, respects reduce-motion)
   static const Duration motionFast = Duration(milliseconds: 150);
@@ -121,10 +125,10 @@ abstract final class VnlfDimensions {
 
 /// Viewport classification according to `DESIGN_REFERENCE.md` Section 5.
 enum VnlfViewportSize {
-  /// `< 840px`: 1 column + sticky 64px top header + sticky 56px bottom nav.
+  /// `< 840px`: 1 column + sticky 54px top header + floating 56px bottom nav.
   mobile,
 
-  /// `840px <= width < 1181px`: compact nav rail + main feed surface.
+  /// `840px <= width < 1181px`: 220px sidebar + main feed surface.
   tablet,
 
   /// `>= 1181px`: 3 columns (252px left sidebar, 717px center feed, 304px right sidebar).

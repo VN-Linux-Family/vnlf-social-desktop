@@ -22,7 +22,8 @@ abstract interface class CommunityRepository {
 abstract interface class ChannelsRepository implements CommunityRepository {}
 
 abstract interface class PostRepository {
-  Future<FeedPost?> getPost(String id);
+  /// Reads one article by its UUID, or by the slug used in public `/a/` links.
+  Future<FeedPost?> getPost(String idOrSlug);
 }
 
 abstract interface class DiscoverRepository {
