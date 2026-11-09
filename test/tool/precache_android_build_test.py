@@ -2,7 +2,6 @@ import hashlib
 import importlib.util
 import io
 from pathlib import Path
-import subprocess
 import tempfile
 import unittest
 
@@ -66,30 +65,6 @@ class FetchTest(unittest.TestCase):
 
         self.assertFalse(self.dest.exists())
         self.assertEqual(self.sleeps, [4, 8, 12])
-
-
-class GradleBootstrapTest(unittest.TestCase):
-    def test_retries_until_the_wrapper_runs(self):
-        codes = [1, 0]
-        calls = []
-        sleeps = []
-
-        def run(args, cwd):
-            calls.append((args, cwd))
-            return subprocess.CompletedProcess(args, codes.pop(0))
-
-        precache.bootstrap_gradle(run=run, sleep=sleeps.append)
-
-        self.assertEqual(calls, [(['./gradlew', '--version'], 'android')] * 2)
-        self.assertEqual(sleeps, [4])
-
-    def test_stops_after_the_last_attempt(self):
-        def run(args, cwd):
-            return subprocess.CompletedProcess(args, 1)
-
-        with self.assertRaises(SystemExit):
-            precache.bootstrap_gradle(run=run, sleep=lambda _: None,
-                                      attempts=2)
 
 
 if __name__ == '__main__':

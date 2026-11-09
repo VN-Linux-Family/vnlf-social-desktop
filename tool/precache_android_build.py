@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Fetch Android build inputs whose in-build downloads are flaky.
+"""Fetch the libmpv jars that media_kit downloads during the Android build.
 
-media_kit_libs_android_video downloads its libmpv jars while Gradle runs, and
-the Gradle wrapper downloads its distribution on first use. Fetching both first,
-with retries (and MD5 checks for the jars), keeps one transient download error
-from failing a build. Run it from the repository root after `flutter pub get`.
+media_kit_libs_android_video downloads these jars while Gradle runs; fetching
+them first, with retries and MD5 checks, keeps one transient GitHub error from
+failing a build. Run it from the repository root after `flutter pub get`.
+
+The Gradle wrapper is not pre-fetched: `android/gradlew` is ignored by Git and
+only exists once `flutter build` has generated it.
 """
 
 from __future__ import annotations
 
 import hashlib
 import pathlib
-import subprocess
 import time
 import urllib.request
 
@@ -53,20 +54,9 @@ def fetch(url, dest, expected_md5, *, opener=urllib.request.urlopen,
     raise SystemExit(f'Failed to pre-cache {url}')
 
 
-def bootstrap_gradle(android_dir='android', *, run=subprocess.run,
-                     sleep=time.sleep, attempts=5):
-    for attempt in range(1, attempts + 1):
-        if run(['./gradlew', '--version'], cwd=android_dir).returncode == 0:
-            return
-        print(f'Gradle wrapper bootstrap attempt {attempt} failed; retrying...')
-        sleep(attempt * 4)
-    raise SystemExit('Failed to bootstrap the Gradle wrapper')
-
-
 def main():
     for name, md5 in MPV_JARS:
         fetch(f'{MPV_BASE}/{name}', MPV_CACHE / name, md5)
-    bootstrap_gradle()
 
 
 if __name__ == '__main__':

@@ -331,7 +331,7 @@ jobs:
         env:
           IS_STABLE: ${{ needs.metadata.outputs.is_stable }}
         run: python3 tool/prepare_android_signing.py --stable "$IS_STABLE"
-      - name: Pre-cache Gradle and Android native dependencies
+      - name: Pre-cache libmpv Android libraries
         run: python3 tool/precache_android_build.py
       - name: Build one APK for each ABI
         env:

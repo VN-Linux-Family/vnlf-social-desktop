@@ -35,7 +35,7 @@ build/test slot.
 Routine checks run once per pull-request update, on main pushes, or on explicit
 dispatch. Besides the tests, they build a debug arm64 APK, which compiles the
 Kotlin host code and manifest without signing secrets. Both the check and the
-Android packaging job fetch flaky build inputs first with
+Android packaging job fetch media_kit's libmpv jars first with
 `tool/precache_android_build.py`. Feature pushes without a pull request do not
 start checks. Packaging
 runs only for `v*` tags or explicit dispatch, rather than every main/release push.
