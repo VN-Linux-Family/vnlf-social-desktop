@@ -20,7 +20,7 @@ Every human contributor and automated coding agent must follow the rules in this
    - Architectural layer boundaries and directory layout are enforced automatically by `test/core/project_layout_contract_test.dart`.
 4. **Website Visual Parity & Native Polish**:
    - Match the visual language documented in [`DESIGN_REFERENCE.md`](DESIGN_REFERENCE.md).
-   - Support Vietnamese (`vi`, default) and English (`en`), dark and light themes, responsive layout tiers (`< 840px`, `840–1180px`, `>= 1181px`), WCAG AA contrast (`>= 4.5:1`), `200%` text scaling, and reduced motion.
+   - Ship Vietnamese only (like the website), dark and light themes, responsive layout tiers (`< 840px`, `840–1180px`, `>= 1181px`), WCAG AA contrast (`>= 4.5:1`), `200%` text scaling, and reduced motion.
 5. **Anti-Slop Policy**:
    - No `TODO` stubs (treated as compile errors by `analysis_options.yaml`), no placeholder text, no dead or commented-out code, and no unverified claims.
 
@@ -32,7 +32,7 @@ Keep the repository clean and predictable:
 
 | Path | Allowed Contents | Forbidden Contents |
 | :--- | :--- | :--- |
-| Root (`/`) | `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `PLAN.md`, `API_NOTES.md`, `DESIGN_REFERENCE.md`, `pubspec.*`, `analysis_options.yaml`, `l10n.yaml`, `flutter_launcher_icons.yaml` | Scratch files, ad-hoc audit reports, screenshots, `.env`, `.har`, signing keys |
+| Root (`/`) | `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `PLAN.md`, `API_NOTES.md`, `DESIGN_REFERENCE.md`, `pubspec.*`, `analysis_options.yaml`, `flutter_launcher_icons.yaml` | Scratch files, ad-hoc audit reports, screenshots, `.env`, `.har`, signing keys |
 | `lib/src/domain/` & `lib/src/features/<slice>/domain/` | Pure Dart immutable models, sealed states/errors, repository interfaces, domain logic | Flutter UI imports (`material.dart`, `widgets.dart`), DTOs, `ApiClient` transport, Riverpod widgets |
 | `lib/src/data/` & `lib/src/features/<slice>/data/` | Repository implementations, DTOs, tolerant JSON parsers (`FieldReader`), local storage stores | Flutter widget imports, presentation controllers, `design_system` imports |
 | `lib/src/features/<slice>/presentation/` | Screens, sub-widgets, Riverpod `Notifier`/`AsyncNotifier` controllers, UI state models | Direct raw socket/HTTP calls bypassing repositories |
@@ -60,11 +60,13 @@ Keep the repository clean and predictable:
 - Bind authenticated requests and WebSocket streams to the current `ApiSessionScope` / `RequestIdentity`.
 - When a user logs out or switches accounts, cancel or ignore stale in-flight responses and clear user-scoped caches and draft stores.
 
-### Localization (`l10n`)
-- Add all new user-facing copy to both `lib/l10n/app_vi.arb` (Vietnamese default) and `lib/l10n/app_en.arb` (English), then regenerate localization bindings:
+### Copy (`lib/src/i18n/vi.dart`)
+- The app is Vietnamese only, like the website. Every user-facing string lives in `lib/src/i18n/vi.dart`, which mirrors the website's `packages/i18n/src/vi.ts` key for key (`vi.pageLogin.dangNhapVnlfSocial` in both). Fill `{name}` placeholders with `format()`.
+- Do not hand-edit the generated website regions; regenerate them from a website checkout:
   ```sh
-  tool/with_build_slot.sh flutter gen-l10n
+  python3 tool/sync_vi_strings.py --web ../vnlf-social
   ```
+  Copy that exists only in the native app goes in `ViApp` at the end of the file.
 - Test Vietnamese diacritics (`Tiếng Việt: ặ ữ ờ ẫ ệ`) and ensure UTF-16 length formatters (`Utf16LengthFormatter`) never split surrogate pairs or emoji clusters.
 
 ---
@@ -95,7 +97,6 @@ Keep the repository clean and predictable:
    Run all verification commands sequentially through `tool/with_build_slot.sh`:
    ```sh
    tool/with_build_slot.sh flutter pub get
-   tool/with_build_slot.sh flutter gen-l10n
    tool/with_build_slot.sh dart format --output=none --set-exit-if-changed lib test tool
    tool/with_build_slot.sh flutter analyze
    tool/with_build_slot.sh dart run test/core/io_transport_headless_smoke.dart

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'l10n/app_localizations.dart';
 import 'src/app/app_router.dart';
 import 'src/app/providers.dart';
 import 'src/core/desktop_tray_service.dart';
@@ -16,6 +15,7 @@ import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/notifications/data/local_notification_service.dart';
 import 'src/features/notifications/presentation/legacy_push_cleanup_provider.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
+import 'src/i18n/vi.dart';
 import 'src/features/realtime/presentation/android_background_service_binding.dart';
 import 'src/features/realtime/presentation/community_realtime_binding.dart';
 import 'src/features/settings/preferences/preferences_controller.dart';
@@ -194,19 +194,19 @@ class _AppState extends ConsumerState<_App> {
           ),
         ),
       ),
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      title: vi.app.tieuDeUngDung,
       theme: VnlfTheme.light(),
       darkTheme: VnlfTheme.dark(),
       themeMode: ref.watch(themeModeProvider),
       themeAnimationDuration: Duration.zero,
-      locale: ref.watch(localeProvider),
+      // VNLF Social chỉ có tiếng Việt, như website.
+      locale: const Locale('vi'),
       localizationsDelegates: const [
-        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: AppLocalizations.supportedLocales,
+      supportedLocales: const [Locale('vi')],
       routerConfig: _router,
     );
   }

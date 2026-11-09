@@ -3,9 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
-import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/features/channels/presentation/channels_screen.dart';
 import 'package:vnlfsocialapp/src/features/search/presentation/search_screen.dart';
@@ -64,8 +62,7 @@ void main() {
       }
     });
   }
-
-  testWidgets('locale override rebuilds every community screen and nav label', (
+  testWidgets('every community screen keeps its title and nav labels', (
     tester,
   ) async {
     final app = await _pumpApp(tester, const Size(360, 900));
@@ -83,46 +80,22 @@ void main() {
         'Mở menu',
       ]);
     }
-
-    app.container.read(localeProvider.notifier).state = const Locale('en');
-    await tester.pumpAndSettle();
-
-    for (final route in _communityRoutes) {
-      app.router.go(route.path);
-      await tester.pumpAndSettle();
-      _expectScreenTitle(route.screen, route.english);
-      _expectMobileNavigation(tester, const [
-        'Feed',
-        'Discover',
-        'Messages',
-        'Voice',
-        'Open menu',
-      ]);
-    }
   });
 }
 
-const _communityRoutes =
-    <({String path, String vietnamese, String english, Type screen})>[
-      (
-        path: '/search',
-        vietnamese: 'Tìm trong cộng đồng',
-        english: 'Search the community',
-        screen: SearchScreen,
-      ),
-      (
-        path: '/channels',
-        vietnamese: 'Đăng nhập để xem kênh cộng đồng',
-        english: 'Sign in to view community channels',
-        screen: ChannelsScreen,
-      ),
-      (
-        path: '/voice',
-        vietnamese: 'Đăng nhập để tham gia Voice',
-        english: 'Sign in to join Voice',
-        screen: VoiceScreen,
-      ),
-    ];
+const _communityRoutes = <({String path, String vietnamese, Type screen})>[
+  (path: '/search', vietnamese: 'Tìm trong cộng đồng', screen: SearchScreen),
+  (
+    path: '/channels',
+    vietnamese: 'Đăng nhập để xem kênh cộng đồng',
+    screen: ChannelsScreen,
+  ),
+  (
+    path: '/voice',
+    vietnamese: 'Đăng nhập để tham gia Voice',
+    screen: VoiceScreen,
+  ),
+];
 
 Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -130,17 +103,7 @@ Future<_TestApp> _pumpApp(WidgetTester tester, Size size) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final container = ProviderContainer(
-    overrides: [
-      localeProvider.overrideWith(
-        (ref) => LocaleController(
-          ref.watch(preferencesStorageProvider),
-          null,
-          const Locale('vi'),
-        ),
-      ),
-    ],
-  );
+  final container = ProviderContainer(overrides: []);
   final router = createMainRouter();
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -191,16 +154,15 @@ class _RouterApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      locale: ref.watch(localeProvider),
+      locale: const Locale('vi'),
       theme: VnlfTheme.light(),
       darkTheme: VnlfTheme.dark(),
       localizationsDelegates: const [
-        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: AppLocalizations.supportedLocales,
+      supportedLocales: const [Locale('vi')],
       routerConfig: router,
     );
   }

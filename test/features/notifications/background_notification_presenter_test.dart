@@ -1,13 +1,8 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/notifications/domain/notifications_repository.dart';
 import 'package:vnlfsocialapp/src/features/notifications/presentation/background_notification_presenter.dart';
 import 'package:vnlfsocialapp/src/features/realtime/domain/community_event.dart';
-
-final _vi = lookupAppLocalizations(const Locale('vi'));
-final _en = lookupAppLocalizations(const Locale('en'));
 
 const _comment = CommunityNotice(
   id: 'notice-1',
@@ -63,7 +58,6 @@ void main() {
     test('describe the notice the way the notifications list does', () async {
       await presenter().present(
         _event('notification:created', {'id': 'notice-1'}),
-        _vi,
       );
 
       expect(loads, 1);
@@ -75,27 +69,11 @@ void main() {
       ));
     });
 
-    test('use the English action phrase for an English locale', () async {
-      await presenter().present(
-        _event('notification:created', {'id': 'notice-1'}),
-        _en,
-      );
-
-      expect(
-        shown.single.body,
-        'Commented on your post: Cài Arch Linux trên Btrfs',
-      );
-    });
-
     test('an aggregated update replaces the earlier notification', () async {
       final subject = presenter();
-      await subject.present(
-        _event('notification:created', {'id': 'notice-1'}),
-        _vi,
-      );
+      await subject.present(_event('notification:created', {'id': 'notice-1'}));
       await subject.present(
         _event('notification:updated', {'id': 'notice-1'}, eventId: 'e-2'),
-        _vi,
       );
 
       expect(shown.map((item) => item.id).toSet(), {'notice-1'.hashCode});
@@ -106,7 +84,6 @@ void main() {
 
       await presenter().present(
         _event('notification:updated', {'id': 'notice-1'}),
-        _vi,
       );
 
       expect(shown, isEmpty);
@@ -117,7 +94,6 @@ void main() {
 
       await presenter().present(
         _event('notification:created', {'id': 'notice-1'}),
-        _vi,
       );
 
       expect(shown.single, (
@@ -133,12 +109,11 @@ void main() {
 
       await presenter().present(
         _event('notification:created', {'id': 'notice-1'}),
-        _en,
       );
 
       expect(
         shown.single.body,
-        'You have new activity on Vietnam Linux Family.',
+        'Bạn có hoạt động mới trên Vietnam Linux Family.',
       );
       expect(shown.single.payload, '/');
     });
@@ -156,7 +131,6 @@ void main() {
 
       await presenter().present(
         _event('notification:created', {'id': 'notice-2'}),
-        _vi,
       );
 
       expect(shown.single.title, 'Vietnam Linux Family');
@@ -179,7 +153,7 @@ void main() {
     };
 
     test('a direct message shows its author and text', () async {
-      await presenter().present(_event('dm:message-created', message()), _vi);
+      await presenter().present(_event('dm:message-created', message()));
 
       expect(shown.single, (
         id: 'message-1'.hashCode,
@@ -193,27 +167,24 @@ void main() {
     test('a message without text uses the localized fallback', () async {
       await presenter().present(
         _event('dm:message-created', message(content: '')),
-        _en,
       );
 
-      expect(shown.single.body, 'You have a new message');
+      expect(shown.single.body, 'Bạn có tin nhắn mới');
     });
 
     test('the member\'s own messages are not announced', () async {
       await presenter().present(
         _event('dm:message-created', message(authorId: 'member-1')),
-        _vi,
       );
       await presenter().present(
         _event('message:created', message(authorId: 'member-1')),
-        _vi,
       );
 
       expect(shown, isEmpty);
     });
 
     test('a channel message opens the channel by its slug', () async {
-      await presenter().present(_event('message:created', message()), _vi);
+      await presenter().present(_event('message:created', message()));
 
       expect(shown.single.payload, '/channels/linux-viet');
     });
@@ -221,7 +192,6 @@ void main() {
     test('an unknown channel opens the channel directory', () async {
       await presenter().present(
         _event('message:created', {...message(), 'channelId': 'channel-9'}),
-        _vi,
       );
 
       expect(shown.single.payload, '/channels');
@@ -229,10 +199,7 @@ void main() {
   });
 
   test('other events are not announced', () async {
-    await presenter().present(
-      _event('presence:changed', {'userId': 'peer-1'}),
-      _vi,
-    );
+    await presenter().present(_event('presence:changed', {'userId': 'peer-1'}));
 
     expect(shown, isEmpty);
     expect(loads, 0);

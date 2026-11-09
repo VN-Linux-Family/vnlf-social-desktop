@@ -4,11 +4,11 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 
@@ -152,8 +152,8 @@ class _CaptureAppState extends State<_CaptureApp> {
       themeMode: _mode,
       themeAnimationDuration: Duration.zero,
       locale: const Locale('vi'),
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: const [Locale('vi')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: _router,
       builder: (context, child) =>
           _preview == null ? child! : Scaffold(body: _preview),

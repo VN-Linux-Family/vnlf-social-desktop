@@ -39,16 +39,12 @@ String? noticeRoute(CommunityNotice item) {
 }
 
 /// The action phrase the notifications list shows for a notice type.
-String noticeAction(String type, bool english) => switch (type) {
-  'article-liked' => english ? 'Liked your post' : 'Đã thích bài viết của bạn',
-  'comment-liked' =>
-    english ? 'Liked your comment' : 'Đã thích bình luận của bạn',
-  'comment-created' =>
-    english ? 'Commented on your post' : 'Đã bình luận bài viết của bạn',
-  'comment-replied' =>
-    english ? 'Replied to your comment' : 'Đã trả lời bình luận của bạn',
-  'user-followed' => english ? 'Started following you' : 'Đã theo dõi bạn',
-  'guestbook-signed' =>
-    english ? 'Signed your guestbook' : 'Đã viết vào sổ lưu bút của bạn',
-  _ => english ? 'Community update' : 'Cập nhật cộng đồng',
+String noticeAction(String type) => switch (type) {
+  'article-liked' => 'Đã thích bài viết của bạn',
+  'comment-liked' => 'Đã thích bình luận của bạn',
+  'comment-created' => 'Đã bình luận bài viết của bạn',
+  'comment-replied' => 'Đã trả lời bình luận của bạn',
+  'user-followed' => 'Đã theo dõi bạn',
+  'guestbook-signed' => 'Đã viết vào sổ lưu bút của bạn',
+  _ => 'Cập nhật cộng đồng',
 };

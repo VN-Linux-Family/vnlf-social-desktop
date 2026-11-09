@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
-import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/vnlf_navigation_helper.dart';
 import 'package:vnlfsocialapp/src/design_system/components/vnlf_post_card.dart';
 import 'package:vnlfsocialapp/src/design_system/components/vnlf_shell.dart';
@@ -142,17 +141,7 @@ void main() {
     testWidgets(
       'router handles /a/:id and /users/:id web aliases without error',
       (tester) async {
-        final container = ProviderContainer(
-          overrides: [
-            localeProvider.overrideWith(
-              (ref) => LocaleController(
-                ref.watch(preferencesStorageProvider),
-                null,
-                const Locale('vi'),
-              ),
-            ),
-          ],
-        );
+        final container = ProviderContainer(overrides: []);
         addTearDown(container.dispose);
 
         final router = createMainRouter();
@@ -160,8 +149,8 @@ void main() {
           UncontrolledProviderScope(
             container: container,
             child: MaterialApp.router(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: GlobalMaterialLocalizations.delegates,
+              supportedLocales: const [Locale('vi')],
               routerConfig: router,
             ),
           ),

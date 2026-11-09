@@ -51,7 +51,9 @@ server with the authorized account, followed by cleanup.
 ## Source and asset handling
 
 The private upstream package declares no license field, and no root license was
-found during review. Read access alone does not establish redistribution rights.
+found during review. Read access alone does not establish redistribution rights;
+on 2026-11-09 the project owner asked for the website's code, UI and copy to be
+ported, and `lib/src/i18n/vi.dart` now mirrors its `vi.ts`.
 Keep the source snapshot outside this repository. Flag official logos, social
 icons and other artwork for owner/license confirmation; do not assume their
 terms. Preserve bundled font licenses and check the actual native media-library

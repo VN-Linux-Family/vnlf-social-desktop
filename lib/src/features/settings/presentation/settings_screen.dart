@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
+import 'package:vnlfsocialapp/src/i18n/vi.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/android_background_service.dart';
@@ -35,13 +35,9 @@ class SettingsScreen extends ConsumerWidget {
         VnlfViewportSize.mobile;
     final colors = VnlfColors.of(context);
     final theme = ref.watch(themeModeProvider);
-    final locale = ref.watch(localeProvider);
     final themeStorageFailure = ref.watch(themeStorageFailureProvider);
-    final localeStorageFailure = ref.watch(localeStorageFailureProvider);
     final sessionStorageFailure = ref.watch(sessionStorageFailureProvider);
     final signingOut = ref.watch(authControllerProvider).isLoading;
-    final language =
-        locale?.languageCode ?? Localizations.localeOf(context).languageCode;
     final session =
         ref.watch(sessionProvider).valueOrNull ??
         ref.watch(sessionStateProvider);
@@ -229,42 +225,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: 24),
-              Text(
-                english ? 'Language' : 'Ngôn ngữ',
-                style: VnlfTypography.h2(colors.ink),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final item in const {
-                    'vi': 'Tiếng Việt',
-                    'en': 'English',
-                  }.entries)
-                    ChoiceChip(
-                      selectedColor: colors.brandSoft,
-                      checkmarkColor: colors.brand,
-                      side: BorderSide(color: colors.line),
-                      labelStyle: VnlfTypography.control(colors.ink),
-                      label: Text(item.value),
-                      selected: language == item.key,
-                      onSelected: (_) => ref
-                          .read(localeProvider.notifier)
-                          .setLocale(Locale(item.key)),
-                    ),
-                ],
-              ),
-              if (localeStorageFailure != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  english
-                      ? 'Could not save language. Please select it again to retry.'
-                      : 'Không thể lưu ngôn ngữ. Vui lòng chọn lại để thử lại.',
-                  style: VnlfTypography.meta(colors.red),
-                ),
-              ],
-              const SizedBox(height: 24),
               const TextSizeSettings(),
               const SizedBox(height: 24),
               if (isDevBuild) ...[
@@ -324,9 +284,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 8),
               Text(
-                english
-                    ? 'Appearance is saved on this device. Language applies for this app session.'
-                    : 'Giao diện được lưu trên thiết bị. Ngôn ngữ áp dụng trong phiên ứng dụng này.',
+                'Giao diện được lưu trên thiết bị.',
                 style: VnlfTypography.meta(colors.muted),
               ),
               if (DesktopTrayService.isDesktop) ...[
@@ -388,12 +346,11 @@ class SettingsScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: colors.brand,
                   title: Text(
-                    AppLocalizations.of(context)!.backgroundNotificationsTitle,
+                    vi.app.thongBaoKhiChayNen,
                     style: VnlfTypography.body(colors.ink),
                   ),
                   subtitle: Text(
-                    AppLocalizations.of(context)!
-                        .backgroundNotificationsSubtitle,
+                    vi.app.giuKetNoiKhiChayNen,
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(androidBackgroundSyncProvider),
@@ -420,13 +377,8 @@ Future<void> _setBackgroundNotifications(
   final notifications = ref.read(localNotificationServiceProvider);
   if (enabled && !await notifications.requestPermission()) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context)!.notificationPermissionDenied,
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(vi.app.chuaDuocPhepGuiThongBao)));
     return;
   }
   await preference.toggle(enabled);

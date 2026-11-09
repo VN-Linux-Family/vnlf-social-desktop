@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vnlfsocialapp/main.dart';
@@ -18,7 +19,6 @@ import 'package:vnlfsocialapp/src/features/feed/presentation/post_mapper.dart';
 import '../tool/ux_audit_fixtures.dart';
 import '../tool/ux_audit_surfaces.dart';
 
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/features/voice/presentation/voice_providers.dart';
 
 void main() {
@@ -336,8 +336,8 @@ void main() {
             child: MaterialApp(
               theme: VnlfTheme.dark(),
               locale: const Locale('vi'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: GlobalMaterialLocalizations.delegates,
+              supportedLocales: const [Locale('vi')],
               builder: (context, child) => MediaQuery(
                 data: MediaQuery.of(context)
                     .copyWith(textScaler: const TextScaler.linear(2)),

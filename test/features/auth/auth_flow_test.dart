@@ -5,7 +5,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/data/live_auth_repository.dart';
@@ -16,9 +15,8 @@ import 'package:vnlfsocialapp/src/features/auth/presentation/login_screen.dart';
 Widget _buildTestApp({required GoRouter router, ProviderContainer? container}) {
   final app = MaterialApp.router(
     locale: const Locale('vi'),
-    supportedLocales: AppLocalizations.supportedLocales,
+    supportedLocales: const [Locale('vi')],
     localizationsDelegates: const [
-      AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,
       GlobalWidgetsLocalizations.delegate,
       GlobalCupertinoLocalizations.delegate,

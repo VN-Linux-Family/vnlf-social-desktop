@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/main.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
@@ -30,12 +29,11 @@ void main() {
         child: MaterialApp.router(
           routerConfig: router,
           localizationsDelegates: const [
-            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: AppLocalizations.supportedLocales,
+          supportedLocales: const [Locale('vi')],
         ),
       ),
     );
@@ -45,7 +43,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(VnlfMobileBottomNav),
-        matching: find.byTooltip('Discover'),
+        matching: find.byTooltip('Khám phá'),
       ),
     );
     await tester.pumpAndSettle();
@@ -68,20 +66,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(VnlfDesktopSidebar), findsOneWidget);
     expect(find.byType(VnlfMobileBottomNav), findsNothing);
-  });
-
-  testWidgets('locale override reaches the application', (tester) async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(container: container, child: const MainApp()),
-    );
-    await tester.pumpAndSettle();
-    container.read(localeProvider.notifier).state = const Locale('en');
-    await tester.pumpAndSettle();
-    final context = tester.element(find.byType(VnlfAdaptiveShell));
-    expect(Localizations.localeOf(context), const Locale('en'));
-    expect(find.text('Feed'), findsWidgets);
   });
 
   testWidgets('account switch removes an active problem notice snackbar', (

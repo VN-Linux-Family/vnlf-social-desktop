@@ -127,33 +127,6 @@ void main() {
   });
 
   testWidgets(
-    'settings reports a language save failure and lets the user retry',
-    (tester) async {
-      final storage = _MemoryStorage()..writeFailure = true;
-      final container = _container(storage: storage);
-      addTearDown(container.dispose);
-      final router = await _pumpApp(tester, container);
-      router.go('/settings');
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(ChoiceChip, 'English'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Could not save language'), findsOneWidget);
-      expect(
-        container.read(localeStorageFailureProvider),
-        isA<StorageFailure>(),
-      );
-      expect(container.read(localeProvider), const Locale('en'));
-
-      storage.writeFailure = false;
-      await tester.tap(find.widgetWithText(ChoiceChip, 'English'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Could not save language'), findsNothing);
-      expect(container.read(localeStorageFailureProvider), isNull);
-    },
-  );
-
-  testWidgets(
     'settings logout handles server failure and shows guest account',
     (tester) async {
       final repository = _AuthRepository()

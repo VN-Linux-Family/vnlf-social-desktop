@@ -6,7 +6,14 @@ import 'session_storage_contract.dart';
 export 'session_storage_contract.dart';
 
 final class SecureSessionStorage implements SessionStorage {
-  const SecureSessionStorage([this._storage = const FlutterSecureStorage()]);
+  const SecureSessionStorage([
+    this._storage = const FlutterSecureStorage(
+      // Bản macOS ký ad hoc không có team identifier nên keychain kiểu data
+      // protection từ chối (errSecMissingEntitlement) và đăng nhập không lưu
+      // được phiên. Login keychain không cần entitlement đó.
+      mOptions: MacOsOptions(useDataProtectionKeyChain: false),
+    ),
+  ]);
   final FlutterSecureStorage _storage;
 
   @override
