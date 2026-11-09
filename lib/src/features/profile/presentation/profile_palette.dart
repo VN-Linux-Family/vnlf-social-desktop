@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../design_system/design_system.dart';
 import '../domain/profile_theme.dart';
 import '../domain/public_profile.dart';
 
@@ -54,7 +55,9 @@ final class ProfilePalette {
 
   static Color _color(String hex) =>
       Color(0xff000000 | int.parse(hex.substring(1), radix: 16));
-}
 
-/// The monospace stack the website gives the terminal theme.
-const profileMonoFamilies = ['JetBrains Mono', 'DejaVu Sans Mono', 'monospace'];
+  /// The terminal theme's monospace text, as the website's
+  /// `ui-monospace, 'JetBrains Mono', monospace`; other themes keep [style].
+  TextStyle monoIfTerminal(TextStyle style) =>
+      mono ? style.copyWith(fontFamily: VnlfTypography.monoFontFamily) : style;
+}

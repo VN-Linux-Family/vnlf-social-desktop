@@ -11,6 +11,7 @@ import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../../shared/presentation/page_header_actions.dart';
 import '../domain/public_profile.dart';
+import 'people_dialog.dart';
 import 'profile_actions.dart';
 import 'profile_card.dart';
 import 'profile_content.dart';
@@ -154,6 +155,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         profile: value,
         palette: palette,
         actions: ProfileActions(profile: value, profileKey: widget.username),
+        onOpenPeople: ref.watch(peopleRepositoryProvider) == null
+            ? null
+            : (tab) => showPeopleDialog(
+                context,
+                username: value.author.username,
+                name: value.author.displayName,
+                initial: tab,
+              ),
         tabs: ProfileTabs(
           tabs: tabs,
           selected: selected,

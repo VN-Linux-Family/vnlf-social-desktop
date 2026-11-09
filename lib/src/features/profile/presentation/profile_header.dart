@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../design_system/design_system.dart';
 import '../../../i18n/vi.dart';
 import '../../shared/presentation/author_mapper.dart';
+import '../domain/people.dart';
 import '../domain/public_profile.dart';
 import 'profile_links_row.dart';
 import 'profile_palette.dart';
@@ -18,10 +19,14 @@ class ProfileHeader extends StatelessWidget {
     required this.palette,
     this.actions,
     this.tabs,
+    this.onOpenPeople,
   });
 
   final PublicProfile profile;
   final ProfilePalette palette;
+
+  /// Opens the followers or following list from its count.
+  final ValueChanged<PeopleTab>? onOpenPeople;
 
   /// Follow, edit or unblock, and the menu.
   final Widget? actions;
@@ -52,7 +57,11 @@ class ProfileHeader extends StatelessWidget {
             actions: actions,
           ),
           _Divider(colors.line),
-          _Stats(profile: profile, palette: palette),
+          _Stats(
+            profile: profile,
+            palette: palette,
+            onOpenPeople: onOpenPeople,
+          ),
           if (tabs case final tabs?) ...[_Divider(colors.line), tabs],
         ],
       ),
@@ -168,9 +177,7 @@ class _Info extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     final author = presentAuthor(profile.author);
-    final mono = palette.mono ? profileMonoFamilies : null;
-    final muted = VnlfTypography.plain(colors.muted)
-        .copyWith(fontFamilyFallback: mono);
+    final muted = palette.monoIfTerminal(VnlfTypography.plain(colors.muted));
     final bio = Text(
       _collapse(profile.bio) ?? vi.accountViews.thanhVienVnlfSocial,
       style: VnlfTypography.plain(colors.ink),
@@ -300,10 +307,15 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _Stats extends StatelessWidget {
-  const _Stats({required this.profile, required this.palette});
+  const _Stats({
+    required this.profile,
+    required this.palette,
+    required this.onOpenPeople,
+  });
 
   final PublicProfile profile;
   final ProfilePalette palette;
+  final ValueChanged<PeopleTab>? onOpenPeople;
 
   @override
   Widget build(BuildContext context) {
@@ -312,10 +324,9 @@ class _Stats extends StatelessWidget {
     final phone = width < 841;
     final grid =
         width <= 520 || MediaQuery.textScalerOf(context).scale(13) > 20;
-    final number = VnlfTypography.plain(
-      palette.accent,
-      fontWeight: FontWeight.w600,
-    ).copyWith(fontFamilyFallback: palette.mono ? profileMonoFamilies : null);
+    final number = palette.monoIfTerminal(
+      VnlfTypography.plain(palette.accent, fontWeight: FontWeight.w600),
+    );
     final cells = [
       _Stat(
         value: profile.totalPoints,
@@ -332,11 +343,19 @@ class _Stats extends StatelessWidget {
         value: profile.followingCount,
         label: vi.accountViews.dangTheoDoi2,
         style: number,
+        opens: vi.people.dangTheoDoi,
+        onTap: onOpenPeople == null
+            ? null
+            : () => onOpenPeople!(PeopleTab.following),
       ),
       _Stat(
         value: profile.followerCount,
         label: vi.accountViews.nguoiTheoDoi,
         style: number,
+        opens: vi.people.nguoiTheoDoi,
+        onTap: onOpenPeople == null
+            ? null
+            : () => onOpenPeople!(PeopleTab.followers),
       ),
     ];
     final line = BorderSide(color: colors.line);
@@ -403,12 +422,14 @@ class _Stats extends StatelessWidget {
   }
 }
 
-class _Stat extends StatelessWidget {
+class _Stat extends StatefulWidget {
   const _Stat({
     required this.value,
     required this.label,
     required this.style,
     this.level,
+    this.opens,
+    this.onTap,
   });
 
   final int? value;
@@ -416,9 +437,44 @@ class _Stat extends StatelessWidget {
   final TextStyle style;
   final int? level;
 
+  /// The list the count opens, named for screen readers ("Xem {label}").
+  final String? opens;
+  final VoidCallback? onTap;
+
+  @override
+  State<_Stat> createState() => _StatState();
+}
+
+class _StatState extends State<_Stat> {
+  var _hovered = false;
+
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
+    final onTap = widget.onTap;
+    final content = _content(colors, hovered: _hovered);
+    if (onTap == null) return content;
+    // The website's `.profile-stat-open`: the label darkens and underlines.
+    return Semantics(
+      button: true,
+      label: format(vi.people.moDanhSach, {'label': widget.opens ?? ''}),
+      excludeSemantics: true,
+      onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        onHover: (value) => setState(() => _hovered = value),
+        onFocusChange: (value) => setState(() => _hovered = value),
+        hoverColor: Colors.transparent,
+        child: content,
+      ),
+    );
+  }
+
+  Widget _content(VnlfColors colors, {required bool hovered}) {
+    final style = widget.style;
+    final value = widget.value;
+    final level = widget.level;
+    final label = widget.label;
     final accent = style.color ?? colors.ink;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +507,11 @@ class _Stat extends StatelessWidget {
               ),
           ],
         ),
-        Text(label, style: VnlfTypography.plain(colors.muted)),
+        Text(
+          label,
+          style: VnlfTypography.plain(hovered ? colors.ink : colors.muted)
+              .copyWith(decoration: hovered ? TextDecoration.underline : null),
+        ),
       ],
     );
   }

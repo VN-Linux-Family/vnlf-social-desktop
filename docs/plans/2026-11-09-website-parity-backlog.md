@@ -53,7 +53,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ Profile header like `ProfileView` (#15): the profile theme's colours and canvas, the cover, the avatar over its edge, links and the Discord account, the status, follow or edit, the "…" menu, the stats and the tabs with their counts.
 - ⬜ Still on the profile page: the moving cover, wallpaper, music, the machine card, the visit counter, the "Đã lưu" tab, and the profile and decor reports.
 - ⬜ Avatar and cover upload with cropping.
-- ⬜ Followers and following lists. The app only shows the counts.
+- ✅ Followers and following lists like `PeopleDialog` (#16): the two counts open them, with a follow button on each row.
 - ⬜ Profile music, "my machine" card, personal links, visit counter.
 - ⬜ Customize hub (`/settings/decor`) and wardrobe: frames, name effects, nameplates, pets, entrance. The app already draws frames and name effects but cannot pick them.
 
