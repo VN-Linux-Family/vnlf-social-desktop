@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 
 import '../../../app/providers.dart';
 import '../../../domain/models.dart';
+import '../../channels/presentation/live_channel_state.dart';
 import '../../notifications/data/local_notification_service.dart';
+import '../../notifications/presentation/background_notification_presenter.dart';
+import '../../notifications/presentation/notifications_controller.dart';
 import '../data/community_chat_update.dart';
 import '../data/community_socket_client.dart';
 import '../domain/community_event.dart';
@@ -60,9 +64,11 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
       }
     });
     _eventsSub = client?.events.listen((event) {
-      if (!_foreground) {
-        _dispatchNotification(event);
+      if (event.type == 'notification:created' ||
+          event.type == 'notification:updated') {
+        ref.invalidate(unreadNotificationsCountProvider);
       }
+      if (!_foreground) _presentInBackground(event);
     });
     if (client != null) {
       unawaited(() async {
@@ -72,67 +78,30 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
     }
   }
 
-  void _dispatchNotification(CommunityEvent event) {
-    final data = event.data;
-    if (data is! Map<String, dynamic>) return;
-
-    final notifService = ref.read(localNotificationServiceProvider);
-    final id = event.eventId.hashCode;
-    final currentUserId = ref.read(sessionStateProvider)?.userId;
-
-    if (event.type == 'dm:message' || event.type == 'dm:message-created') {
-      final author = data['author'];
-      final authorId =
-          (author is Map<String, dynamic> ? author['id'] : null) ??
-          data['authorId'];
-      if (authorId != null && authorId == currentUserId) return;
-
-      final authorName = author is Map<String, dynamic>
-          ? (author['displayName'] ?? author['username'] ?? 'Tin nhắn mới')
-          : 'Tin nhắn mới';
-      final content = data['content'] ?? 'Bạn có tin nhắn mới';
-      final convId = (data['conversationId'] ?? '').toString();
-      unawaited(
-        notifService.showNotification(
-          id: id,
-          title: authorName.toString(),
-          body: content.toString(),
-          payload: convId.isNotEmpty ? '/messages/$convId' : '/messages',
-        ),
-      );
-    } else if (event.type == 'message:created') {
-      final author = data['author'];
-      final authorId =
-          (author is Map<String, dynamic> ? author['id'] : null) ??
-          data['authorId'];
-      if (authorId != null && authorId == currentUserId) return;
-
-      final authorName = author is Map<String, dynamic>
-          ? (author['displayName'] ?? 'Kênh chat')
-          : 'Kênh chat';
-      final content = data['content'] ?? 'Có tin nhắn mới trong kênh';
-      final channelId = (data['channelId'] ?? '').toString();
-      unawaited(
-        notifService.showNotification(
-          id: id,
-          title: authorName.toString(),
-          body: content.toString(),
-          payload: channelId.isNotEmpty ? '/channels/$channelId' : '/channels',
-        ),
-      );
-    } else if (event.type.startsWith('notification:')) {
-      final title = data['title'] ?? 'VNLF Social';
-      final body =
-          data['body'] ?? 'Bạn có hoạt động mới trên Vietnam Linux Family.';
-      unawaited(
-        notifService.showNotification(
-          id: id,
-          title: title.toString(),
-          body: body.toString(),
-          payload: '/notifications',
-        ),
-      );
-    }
+  void _presentInBackground(CommunityEvent event) {
+    final presenter = BackgroundNotificationPresenter(
+      show: ref.read(localNotificationServiceProvider).showNotification,
+      loadLatestNotices: () => ref.read(notificationsRepositoryProvider).load(),
+      currentUserId: ref.read(sessionStateProvider)?.userId,
+      channelSlug: (channelId) => ref.exists(liveChannelsProvider)
+          ? ref
+                .read(liveChannelsProvider)
+                .valueOrNull
+                ?.where((channel) => channel.id == channelId)
+                .firstOrNull
+                ?.slug
+          : null,
+    );
+    unawaited(
+      presenter
+          .present(event, AppLocalizations.of(context)!)
+          .then<void>(
+            (_) {},
+            onError: (Object error) => debugPrint(
+              'Background notification failed: ${error.runtimeType}',
+            ),
+          ),
+    );
   }
 
   @override

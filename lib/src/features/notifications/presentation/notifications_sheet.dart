@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/vnlf_navigation_helper.dart';
 import '../../../design_system/design_system.dart';
 import '../domain/notifications_repository.dart';
+import 'notice_copy.dart';
 import 'notifications_controller.dart';
 
 class NotificationsSheet extends ConsumerWidget {
@@ -193,7 +194,7 @@ class NotificationsSheet extends ConsumerWidget {
                                 [
                                   if (item.actor.displayName.isNotEmpty)
                                     item.actor.displayName,
-                                  _action(item.type, english),
+                                  noticeAction(item.type, english),
                                 ].join(' · '),
                                 style: TextStyle(
                                   fontWeight: item.unread
@@ -224,7 +225,7 @@ class NotificationsSheet extends ConsumerWidget {
                                               null) {
                                         return;
                                       }
-                                      final route = _route(item);
+                                      final route = noticeRoute(item);
                                       if (route != null) {
                                         Navigator.pop(context);
                                         router.push(route);
@@ -260,54 +261,3 @@ class NotificationsSheet extends ConsumerWidget {
     );
   }
 }
-
-String? _route(CommunityNotice item) {
-  if (item.targetType == 'ARTICLE' && item.targetId.isNotEmpty) {
-    return '/thread/${Uri.encodeComponent(item.targetId)}';
-  }
-  if (item.targetType == 'USER' && item.actor.username.isNotEmpty) {
-    return '/profile/${Uri.encodeComponent(item.actor.username)}';
-  }
-  if (item.targetType == 'CONVERSATION' && item.targetId.isNotEmpty) {
-    return '/messages/${Uri.encodeComponent(item.targetId)}';
-  }
-  if (item.targetType == 'FEEDBACK' && item.targetId.isNotEmpty) {
-    return '/feedback/${Uri.encodeComponent(item.targetId)}';
-  }
-  final href = Uri.tryParse(item.href);
-  if (item.targetType == 'GUESTBOOK' &&
-      href != null &&
-      !href.hasScheme &&
-      !href.hasAuthority &&
-      href.path.startsWith('/') &&
-      href.pathSegments.length == 2 &&
-      href.pathSegments.first == 'u' &&
-      href.pathSegments.last.isNotEmpty &&
-      href.queryParameters['tab'] == 'guestbook') {
-    return '/profile/${Uri.encodeComponent(href.pathSegments.last)}?tab=guestbook';
-  }
-  if (href != null &&
-      !href.hasScheme &&
-      !href.hasAuthority &&
-      href.pathSegments.length == 2 &&
-      href.pathSegments.first == 'projects' &&
-      href.pathSegments.last.isNotEmpty &&
-      href.path.startsWith('/')) {
-    return '/projects/${Uri.encodeComponent(href.pathSegments.last)}';
-  }
-  return null;
-}
-
-String _action(String type, bool english) => switch (type) {
-  'article-liked' => english ? 'Liked your post' : 'Đã thích bài viết của bạn',
-  'comment-liked' =>
-    english ? 'Liked your comment' : 'Đã thích bình luận của bạn',
-  'comment-created' =>
-    english ? 'Commented on your post' : 'Đã bình luận bài viết của bạn',
-  'comment-replied' =>
-    english ? 'Replied to your comment' : 'Đã trả lời bình luận của bạn',
-  'user-followed' => english ? 'Started following you' : 'Đã theo dõi bạn',
-  'guestbook-signed' =>
-    english ? 'Signed your guestbook' : 'Đã viết vào sổ lưu bút của bạn',
-  _ => english ? 'Community update' : 'Cập nhật cộng đồng',
-};

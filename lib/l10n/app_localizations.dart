@@ -103,6 +103,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vietnam Linux Family'**
   String get appTitle;
+
+  /// Android settings switch that keeps the realtime connection open while the app is in the background.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo khi chạy nền'**
+  String get backgroundNotificationsTitle;
+
+  /// Explains that notifications arrive only while the app process is alive; the server offers the app no push service.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ kết nối khi ứng dụng chạy nền để báo tin nhắn và hoạt động mới. Đóng hẳn ứng dụng thì sẽ không nhận được thông báo.'**
+  String get backgroundNotificationsSubtitle;
+
+  /// System notification title for a direct message whose author name is missing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn mới'**
+  String get messageNotificationTitle;
+
+  /// System notification text for a direct message without text, such as an image or GIF.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có tin nhắn mới'**
+  String get messageNotificationBody;
+
+  /// System notification title for a channel message whose author name is missing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kênh chat'**
+  String get channelNotificationTitle;
+
+  /// System notification text for a channel message without text.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có tin nhắn mới trong kênh'**
+  String get channelNotificationBody;
+
+  /// System notification text when a new notification cannot be loaded to describe it.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có hoạt động mới trên Vietnam Linux Family.'**
+  String get activityNotificationBody;
 }
 
 class _AppLocalizationsDelegate

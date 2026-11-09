@@ -112,6 +112,15 @@ and logged out; it did not mark any notification read or seen.
   - On native desktop/mobile clients (Flutter), active real-time updates and notifications arrive directly over the persistent WebSocket connection (`/ws/community`) with topic subscriptions (`channel:join`, `conversation:join`, etc.).
   - For future background push on Android without Play Services or via UnifiedPush, the backend would need an upstream gateway or endpoint whitelist update.
 
+### Native client policy and v0.1.0 cleanup (2026-11-09)
+
+[CONFIRMED from source `ab23799`] details that matter for cleanup:
+- `POST` checks only the endpoint host, the 65-byte key starting with `0x04` and the 16-byte auth secret. It does not check that the key is a real P-256 point, and it caps an account at ten subscriptions.
+- `DELETE /api/v1/push/subscriptions` with `{ endpoint }` deletes the signed-in user's row for that endpoint and returns `{ ok: true }` even when no row matched. The website calls it the same way (`push-settings.tsx`, `push-sw.js`).
+- The worker deletes a subscription only after a 404 or 410 from the push service. Any other failure, such as an encryption error, keeps the row, marks the delivery failed and rethrows for a retry when no subscription succeeded.
+
+The native client registers no Web Push subscription, because no native push service can receive one. v0.1.0 did register one from the Settings switch, with random bytes as `p256dh`/`auth` and an invented `https://fcm.googleapis.com/fcm/send/<random>` endpoint cached in shared preferences (`vnlf_push_endpoint`). The server cannot encrypt for that key, so every delivery fails. When a member signs in or a session loads, the client now sends one `DELETE` for the cached endpoint. It forgets the cached values after `{ ok: true }` and keeps them after a failure for the next sign-in; the delete is never retried automatically.
+
 ## Read Receipts & Real-time Read State (2026-11-07)
 
 - `POST /api/v1/dm/conversations/:id/read` accepts `{ lastReadMessageId?: string }` and publishes `dm:peer-read` to peers.
@@ -367,6 +376,10 @@ Connection uses HTTP upgrade with existing session cookies.
 - [CONFIRMED] Handshake Origin validation: The server (Caddy / Cloudflare) returns `HTTP 403 Forbidden` if the `Origin` header is absent during WebSocket handshake upgrade. Native clients must pass `Origin: https://vietnamlinuxfamily.net` (matching the origin of `baseUri`).
 - [CONFIRMED] Unauthenticated closure: The server immediately closes unauthenticated WebSocket connections with close code `4401` ("Authentication required").
 - [CONFIRMED from production chunk `03vhpiw_fgmse.js`]: Realtime provider module `8808` (`RealtimeProvider`) performs an initial `presence:heartbeat` frame upon open, and triggers invalidation / refetching for `dm-conversations`, `dm-messages`, `channels`, and `voice-rooms`.
+- [CONFIRMED from source `ab23799`] Event payloads used for system notifications:
+  - The gateway (`apps/api/src/modules/realtime.ts`) wraps every relayed pub/sub message with a fresh `eventId` and `occurredAt`.
+  - `notification:created` and `notification:updated` carry only `{ id }` (`apps/worker/src/index.ts`). `updated` means another actor was folded into an existing notification, which becomes unread again. The website only refetches its notification queries on both events. The native client refreshes its unread count, and while in the background it reads the newest `GET /api/v1/notifications` page to describe the notice.
+  - `dm:message-created` and channel `message:created` carry the chat message DTO: `id`, `conversationId` or `channelId`, `authorId`, `author { id, username, displayName, avatarUrl }`, `content`. The channel slug is not included. A direct message is published to `conversation:<id>` and to every member's `notification:<userId>`, so the same message can arrive twice; the client keys its system notification by message id.
 
 > [!NOTE]
 > **Observation Audit**: The page's live `/ws/community` WebSocket connection was **NOT observed**, and its live frames were **NOT captured**. All endpoint strings, event names, and protocol patterns below were inferred solely by string-matching static JavaScript bundle `2bvq-3i0lg1dx.js`. All sample frames shown below are purely synthetic/invented.
