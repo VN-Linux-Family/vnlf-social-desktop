@@ -58,14 +58,18 @@ final class VnlfMenuAction {
 /// Opens a menu like the website's `PostMenu`: a popover under [anchor] on
 /// wider screens and a bottom action sheet on phones. The chosen action runs
 /// after the menu has closed, so it can open its own dialog.
+/// The website's "…" menus. Posts use a sheet on phones; [dense] is the
+/// profile's `.profile-menu`, a smaller dropdown at every width.
 Future<void> showVnlfActionMenu(
   BuildContext context, {
   required Rect anchor,
   required List<VnlfMenuAction> actions,
   required String label,
+  bool dense = false,
 }) async {
-  final phone =
+  final touch =
       MediaQuery.sizeOf(context).width < VnlfDimensions.tabletMinWidth;
+  final phone = touch && !dense;
   final reduceMotion = MediaQuery.disableAnimationsOf(context);
   final chosen = await showGeneralDialog<VnlfMenuAction>(
     context: context,
@@ -77,7 +81,13 @@ Future<void> showVnlfActionMenu(
         : Duration(milliseconds: phone ? 180 : 120),
     pageBuilder: (context, _, _) => phone
         ? _MenuSheet(actions: actions, label: label)
-        : _MenuPopover(anchor: anchor, actions: actions, label: label),
+        : _MenuPopover(
+            anchor: anchor,
+            actions: actions,
+            label: label,
+            dense: dense,
+            touch: touch,
+          ),
     transitionBuilder: (context, animation, _, child) {
       final curved = CurvedAnimation(parent: animation, curve: Curves.easeOut);
       return FadeTransition(
@@ -103,23 +113,27 @@ class _MenuPopover extends StatelessWidget {
     required this.anchor,
     required this.actions,
     required this.label,
+    required this.dense,
+    required this.touch,
   });
 
   final Rect anchor;
   final List<VnlfMenuAction> actions;
   final String label;
+  final bool dense;
+  final bool touch;
 
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     return CustomSingleChildLayout(
-      delegate: _PopoverLayout(anchor, gap: 6),
+      delegate: _PopoverLayout(anchor, gap: dense ? 7 : 6),
       child: Semantics(
         label: label,
         scopesRoute: true,
         explicitChildNodes: true,
         child: Container(
-          width: 232,
+          width: dense ? 210 : 232,
           padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
             color: colors.surface,
@@ -129,7 +143,12 @@ class _MenuPopover extends StatelessWidget {
           ),
           child: Material(
             type: MaterialType.transparency,
-            child: _MenuItems(actions: actions, phone: false),
+            child: _MenuItems(
+              actions: actions,
+              phone: false,
+              dense: dense,
+              touch: touch,
+            ),
           ),
         ),
       ),
@@ -272,10 +291,17 @@ class _MenuSheet extends StatelessWidget {
 }
 
 class _MenuItems extends StatelessWidget {
-  const _MenuItems({required this.actions, required this.phone});
+  const _MenuItems({
+    required this.actions,
+    required this.phone,
+    this.dense = false,
+    this.touch = false,
+  });
 
   final List<VnlfMenuAction> actions;
   final bool phone;
+  final bool dense;
+  final bool touch;
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +316,13 @@ class _MenuItems extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (var i = 0; i < actions.length; i++)
-              _MenuItem(action: actions[i], phone: phone, autofocus: i == 0),
+              _MenuItem(
+                action: actions[i],
+                phone: phone,
+                dense: dense,
+                touch: touch,
+                autofocus: i == 0,
+              ),
           ],
         ),
       ),
@@ -303,11 +335,18 @@ class _MenuItem extends StatefulWidget {
     required this.action,
     required this.phone,
     required this.autofocus,
+    this.dense = false,
+    this.touch = false,
   });
 
   final VnlfMenuAction action;
   final bool phone;
   final bool autofocus;
+
+  /// `.profile-menu` rows: padding 9, radius 6, a 15px icon, and a soft
+  /// grey on hover. [touch] keeps them 48 tall on phones.
+  final bool dense;
+  final bool touch;
 
   @override
   State<_MenuItem> createState() => _MenuItemState();
@@ -320,7 +359,14 @@ class _MenuItemState extends State<_MenuItem> {
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     final action = widget.action;
-    final radius = BorderRadius.circular(widget.phone ? 12 : 10);
+    final dense = widget.dense;
+    final radius = BorderRadius.circular(
+      dense
+          ? 6
+          : widget.phone
+          ? 12
+          : 10,
+    );
     final color = action.danger
         ? colors.red
         : _lit
@@ -337,21 +383,40 @@ class _MenuItemState extends State<_MenuItem> {
         onFocusChange: (value) => setState(() => _lit = value),
         onTap: action.enabled ? () => Navigator.of(context).pop(action) : null,
         child: Container(
-          constraints: BoxConstraints(minHeight: widget.phone ? 50 : 42),
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.phone ? 14 : 12,
-            vertical: widget.phone ? 14 : 10,
+          constraints: BoxConstraints(
+            minHeight: dense
+                ? (widget.touch ? 48 : 34)
+                : widget.phone
+                ? 50
+                : 42,
           ),
+          padding: dense
+              ? const EdgeInsets.all(9)
+              : EdgeInsets.symmetric(
+                  horizontal: widget.phone ? 14 : 12,
+                  vertical: widget.phone ? 14 : 10,
+                ),
           decoration: BoxDecoration(
-            color: _lit ? colors.brandSoft : null,
+            color: _lit
+                ? (dense ? colors.surfaceSoft : colors.brandSoft)
+                : null,
             borderRadius: radius,
           ),
           child: Row(
-            spacing: widget.phone ? 12 : 9,
+            spacing: dense
+                ? 8
+                : widget.phone
+                ? 12
+                : 9,
             children: [
-              VnlfIcon(action.icon, size: 16, color: color),
+              VnlfIcon(action.icon, size: dense ? 15 : 16, color: color),
               Expanded(
-                child: Text(action.label, style: VnlfTypography.body(color)),
+                child: Text(
+                  action.label,
+                  style: dense
+                      ? VnlfTypography.plain(color)
+                      : VnlfTypography.body(color),
+                ),
               ),
             ],
           ),

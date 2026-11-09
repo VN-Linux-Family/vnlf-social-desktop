@@ -9,6 +9,7 @@ import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/profile/domain/public_profile.dart';
 import 'package:vnlfsocialapp/src/features/profile/presentation/profile_data.dart';
 import 'package:vnlfsocialapp/src/features/profile/presentation/profile_header.dart';
+import 'package:vnlfsocialapp/src/features/profile/presentation/profile_tabs.dart';
 
 void main() {
   for (final scale in [1.0, 1.6]) {
@@ -27,29 +28,38 @@ void main() {
           of: header,
           matching: find.text('Nguyễn An'),
         );
+        // The website leaves 11px under the avatar on phones.
         expect(
           tester.getTopLeft(name).dy,
-          greaterThanOrEqualTo(tester.getBottomRight(avatar).dy + 12),
+          greaterThanOrEqualTo(tester.getBottomRight(avatar).dy + 11),
         );
       },
     );
   }
 
-  testWidgets('opening a profile requests only its visible content section', (
+  testWidgets('opening a profile loads each section once for its count', (
     tester,
   ) async {
     final repository = _Profiles();
     await _pump(tester, repository);
-    expect(repository.requested, ['profile', 'posts']);
+    // The website loads every tab on opening to show the counts.
+    expect(repository.requested, hasLength(5));
+    expect(repository.requested.toSet(), {
+      'profile',
+      'posts',
+      'comments',
+      'projects',
+      'guestbook',
+    });
     await _select(tester, 'Bình luận');
-    expect(repository.requested, ['profile', 'posts', 'comments']);
+    expect(repository.requested, hasLength(5));
   });
   testWidgets('guestbook link opens the guestbook tab directly', (
     tester,
   ) async {
     final repository = _Profiles();
     await _pump(tester, repository, route: '/profile/fixture?tab=guestbook');
-    expect(repository.requested, ['profile', 'guestbook']);
+    expect(repository.requested.first, 'profile');
     expect(find.text('Lời nhắn đầu'), findsOneWidget);
   });
   testWidgets(
@@ -79,6 +89,11 @@ void main() {
       expect(find.text('đang theo dõi'), findsOneWidget);
       expect(find.text('người theo dõi'), findsOneWidget);
       expect(find.text('Tiếng Việt: ặ ữ ờ ẫ ệ'), findsOneWidget);
+      expect(find.text('1.234 lượt ghé'), findsOneWidget);
+      expect(find.text('@an.vnlf'), findsOneWidget);
+      // The unsafe link is dropped; the GitHub one keeps its name.
+      expect(find.byTooltip('GitHub: an'), findsOneWidget);
+      expect(find.byTooltip('Website: alert(1)'), findsNothing);
       expect(find.text('Karma'), findsNothing);
       expect(find.text('Tủ đồ & Huy hiệu'), findsNothing);
       expect(find.text('Bài viết'), findsOneWidget);
@@ -130,7 +145,7 @@ void main() {
 
 Future<void> _select(WidgetTester tester, String label) async {
   final tab = find.descendant(
-    of: find.byType(VnlfFeedTabBar),
+    of: find.byType(ProfileTabs),
     matching: find.text(label),
   );
   await tester.ensureVisible(tab);
@@ -181,6 +196,13 @@ class _Profiles implements PublicProfileRepository {
       followingCount: 9,
       followerCount: 12,
       bio: 'Tiếng Việt: ặ ữ ờ ẫ ệ',
+      decor: ProfileDecor(
+        themeId: 'arch',
+        status: (emoji: '🐧', text: 'Đang cài Arch'),
+        links: ['https://github.com/an', 'javascript:alert(1)'],
+        discordUsername: 'an.vnlf',
+        visits: (count: 1234, hidden: false),
+      ),
     );
   }
 

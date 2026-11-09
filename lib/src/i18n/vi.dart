@@ -5181,7 +5181,6 @@ final class ViAppProfile {
   final dangTheoDoi = 'Đang theo dõi {name}';
   final theoDoi = 'Theo dõi {name}';
   final dangTheoDoiCham = 'Đang theo dõi {name}. Chạm để bỏ theo dõi';
-  final tuyChonHoSo = 'Tùy chọn hồ sơ';
   final boChan = 'Bỏ chặn {name}';
   final dangNhapDeTheo = 'Đăng nhập để theo dõi {name}';
   final hoSoNayHien = 'Hồ sơ này hiện không có sẵn.';

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/providers.dart';
+import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
+import '../../direct_messages/presentation/direct_message_feedback.dart';
+import '../../direct_messages/presentation/direct_message_state.dart';
 import '../domain/profile_relationship.dart';
 import '../domain/public_profile.dart';
 import 'profile_relationship_controller.dart';
 import 'profile_relationship_copy.dart';
 
-/// Follow and block controls for a member profile.
-///
-/// Guests get a sign-in path, owners and sample profiles get nothing, and a
-/// member the viewer blocked can only be unblocked.
+/// The website's `.profile-actions`: follow (edit for the owner, unblock
+/// for someone the viewer blocked) and the "…" menu.
 class ProfileActions extends ConsumerWidget {
   const ProfileActions({
     super.key,
@@ -28,29 +31,54 @@ class ProfileActions extends ConsumerWidget {
     if (profile.isSample) return const SizedBox.shrink();
     final copy = ProfileRelationshipCopy(name: profile.author.displayName);
     final session = ref.watch(sessionStateProvider);
-    if (session == null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: _FollowButton(
-          label: copy.follow,
-          semanticLabel: copy.signInToFollow,
-          onPressed: () => context.push('/login'),
-        ),
+    final targetId = profile.author.id;
+    final owner =
+        session != null &&
+        (targetId == session.userId ||
+            (session.username.isNotEmpty &&
+                session.username.toLowerCase() ==
+                    profile.author.username.toLowerCase()));
+    if (session == null || owner) {
+      return _ActionsRow(
+        primary: owner
+            ? ProfileOutlineButton(
+                icon: VnlfLucide.penLine,
+                label: vi.common.chinhSuaHoSo,
+                onPressed: () => context.go('/settings'),
+              )
+            : ProfileOutlineButton(
+                icon: VnlfLucide.userPlus,
+                label: copy.follow,
+                semanticLabel: copy.signInToFollow,
+                onPressed: () => context.push('/login'),
+              ),
+        menu: [
+          if (owner) ...[
+            VnlfMenuAction(
+              icon: VnlfLucide.bookOpen,
+              label: vi.common.quanLyBaiViet,
+              // "My articles" is not ported yet; the website has it.
+              onSelected: () => launchUrl(
+                Uri.parse('https://vietnamlinuxfamily.net/my/articles'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+            VnlfMenuAction(
+              icon: VnlfLucide.settings,
+              label: vi.accountViews.caiDatTaiKhoan,
+              onSelected: () => context.go('/settings'),
+            ),
+          ],
+          _activity(context),
+        ],
       );
     }
-    final targetId = profile.author.id;
-    final isOwner =
-        targetId == session.userId ||
-        (session.username.isNotEmpty &&
-            session.username.toLowerCase() ==
-                profile.author.username.toLowerCase());
     final repository = ref.watch(profileRelationshipRepositoryProvider);
-    if (isOwner ||
-        targetId.isEmpty ||
+    if (targetId.isEmpty ||
         repository == null ||
         profile.followedByViewer == null ||
         profile.blockedByViewer == null) {
-      return const SizedBox.shrink();
+      return _ActionsRow(menu: [_message(context, ref), _activity(context)]);
     }
     return _SignedInActions(
       key: ValueKey('${session.userId}:$targetId'),
@@ -61,8 +89,42 @@ class ProfileActions extends ConsumerWidget {
         targetId: targetId,
         username: profileKey,
       ),
+      message: _message(context, ref),
+      activity: _activity(context),
     );
   }
+
+  VnlfMenuAction _activity(BuildContext context) => VnlfMenuAction(
+    icon: VnlfLucide.trophy,
+    label: vi.accountViews.xemDiemHoatDong,
+    onSelected: () => context.push('/activity'),
+  );
+
+  VnlfMenuAction _message(BuildContext context, WidgetRef ref) =>
+      VnlfMenuAction(
+        icon: VnlfLucide.messageCircle,
+        label: vi.accountViews.nhanTin,
+        // As the website's "Nhắn tin" link, it opens the conversation with
+        // this member, asking for one when there is none yet.
+        onSelected: () async {
+          final router = GoRouter.of(context);
+          final id = await ref
+              .read(dmInboxProvider.notifier)
+              .openOrRequestConversation(profile.author.id);
+          if (id != null) {
+            router.go('/messages/$id');
+            return;
+          }
+          if (!context.mounted) return;
+          final failure = ref.read(dmInboxProvider).actionFailure;
+          if (failure == null) return;
+          ScaffoldMessenger.maybeOf(context)
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(content: Text(dmFailureMessage(context, failure))),
+            );
+        },
+      );
 }
 
 class _SignedInActions extends ConsumerWidget {
@@ -71,10 +133,14 @@ class _SignedInActions extends ConsumerWidget {
     required this.profile,
     required this.copy,
     required this.relationship,
+    required this.message,
+    required this.activity,
   });
   final PublicProfile profile;
   final ProfileRelationshipCopy copy;
   final ProfileRelationshipKey relationship;
+  final VnlfMenuAction message;
+  final VnlfMenuAction activity;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,134 +167,200 @@ class _SignedInActions extends ConsumerWidget {
     final followed = profile.followedByViewer == true;
 
     Future<void> block() async {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(copy.blockTitle),
-          content: Text(copy.blockExplanation),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(copy.cancel),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Theme.of(context).colorScheme.onError,
-              ),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(copy.confirmBlock),
-            ),
-          ],
-        ),
+      final confirmed = await showVnlfConfirm(
+        context,
+        title: copy.blockTitle,
+        description: copy.blockExplanation,
+        confirmLabel: copy.confirmBlock,
       );
-      if (confirmed == true) {
+      if (confirmed) {
         await controller.perform(ProfileRelationshipAction.block, profile);
       }
     }
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (blocked)
-          _FollowButton(
-            label: busy ? copy.updating : copy.unblock,
-            semanticLabel: copy.unblockLabel,
-            icon: Icons.block,
-            onPressed: busy
-                ? null
-                : () => controller.perform(
-                    ProfileRelationshipAction.unblock,
-                    profile,
-                  ),
-          )
-        else
-          _FollowButton(
-            label: busy
-                ? copy.updating
-                : followed
-                ? copy.following
-                : copy.follow,
-            semanticLabel: copy.followToggleLabel(followed),
-            toggled: followed,
-            icon: followed
-                ? Icons.check_rounded
-                : Icons.person_add_alt_1_rounded,
-            onPressed: busy
-                ? null
-                : () => controller.perform(
-                    followed
-                        ? ProfileRelationshipAction.unfollow
-                        : ProfileRelationshipAction.follow,
-                    profile,
-                  ),
-          ),
-        if (blocked) Text(copy.blockedHint),
-        if (!blocked)
-          PopupMenuButton<void>(
-            tooltip: copy.moreOptions,
-            enabled: !busy,
-            icon: const Icon(Icons.more_horiz_rounded),
-            itemBuilder: (context) => [
-              PopupMenuItem<void>(
-                onTap: block,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.block,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.error,
+    void unblock() =>
+        controller.perform(ProfileRelationshipAction.unblock, profile);
+
+    return _ActionsRow(
+      primary: blocked
+          ? ProfileOutlineButton(
+              icon: VnlfLucide.ban,
+              label: busy ? copy.updating : copy.unblock,
+              semanticLabel: copy.unblockLabel,
+              tooltip: copy.blockedHint,
+              onPressed: busy ? null : unblock,
+            )
+          : ProfileOutlineButton(
+              // The website keeps user-plus in both states.
+              icon: VnlfLucide.userPlus,
+              label: busy
+                  ? copy.updating
+                  : followed
+                  ? copy.following
+                  : copy.follow,
+              semanticLabel: copy.followToggleLabel(followed),
+              toggled: followed,
+              onPressed: busy
+                  ? null
+                  : () => controller.perform(
+                      followed
+                          ? ProfileRelationshipAction.unfollow
+                          : ProfileRelationshipAction.follow,
+                      profile,
                     ),
-                    const SizedBox(width: 8),
-                    Text(copy.block),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+      menu: [
+        message,
+        activity,
+        VnlfMenuAction(
+          icon: VnlfLucide.ban,
+          label: blocked ? copy.unblock : copy.block,
+          danger: true,
+          enabled: !busy,
+          onSelected: blocked ? unblock : block,
+        ),
       ],
     );
   }
 }
 
-class _FollowButton extends StatelessWidget {
-  const _FollowButton({
+/// The main button and the menu, side by side.
+class _ActionsRow extends StatelessWidget {
+  const _ActionsRow({this.primary, required this.menu});
+
+  final Widget? primary;
+  final List<VnlfMenuAction> menu;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 4,
+      children: [
+        if (primary case final primary?) Flexible(child: primary),
+        _MenuButton(actions: menu),
+      ],
+    );
+  }
+}
+
+class _MenuButton extends StatelessWidget {
+  const _MenuButton({required this.actions});
+
+  final List<VnlfMenuAction> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final size = MediaQuery.sizeOf(context).width < 841 ? 48.0 : 37.0;
+    return Tooltip(
+      message: vi.accountViews.moTuyChonHoSo,
+      child: Semantics(
+        button: true,
+        label: vi.accountViews.moTuyChonHoSo,
+        excludeSemantics: true,
+        onTap: () => _open(context),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+          onTap: () => _open(context),
+          child: SizedBox.square(
+            dimension: size,
+            child: Center(
+              child: VnlfIcon(
+                VnlfLucide.ellipsis,
+                size: 18,
+                color: colors.muted,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context) {
+    final box = context.findRenderObject()! as RenderBox;
+    showVnlfActionMenu(
+      context,
+      anchor: box.localToGlobal(Offset.zero) & box.size,
+      actions: actions,
+      label: vi.accountViews.moTuyChonHoSo,
+      dense: true,
+    );
+  }
+}
+
+/// The website's `.button-outline`: a bordered surface button with a 15px
+/// icon. Phones keep 48dp targets where the website's is 34px tall.
+class ProfileOutlineButton extends StatelessWidget {
+  const ProfileOutlineButton({
+    super.key,
+    required this.icon,
     required this.label,
-    required this.semanticLabel,
     required this.onPressed,
-    this.icon,
+    this.semanticLabel,
+    this.tooltip,
     this.toggled,
   });
+
+  final VnlfLucide icon;
   final String label;
-  final String semanticLabel;
   final VoidCallback? onPressed;
-  final IconData? icon;
+  final String? semanticLabel;
+  final String? tooltip;
   final bool? toggled;
 
   @override
   Widget build(BuildContext context) {
-    final style = OutlinedButton.styleFrom(minimumSize: const Size(48, 48));
-    return Semantics(
+    final colors = VnlfColors.of(context);
+    final radius = BorderRadius.circular(VnlfDimensions.radiusMd);
+    final phone = MediaQuery.sizeOf(context).width < 841;
+    final button = Semantics(
       button: true,
       toggled: toggled,
-      label: semanticLabel,
+      label: semanticLabel ?? label,
       excludeSemantics: true,
       enabled: onPressed != null,
       onTap: onPressed,
-      child: icon == null
-          ? OutlinedButton(
-              style: style,
-              onPressed: onPressed,
-              child: Text(label),
-            )
-          : OutlinedButton.icon(
-              style: style,
-              onPressed: onPressed,
-              icon: Icon(icon, size: 18),
-              label: Text(label),
+      child: Opacity(
+        opacity: onPressed == null ? .42 : 1,
+        child: Material(
+          color: colors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: radius,
+            side: BorderSide(color: colors.line),
+          ),
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onPressed,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: phone ? 48 : 34),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 6,
+                  children: [
+                    VnlfIcon(icon, size: 15, color: colors.ink),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: VnlfTypography.plain(colors.ink),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
+          ),
+        ),
+      ),
     );
+    return tooltip == null ? button : Tooltip(message: tooltip, child: button);
   }
 }

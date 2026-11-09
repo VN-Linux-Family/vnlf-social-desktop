@@ -140,7 +140,7 @@ Future<ProviderContainer> _pump(
 }
 
 Future<void> _openBlockDialog(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Tùy chọn hồ sơ'));
+  await tester.tap(find.byTooltip('Mở tùy chọn hồ sơ'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Chặn người này'));
   await tester.pumpAndSettle();
@@ -159,7 +159,13 @@ void main() {
       find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'),
       findsOneWidget,
     );
-    expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
+    // Guests get the website's menu, without the writes.
+    await tester.tap(find.byTooltip('Mở tùy chọn hồ sơ'));
+    await tester.pumpAndSettle();
+    expect(find.text('Xem điểm hoạt động'), findsOneWidget);
+    expect(find.text('Chặn người này'), findsNothing);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Theo dõi'));
     await tester.pumpAndSettle();
     expect(find.text('login'), findsOneWidget);
@@ -172,7 +178,11 @@ void main() {
     final profiles = _Profiles()..targetId = _viewer.userId;
     await _pump(tester, profiles: profiles, relationships: _Relationships());
     expect(find.text('Theo dõi'), findsNothing);
-    expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
+    expect(find.text('Chỉnh sửa hồ sơ'), findsOneWidget);
+    await tester.tap(find.byTooltip('Mở tùy chọn hồ sơ'));
+    await tester.pumpAndSettle();
+    expect(find.text('Cài đặt tài khoản'), findsOneWidget);
+    expect(find.text('Chặn người này'), findsNothing);
   });
 
   testWidgets('a sample profile never offers writes', (tester) async {
@@ -223,9 +233,14 @@ void main() {
     await tester.pump();
     expect(find.text('Đang cập nhật…'), findsOneWidget);
     await tester.tap(find.text('Đang cập nhật…'), warnIfMissed: false);
-    await tester.tap(find.byTooltip('Tùy chọn hồ sơ'), warnIfMissed: false);
+    await tester.tap(find.byTooltip('Mở tùy chọn hồ sơ'));
+    await tester.pumpAndSettle();
+    // Blocking waits for the pending follow.
+    await tester.tap(find.text('Chặn người này'), warnIfMissed: false);
     await tester.pump();
-    expect(find.text('Chặn người này'), findsNothing);
+    expect(find.text('Chặn Nguyễn An?'), findsNothing);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     relationships.gate!.complete();
     await tester.pumpAndSettle();
     expect(relationships.calls, ['follow:target-1']);
@@ -294,10 +309,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(relationships.calls, ['block:target-1']);
       expect(find.text('Bỏ chặn'), findsOneWidget);
-      expect(find.text('Bạn đã chặn người này.'), findsOneWidget);
+      expect(find.byTooltip('Bạn đã chặn người này.'), findsOneWidget);
       expect(find.text('Theo dõi'), findsNothing);
       expect(find.text('Đang theo dõi'), findsNothing);
-      expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
 
       relationships.onAcknowledged = () => profiles.blocked = false;
       await tester.tap(find.text('Bỏ chặn'));
@@ -355,10 +369,15 @@ void main() {
       profiles: _Profiles(),
       relationships: _Relationships(),
     );
-    expect(find.byTooltip('Tùy chọn hồ sơ'), findsOneWidget);
+    expect(find.byTooltip('Mở tùy chọn hồ sơ'), findsOneWidget);
     container.read(sessionStateProvider.notifier).state = null;
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Tùy chọn hồ sơ'), findsNothing);
+    await tester.tap(find.byTooltip('Mở tùy chọn hồ sơ'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chặn người này'), findsNothing);
+    expect(find.text('Nhắn tin'), findsNothing);
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pumpAndSettle();
     expect(
       find.bySemanticsLabel('Đăng nhập để theo dõi Nguyễn An'),
       findsOneWidget,
@@ -381,7 +400,7 @@ void main() {
         find.bySemanticsLabel('Đang theo dõi Nguyễn An. Chạm để bỏ theo dõi'),
         findsOneWidget,
       );
-      expect(find.byTooltip('Tùy chọn hồ sơ'), findsOneWidget);
+      expect(find.byTooltip('Mở tùy chọn hồ sơ'), findsOneWidget);
       handle.dispose();
     },
   );

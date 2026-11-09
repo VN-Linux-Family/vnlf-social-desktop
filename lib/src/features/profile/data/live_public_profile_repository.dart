@@ -59,6 +59,7 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
             blockedByViewer: json['blockedByViewer'] == null
                 ? null
                 : boolValue(json['blockedByViewer'], 'profile.blockedByViewer'),
+            decor: decor == null ? const ProfileDecor() : _decor(decor),
           );
         },
       );
@@ -66,6 +67,58 @@ final class LivePublicProfileRepository implements PublicProfileRepository {
       if (error.statusCode == 404) return null;
       rethrow;
     }
+  }
+
+  static ProfileDecor _decor(Map<String, Object?> decor) {
+    final theme = objectValue(decor['theme'], 'profile.decor.theme');
+    final cover = objectValue(decor['cover'], 'profile.decor.cover');
+    final status = objectValue(decor['status'], 'profile.decor.status');
+    final discord = objectValue(decor['discord'], 'profile.decor.discord');
+    final visits = objectValue(decor['visits'], 'profile.decor.visits');
+    final links = decor['links'];
+    return ProfileDecor(
+      themeId: nullableString(theme?['id'], 'profile.decor.theme.id') ?? 'vnlf',
+      accentColor: nullableString(
+        theme?['accentColor'],
+        'profile.decor.theme.accentColor',
+      ),
+      coverSmallUrl: nullableString(
+        cover?['smallUrl'],
+        'profile.decor.cover.smallUrl',
+      ),
+      status: status == null
+          ? null
+          : (
+              emoji:
+                  nullableString(
+                    status['emoji'],
+                    'profile.decor.status.emoji',
+                  ) ??
+                  '',
+              text:
+                  nullableString(status['text'], 'profile.decor.status.text') ??
+                  '',
+            ),
+      // Links come back to the screen as typed URLs and are checked again
+      // there, as the website does; a malformed entry is left out.
+      links: [
+        if (links is List)
+          for (final link in links)
+            if (link is Map && link['url'] is String) link['url'] as String,
+      ],
+      discordUsername: nullableString(
+        discord?['username'],
+        'profile.decor.discord.username',
+      ),
+      visits: visits == null
+          ? null
+          : (
+              count:
+                  nullableInt(visits['count'], 'profile.decor.visits.count') ??
+                  0,
+              hidden: visits['hidden'] == true,
+            ),
+    );
   }
 
   @override

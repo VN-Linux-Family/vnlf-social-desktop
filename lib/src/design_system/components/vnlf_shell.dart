@@ -45,6 +45,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.centerChildHandlesScroll = false,
     this.centerPadding,
     this.centerMaxWidth = 1053,
+    this.centerFillsColumn = false,
     this.showMobileBottomNav = true,
     this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
@@ -121,6 +122,10 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final Widget? rightSidebarFooter;
   final EdgeInsets? centerPadding;
   final double centerMaxWidth;
+
+  /// The page fills the whole column right of the sidebar and lays out its
+  /// own margins, as the website's profile paints its theme there.
+  final bool centerFillsColumn;
   final bool showMobileBottomNav;
   final VnlfNavDestination activeDestination;
 
@@ -264,21 +269,23 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 children: [
                   _sidebar(VnlfDimensions.leftSidebarWidth),
                   Expanded(
-                    child: _scrollArea(
-                      padding:
-                          centerPadding ??
-                          const EdgeInsets.fromLTRB(38, 34, 38, 80),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: centerMaxWidth == double.infinity
-                                ? double.infinity
-                                : VnlfDimensions.mainContentMaxWidth,
+                    child: centerFillsColumn
+                        ? centerChild
+                        : _scrollArea(
+                            padding:
+                                centerPadding ??
+                                const EdgeInsets.fromLTRB(38, 34, 38, 80),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: centerMaxWidth == double.infinity
+                                      ? double.infinity
+                                      : VnlfDimensions.mainContentMaxWidth,
+                                ),
+                                child: centerChild,
+                              ),
+                            ),
                           ),
-                          child: centerChild,
-                        ),
-                      ),
-                    ),
                   ),
                   if (rightSidebarChild != null)
                     VnlfDesktopRightSidebar(
@@ -300,22 +307,24 @@ class VnlfAdaptiveShell extends StatelessWidget {
                 children: [
                   _sidebar(VnlfDimensions.tabletSidebarWidth),
                   Expanded(
-                    child: _scrollArea(
-                      padding:
-                          centerPadding ??
-                          const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 16,
+                    child: centerFillsColumn
+                        ? centerChild
+                        : _scrollArea(
+                            padding:
+                                centerPadding ??
+                                const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
+                            child: Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: VnlfDimensions.centerFeedMaxWidth,
+                                ),
+                                child: centerChild,
+                              ),
+                            ),
                           ),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: VnlfDimensions.centerFeedMaxWidth,
-                          ),
-                          child: centerChild,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),

@@ -7,6 +7,7 @@ import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/domain/repositories.dart';
+import 'package:vnlfsocialapp/src/features/profile/presentation/profile_tabs.dart';
 
 void main() {
   testWidgets('profile retries a repository failure and loads the member', (
@@ -140,14 +141,17 @@ void main() {
     expect(find.text('Tổng XP'), findsOneWidget);
     expect(find.textContaining('Bài viết'), findsWidgets);
     final projects = find.descendant(
-      of: find.byType(VnlfFeedTabBar),
+      of: find.byType(ProfileTabs),
       matching: find.textContaining('Dự án'),
     );
     await tester.ensureVisible(projects);
     await tester.tap(projects);
     await tester.pumpAndSettle();
     expect(find.text('vnlf-cli'), findsOneWidget);
-    final guestbook = find.text('Sổ lưu bút');
+    final guestbook = find.descendant(
+      of: find.byType(ProfileTabs),
+      matching: find.text('Sổ lưu bút'),
+    );
     await tester.ensureVisible(guestbook);
     await tester.tap(guestbook);
     await tester.pumpAndSettle();

@@ -179,6 +179,11 @@ GoRouter createMainRouter({
               final threadId = isArticleOrThread
                   ? state.pathParameters['id']
                   : null;
+              final profileRoute =
+                  state.uri.path.startsWith('/profile/') ||
+                  state.uri.path.startsWith('/user/') ||
+                  state.uri.path.startsWith('/users/') ||
+                  state.uri.path.startsWith('/u/');
               final isDetailRoute =
                   threadId != null ||
                   state.uri.path.startsWith('/projects/') ||
@@ -227,12 +232,16 @@ GoRouter createMainRouter({
                 unreadDestinations: unreadDestinations,
                 notificationBadgeCount: notificationBadgeCount,
                 centerMaxWidth: communication ? double.infinity : 1053,
+                // A profile paints its theme's canvas across the column and
+                // lays out its own margins, as the website does.
+                centerFillsColumn: profileRoute,
                 showMobileBottomNav: !communicationDetail,
                 titleText: titleText,
                 // Phones show chats, threads and the home feed full-bleed,
                 // as the website does below 841px.
                 centerPadding:
                     communication ||
+                        profileRoute ||
                         (threadId != null || state.uri.path == '/') &&
                             VnlfViewportSize.fromWidth(
                                   MediaQuery.sizeOf(context).width,

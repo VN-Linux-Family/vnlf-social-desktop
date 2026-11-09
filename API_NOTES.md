@@ -887,3 +887,24 @@ so a native client cannot receive the session without a server change.
 
 Not checked live: the page needs a signed-in account. The behaviour has
 synthetic coverage in `test/features/notifications/notification_center_test.dart`.
+
+## Profile page — 2026-11-10
+
+[CONFIRMED from source] (`packages/contracts/src/decor.ts`, `profile-links.ts`,
+`profile-themes.ts`, `account-views.tsx`), ported in `ProfileHeader`:
+- `GET /api/v1/users/{username}` carries `decor` (optional) with
+  `theme {id, accentColor|null}`, `cover {imageUrl, smallUrl, videoUrl}|null`,
+  `status {emoji, text, expiresAt}|null`, `links [{url, platform, label}]` and
+  `discord {username, displayName}|null`. The app reads only these. Colours come
+  from `profileThemeColors(themeId, accentColor)`, ported with the website's
+  OKLCH contrast search, and every link is checked again with
+  `parseProfileLink` before it is shown, as the website does.
+- Like `ProfileView`, opening a profile loads the posts, comments, projects and
+  the first guestbook page at once, for the counts on the tabs. These are the
+  same reads the tabs made one at a time before.
+- "Nhắn tin" in the profile menu opens the conversation through the existing
+  `POST /api/v1/dm/conversations`, as the app's new-message dialog does.
+
+Not ported yet: the moving cover (`videoUrl`), the wallpaper, music, the
+machine card, the visit counter, the "Đã lưu" tab, the followers and following
+lists, and the profile and decor reports.
