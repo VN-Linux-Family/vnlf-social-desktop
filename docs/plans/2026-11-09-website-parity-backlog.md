@@ -45,7 +45,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ Stickers and GIFs in the article composer. Comments have them (#11); link previews and YouTube cards already show under posts (#8).
 
 ### 4. Notifications
-- ⬜ Full notifications page (`/notifications`). The app only has a sheet.
+- ✅ The website's notification center (#13): the `/notifications` page and the bell's popover at every width, with day groups, filters, the kind select, badges by kind, the unseen count on the bell and the website's copy.
 - ⬜ Notification sounds (`community-sounds.tsx`).
 
 ### 5. Profile

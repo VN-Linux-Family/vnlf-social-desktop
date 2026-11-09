@@ -11,12 +11,37 @@ final class CommunityNotice {
     required this.href,
     this.title = '',
     this.excerpt = '',
-    this.actor = const Author(username: '', displayName: ''),
+    this.summarized = false,
+    this.actors = const [],
+    this.actorCount = 0,
+    this.payload = const {},
+    this.updatedAt,
     this.unread = true,
   });
   final String id, type, targetId, targetType, href, title, excerpt;
-  final Author actor;
+
+  /// Whether the server described the target: a comment that no longer shows
+  /// has no summary, which the list says in words.
+  final bool summarized;
+
+  /// The people the notice is about, newest first; the server sends a few.
+  final List<Author> actors;
+
+  /// How many people in all, which can be more than [actors].
+  final int actorCount;
+
+  /// Type-specific details the action text reads, such as a ticket status.
+  final Map<String, Object?> payload;
+
+  /// When the notice last changed; grouped notices move up when it does.
+  final DateTime? updatedAt;
   final bool unread;
+
+  /// The newest actor, or an empty author for a notice from the system.
+  Author get actor => actors.isEmpty
+      ? const Author(username: '', displayName: '')
+      : actors.first;
+
   CommunityNotice read() => CommunityNotice(
     id: id,
     type: type,
@@ -25,7 +50,11 @@ final class CommunityNotice {
     href: href,
     title: title,
     excerpt: excerpt,
-    actor: actor,
+    summarized: summarized,
+    actors: actors,
+    actorCount: actorCount,
+    payload: payload,
+    updatedAt: updatedAt,
     unread: false,
   );
 }

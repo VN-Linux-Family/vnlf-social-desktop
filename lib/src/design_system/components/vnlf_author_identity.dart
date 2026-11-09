@@ -15,6 +15,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
     this.showHandleInline = true,
     this.plate = false,
     this.fontSize = VnlfTypography.baseSize,
+    this.fontWeight = FontWeight.w700,
     this.allowWrap = true,
     this.semanticLabel,
     this.distroBadgeTooltip,
@@ -31,6 +32,9 @@ class VnlfAuthorNameRow extends StatelessWidget {
   /// conversation lists and the sidebar, never beside posts or messages.
   final bool plate;
   final double fontSize;
+
+  /// 700 beside posts; 600 inside a sentence, as in notifications.
+  final FontWeight fontWeight;
   final bool allowWrap;
   final String? semanticLabel;
   final String? distroBadgeTooltip;
@@ -52,7 +56,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
       fontFamily: VnlfTypography.fontFamily,
       fontSize: fontSize,
       height: 18 / 13,
-      fontWeight: FontWeight.w700,
+      fontWeight: fontWeight,
       color: resolvedNameColor,
     );
 

@@ -83,9 +83,10 @@ final class BackgroundNotificationPresenter {
     );
   }
 
+  /// The notification list's words: what happened, then its snippet.
   String _noticeBody(CommunityNotice notice) {
-    final action = noticeAction(notice.type);
-    final subject = notice.title.isNotEmpty ? notice.title : notice.excerpt;
+    final action = notificationAction(notice.type, notice.payload);
+    final subject = notificationSnippet(notice);
     return subject.isEmpty ? action : '$action: $subject';
   }
 

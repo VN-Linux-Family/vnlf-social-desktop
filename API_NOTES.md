@@ -865,3 +865,25 @@ handles that link. Google and Discord sign-in
 (`/api/v1/auth/{google/start,discord/login}`) finish on the website's domain,
 so a native client cannot receive the session without a server change.
 
+## Notification center — 2026-11-09
+
+[CONFIRMED from source] (`apps/api/src/modules/admin.ts`, `notification-center.tsx`,
+`social-runtime.tsx`), ported as `NotificationCenter`:
+- `GET /api/v1/notifications?limit=20&filter=all|unread&kind=all|like|comment|follow|system[&cursor=]`
+  is ordered by `updatedAt` then `id`, newest first. A repeated event updates its
+  row: `readAt` goes back to null and `updatedAt` to now, so the row moves up as
+  unread. `like` matches `%liked%`, `comment` matches `%comment%` without
+  `%liked%`, `follow` matches `%follow%`, `system` is the rest.
+- The bell shows `unseenCount`: unread rows changed after `notificationsSeenAt`.
+  Opening the list posts `POST /api/v1/notifications/seen` only while that count
+  is above zero; read state is untouched. A failed call is ignored, as on the
+  website, and the next opening tries again.
+- `POST /api/v1/notifications/read` takes `{ids?: string[]}` (at most 100).
+  Without ids it marks every unread notification read, whatever the filter. The
+  website sends `{}` for "Đánh dấu tất cả đã đọc" and `{ids: [id]}` when a row is
+  opened.
+- Rows open `href`: the app screen when the link resolver knows the page,
+  otherwise the website (for example `/community-guidelines` after a removal).
+
+Not checked live: the page needs a signed-in account. The behaviour has
+synthetic coverage in `test/features/notifications/notification_center_test.dart`.

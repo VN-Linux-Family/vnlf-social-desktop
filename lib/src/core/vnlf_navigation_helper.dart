@@ -78,6 +78,9 @@ String? resolveInAppVnlfRoute(Uri uri) {
     case 'activity':
       return '/activity';
 
+    case 'notifications':
+      return '/notifications';
+
     case 'channels':
       if (segments.length >= 2 && segments[1].isNotEmpty) {
         return '/channels/${Uri.encodeComponent(segments[1])}';

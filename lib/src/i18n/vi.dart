@@ -5123,23 +5123,9 @@ final class ViAppModeration {
 
 final class ViAppNotifications {
   const ViAppNotifications._();
-  final khongMoDuocThong = 'Không mở được thông báo';
   final tinNhanThongBao = 'Tin nhắn & Thông báo VNLF';
   final thongBaoTinNhan =
       'Thông báo tin nhắn và hoạt động mới từ Vietnam Linux Family';
-  final daThichBaiViet = 'Đã thích bài viết của bạn';
-  final daThichBinhLuan = 'Đã thích bình luận của bạn';
-  final daBinhLuanBai = 'Đã bình luận bài viết của bạn';
-  final daTraLoiBinh = 'Đã trả lời bình luận của bạn';
-  final daTheoDoiBan = 'Đã theo dõi bạn';
-  final daVietVaoSo = 'Đã viết vào sổ lưu bút của bạn';
-  final capNhatCongDong = 'Cập nhật cộng đồng';
-  final taiThem = 'Tải thêm';
-  final chuaCoThongBao = 'Chưa có thông báo';
-  final khongThucHienDuoc = 'Không thực hiện được yêu cầu. Vui lòng thử lại.';
-  final danhDauDaDoc = 'Đánh dấu đã đọc tất cả';
-  final moiLoai = 'Mọi loại';
-  final dangNhapDeXem = 'Đăng nhập để xem thông báo';
   // The website's service worker (`push-sw.js`) shows these for a push.
   final tieuDeThongBaoDay = 'VNLF Social';
   final banCoHoatDongMoiDay = 'Bạn có hoạt động mới.';

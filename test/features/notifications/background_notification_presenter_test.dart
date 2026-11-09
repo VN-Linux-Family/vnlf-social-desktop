@@ -11,7 +11,12 @@ const _comment = CommunityNotice(
   targetType: 'ARTICLE',
   href: '/a/cai-arch-linux',
   title: 'Cài Arch Linux trên Btrfs',
-  actor: Author(id: 'peer-1', username: 'hoangnam', displayName: 'Hoàng Nam'),
+  excerpt: 'Dùng snapper để chụp lại trước khi cập nhật.',
+  summarized: true,
+  actors: [
+    Author(id: 'peer-1', username: 'hoangnam', displayName: 'Hoàng Nam'),
+  ],
+  actorCount: 1,
 );
 
 CommunityEvent _event(String type, Object? data, {String eventId = 'e-1'}) =>
@@ -64,7 +69,9 @@ void main() {
       expect(shown.single, (
         id: 'notice-1'.hashCode,
         title: 'Hoàng Nam',
-        body: 'Đã bình luận bài viết của bạn: Cài Arch Linux trên Btrfs',
+        body:
+            'đã bình luận về bài viết của bạn: '
+            'Dùng snapper để chụp lại trước khi cập nhật.',
         payload: '/thread/article-1',
       ));
     });
@@ -134,7 +141,7 @@ void main() {
       );
 
       expect(shown.single.title, 'Vietnam Linux Family');
-      expect(shown.single.body, 'Cập nhật cộng đồng');
+      expect(shown.single.body, 'có cập nhật mới');
       expect(shown.single.payload, '/');
     });
   });

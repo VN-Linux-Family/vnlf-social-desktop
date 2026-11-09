@@ -42,6 +42,18 @@ abstract final class VnlfTypography {
     color: color,
   );
 
+  /// 13px with the font's own line height, CSS `line-height: normal`: the
+  /// website's controls and lists that set no line height.
+  static TextStyle plain(
+    Color color, {
+    FontWeight fontWeight = FontWeight.w400,
+  }) => TextStyle(
+    fontFamily: fontFamily,
+    fontSize: baseSize,
+    fontWeight: fontWeight,
+    color: color,
+  );
+
   /// Body: 13px, line height 1.6, weight 400. Posts, comments, descriptions.
   static TextStyle body(Color color) => TextStyle(
     fontFamily: fontFamily,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
@@ -9,16 +11,14 @@ final notificationsRepositoryProvider = Provider<NotificationsRepository>(
   (ref) => LiveNotificationsRepository(ref.watch(apiClientProvider)),
 );
 
-final unreadNotificationsCountProvider = FutureProvider<int>((ref) async {
+/// The bell's count, as the website's `notificationBadgeCount`: unread
+/// notices that changed since the list was last opened. A failed load shows
+/// no badge.
+final notificationBadgeCountProvider = FutureProvider<int>((ref) async {
   final session = ref.watch(sessionStateProvider);
   if (session == null || session.userId.isEmpty) return 0;
-  final repo = ref.watch(notificationsRepositoryProvider);
-  try {
-    final page = await repo.load(unreadOnly: true);
-    return page.unreadCount;
-  } catch (_) {
-    return 0;
-  }
+  final page = await ref.watch(notificationsRepositoryProvider).load();
+  return page.unseenCount;
 });
 
 final notificationsControllerProvider =
@@ -29,9 +29,7 @@ final notificationsControllerProvider =
       final account = ref.watch(sessionStateProvider);
       final controller = NotificationsController(
         ref.watch(notificationsRepositoryProvider),
-        onUnreadCountChanged: () {
-          ref.invalidate(unreadNotificationsCountProvider);
-        },
+        onBadgeChanged: () => ref.invalidate(notificationBadgeCountProvider),
       );
       if (account != null) controller.refresh();
       return controller;
@@ -74,10 +72,10 @@ final class NotificationsState {
 }
 
 class NotificationsController extends StateNotifier<NotificationsState> {
-  NotificationsController(this._repository, {this.onUnreadCountChanged})
+  NotificationsController(this._repository, {this.onBadgeChanged})
     : super(NotificationsState());
   final NotificationsRepository _repository;
-  final void Function()? onUnreadCountChanged;
+  final void Function()? onBadgeChanged;
   bool _seen = false;
   Future<void> refresh({bool? unreadOnly, NotificationKind? kind}) =>
       _load(reset: true, unreadOnly: unreadOnly, kind: kind);
@@ -114,9 +112,17 @@ class NotificationsController extends StateNotifier<NotificationsState> {
         unreadOnly: filter,
         kind: selectedKind,
       );
-      if (!_seen) {
-        await _repository.seen();
+      // Opening the list clears the bell, as on the website; notices stay
+      // unread until opened. A failed call leaves the bell as it was, and
+      // the next load tries again.
+      if (!_seen && page.unseenCount > 0) {
         _seen = true;
+        unawaited(
+          _repository.seen().then<void>(
+            (_) => onBadgeChanged?.call(),
+            onError: (Object _) => _seen = false,
+          ),
+        );
       }
     } catch (error) {
       if (mounted) state = state.copy(loading: false, failure: _failure(error));
@@ -149,7 +155,7 @@ class NotificationsController extends StateNotifier<NotificationsState> {
             ? 0
             : (state.unreadCount - changed).clamp(0, state.unreadCount),
       );
-      onUnreadCountChanged?.call();
+      onBadgeChanged?.call();
     } catch (error) {
       if (mounted) state = state.copy(busy: false, failure: _failure(error));
     }
