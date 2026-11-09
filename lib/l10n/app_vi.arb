@@ -31,5 +31,9 @@
   "activityNotificationBody": "Bạn có hoạt động mới trên Vietnam Linux Family.",
   "@activityNotificationBody": {
     "description": "System notification text when a new notification cannot be loaded to describe it."
+  },
+  "notificationPermissionDenied": "Ứng dụng chưa được phép gửi thông báo. Hãy cho phép trong cài đặt hệ thống rồi bật lại.",
+  "@notificationPermissionDenied": {
+    "description": "Shown when Android denies the notification permission after the member turns on background notifications."
   }
 }

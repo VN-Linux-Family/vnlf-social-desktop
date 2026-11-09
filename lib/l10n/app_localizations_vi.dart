@@ -34,4 +34,8 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get activityNotificationBody =>
       'Bạn có hoạt động mới trên Vietnam Linux Family.';
+
+  @override
+  String get notificationPermissionDenied =>
+      'Ứng dụng chưa được phép gửi thông báo. Hãy cho phép trong cài đặt hệ thống rồi bật lại.';
 }

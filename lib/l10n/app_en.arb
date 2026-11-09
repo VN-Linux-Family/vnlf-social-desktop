@@ -7,5 +7,6 @@
   "messageNotificationBody": "You have a new message",
   "channelNotificationTitle": "Channel chat",
   "channelNotificationBody": "There is a new message in the channel",
-  "activityNotificationBody": "You have new activity on Vietnam Linux Family."
+  "activityNotificationBody": "You have new activity on Vietnam Linux Family.",
+  "notificationPermissionDenied": "The app is not allowed to send notifications. Allow them in system settings, then turn this on again."
 }

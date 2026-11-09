@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
@@ -11,14 +12,27 @@ final androidPlatformProvider = Provider<bool>(
   (ref) => AndroidBackgroundService.isAndroid,
 );
 
+/// Starts and stops the Android foreground service that keeps the process,
+/// and with it the realtime connection, alive in the background.
+abstract interface class BackgroundServiceControl {
+  Future<void> start();
+  Future<void> stop();
+}
+
+final backgroundServiceControlProvider = Provider<BackgroundServiceControl>(
+  (ref) => const AndroidBackgroundService(),
+);
+
+/// The member's choice to keep notifying in the background. It stays off
+/// until they turn it on, because it shows a permanent notification.
 final androidBackgroundSyncProvider =
-    StateNotifierProvider<AndroidBackgroundSyncNotifier, bool>((ref) {
-      return AndroidBackgroundSyncNotifier();
-    });
+    StateNotifierProvider<AndroidBackgroundSyncNotifier, bool>(
+      (ref) => AndroidBackgroundSyncNotifier(),
+    );
 
 class AndroidBackgroundSyncNotifier extends StateNotifier<bool> {
-  AndroidBackgroundSyncNotifier() : super(true) {
-    _load();
+  AndroidBackgroundSyncNotifier() : super(false) {
+    unawaited(_load());
   }
 
   static const _prefKey = 'android_background_sync';
@@ -26,12 +40,13 @@ class AndroidBackgroundSyncNotifier extends StateNotifier<bool> {
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final val = prefs.getBool(_prefKey) ?? true;
-      state = val;
-      if (val && AndroidBackgroundService.isAndroid) {
-        await AndroidBackgroundService.start();
-      }
-    } catch (_) {}
+      final stored = prefs.getBool(_prefKey);
+      if (mounted && stored != null) state = stored;
+    } on Object catch (error) {
+      debugPrint(
+        'Background sync preference unavailable: ${error.runtimeType}',
+      );
+    }
   }
 
   Future<void> toggle(bool enabled) async {
@@ -39,57 +54,29 @@ class AndroidBackgroundSyncNotifier extends StateNotifier<bool> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_prefKey, enabled);
-    } catch (_) {}
-
-    if (AndroidBackgroundService.isAndroid) {
-      if (enabled) {
-        await AndroidBackgroundService.start();
-      } else {
-        await AndroidBackgroundService.stop();
-      }
+    } on Object catch (error) {
+      debugPrint('Background sync preference not saved: ${error.runtimeType}');
     }
   }
 }
 
-class AndroidBackgroundService {
+final class AndroidBackgroundService implements BackgroundServiceControl {
+  const AndroidBackgroundService();
+
   static const _channel = MethodChannel(
     'net.vietnamlinuxfamily.vnlfsocialapp/background_sync',
   );
 
   static bool get isAndroid => !kIsWeb && Platform.isAndroid;
 
-  static Future<bool> start() async {
-    if (!isAndroid) return false;
-    try {
-      if (Platform.environment.containsKey('FLUTTER_TEST')) return true;
-    } catch (_) {}
-    try {
-      final res = await _channel.invokeMethod<bool>('startService');
-      return res ?? false;
-    } catch (e) {
-      debugPrint('AndroidBackgroundService start failed: $e');
-      return false;
-    }
-  }
+  @override
+  Future<void> start() => _invoke('startService');
 
-  static Future<bool> stop() async {
-    if (!isAndroid) return false;
-    try {
-      final res = await _channel.invokeMethod<bool>('stopService');
-      return res ?? false;
-    } catch (e) {
-      debugPrint('AndroidBackgroundService stop failed: $e');
-      return false;
-    }
-  }
+  @override
+  Future<void> stop() => _invoke('stopService');
 
-  static Future<bool> isRunning() async {
-    if (!isAndroid) return false;
-    try {
-      final res = await _channel.invokeMethod<bool>('isServiceRunning');
-      return res ?? false;
-    } catch (_) {
-      return false;
-    }
+  Future<void> _invoke(String method) async {
+    if (!isAndroid) return;
+    await _channel.invokeMethod<bool>(method);
   }
 }

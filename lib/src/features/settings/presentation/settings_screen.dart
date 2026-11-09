@@ -9,6 +9,7 @@ import '../../../core/android_background_service.dart';
 import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../notifications/data/local_notification_service.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -396,9 +397,8 @@ class SettingsScreen extends ConsumerWidget {
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(androidBackgroundSyncProvider),
-                  onChanged: ref
-                      .read(androidBackgroundSyncProvider.notifier)
-                      .toggle,
+                  onChanged: (enabled) =>
+                      _setBackgroundNotifications(context, ref, enabled),
                 ),
               ],
             ],
@@ -407,6 +407,29 @@ class SettingsScreen extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Turning background notifications on first asks Android 13+ for the
+/// notification permission; without it nothing would ever be shown.
+Future<void> _setBackgroundNotifications(
+  BuildContext context,
+  WidgetRef ref,
+  bool enabled,
+) async {
+  final preference = ref.read(androidBackgroundSyncProvider.notifier);
+  final notifications = ref.read(localNotificationServiceProvider);
+  if (enabled && !await notifications.requestPermission()) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context)!.notificationPermissionDenied,
+        ),
+      ),
+    );
+    return;
+  }
+  await preference.toggle(enabled);
 }
 
 Future<void> logoutWithFeedback(BuildContext context, WidgetRef ref) async {

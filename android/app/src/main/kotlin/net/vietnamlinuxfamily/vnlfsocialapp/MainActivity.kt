@@ -16,9 +16,7 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "startService" -> {
                     try {
-                        val intent = Intent(this, VnlfBackgroundSyncService::class.java).apply {
-                            action = VnlfBackgroundSyncService.ACTION_START
-                        }
+                        val intent = Intent(this, VnlfBackgroundSyncService::class.java)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             startForegroundService(intent)
                         } else {
@@ -30,21 +28,21 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "stopService" -> {
-                    try {
-                        val intent = Intent(this, VnlfBackgroundSyncService::class.java).apply {
-                            action = VnlfBackgroundSyncService.ACTION_STOP
-                        }
-                        startService(intent)
-                        result.success(true)
-                    } catch (e: Exception) {
-                        result.error("STOP_FAILED", e.message, null)
-                    }
-                }
-                "isServiceRunning" -> {
-                    result.success(VnlfBackgroundSyncService.isRunning)
+                    // Stops a running service and does nothing otherwise.
+                    result.success(stopBackgroundService())
                 }
                 else -> result.notImplemented()
             }
         }
     }
+
+    override fun onDestroy() {
+        // The Flutter engine, and with it the realtime connection, goes away
+        // with this activity, so the service would keep nothing alive.
+        if (!isChangingConfigurations) stopBackgroundService()
+        super.onDestroy()
+    }
+
+    private fun stopBackgroundService(): Boolean =
+        stopService(Intent(this, VnlfBackgroundSyncService::class.java))
 }

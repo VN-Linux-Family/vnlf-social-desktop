@@ -11,14 +11,15 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 
+/**
+ * Keeps the app process in the foreground state while the Flutter engine
+ * holds the realtime connection that posts background notifications. The
+ * service does no work of its own.
+ */
 class VnlfBackgroundSyncService : Service() {
     companion object {
         const val CHANNEL_ID = "vnlf_background_sync_channel"
         const val NOTIFICATION_ID = 90210
-        const val ACTION_START = "ACTION_START"
-        const val ACTION_STOP = "ACTION_STOP"
-        var isRunning = false
-            private set
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -29,30 +30,16 @@ class VnlfBackgroundSyncService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            stopForegroundService()
-            return START_NOT_STICKY
-        }
-
-        isRunning = true
-        val notification = buildForegroundNotification()
-        startForeground(NOTIFICATION_ID, notification)
-        return START_STICKY
+        startForeground(NOTIFICATION_ID, buildForegroundNotification())
+        // A restarted process has no Flutter engine and no connection, so a
+        // service recreated by the system would keep nothing alive.
+        return START_NOT_STICKY
     }
 
-    override fun onDestroy() {
-        isRunning = false
-        super.onDestroy()
-    }
-
-    private fun stopForegroundService() {
-        isRunning = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+    // Android 15 allows a dataSync foreground service six hours in 24 and then
+    // calls this; the service must stop within seconds. The app starts it
+    // again when it returns to the foreground.
+    override fun onTimeout(startId: Int, fgsType: Int) {
         stopSelf()
     }
 

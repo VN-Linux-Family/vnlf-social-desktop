@@ -9,6 +9,7 @@ import 'package:vnlfsocialapp/src/core/android_background_service.dart';
 import 'package:vnlfsocialapp/src/core/preferences_storage.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/domain/repositories.dart';
+import 'package:vnlfsocialapp/src/features/notifications/data/local_notification_service.dart';
 
 const _member = Session(
   userId: 'synthetic-member',
@@ -27,7 +28,8 @@ void main() {
   testWidgets('Android settings describe background notifications honestly', (
     tester,
   ) async {
-    final container = _container(android: true);
+    final notifications = _Notifications();
+    final container = _container(android: true, notifications: notifications);
     addTearDown(container.dispose);
     await _openSettings(tester, container);
 
@@ -35,13 +37,54 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(_viSubtitle), findsOneWidget);
     expect(find.text('Thông báo đẩy'), findsNothing);
-    expect(container.read(androidBackgroundSyncProvider), isTrue);
+    expect(container.read(androidBackgroundSyncProvider), isFalse);
 
     await tester.tap(find.text(_viTitle));
     await tester.pumpAndSettle();
 
-    expect(container.read(androidBackgroundSyncProvider), isFalse);
+    expect(notifications.requests, 1);
+    expect(container.read(androidBackgroundSyncProvider), isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a denied notification permission keeps the switch off', (
+    tester,
+  ) async {
+    final notifications = _Notifications()..granted = false;
+    final container = _container(android: true, notifications: notifications);
+    addTearDown(container.dispose);
+    await _openSettings(tester, container);
+
+    await tester.ensureVisible(find.text(_viTitle));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(_viTitle));
+    await tester.pumpAndSettle();
+
+    expect(container.read(androidBackgroundSyncProvider), isFalse);
+    expect(
+      find.text(
+        'Ứng dụng chưa được phép gửi thông báo. '
+        'Hãy cho phép trong cài đặt hệ thống rồi bật lại.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('turning the switch off asks for nothing', (tester) async {
+    SharedPreferences.setMockInitialValues({'android_background_sync': true});
+    final notifications = _Notifications();
+    final container = _container(android: true, notifications: notifications);
+    addTearDown(container.dispose);
+    await _openSettings(tester, container);
+
+    await tester.ensureVisible(find.text(_viTitle));
+    await tester.pumpAndSettle();
+    expect(container.read(androidBackgroundSyncProvider), isTrue);
+    await tester.tap(find.text(_viTitle));
+    await tester.pumpAndSettle();
+
+    expect(container.read(androidBackgroundSyncProvider), isFalse);
+    expect(notifications.requests, 0);
   });
 
   testWidgets('the switch uses the English catalog', (tester) async {
@@ -78,9 +121,15 @@ void main() {
   });
 }
 
-ProviderContainer _container({required bool android}) => ProviderContainer(
+ProviderContainer _container({
+  required bool android,
+  _Notifications? notifications,
+}) => ProviderContainer(
   overrides: [
     androidPlatformProvider.overrideWithValue(android),
+    localNotificationServiceProvider.overrideWithValue(
+      notifications ?? _Notifications(),
+    ),
     preferencesStorageProvider.overrideWithValue(_MemoryStorage()),
     authRepositoryProvider.overrideWithValue(_AuthRepository()),
   ],
@@ -133,4 +182,15 @@ class _MemoryStorage implements PreferencesStorage {
 
   @override
   Future<void> write(String key, String value) async => values[key] = value;
+}
+
+class _Notifications extends LocalNotificationService {
+  bool granted = true;
+  int requests = 0;
+
+  @override
+  Future<bool> requestPermission() async {
+    requests++;
+    return granted;
+  }
 }

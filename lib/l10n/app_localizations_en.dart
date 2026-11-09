@@ -34,4 +34,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get activityNotificationBody =>
       'You have new activity on Vietnam Linux Family.';
+
+  @override
+  String get notificationPermissionDenied =>
+      'The app is not allowed to send notifications. Allow them in system settings, then turn this on again.';
 }
