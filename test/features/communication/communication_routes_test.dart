@@ -15,7 +15,7 @@ import 'package:vnlfsocialapp/src/features/channels/presentation/live_channel_st
 import 'package:vnlfsocialapp/src/features/communication/presentation/communication_directory.dart';
 import 'package:vnlfsocialapp/src/features/direct_messages/presentation/direct_message_state.dart';
 
-import 'direct_messages/direct_message_controller_test.dart'
+import '../direct_messages/direct_message_controller_test.dart'
     show ControlledDmRepository;
 
 void main() {

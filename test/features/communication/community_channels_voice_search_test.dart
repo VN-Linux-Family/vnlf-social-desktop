@@ -12,7 +12,7 @@ import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
 
-import 'channels/live_channels_test.dart' show channelJson, messageJson;
+import '../channels/live_channels_test.dart' show channelJson, messageJson;
 
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';

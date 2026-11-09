@@ -13,7 +13,7 @@ import 'package:vnlfsocialapp/src/features/communication/presentation/communicat
 import 'package:vnlfsocialapp/src/features/direct_messages/domain/direct_message_models.dart';
 import 'package:vnlfsocialapp/src/features/direct_messages/presentation/direct_message_state.dart';
 
-import 'direct_messages/direct_message_controller_test.dart'
+import '../direct_messages/direct_message_controller_test.dart'
     show ControlledDmRepository;
 
 void main() {

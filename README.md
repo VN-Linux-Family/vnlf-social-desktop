@@ -1,47 +1,45 @@
 # VNLF Social
 
-Native Flutter client for [Vietnam Linux Family](https://vietnamlinuxfamily.net),
-with Vietnamese and English interfaces. Linux, Android, macOS and Windows builds
-are produced for the architectures listed in [the build guide](docs/BUILD_AND_RELEASE.md).
+Native cross-platform Flutter client for [Vietnam Linux Family](https://vietnamlinuxfamily.net), with Vietnamese (`vi`, default) and English (`en`) interfaces. Official builds are published for Linux (`x64`, `arm64`), Android (`arm64-v8a`, `armeabi-v7a`, `x86_64`), Windows (`x64`, `arm64`), and macOS (`x64`, `arm64`) as documented in [the build and release guide](docs/BUILD_AND_RELEASE.md).
 
-The app opens the community feed. It includes native article/media rendering,
-threaded comments, a rich post/article editor, channels and direct messages,
-voice rooms, search, rankings, profiles, projects and update checks. Implementation
-and runtime coverage vary by feature; [the parity audit](docs/source-parity-audit.md)
-records the remaining work. Stable production readiness has not been established.
+The app opens the community feed and provides native article/media rendering, threaded comments, a rich post/article composer with polls, community channels and direct messages with realtime WebSocket updates, LiveKit voice rooms, global search, weekly leaderboards, daily attendance check-in, member profiles, open-source project showcases, and in-app release update checks. Implementation and runtime verification details are tracked in [the parity audit](docs/source-parity-audit.md) and [`PLAN.md`](PLAN.md).
 
-Use the Flutter revision pinned in the CI workflow. From a Linux checkout:
+## Quickstart (Linux)
+
+Use the Flutter version pinned in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (`3.47.9`). All local SDK commands run through `tool/with_build_slot.sh`, which serializes builds across worktrees and bounds CPU/memory usage:
 
 ```sh
 tool/with_build_slot.sh flutter pub get
+tool/with_build_slot.sh flutter gen-l10n
 tool/with_build_slot.sh flutter run -d linux
 ```
 
-The shared build slot limits local SDK work to two CPUs and prevents concurrent
-build/test jobs across project worktrees. Stop the development app when finished.
-For verification:
+For full verification before submitting changes:
 
 ```sh
+tool/with_build_slot.sh dart format --output=none --set-exit-if-changed lib test tool
 tool/with_build_slot.sh flutter analyze
+tool/with_build_slot.sh dart run test/core/io_transport_headless_smoke.dart
 tool/with_build_slot.sh flutter test --concurrency=1
+python3 -m unittest discover -s test/tool -p '*_test.py'
 ```
 
-Linux archives require the system GTK 3, libmpv (ABI 2), epoxy and libsecret
-runtimes; they are not self-contained installers. Secure sessions also require an available, unlocked Secret Service
-keyring in the user's desktop session, such as GNOME Keyring or a compatible
-KWallet service. A headless session without that service cannot verify account
-sign-in or secure draft recovery. The app reports storage failures; credentials
-must never be saved in source, fixtures or logs.
+## Runtime Requirements & Security
 
-macOS archives are signed ad hoc and not notarized. After unzipping, move the
-app to Applications and open it; if macOS blocks the first launch, choose
-System Settings > Privacy & Security > Open Anyway.
+- **Linux desktop dependencies**: Linux release archives require system `GTK 3`, `libmpv` (ABI 2), `libepoxy`, and `libsecret-1` runtimes (`python3 tool/install_linux_dependencies.py`).
+- **Secure session storage**: Persistent account sessions and encrypted draft recovery on Linux require an unlocked Secret Service provider (e.g., GNOME Keyring or KWallet). Credentials, cookies, tokens, and signing keys must never be stored in source files, fixtures, or logs.
+- **Android in-place upgrades**: Official `.apk` releases are signed with the permanent VNLF release keystore and monotonic ABI-split `versionCode` values so updates install directly over previous releases without uninstalling.
+- **macOS first launch**: macOS archives are signed ad hoc and not notarized. After unzipping, move the app to Applications and open it; if macOS blocks the first launch, choose System Settings > Privacy & Security > Open Anyway.
 
-Release binaries and community updates are published directly in
-[VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases),
-and the in-app updater fetches stable updates from that public repository. See
-[distribution instructions](docs/BUILD_AND_RELEASE.md).
+## Releases & Documentation
 
-`assets/fonts/` contains Be Vietnam Pro, distributed under the included SIL Open
-Font License. Source contracts and design comparisons are documented in
-[API_NOTES.md](API_NOTES.md) and [DESIGN_REFERENCE.md](DESIGN_REFERENCE.md).
+Official release binaries and `release.json` / `SHA256SUMS` manifests are published in [VN-Linux-Family/vnlf-social-desktop releases](https://github.com/VN-Linux-Family/vnlf-social-desktop/releases), which powers the in-app updater.
+
+- **[Development Guide](docs/DEVELOPMENT.md)** — Setup, Clean Architecture layers, feature workflow, testing, and troubleshooting
+- **[Contributing Guide](CONTRIBUTING.md)** — Contribution rules, layer contracts, and PR checklist
+- **[Agent Operating Rules](AGENTS.md)** — Mandatory guidelines for coding agents and contributors
+- **[Build & Release Guide](docs/BUILD_AND_RELEASE.md)** — CI matrix, signing, and release distribution
+- **[API Contracts](API_NOTES.md)** & **[Design Reference](DESIGN_REFERENCE.md)** — Confirmed server endpoints and UI token specifications
+- **[Documentation Index](docs/README.md)** — Full catalog of contracts, ADRs, plans, and audit reports
+
+`assets/fonts/` bundles **Be Vietnam Pro**, distributed under the included SIL Open Font License 1.1 (`assets/fonts/OFL.txt`; see [`docs/ASSETS.md`](docs/ASSETS.md)).
