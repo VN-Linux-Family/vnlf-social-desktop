@@ -122,7 +122,9 @@ class PostInteractions extends Notifier<Map<String, PostInteraction>> {
       id: PostInteraction(vote: previous.vote, bookmarked: next, pending: true),
     };
     try {
-      await ref.read(postActionsRepositoryProvider).toggleBookmark(id);
+      await ref
+          .read(postActionsRepositoryProvider)
+          .setBookmark(id, saved: next);
       if (!_current(generation)) return;
       state = {
         ...state,

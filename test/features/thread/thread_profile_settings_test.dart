@@ -7,7 +7,6 @@ import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/domain/repositories.dart';
-import 'package:vnlfsocialapp/src/features/thread/presentation/thread_sidebar.dart';
 
 void main() {
   testWidgets('profile retries a repository failure and loads the member', (
@@ -46,8 +45,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: path);
         if (width == 1440 && path.startsWith('/thread/')) {
-          expect(find.byType(ThreadSidebar), findsOneWidget);
-          expect(find.text('Xem trang cá nhân'), findsOneWidget);
+          // Like the website, a post page is wide: no right rail.
+          expect(find.text('Xem trang cá nhân'), findsNothing);
+          expect(find.text('Xếp hạng tuần'), findsNothing);
         }
       }
     });
@@ -93,7 +93,7 @@ void main() {
       find.textContaining('Vietnam Linux Family là nơi chia sẻ'),
       findsOneWidget,
     );
-    await tester.tap(find.byTooltip('Quay lại'));
+    await tester.tap(find.bySemanticsLabel('Quay lại bảng tin'));
     await tester.pumpAndSettle();
     expect(
       router.routerDelegate.currentConfiguration.last.matchedLocation,

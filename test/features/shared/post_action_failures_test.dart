@@ -65,8 +65,14 @@ class ControlledActions implements PostActionsRepository {
   @override
   Future<int> setVote(String id, int value) => vote.future;
   @override
-  Future<void> toggleBookmark(String id) {
+  Future<void> setBookmark(String id, {required bool saved}) {
     bookmarkCalls++;
     return bookmark.future;
   }
+
+  @override
+  Future<void> deletePost(String id) => Completer<void>().future;
+
+  @override
+  Future<void> hidePost(String id) => Completer<void>().future;
 }

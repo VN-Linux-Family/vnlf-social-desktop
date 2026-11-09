@@ -13,6 +13,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
     super.key,
     required this.author,
     this.showHandleInline = true,
+    this.plate = false,
     this.fontSize = VnlfTypography.baseSize,
     this.allowWrap = true,
     this.semanticLabel,
@@ -25,6 +26,10 @@ class VnlfAuthorNameRow extends StatelessWidget {
 
   final AuthorData author;
   final bool showHandleInline;
+
+  /// Draws the nameplate. The website shows plates only in member lists,
+  /// conversation lists and the sidebar, never beside posts or messages.
+  final bool plate;
   final double fontSize;
   final bool allowWrap;
   final String? semanticLabel;
@@ -71,11 +76,13 @@ class VnlfAuthorNameRow extends StatelessWidget {
     );
 
     if (style.nameEffect == NameEffectType.rainbow) {
+      // The website's gradient is three times the name's width, so a resting
+      // name shows its red-to-orange start (profile-decor.css).
       nameText = ShaderMask(
         blendMode: BlendMode.srcIn,
         shaderCallback: (bounds) => LinearGradient(
-          colors: [colors.brand, colors.cyan, colors.purple, colors.red],
-        ).createShader(bounds),
+          colors: colors.isDark ? _rainbowDark : _rainbowLight,
+        ).createShader(Rect.fromLTWH(0, 0, bounds.width * 3, bounds.height)),
         child: nameText,
       );
     } else if (gradientColors != null && gradientColors.length >= 2) {
@@ -90,7 +97,7 @@ class VnlfAuthorNameRow extends StatelessWidget {
     final nameplateColor = colors.isDark
         ? style.nameplateDarkColor ?? style.nameplateColor
         : style.nameplateColor;
-    if (style.nameplateId != null && nameplateColor != null) {
+    if (plate && style.nameplateId != null && nameplateColor != null) {
       nameText = Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
         decoration: BoxDecoration(
@@ -402,3 +409,21 @@ class _GoldStarMiniBadge extends StatelessWidget {
     return Semantics(label: semanticLabel, child: badge);
   }
 }
+
+const _rainbowLight = [
+  Color(0xFFC62828),
+  Color(0xFFC2410C),
+  Color(0xFF166534),
+  Color(0xFF0369A1),
+  Color(0xFF7E22CE),
+  Color(0xFFC62828),
+];
+
+const _rainbowDark = [
+  Color(0xFFFF8A80),
+  Color(0xFFFDBA74),
+  Color(0xFF86EFAC),
+  Color(0xFF7DD3FC),
+  Color(0xFFD8B4FE),
+  Color(0xFFFF8A80),
+];

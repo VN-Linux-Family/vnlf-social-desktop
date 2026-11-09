@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show OverflowBoxFit;
+import 'package:intl/intl.dart';
 
 import '../../core/vnlf_navigation_helper.dart';
 import '../../i18n/vi.dart';
@@ -10,10 +11,8 @@ import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
 import 'vnlf_author_identity.dart';
 import 'vnlf_avatar.dart';
-import 'vnlf_code_block.dart';
-import 'vnlf_media_preview.dart';
+import 'vnlf_post_attachment.dart';
 import 'vnlf_rich_content.dart';
-import 'vnlf_media_gallery.dart';
 import 'vnlf_skeleton.dart';
 import 'vnlf_state_cards.dart';
 import 'vnlf_vote_capsule.dart';
@@ -110,6 +109,7 @@ class VnlfPostCard extends StatelessWidget {
     super.key,
     this.post,
     this.poll,
+    this.linkPreview,
     this.isLoading = false,
     this.isEmpty = false,
     this.controller,
@@ -162,6 +162,7 @@ class VnlfPostCard extends StatelessWidget {
     this.loadingSemanticLabel,
   }) : post = null,
        poll = null,
+       linkPreview = null,
        isLoading = true,
        isEmpty = false,
        emptyTitle = '',
@@ -207,6 +208,7 @@ class VnlfPostCard extends StatelessWidget {
     this.actionSemanticLabel,
   }) : post = null,
        poll = null,
+       linkPreview = null,
        isLoading = false,
        isEmpty = true,
        controller = null,
@@ -250,6 +252,7 @@ class VnlfPostCard extends StatelessWidget {
     this.actionSemanticLabel,
   }) : post = null,
        poll = null,
+       linkPreview = null,
        isLoading = false,
        isEmpty = false,
        controller = null,
@@ -285,6 +288,9 @@ class VnlfPostCard extends StatelessWidget {
 
   final PostData? post;
   final Widget? poll;
+
+  /// The link card under a post without photos or a poll.
+  final Widget? linkPreview;
   final bool isLoading;
   final bool isEmpty;
   final Animation<double>? controller;
@@ -308,7 +314,9 @@ class VnlfPostCard extends StatelessWidget {
   final VoidCallback? onShareTap;
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onAuthorTap;
-  final VoidCallback? onMoreTap;
+
+  /// Opens the post menu under the "…" button, whose global rect is given.
+  final ValueChanged<Rect>? onMoreTap;
   final VoidCallback? onReportTap;
   final bool showBottomActions;
 
@@ -473,34 +481,15 @@ class VnlfPostCard extends StatelessWidget {
       if (loadedPost.attachment != null)
         Padding(
           padding: EdgeInsets.only(top: phone ? 8 : 12),
-          child: switch (loadedPost.attachment!) {
-            final MediaGalleryAttachment gallery => VnlfMediaGallery(
-              items: gallery.items,
-            ),
-            final ImagePlaceholderAttachment imagePlaceholder =>
-              VnlfImagePlaceholder(
-                imageUrl: imagePlaceholder.imageUrl,
-                aspectRatio: imagePlaceholder.aspectRatio,
-                label: imagePlaceholder.label,
-                semanticLabel: imagePlaceholder.semanticLabel,
-              ),
-            final CodeBlockAttachment codeBlock => VnlfCodeBlock(
-              code: codeBlock.code,
-              showHorizontalScrollbar: codeBlock.showHorizontalScrollbar,
-              copyLabel: codeBlock.copyLabel.isNotEmpty
-                  ? codeBlock.copyLabel
-                  : codeCopyLabel,
-              copiedLabel: codeBlock.copiedLabel.isNotEmpty
-                  ? codeBlock.copiedLabel
-                  : codeCopiedLabel,
-              semanticLabel: codeBlock.semanticLabel ?? codeBlockSemanticLabel,
-              copyButtonSemanticLabel: codeBlock.copyButtonSemanticLabel,
-            ),
-            final ProjectPreviewAttachment projectPreview =>
-              VnlfProjectPreviewCard(project: projectPreview.project),
-          },
+          child: VnlfPostAttachmentView(
+            attachment: loadedPost.attachment!,
+            codeCopyLabel: codeCopyLabel,
+            codeCopiedLabel: codeCopiedLabel,
+            codeBlockSemanticLabel: codeBlockSemanticLabel,
+          ),
         ),
       ?poll,
+      ?linkPreview,
       if (loadedPost.actionError != null)
         Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -545,6 +534,14 @@ class VnlfPostCard extends StatelessWidget {
             commentSemanticLabel: commentSemanticLabel,
             shareSemanticLabel: shareSemanticLabel,
             bookmarkSemanticLabel: bookmarkSemanticLabel,
+            viewCount: loadedPost.viewCount,
+            viewsLabel: loadedPost.viewCount == null
+                ? null
+                : format(vi.miscViews.luotXem, {
+                    'viewCount': NumberFormat.decimalPattern('vi')
+                        .format(loadedPost.viewCount),
+                  }),
+            viewsTooltip: vi.miscViews.chiBanThayLuotXem,
           ),
         ),
     ];
@@ -691,7 +688,9 @@ class _PostMoreButton extends StatelessWidget {
   final bool phone;
   final bool isBookmarked;
   final String? semanticLabel;
-  final VoidCallback? onMoreTap;
+
+  /// Opens the post menu under the "…" button, whose global rect is given.
+  final ValueChanged<Rect>? onMoreTap;
   final VoidCallback? onShareTap;
   final VoidCallback? onBookmarkToggle;
   final VoidCallback? onReportTap;
@@ -716,7 +715,12 @@ class _PostMoreButton extends StatelessWidget {
         child: onMoreTap != null
             ? InkWell(
                 customBorder: const CircleBorder(),
-                onTap: onMoreTap,
+                onTap: () {
+                  final box = context.findRenderObject() as RenderBox?;
+                  if (box != null) {
+                    onMoreTap!(box.localToGlobal(Offset.zero) & box.size);
+                  }
+                },
                 child: Center(child: icon),
               )
             : PopupMenuButton<String>(

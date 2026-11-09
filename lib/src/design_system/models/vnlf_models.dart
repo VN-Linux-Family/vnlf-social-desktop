@@ -217,6 +217,7 @@ class PostData {
     this.selectableContent = false,
     this.actionPending = false,
     this.actionError,
+    this.viewCount,
   });
 
   final Map<String, dynamic>? richContent;
@@ -236,6 +237,9 @@ class PostData {
   final int commentCount;
   final bool isBookmarked;
   final bool isArticle;
+
+  /// Views, sent only to the author.
+  final int? viewCount;
 
   PostData copyWith({
     int? voteScore,
@@ -262,6 +266,7 @@ class PostData {
       selectableContent: selectableContent,
       actionPending: actionPending ?? this.actionPending,
       actionError: actionError,
+      viewCount: viewCount,
     );
   }
 }

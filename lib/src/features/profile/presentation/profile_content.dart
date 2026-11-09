@@ -1,5 +1,4 @@
 import '../../../i18n/vi.dart';
-import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,10 +7,8 @@ import 'package:intl/intl.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
-import '../../feed/presentation/post_mapper.dart';
+import '../../shared/presentation/post_card_tile.dart';
 import '../../shared/presentation/feature_widgets.dart';
-import '../../shared/presentation/post_share.dart';
-import '../../shared/presentation/post_interactions.dart';
 import '../domain/public_profile.dart';
 import 'profile_data.dart';
 
@@ -31,38 +28,7 @@ class ProfileContent extends ConsumerWidget {
           for (final post in page.items)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: InkWell(
-                onTap: () =>
-                    context.push('/thread/${Uri.encodeComponent(post.id)}'),
-                child: VnlfPostCard(
-                  poll: post.poll == null
-                      ? null
-                      : PollCard(poll: post.poll!, authorId: post.author.id),
-                  post: ref
-                      .watch(postInteractionProvider(post.id))
-                      .apply(presentPost(post)),
-                  onVoteChanged: (vote) => ref
-                      .read(postInteractionsProvider.notifier)
-                      .vote(post.id, vote),
-                  onBookmarkToggle: () => ref
-                      .read(postInteractionsProvider.notifier)
-                      .toggleBookmark(
-                        post.id,
-                        initialValue: post.viewerBookmarked,
-                      ),
-                  upvoteSemanticLabel: vi.app.common.ungHo,
-                  downvoteSemanticLabel: vi.app.common.phanDoi,
-                  bookmarkSemanticLabel: vi.app.common.luuBaiViet,
-                  commentSemanticLabel: vi.common.binhLuan,
-                  onAuthorTap: () => context.push(
-                    '/profile/${Uri.encodeComponent(post.author.username)}',
-                  ),
-                  onCommentTap: () =>
-                      context.push('/thread/${Uri.encodeComponent(post.id)}'),
-                  onShareTap: () => copyPostLink(context, post),
-                  shareSemanticLabel: vi.miscViews.chiaSe,
-                ),
-              ),
+              child: PostCardTile(post: post),
             ),
           if (page.nextCursor != null) _empty(vi.app.profile.dangHienThi50Bai),
         ],

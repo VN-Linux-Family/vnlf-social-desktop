@@ -81,17 +81,26 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
         case 'strike':
           style = style.copyWith(decoration: TextDecoration.lineThrough);
         case 'code':
-          style = style.copyWith(
-            fontFamily: 'monospace',
-            backgroundColor: colors.surfaceSoft,
-          );
+          // Posts tint inline code; articles keep the browser's plain mono.
+          style = widget.articleDetail
+              ? style.copyWith(fontFamily: 'monospace')
+              : style.copyWith(
+                  fontFamily: 'monospace',
+                  color: widget.postStyle ? colors.brand : null,
+                  backgroundColor: widget.postStyle
+                      ? colors.brandSoft
+                      : colors.surfaceSoft,
+                );
         case 'link':
           final uri = externalWebUri(_attrs(mark)['href'] as String?);
           if (uri != null) {
-            style = style.copyWith(
-              color: colors.blue,
-              decoration: TextDecoration.underline,
-            );
+            // Article links read as plain text on the website.
+            if (!widget.articleDetail) {
+              style = style.copyWith(
+                color: widget.postStyle ? colors.brand : colors.blue,
+                decoration: TextDecoration.underline,
+              );
+            }
             recognizer = TapGestureRecognizer()..onTap = () => _open(uri);
             _links.add(recognizer);
           }
@@ -106,40 +115,73 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
   }
 
   double _headingHeight(bool h3) {
-    if (widget.postStyle) return 1.6;
+    if (widget.postStyle) return 1.5;
     if (widget.articleDetail) return h3 ? 1.7 : 1.08;
     return h3 ? 1.2 : 1.14;
   }
 
+  bool get _compact =>
+      VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
+      VnlfViewportSize.mobile;
+
+  /// Vertical margins of a block, from the website's `.post-rich-text`
+  /// (posts), `.detail-copy` with browser defaults (articles) or the feed.
   EdgeInsets _blockSpacing(Map<String, dynamic> node) {
-    if (widget.postStyle) return EdgeInsets.zero;
-    final compact =
-        widget.articleDetail &&
-        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
-            VnlfViewportSize.mobile;
-    if (node['type'] == 'paragraph') {
-      return EdgeInsets.only(
-        bottom: widget.articleDetail ? (compact ? 12 : 18) : 17,
-      );
-    }
-    if (node['type'] != 'heading') return EdgeInsets.zero;
-    if (_attrs(node)['level'] == 3) {
-      return const EdgeInsets.only(top: 24, bottom: 7);
+    final type = node['type'];
+    final h3 = _attrs(node)['level'] == 3;
+    if (widget.postStyle) {
+      return switch (type) {
+        'paragraph' ||
+        'bulletList' ||
+        'orderedList' => const EdgeInsets.only(bottom: 8),
+        'heading' => const EdgeInsets.only(top: 12, bottom: 8),
+        'blockquote' || 'image' => const EdgeInsets.symmetric(vertical: 8),
+        'codeBlock' => const EdgeInsets.symmetric(vertical: 20),
+        'horizontalRule' => const EdgeInsets.symmetric(vertical: 28),
+        _ => EdgeInsets.zero,
+      };
     }
     if (widget.articleDetail) {
-      return EdgeInsets.only(top: compact ? 12 : 19, bottom: compact ? 7 : 10);
+      final compact = _compact;
+      return switch (type) {
+        'paragraph' => EdgeInsets.only(bottom: compact ? 12 : 18),
+        'heading' when h3 => const EdgeInsets.only(top: 24, bottom: 7),
+        'heading' => EdgeInsets.only(
+          top: compact ? 12 : 19,
+          bottom: compact ? 7 : 10,
+        ),
+        'blockquote' ||
+        'bulletList' ||
+        'orderedList' ||
+        'codeBlock' => const EdgeInsets.symmetric(vertical: 13),
+        'horizontalRule' => const EdgeInsets.symmetric(vertical: 6.5),
+        'image' => const EdgeInsets.symmetric(vertical: 25),
+        _ => EdgeInsets.zero,
+      };
     }
-    return const EdgeInsets.only(top: 29, bottom: 9);
+    return switch (type) {
+      'paragraph' => const EdgeInsets.only(bottom: 17),
+      'heading' when h3 => const EdgeInsets.only(top: 24, bottom: 7),
+      'heading' => const EdgeInsets.only(top: 29, bottom: 9),
+      'blockquote' ||
+      'codeBlock' ||
+      'image' => const EdgeInsets.symmetric(vertical: 8),
+      'bulletList' || 'orderedList' => const EdgeInsets.only(bottom: 8),
+      'horizontalRule' => const EdgeInsets.symmetric(vertical: 12),
+      _ => EdgeInsets.zero,
+    };
   }
 
   Widget _node(
     Map<String, dynamic> node, {
     int depth = 0,
-    double? leadingMargin,
+    TextStyle? inherited,
   }) {
     final colors = VnlfColors.of(context);
-    final body = VnlfTypography.body(colors.ink)
-        .copyWith(height: widget.postStyle ? 1.6 : 1.7);
+    final body =
+        inherited ??
+        VnlfTypography.body(colors.ink)
+            .copyWith(height: widget.postStyle ? 1.6 : 1.7);
     // Empty article paragraphs have no CSS line box. POST keeps explicit breaks.
     final children = _children(node)
         .where(
@@ -149,20 +191,26 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
               _children(child).isNotEmpty,
         )
         .toList();
-    Widget blocks() => Column(
+    Widget blocks({TextStyle? style}) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < children.length; i++)
-          _node(
-            children[i],
-            depth: depth + 1,
-            leadingMargin: i == 0
-                ? null
-                : (_blockSpacing(children[i]).top -
-                          _blockSpacing(children[i - 1]).bottom)
-                      .clamp(0, double.infinity)
-                      .toDouble(),
+          Padding(
+            // Adjacent vertical margins collapse to the larger one, as in CSS;
+            // the first block's top and the last block's bottom are dropped.
+            padding: EdgeInsets.only(
+              top: i == 0
+                  ? 0
+                  : (_blockSpacing(children[i]).top -
+                            _blockSpacing(children[i - 1]).bottom)
+                        .clamp(0, double.infinity)
+                        .toDouble(),
+              bottom: i == children.length - 1
+                  ? 0
+                  : _blockSpacing(children[i]).bottom,
+            ),
+            child: _node(children[i], depth: depth + 1, inherited: style),
           ),
       ],
     );
@@ -175,7 +223,7 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
         final heading = node['type'] == 'heading';
         final h3 = _attrs(node)['level'] == 3;
         final style = body.copyWith(
-          fontWeight: heading ? FontWeight.w700 : FontWeight.w400,
+          fontWeight: heading ? FontWeight.w700 : null,
           height: heading ? _headingHeight(h3) : body.height,
           letterSpacing: heading && !widget.postStyle
               ? (h3
@@ -183,106 +231,143 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
                     : widget.articleDetail
                     ? -.65
                     : -.52)
-              : 0,
+              : null,
         );
-        final spacing = _blockSpacing(node);
-        return Padding(
-          padding: spacing.copyWith(top: leadingMargin ?? spacing.top),
-          child: Semantics(
-            header: heading,
-            child: Text.rich(
-              TextSpan(
-                children: children.isEmpty
-                    ? [const TextSpan(text: '\n')]
-                    : children.map(_inline).toList(),
-              ),
-              style: style,
+        return Semantics(
+          header: heading,
+          child: Text.rich(
+            TextSpan(
+              children: children.isEmpty
+                  // One empty line, like the website's <br> in an empty <p>.
+                  ? [const TextSpan(text: '\u200B')]
+                  : children.map(_inline).toList(),
             ),
+            style: style,
           ),
         );
       case 'blockquote':
+        if (widget.articleDetail) {
+          // The browser's default: indented 40px on both sides, no rule.
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: blocks(style: inherited),
+          );
+        }
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          padding: const EdgeInsets.only(left: 12),
+          padding: widget.postStyle
+              ? const EdgeInsets.fromLTRB(12, 5, 0, 5)
+              : const EdgeInsets.only(left: 12),
           decoration: BoxDecoration(
             border: Border(left: BorderSide(width: 3, color: colors.line)),
           ),
-          child: blocks(),
+          child: blocks(
+            style: widget.postStyle
+                ? body.copyWith(
+                    color: colors.muted,
+                    fontStyle: FontStyle.italic,
+                  )
+                : inherited,
+          ),
         );
       case 'bulletList':
       case 'orderedList':
+        final ordered = node['type'] == 'orderedList';
         final start = _attrs(node)['start'] is int
             ? _attrs(node)['start'] as int
             : 1;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < children.length; i++)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: depth > 8 ? 14 : 24,
+        final indent = widget.articleDetail ? 40.0 : (depth > 8 ? 14.0 : 24.0);
+        final bullet = switch (depth ~/ 2) {
+          0 => '•',
+          1 => '◦',
+          _ => '▪',
+        };
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < children.length; i++)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: indent,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: widget.articleDetail ? 6 : 0,
+                      ),
                       child: Text(
-                        node['type'] == 'orderedList' ? '${start + i}.' : '•',
+                        ordered ? '${start + i}.' : bullet,
+                        textAlign: widget.articleDetail
+                            ? TextAlign.right
+                            : TextAlign.start,
                         style: body,
                       ),
                     ),
-                    Expanded(child: _node(children[i], depth: depth + 1)),
-                  ],
-                ),
-            ],
-          ),
+                  ),
+                  Expanded(
+                    child: _node(
+                      children[i],
+                      depth: depth + 1,
+                      inherited: inherited,
+                    ),
+                  ),
+                ],
+              ),
+          ],
         );
       case 'codeBlock':
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: VnlfCodeBlock(
-            code: _text(node),
-            copyLabel: vi.articleRenderer.saoChep,
-            copiedLabel: vi.articleRenderer.daChep,
-          ),
+        return VnlfCodeBlock(
+          code: _text(node),
+          copyLabel: vi.articleRenderer.saoChep,
+          copiedLabel: vi.articleRenderer.daChep,
         );
       case 'horizontalRule':
-        return Divider(color: colors.line, height: 24);
+        return Container(height: 1, color: colors.line);
       case 'image':
         if (!widget.showImages) return const SizedBox.shrink();
         final attrs = _attrs(node);
         final url = attrs['src'] as String?;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (externalWebUri(url) != null)
-                VnlfMediaGallery(
-                  items: [
-                    PostMediaData(
-                      url: url!,
-                      alt: attrs['alt'] as String? ?? '',
-                      width: attrs['width'] as int?,
-                      height: attrs['height'] as int?,
-                    ),
-                  ],
-                )
-              else
-                Text(
-                  vi.app.designSystem.anhKhongConTrong,
-                  style: VnlfTypography.meta(colors.muted),
-                ),
-              if (attrs['caption'] is String &&
-                  (attrs['caption'] as String).isNotEmpty)
-                Text(
-                  attrs['caption'] as String,
-                  style: VnlfTypography.meta(colors.muted),
-                ),
-            ],
-          ),
+        final figure = Column(
+          crossAxisAlignment: widget.articleDetail
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.stretch,
+          children: [
+            if (externalWebUri(url) != null)
+              VnlfMediaGallery(
+                items: [
+                  PostMediaData(
+                    url: url!,
+                    alt: attrs['alt'] as String? ?? '',
+                    width: attrs['width'] as int?,
+                    height: attrs['height'] as int?,
+                  ),
+                ],
+              )
+            else
+              Text(
+                vi.app.designSystem.anhKhongConTrong,
+                style: VnlfTypography.meta(colors.muted),
+              ),
+            if (attrs['caption'] is String &&
+                (attrs['caption'] as String).isNotEmpty)
+              Text(
+                attrs['caption'] as String,
+                textAlign: widget.articleDetail
+                    ? TextAlign.center
+                    : TextAlign.start,
+                style: VnlfTypography.meta(colors.muted),
+              ),
+          ],
         );
+        return widget.articleDetail
+            ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: figure,
+                ),
+              )
+            : figure;
       default:
-        return blocks();
+        return blocks(style: inherited);
     }
   }
 
