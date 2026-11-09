@@ -7,7 +7,7 @@ import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../../i18n/vi.dart';
 import '../../composer/presentation/composer_prompt.dart';
-import '../../notifications/presentation/notification_bell.dart';
+import '../../shared/presentation/page_header_actions.dart';
 import '../../shared/presentation/post_card_tile.dart';
 import '../../shared/presentation/session_avatar.dart';
 import 'feed_notifier.dart';
@@ -173,39 +173,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         if (!phone)
           VnlfCenterPageHeader(
             title: vi.socialChrome.bangTin,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 10,
-              children: [
-                VnlfHeaderIconBox(
-                  icon: VnlfLucide.search,
-                  tooltip: vi.common.timKiem,
-                  onPressed: () => context.push('/search'),
-                ),
-                const NotificationBellBox(),
-                Semantics(
-                  button: true,
-                  label: session == null
-                      ? vi.common.dangNhap
-                      : session.displayName,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(
-                      VnlfDimensions.radiusMd,
-                    ),
-                    onTap: () => context.push(
-                      session == null
-                          ? '/login'
-                          : '/profile/${Uri.encodeComponent(session.username)}',
-                    ),
-                    child: sessionAvatar(
-                      session,
-                      size: 40,
-                      cornerRadius: VnlfDimensions.radiusMd,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            trailing: const PageHeaderActions(),
           ),
         Expanded(
           child: phone
