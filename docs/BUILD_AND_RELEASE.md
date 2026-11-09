@@ -33,7 +33,11 @@ build/test slot.
 ## CI matrix
 
 Routine checks run once per pull-request update, on main pushes, or on explicit
-dispatch. Feature pushes without a pull request do not start checks. Packaging
+dispatch. Besides the tests, they build a debug arm64 APK, which compiles the
+Kotlin host code and manifest without signing secrets. Both the check and the
+Android packaging job fetch flaky build inputs first with
+`tool/precache_android_build.py`. Feature pushes without a pull request do not
+start checks. Packaging
 runs only for `v*` tags or explicit dispatch, rather than every main/release push.
 The manual `build_set` defaults to `linux-x64`; `android` builds three APKs and
 `all` builds all nine outputs below. Every tag forces all nine targets, regardless
