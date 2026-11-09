@@ -47,7 +47,6 @@ To prevent out-of-memory crashes and CPU contention on 8 GB workstations or mult
 
 ```sh
 tool/with_build_slot.sh flutter pub get
-tool/with_build_slot.sh flutter gen-l10n
 tool/with_build_slot.sh flutter run -d linux
 ```
 
@@ -124,7 +123,7 @@ flowchart TD
    - Parse responses using `FieldReader`.
    - Guard all async mutations with the active `ApiSessionScope` / `RequestIdentity` so account switches or logouts discard stale results.
 4. **Build Presentation & Localization (`lib/src/features/<slice>/presentation/`)**:
-   - Add Vietnamese (`lib/l10n/app_vi.arb`) and English (`lib/l10n/app_en.arb`) strings, then run `tool/with_build_slot.sh flutter gen-l10n`.
+   - Take copy from `lib/src/i18n/vi.dart` (the website's keys); add native-only copy to `ViApp` there.
    - Use tokens from `lib/src/design_system/design_system.dart`.
    - Handle all 4 states explicitly: `loading`, `empty`, `error` (with retry callback), and `data`.
 5. **Write Tests (`test/features/<slice>/`)**:

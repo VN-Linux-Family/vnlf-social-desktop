@@ -30,7 +30,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends pkg-config libgtk-3-dev libx11-dev libxi-dev xvfb
       - run: flutter pub get
-      - run: flutter gen-l10n
       - run: git diff --exit-code
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze

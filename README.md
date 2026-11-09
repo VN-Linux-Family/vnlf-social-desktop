@@ -1,6 +1,6 @@
 # VNLF Social
 
-Native cross-platform Flutter client for [Vietnam Linux Family](https://vietnamlinuxfamily.net), with Vietnamese (`vi`, default) and English (`en`) interfaces. Official builds are published for Linux (`x64`, `arm64`), Android (`arm64-v8a`, `armeabi-v7a`, `x86_64`), Windows (`x64`, `arm64`), and macOS (`x64`, `arm64`) as documented in [the build and release guide](docs/BUILD_AND_RELEASE.md).
+Native cross-platform Flutter client for [Vietnam Linux Family](https://vietnamlinuxfamily.net), in Vietnamese like the website. Official builds are published for Linux (`x64`, `arm64`), Android (`arm64-v8a`, `armeabi-v7a`, `x86_64`), Windows (`x64`, `arm64`), and macOS (`x64`, `arm64`) as documented in [the build and release guide](docs/BUILD_AND_RELEASE.md).
 
 The app opens the community feed and provides native article/media rendering, threaded comments, a rich post/article composer with polls, community channels and direct messages with realtime WebSocket updates, LiveKit voice rooms, global search, weekly leaderboards, daily attendance check-in, member profiles, open-source project showcases, and in-app release update checks. Implementation and runtime verification details are tracked in [the parity audit](docs/source-parity-audit.md) and [`PLAN.md`](PLAN.md).
 
@@ -10,7 +10,6 @@ Use the Flutter version pinned in [`.github/workflows/ci.yml`](.github/workflows
 
 ```sh
 tool/with_build_slot.sh flutter pub get
-tool/with_build_slot.sh flutter gen-l10n
 tool/with_build_slot.sh flutter run -d linux
 ```
 

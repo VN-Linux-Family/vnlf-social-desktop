@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
@@ -76,8 +76,8 @@ void main() {
             child: MaterialApp.router(
               theme: VnlfTheme.light(),
               locale: const Locale('vi'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: GlobalMaterialLocalizations.delegates,
+              supportedLocales: const [Locale('vi')],
               builder: (context, child) => MediaQuery(
                 data: MediaQuery.of(context)
                     .copyWith(textScaler: TextScaler.linear(layout.$2)),

@@ -194,7 +194,7 @@ class NotificationsSheet extends ConsumerWidget {
                                 [
                                   if (item.actor.displayName.isNotEmpty)
                                     item.actor.displayName,
-                                  noticeAction(item.type, english),
+                                  noticeAction(item.type),
                                 ].join(' · '),
                                 style: TextStyle(
                                   fontWeight: item.unread

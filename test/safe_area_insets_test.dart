@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 
 void main() {
@@ -21,12 +20,11 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             localizationsDelegates: const [
-              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: AppLocalizations.supportedLocales,
+            supportedLocales: const [Locale('vi')],
             home: MediaQuery(
               data: const MediaQueryData(
                 size: Size(390, 844),
@@ -92,12 +90,11 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             localizationsDelegates: const [
-              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: AppLocalizations.supportedLocales,
+            supportedLocales: const [Locale('vi')],
             home: MediaQuery(
               data: const MediaQueryData(
                 size: Size(1280, 800),

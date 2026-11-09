@@ -5,9 +5,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
@@ -347,8 +347,8 @@ Future<GoRouter> _pump(
       overrides: overrides,
       child: MaterialApp.router(
         locale: const Locale('vi'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: const [Locale('vi')],
         theme: VnlfTheme.light(),
         routerConfig: router,
         builder: (context, child) => MediaQuery(

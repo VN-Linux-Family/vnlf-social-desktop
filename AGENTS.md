@@ -40,7 +40,6 @@ The project layout is enforced by automated contract tests (`test/core/project_l
 ├── analysis_options.yaml     # Strict Dart/Flutter static analysis rules
 ├── lib/
 │   ├── main.dart             # App entrypoint & runtime bootstrap
-│   ├── l10n/                 # ARB localization catalogs (vi default, en secondary)
 │   └── src/
 │       ├── app/              # GoRouter configuration & root Riverpod providers
 │       ├── core/             # Transport (ApiClient, IoApiTransport), storage, guards
@@ -48,6 +47,7 @@ The project layout is enforced by automated contract tests (`test/core/project_l
 │       ├── data/             # Shared DTOs, tolerant FieldReader, fixture & live adapters
 │       ├── design_system/    # Tokens, theme, responsive shell & atomic UI components
 │       ├── features/         # Feature-first slices (<slice>/{domain,data,presentation})
+│       ├── i18n/             # vi.dart: every user-facing string, mirroring the website's vi.ts
 │       └── gallery/          # Isolated design-system workbench & component catalog
 ├── test/
 │   ├── core/                 # Transport, parser, session isolation & layout contract tests
@@ -91,7 +91,7 @@ The project layout is enforced by automated contract tests (`test/core/project_l
   - Expanded (`>= 1181px`): Desktop three-column layout (`240px` left navigation sidebar, fluid center column, `304px` right complementary rail).
 - **Typography & localization**:
   - `Be Vietnam Pro` bundled in `assets/fonts/` (SIL OFL-1.1).
-  - Vietnamese (`vi`) is the default locale; English (`en`) is secondary. Every user-visible string belongs in `lib/l10n/app_vi.arb` and `lib/l10n/app_en.arb`.
+  - The app is Vietnamese only, like the website. Every user-visible string lives in `lib/src/i18n/vi.dart`, which mirrors the website's `packages/i18n/src/vi.ts` key for key; regenerate the website part with `python3 tool/sync_vi_strings.py` and add native-only copy to `ViApp`.
   - Verify Vietnamese diacritics rendering (`Tiếng Việt: ặ ữ ờ ẫ ệ`) and up to `200%` text scaling (`1.6x–2.0x`) without layout overflow at `320px`, `390px`, `900px`, and `1440px` widths.
 - **Accessibility & motion**:
   - Minimum WCAG AA contrast (`>= 4.5:1` for text and interactive controls in both dark and light modes).
@@ -100,7 +100,7 @@ The project layout is enforced by automated contract tests (`test/core/project_l
 - **Performance**:
   - Target 60fps (120fps on capable displays), `< 2s` cold start on mid-range Android, `const` widget constructors where possible, lazy sliver lists, bounded image caches, and zero rebuild storms.
 - **Native widgets & asset licensing**:
-  - No `WebView` wrappers and no verbatim copying of proprietary upstream web code.
+  - No `WebView` wrappers. At the project owner's request (2026-11-09) the website's components, UI and copy are ported into native Flutter code, screen by screen.
   - Record all third-party fonts, icons, and brand assets in [`docs/ASSETS.md`](docs/ASSETS.md).
 
 ---
@@ -122,7 +122,6 @@ The project layout is enforced by automated contract tests (`test/core/project_l
   Before reporting any task complete or opening/merging a PR, run and verify all of the following:
   ```sh
   tool/with_build_slot.sh flutter pub get
-  tool/with_build_slot.sh flutter gen-l10n
   tool/with_build_slot.sh dart format --output=none --set-exit-if-changed lib test tool
   tool/with_build_slot.sh flutter analyze
   tool/with_build_slot.sh dart run test/core/io_transport_headless_smoke.dart

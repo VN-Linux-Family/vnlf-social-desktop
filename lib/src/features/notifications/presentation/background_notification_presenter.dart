@@ -1,6 +1,5 @@
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
-
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../realtime/domain/community_event.dart';
 import '../domain/notifications_repository.dart';
 import 'notice_copy.dart';
@@ -27,20 +26,20 @@ final class BackgroundNotificationPresenter {
   final String? currentUserId;
   final String? Function(String channelId) channelSlug;
 
-  Future<void> present(CommunityEvent event, AppLocalizations l10n) async {
+  Future<void> present(CommunityEvent event) async {
     final data = event.data;
     if (data is! Map<String, Object?>) return;
     switch (event.type) {
       case 'notification:created' || 'notification:updated':
-        await _presentNotice(data, l10n);
+        await _presentNotice(data);
       case 'dm:message-created':
         if (_ownMessage(data)) return;
         final conversationId = _text(data['conversationId']);
         await show(
           // The same message also arrives on the conversation topic.
           id: (_text(data['id']) ?? event.eventId).hashCode,
-          title: _authorName(data) ?? l10n.messageNotificationTitle,
-          body: _text(data['content']) ?? l10n.messageNotificationBody,
+          title: _authorName(data) ?? vi.app.tinNhanMoi,
+          body: _text(data['content']) ?? vi.app.banCoTinNhanMoi,
           payload: conversationId == null
               ? '/messages'
               : '/messages/${Uri.encodeComponent(conversationId)}',
@@ -51,8 +50,8 @@ final class BackgroundNotificationPresenter {
         final slug = channelId == null ? null : channelSlug(channelId);
         await show(
           id: (_text(data['id']) ?? event.eventId).hashCode,
-          title: _authorName(data) ?? l10n.channelNotificationTitle,
-          body: _text(data['content']) ?? l10n.channelNotificationBody,
+          title: _authorName(data) ?? vi.app.kenhChat,
+          body: _text(data['content']) ?? vi.app.coTinNhanMoiTrongKenh,
           payload: slug == null
               ? '/channels'
               : '/channels/${Uri.encodeComponent(slug)}',
@@ -62,10 +61,7 @@ final class BackgroundNotificationPresenter {
 
   /// Realtime notification events carry only the notification id, so the
   /// newest page is read to describe it the way the notifications list does.
-  Future<void> _presentNotice(
-    Map<String, Object?> data,
-    AppLocalizations l10n,
-  ) async {
+  Future<void> _presentNotice(Map<String, Object?> data) async {
     final id = _text(data['id']);
     if (id == null) return;
     CommunityNotice? notice;
@@ -76,22 +72,19 @@ final class BackgroundNotificationPresenter {
       notice = null;
     }
     if (notice != null && !notice.unread) return;
-    final english = l10n.localeName == 'en';
     await show(
       // An aggregated update replaces the earlier system notification.
       id: id.hashCode,
       title: notice == null || notice.actor.displayName.isEmpty
-          ? l10n.appTitle
+          ? vi.app.tieuDeUngDung
           : notice.actor.displayName,
-      body: notice == null
-          ? l10n.activityNotificationBody
-          : _noticeBody(notice, english),
+      body: notice == null ? vi.app.banCoHoatDongMoi : _noticeBody(notice),
       payload: (notice == null ? null : noticeRoute(notice)) ?? '/',
     );
   }
 
-  String _noticeBody(CommunityNotice notice, bool english) {
-    final action = noticeAction(notice.type, english);
+  String _noticeBody(CommunityNotice notice) {
+    final action = noticeAction(notice.type);
     final subject = notice.title.isNotEmpty ? notice.title : notice.excerpt;
     return subject.isEmpty ? action : '$action: $subject';
   }

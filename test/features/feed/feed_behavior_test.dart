@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
@@ -242,8 +242,8 @@ Future<ProviderContainer> _pumpFeed(
       container: container,
       child: MaterialApp(
         locale: const Locale('vi'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: const [Locale('vi')],
         theme: VnlfTheme.light(),
         home: const Scaffold(body: FeedScreen()),
       ),

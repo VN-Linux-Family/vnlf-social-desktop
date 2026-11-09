@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart' show ThemeMode;
@@ -15,69 +14,6 @@ import '../data/live_auth_repository.dart';
 import '../data/live_post_repository.dart';
 import '../domain/models.dart';
 import '../domain/repositories.dart';
-
-final localeStorageFailureProvider = StateProvider<StorageFailure?>(
-  (ref) => null,
-);
-
-final localeProvider = StateNotifierProvider<LocaleController, Locale?>(
-  (ref) => LocaleController(ref.watch(preferencesStorageProvider), (failure) {
-    ref.read(localeStorageFailureProvider.notifier).state = failure;
-  }),
-);
-
-class LocaleController extends StateNotifier<Locale?> {
-  LocaleController(this._storage, [this._onStorageFailure, Locale? initial])
-    : super(initial) {
-    restored = _restore();
-  }
-
-  static const _storageKey = 'vnlf_locale';
-  final PreferencesStorage _storage;
-  final void Function(StorageFailure?)? _onStorageFailure;
-  late final Future<void> restored;
-  Future<void> _writes = Future.value();
-  int _revision = 0;
-
-  Future<void> _restore() async {
-    final revision = _revision;
-    try {
-      final value = await _storage.read(_storageKey);
-      if (!mounted || revision != _revision) return;
-      if (value != null && value.isNotEmpty && value != 'system') {
-        super.state = Locale(value);
-      }
-    } catch (_) {
-      if (mounted && revision == _revision) {
-        _onStorageFailure?.call(const StorageFailure());
-      }
-    }
-  }
-
-  Future<void> setLocale(Locale? locale) {
-    final revision = ++_revision;
-    super.state = locale;
-    return _writes = _writes.then((_) async {
-      try {
-        if (locale == null) {
-          await _storage.write(_storageKey, 'system');
-        } else {
-          await _storage.write(_storageKey, locale.languageCode);
-        }
-        if (mounted && revision == _revision) _onStorageFailure?.call(null);
-      } catch (_) {
-        if (mounted && revision == _revision) {
-          _onStorageFailure?.call(const StorageFailure());
-        }
-      }
-    });
-  }
-
-  @override
-  set state(Locale? value) {
-    setLocale(value);
-  }
-}
 
 final sessionStorageProvider = Provider<SessionStorage>(
   (ref) => const SecureSessionStorage(),

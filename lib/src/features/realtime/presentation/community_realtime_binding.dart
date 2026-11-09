@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 
 import '../../../app/providers.dart';
 import '../../../domain/models.dart';
@@ -94,7 +93,7 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
     );
     unawaited(
       presenter
-          .present(event, AppLocalizations.of(context)!)
+          .present(event)
           .then<void>(
             (_) {},
             onError: (Object error) => debugPrint(

@@ -2,8 +2,8 @@ import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dar
 import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vnlfsocialapp/l10n/app_localizations.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/projects/presentation/projects_screen.dart';
@@ -158,8 +158,8 @@ Future<void> _openProject(
       ],
       child: MaterialApp(
         locale: const Locale('vi'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: const [Locale('vi')],
         theme: dark ? VnlfTheme.dark() : VnlfTheme.light(),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context)
