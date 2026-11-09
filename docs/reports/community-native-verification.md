@@ -17,7 +17,7 @@ Search indexes loaded fixture posts, projects and member identities, with query 
 | `git diff --check` | Passed. |
 | `flutter run -d linux --route=/channels` under isolated Xvfb | Linux debug build and app startup passed; navigated through the shell to capture the screens. |
 
-The new `test/features/community_channels_voice_search_test.dart` covers channel switching and retained local sends, voice join/mute/deafen/share/leave, search queries/scopes/tags/clearing, shared feed/thread reactions, project filtering and leaderboard order. It also checks the three new screens at 390, 900 and 1440 pixels with 1.3× text scaling. Existing shell tests now check the actual native screens and both Vietnamese and English titles; their previous placeholder expectations were obsolete.
+The new `test/features/communication/community_channels_voice_search_test.dart` covers channel switching and retained local sends, voice join/mute/deafen/share/leave, search queries/scopes/tags/clearing, shared feed/thread reactions, project filtering and leaderboard order. It also checks the three new screens at 390, 900 and 1440 pixels with 1.3× text scaling. Existing shell tests now check the actual native screens and both Vietnamese and English titles; their previous placeholder expectations were obsolete.
 
 ## Screenshots and design comparison
 
