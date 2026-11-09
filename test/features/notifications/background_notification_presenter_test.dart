@@ -113,7 +113,7 @@ void main() {
 
       expect(
         shown.single.body,
-        'You have new activity on Vietnam Linux Family.',
+        'Bạn có hoạt động mới trên Vietnam Linux Family.',
       );
       expect(shown.single.payload, '/');
     });

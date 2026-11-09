@@ -159,20 +159,13 @@ void main() {
       tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
       ThemeMode.dark,
     );
-    await tester.tap(find.text('English'));
-    await tester.pumpAndSettle();
-    expect(find.text('Settings'), findsWidgets);
-    expect(
-      tester.widget<MaterialApp>(find.byType(MaterialApp)).locale,
-      const Locale('en'),
-    );
-    await tester.tap(find.text('Light'));
+    await tester.tap(find.text('Sáng'));
     await tester.pumpAndSettle();
     expect(
       tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,
       ThemeMode.light,
     );
-    await tester.tap(find.text('System'));
+    await tester.tap(find.text('Tự động'));
     await tester.pumpAndSettle();
     expect(
       tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode,

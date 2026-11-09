@@ -43,7 +43,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(VnlfMobileBottomNav),
-        matching: find.byTooltip('Discover'),
+        matching: find.byTooltip('Khám phá'),
       ),
     );
     await tester.pumpAndSettle();

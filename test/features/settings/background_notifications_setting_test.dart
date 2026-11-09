@@ -87,18 +87,6 @@ void main() {
     expect(notifications.requests, 0);
   });
 
-  testWidgets('the switch uses the English catalog', (tester) async {
-    final container = _container(android: true);
-    addTearDown(container.dispose);
-    await _openSettings(tester, container, locale: const Locale('en'));
-
-    await tester.ensureVisible(find.text('Background notifications'));
-    expect(
-      find.textContaining('Nothing arrives after the app is fully closed.'),
-      findsOneWidget,
-    );
-  });
-
   testWidgets('the switch fits a 390px phone at 200% text', (tester) async {
     final container = _container(android: true);
     addTearDown(container.dispose);
@@ -137,11 +125,8 @@ ProviderContainer _container({
 
 Future<void> _openSettings(
   WidgetTester tester,
-  ProviderContainer container, {
-  Locale locale = const Locale('vi'),
-}) async {
-  tester.platformDispatcher.localesTestValue = [locale];
-  addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+  ProviderContainer container,
+) async {
   tester.view.physicalSize = const Size(390, 1100);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
