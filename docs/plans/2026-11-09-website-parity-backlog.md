@@ -19,14 +19,15 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 | Vietnamese only; copy generated from `vi.ts` | #5 |
 | Shell (sidebar, rail, phone bar) and home feed | #6 |
 | Every user-visible string in `vi.dart`; no language flags | #7 |
+| Post and article detail pages, post menu, share dialog, link previews, author view counts | #8 |
 
 ## Screens and features, in port order
 
 ### 1. Article detail and comments
-- ⬜ Article/thread detail page like the website's `ArticleDetailView`. The app's `thread_screen` still uses the framed card.
+- ✅ Post and article detail pages like the website's `ArticleDetailView` (#8).
 - ⬜ Comments panel like `comments-panel.tsx`, including the drawer on phones.
-- ⬜ Edit, delete and hide your own post from the "…" menu. Today the menu has only Save, Copy link and Report.
-- ⬜ Share dialog: send in a message, Facebook, Telegram, Email. Today the app only copies the link.
+- ✅ The website's "…" menu everywhere a post appears: save, copy link, edit and delete for the author, hide and report for everyone else (#8).
+- ✅ Share dialog: message, Facebook, Telegram, Email and copy (#8).
 - ⬜ GIF (KLIPY) and sticker pickers in comments.
 - ⬜ Profile hover card on desktop (`profile-card.tsx`).
 
@@ -38,7 +39,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 
 ### 3. Composer
 - ⬜ Article editor parity (`article-editor.tsx`).
-- ⬜ Stickers, GIFs, link previews and YouTube embeds.
+- ⬜ Stickers and GIFs. Link previews and YouTube cards already show under posts (#8).
 
 ### 4. Notifications
 - ⬜ Full notifications page (`/notifications`). The app only has a sheet.

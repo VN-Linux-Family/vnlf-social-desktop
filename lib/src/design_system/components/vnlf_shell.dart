@@ -48,6 +48,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
     this.showMobileBottomNav = true,
     this.showMobileHeader = true,
     this.activeDestination = VnlfNavDestination.feed,
+    this.highlightActiveDestination = true,
     this.onDestinationSelected,
     this.themeMode = ThemeMode.light,
     this.onThemeModeChanged,
@@ -122,6 +123,10 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final double centerMaxWidth;
   final bool showMobileBottomNav;
   final VnlfNavDestination activeDestination;
+
+  /// False on pages outside the menu (a post, search, a profile), where the
+  /// website highlights no item.
+  final bool highlightActiveDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final Set<VnlfNavDestination> unreadDestinations;
   final int notificationBadgeCount;
@@ -195,7 +200,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
 
   Widget _sidebar(double width) => VnlfDesktopSidebar(
     width: width,
-    activeDestination: activeDestination,
+    activeDestination: highlightActiveDestination ? activeDestination : null,
     onDestinationSelected: onDestinationSelected,
     unreadDestinations: unreadDestinations,
     themeMode: themeMode,
@@ -320,6 +325,9 @@ class VnlfAdaptiveShell extends StatelessWidget {
             colors: colors,
             constraints: constraints,
             activeDestination: activeDestination,
+            highlightedDestination: highlightActiveDestination
+                ? activeDestination
+                : null,
             unreadDestinations: unreadDestinations,
             themeMode: themeMode,
             onThemeModeChanged: onThemeModeChanged,
@@ -516,6 +524,7 @@ class _MobileShellScaffold extends StatefulWidget {
     required this.colors,
     required this.constraints,
     required this.activeDestination,
+    required this.highlightedDestination,
     required this.unreadDestinations,
     required this.themeMode,
     required this.onThemeModeChanged,
@@ -584,6 +593,7 @@ class _MobileShellScaffold extends StatefulWidget {
   final VnlfColors colors;
   final BoxConstraints constraints;
   final VnlfNavDestination activeDestination;
+  final VnlfNavDestination? highlightedDestination;
   final Set<VnlfNavDestination> unreadDestinations;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode>? onThemeModeChanged;
@@ -718,7 +728,7 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
             surfaceTintColor: Colors.transparent,
             child: SafeArea(
               child: VnlfDesktopSidebar(
-                activeDestination: widget.activeDestination,
+                activeDestination: widget.highlightedDestination,
                 unreadDestinations: widget.unreadDestinations,
                 onDestinationSelected: (dest) {
                   _closeDrawer();
@@ -852,7 +862,7 @@ class _MobileShellScaffoldState extends State<_MobileShellScaffold> {
                 MediaQuery.viewInsetsOf(context).bottom > 0
             ? null
             : VnlfMobileBottomNav(
-                activeDestination: widget.activeDestination,
+                activeDestination: widget.highlightedDestination,
                 onDestinationSelected: widget.onDestinationSelected,
                 destinationLabels: widget.destinationLabels,
                 destinationSemanticLabels: widget.destinationSemanticLabels,

@@ -213,7 +213,8 @@ class VnlfMobileBottomNav extends StatelessWidget {
     VnlfNavDestination.voice,
   ];
 
-  final VnlfNavDestination activeDestination;
+  /// The highlighted item; null on pages that are not in the menu.
+  final VnlfNavDestination? activeDestination;
   final ValueChanged<VnlfNavDestination>? onDestinationSelected;
   final Map<VnlfNavDestination, String> destinationLabels;
   final Map<VnlfNavDestination, String> destinationSemanticLabels;

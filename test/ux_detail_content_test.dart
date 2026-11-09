@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vnlfsocialapp/main.dart';
 
@@ -29,10 +30,7 @@ void main() {
   testWidgets('desktop post has one working back control', (tester) async {
     final router = await open(tester, '/thread/post-synth-1');
     final arrows = find.byWidgetPredicate(
-      (widget) =>
-          widget is Icon &&
-          (widget.icon == Icons.arrow_back ||
-              widget.icon == Icons.arrow_back_rounded),
+      (widget) => widget is VnlfIcon && widget.icon == VnlfLucide.arrowLeft,
     );
     expect(arrows, findsOneWidget);
     await tester.tap(arrows);

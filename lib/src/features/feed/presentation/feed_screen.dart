@@ -7,15 +7,11 @@ import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../../i18n/vi.dart';
 import '../../composer/presentation/composer_prompt.dart';
-import '../../moderation/presentation/report_dialog.dart';
 import '../../notifications/presentation/notifications_controller.dart';
 import '../../notifications/presentation/notifications_sheet.dart';
-import '../../polls/presentation/poll_card.dart';
-import '../../shared/presentation/post_interactions.dart';
-import '../../shared/presentation/post_share.dart';
+import '../../shared/presentation/post_card_tile.dart';
 import '../../shared/presentation/session_avatar.dart';
 import 'feed_notifier.dart';
-import 'post_mapper.dart';
 
 /// The website's home feed (HomeFeed): tabs, composer bar and posts. Phones
 /// show each post as a full-bleed band 6px apart; wider screens put every
@@ -260,7 +256,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ? const SizedBox(height: 6)
           : Divider(height: 1, thickness: 1, color: colors.line),
       itemBuilder: (context, index) =>
-          _FeedPostTile(source: data.posts[index], key: ValueKey(index)),
+          PostCardTile(post: data.posts[index], key: ValueKey(index)),
     );
     if (phone) {
       return SliverPadding(
@@ -279,47 +275,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 }
 
-class _FeedPostTile extends ConsumerWidget {
-  const _FeedPostTile({super.key, required this.source});
-
-  final FeedPost source;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final interaction = ref.watch(postInteractionProvider(source.id));
-    final path = '/thread/${Uri.encodeComponent(source.id)}';
-    return InkWell(
-      onTap: () => context.push(path),
-      child: VnlfPostCard(
-        key: ValueKey(source.id),
-        poll: source.poll == null
-            ? null
-            : PollCard(poll: source.poll!, authorId: source.author.id),
-        post: interaction.apply(presentPost(source)),
-        onVoteChanged: (vote) =>
-            ref.read(postInteractionsProvider.notifier).vote(source.id, vote),
-        onBookmarkToggle: () => ref
-            .read(postInteractionsProvider.notifier)
-            .toggleBookmark(source.id, initialValue: source.viewerBookmarked),
-        authorAvatarSemanticLabel: source.author.displayName,
-        onAuthorTap: () => context.push(
-          '/profile/${Uri.encodeComponent(source.author.username)}',
-        ),
-        onShareTap: () => copyPostLink(context, source),
-        onReportTap: () => showArticleReport(context, ref, source.id),
-        onCommentTap: () => context.push(path),
-        moreOptionsSemanticLabel: vi.feedViews.moMenuBaiViet,
-        upvoteSemanticLabel: vi.app.common.ungHo,
-        downvoteSemanticLabel: vi.app.common.phanDoi,
-        commentSemanticLabel: vi.common.binhLuan,
-        shareSemanticLabel: vi.socialOverlays.saoChepLienKet,
-        bookmarkSemanticLabel: vi.common.luuBaiViet,
-      ),
-    );
-  }
-}
-
-/// The website's feed sentinel line below the posts.
 class _FeedSentinel extends StatelessWidget {
   const _FeedSentinel({required this.phone, required this.text});
 

@@ -83,14 +83,17 @@ void main() {
       expect(find.text('Tủ đồ & Huy hiệu'), findsNothing);
       expect(find.text('Bài viết'), findsOneWidget);
       expect(find.text('Bài viết trong hồ sơ'), findsOneWidget);
-      final share = find.byWidgetPredicate(
-        (w) => w is VnlfIcon && w.icon == VnlfLucide.link2,
-      );
+      final share = find.bySemanticsLabel('Chia sẻ bài').first;
       await tester.ensureVisible(share);
       await tester.tap(share);
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Sao chép').last);
+      await tester.pumpAndSettle();
       expect(copiedLink, 'https://vietnamlinuxfamily.net/a/profile-post');
       expect(find.text('Đã sao chép liên kết'), findsOneWidget);
+      await tester.tap(find.byTooltip('Đóng hộp thoại'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 3));
       await _select(tester, 'Bình luận');
       expect(find.text('Bình luận trong hồ sơ'), findsOneWidget);
       await _select(tester, 'Dự án');

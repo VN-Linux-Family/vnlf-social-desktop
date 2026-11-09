@@ -32,7 +32,6 @@ import '../features/shared/presentation/session_avatar.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
-import '../features/thread/presentation/thread_sidebar.dart';
 import '../gallery/gallery_page.dart';
 import '../i18n/vi.dart';
 import 'providers.dart';
@@ -145,15 +144,15 @@ GoRouter createMainRouter({
               state.uri.path.startsWith('/messages/');
           final communicationDetail =
               communication && state.uri.path.split('/').length > 2;
-          final active = communication
+          final matched = communication
               ? VnlfNavDestination.messages
               : state.uri.path.startsWith('/projects/')
               ? VnlfNavDestination.projects
               : destinations.entries
-                        .where((entry) => entry.value == state.uri.path)
-                        .map((entry) => entry.key)
-                        .firstOrNull ??
-                    VnlfNavDestination.feed;
+                    .where((entry) => entry.value == state.uri.path)
+                    .map((entry) => entry.key)
+                    .firstOrNull;
+          final active = matched ?? VnlfNavDestination.feed;
           return Consumer(
             builder: (context, ref, _) {
               final session =
@@ -169,10 +168,6 @@ GoRouter createMainRouter({
               final threadId = isArticleOrThread
                   ? state.pathParameters['id']
                   : null;
-              final articleDetail =
-                  threadId != null &&
-                  ref.watch(threadPostProvider(threadId)).valueOrNull?.format ==
-                      'ARTICLE';
               final isDetailRoute =
                   threadId != null ||
                   state.uri.path.startsWith('/projects/') ||
@@ -236,9 +231,11 @@ GoRouter createMainRouter({
                 onThemeModeChanged: (mode) =>
                     ref.read(themeModeProvider.notifier).setThemeMode(mode),
                 activeDestination: active,
+                highlightActiveDestination: matched != null,
                 onDestinationSelected: (destination) =>
                     context.go(destinations[destination]!),
-                onBack: !isDetailRoute
+                // Posts carry their own "Quay lại bảng tin" bar, as on the website.
+                onBack: !isDetailRoute || threadId != null
                     ? null
                     : () {
                         final router = GoRouter.maybeOf(context);
@@ -334,9 +331,8 @@ GoRouter createMainRouter({
                     ),
                   ],
                 ),
-                rightSidebarChild: threadId != null && !articleDetail
-                    ? ThreadSidebar(postId: threadId)
-                    : state.uri.path == '/'
+                // Detail pages are wide on the website: no right rail.
+                rightSidebarChild: state.uri.path == '/'
                     ? const LeaderboardPanel(sidebar: true)
                     : null,
                 destinationLabels: labels,

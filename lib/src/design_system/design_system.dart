@@ -1,10 +1,14 @@
 export 'components/brand_assets.dart';
+export 'components/vnlf_action_button.dart';
 export 'components/vnlf_author_identity.dart';
 export 'components/vnlf_avatar.dart';
 export 'components/vnlf_code_block.dart';
 export 'components/vnlf_comment_tree.dart';
 export 'components/vnlf_leaderboard_card.dart';
+export 'components/vnlf_link_preview.dart';
 export 'components/vnlf_media_preview.dart';
+export 'components/vnlf_overlays.dart';
+export 'components/vnlf_post_attachment.dart';
 export 'components/vnlf_post_card.dart';
 export 'icons/vnlf_icon.dart';
 export 'components/vnlf_shell.dart';

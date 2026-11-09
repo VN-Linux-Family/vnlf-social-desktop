@@ -56,6 +56,7 @@ PostData presentPost(FeedPost post, {bool fullContent = false}) {
     isBookmarked: post.viewerBookmarked,
     isArticle: post.format.toLowerCase() == 'article',
     attachment: attachment,
+    viewCount: post.viewCount,
   );
 }
 
