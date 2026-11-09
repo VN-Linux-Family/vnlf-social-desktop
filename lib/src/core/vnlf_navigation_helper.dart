@@ -79,11 +79,17 @@ String? resolveInAppVnlfRoute(Uri uri) {
       return '/activity';
 
     case 'channels':
-    case 'messages':
       if (segments.length >= 2 && segments[1].isNotEmpty) {
         return '/channels/${Uri.encodeComponent(segments[1])}';
       }
       return '/channels';
+
+    case 'messages':
+      // The website's /messages/:id is a direct conversation, not a channel.
+      if (segments.length >= 2 && segments[1].isNotEmpty) {
+        return '/messages/${Uri.encodeComponent(segments[1])}';
+      }
+      return '/messages';
 
     case 'voice':
       return '/voice';
@@ -103,6 +109,12 @@ String? resolveInAppVnlfRoute(Uri uri) {
 
     case 'login':
       return '/login';
+
+    case 'register':
+      return '/register';
+
+    case 'forgot-password':
+      return '/forgot-password';
 
     case 'compose':
       return '/compose';

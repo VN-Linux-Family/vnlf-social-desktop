@@ -60,10 +60,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final button = tester.widget<FilledButton>(find.byType(FilledButton));
-    final background = button.style!.backgroundColor!.resolve({})!;
-    _expectReadable(button.style!.foregroundColor!.resolve({})!, background);
-    final text = tester.widget<Text>(find.text('Vào VNLF Social'));
-    _expectReadable(text.style!.color!, background);
+    // The website's dark `.auth-submit`: #7fcf9a with #0c1f14 text.
+    final label = find.text('Vào VNLF Social');
+    final button = tester.widget<Material>(
+      find.ancestor(of: label, matching: find.byType(Material)).first,
+    );
+    final text = tester.widget<Text>(label);
+    _expectReadable(text.style!.color!, button.color!);
   });
 }

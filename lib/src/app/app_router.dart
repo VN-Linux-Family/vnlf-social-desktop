@@ -117,6 +117,16 @@ GoRouter createMainRouter({
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
+        path: '/register',
+        builder: (context, state) =>
+            const LoginScreen(initialMode: AuthMode.register),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) =>
+            const LoginScreen(initialMode: AuthMode.forgot),
+      ),
+      GoRoute(
         path: '/compose',
         name: composeRouteName,
         builder: (context, state) => const ComposerScreen(),

@@ -11,12 +11,16 @@ final class PendingComment {
     required this.parentId,
     required this.attachmentIds,
     this.confirmedCommentId,
+    this.gif,
   });
   final String identity;
   final String content;
   final String? parentId;
   final List<String> attachmentIds;
   final String? confirmedCommentId;
+
+  /// The chosen GIF or sticker payload, kept so a retry sends the same one.
+  final Map<String, Object>? gif;
 }
 
 /// Only the payload and deduplication key are stored; no files or upload URLs.
@@ -55,13 +59,16 @@ final class CommentPendingStore {
       final parent = json['parentId'] as String?;
       final confirmed = json['confirmedCommentId'] as String?;
       final ids = (json['attachmentIds'] as List).cast<String>();
+      final gif = json['gif'] == null
+          ? null
+          : Map<String, Object>.from(json['gif'] as Map);
       if (json['schema'] != 1 ||
           (confirmed != null && confirmed.isEmpty) ||
           identity.isEmpty ||
           content.length > 4000 ||
           ids.length > 10 ||
           ids.any((id) => id.isEmpty) ||
-          (content.isEmpty && ids.isEmpty)) {
+          (content.isEmpty && ids.isEmpty && gif == null)) {
         throw const FormatException();
       }
       return PendingComment(
@@ -70,6 +77,7 @@ final class CommentPendingStore {
         parentId: parent,
         attachmentIds: List.unmodifiable(ids),
         confirmedCommentId: confirmed,
+        gif: gif,
       );
     } catch (_) {
       throw const ParseFailure('comment.pending');
@@ -82,6 +90,7 @@ final class CommentPendingStore {
     'content': pending.content,
     'parentId': pending.parentId,
     'attachmentIds': pending.attachmentIds,
+    if (pending.gif != null) 'gif': pending.gif,
     if (pending.confirmedCommentId != null)
       'confirmedCommentId': pending.confirmedCommentId,
   });
@@ -115,6 +124,7 @@ final class CommentPendingStore {
       parentId: pending.parentId,
       attachmentIds: pending.attachmentIds,
       confirmedCommentId: commentId,
+      gif: pending.gif,
     );
     return _serial(key, () async {
       if (await _storage.read(key) != _encode(pending)) {

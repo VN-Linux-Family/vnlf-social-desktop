@@ -103,6 +103,26 @@ void main() {
       );
     });
 
+    test('direct messages and the sign-in pages keep their own routes', () {
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse('https://vietnamlinuxfamily.net/messages/conv-1'),
+        ),
+        '/messages/conv-1',
+      );
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse('https://vietnamlinuxfamily.net/channels/chung'),
+        ),
+        '/channels/chung',
+      );
+      expect(resolveInAppVnlfRoute(Uri.parse('/register')), '/register');
+      expect(
+        resolveInAppVnlfRoute(Uri.parse('/forgot-password')),
+        '/forgot-password',
+      );
+    });
+
     test('resolves custom vnlf:// scheme', () {
       expect(
         resolveInAppVnlfRoute(Uri.parse('vnlf://thread/abc')),

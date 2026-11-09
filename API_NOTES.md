@@ -791,3 +791,57 @@ mentions, draws stickers without a frame (at most 160px) and labels KLIPY media
 with its provider. The native app reads both fields from 2026-11-09 and treats
 missing values as none.
 
+## Sticker and GIF picker — 2026-11-09
+
+Confirmed from the website source (`apps/web/lib/klipy.ts`,
+`apps/web/lib/stickers.ts`, `components/social/chat/gif-picker.tsx`) and the
+API routes in `integrations.ts`, `stickers.ts` and `articles.ts`:
+
+- `GET /api/v1/integrations/klipy` (signed in, `cache-control: private,
+  no-store`) returns `{provider: "KLIPY", enabled, apiKey, customerId}`. The
+  key is KLIPY's public app key; `customerId` is an HMAC pseudonym of the
+  member, never an email or user id.
+- The client then calls KLIPY directly, without cookies:
+  `GET https://api.klipy.com/api/v1/{apiKey}/{gifs|stickers}/{trending|search}`
+  with `page`, `per_page=24`, `customer_id`, `locale=vn`,
+  `format_filter=gif,webp`, `content_filter=high` and `q` when searching.
+  The native parser mirrors `parseKlipyPage`:
+  - it refuses ads, malformed pages and media outside `static{,1,2}.klipy.com/ii/`;
+  - it keeps ids of 16 or more digits exact;
+  - it prefers `gif` for GIFs and `webp` for stickers among the `sm`, `md`, `hd`, `xs` renditions.
+  
+  After a comment with a KLIPY item is sent, it posts
+  `POST https://api.klipy.com/api/v1/{apiKey}/{gifs|stickers}/share/{slug}`
+  `{customer_id, q}` once. That call is analytics and never blocks the comment.
+- `GET /api/v1/stickers/tray` → `{packs: StickerPackDto[]}` and
+  `GET /api/v1/stickers/saved` → `{items: [{sticker, pack: {id, slug, title},
+  savedAt}]}`. Only `READY` stickers with a URL are offered.
+  `DELETE /api/v1/stickers/:id/save` removes a saved sticker.
+- `POST /api/v1/articles/:id/comments` accepts `gif` beside `content` and
+  `attachmentIds`:
+  - KLIPY: `{provider: "KLIPY", id, slug, kind?: "sticker", title, url, width, height}`.
+  - VNLF: `{provider: "VNLF", kind: "sticker", id, packId, packSlug, title, url, width, height}`.
+
+  The server rebuilds VNLF stickers from the pack. The native client keeps the
+  payload in the pending-comment record, so a retry sends the same item under the
+  same `clientCommentId`.
+- The last 16 stickers sent are kept on the device. The website keeps them per
+  browser (`vnlf:recent-stickers`); the app keeps them per account.
+
+No live call was made: the picker needs a signed-in account, and none was
+authorized for testing. Parsing, requests and the picker have synthetic coverage.
+
+## Password reset — 2026-11-09
+
+`POST /api/v1/auth/forgot-password {email}` always answers
+`{ok: true, message}`, whether or not the address has an account, and is
+limited to 5 requests an hour per IP (`apps/api/src/modules/auth.ts`). The
+emailed link points to `https://vietnamlinuxfamily.net/reset-password?token=`,
+where `POST /api/v1/auth/reset-password {token, password}` sets the new
+password (`400 RESET_TOKEN_INVALID` for a used or expired token). The native
+app sends the email request and waits 60 seconds before offering a resend,
+like the website. The reset itself happens on the website until the app
+handles that link. Google and Discord sign-in
+(`/api/v1/auth/{google/start,discord/login}`) finish on the website's domain,
+so a native client cannot receive the session without a server change.
+
