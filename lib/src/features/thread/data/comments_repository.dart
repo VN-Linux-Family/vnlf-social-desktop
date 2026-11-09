@@ -37,6 +37,11 @@ ArticleComment commentFromJson(Map<String, dynamic> json) {
       ),
     ),
     gif: _gif(json['gif']),
+    mentions: List.unmodifiable(
+      objectList(json['mentions'], 'comment.mentions')
+          .map((m) => stringValue(m['username'], 'mention.username'))
+          .where((username) => username.isNotEmpty),
+    ),
   );
 }
 
@@ -49,6 +54,7 @@ CommentGif? _gif(Object? raw) {
     provider: stringValue(json['provider'], 'gif.provider'),
     id: stringValue(json['id'], 'gif.id'),
     packSlug: stringValue(json['packSlug'], 'gif.packSlug'),
+    kind: stringValue(json['kind'], 'gif.kind'),
     hidden: boolValue(json['hidden'], 'gif.hidden'),
     width: nullableInt(json['width'], 'gif.width'),
     height: nullableInt(json['height'], 'gif.height'),
@@ -209,6 +215,7 @@ final class FixtureCommentsRepository implements CommentsRepository {
       canPin: old.canPin,
       attachments: old.attachments,
       gif: old.gif,
+      mentions: old.mentions,
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
@@ -92,6 +93,20 @@ List<CommentNodeData> presentComments(
     author: presentAuthor(comment.author),
     body: comment.content,
     relativeTime: comment.createdAt == null ? '' : _time(comment.createdAt!),
+    date: comment.createdAt == null
+        ? ''
+        : DateFormat('d/M/yyyy').format(comment.createdAt!.toLocal()),
+    mentions: comment.mentions,
+    gifProvider: comment.gif?.provider,
+    gifSticker: comment.gif?.isSticker ?? false,
+    gifLink: switch (comment.gif) {
+      null => null,
+      final gif when gif.provider == 'VNLF' =>
+        gif.packSlug.isEmpty
+            ? null
+            : 'https://vietnamlinuxfamily.net/stickers/${Uri.encodeComponent(gif.packSlug)}',
+      final gif => gif.url,
+    },
     voteScore: comment.voteScore,
     canEdit: comment.canEdit,
     canDelete: comment.canDelete,

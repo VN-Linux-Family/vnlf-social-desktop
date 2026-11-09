@@ -117,7 +117,8 @@ class VnlfVoteCapsule extends StatelessWidget {
     return Semantics(
       label: semanticLabel,
       container: true,
-      child: phone
+      // Posts on phones drop the pill; comments keep it, as on the website.
+      child: phone && !compact
           ? row
           : DecoratedBox(
               decoration: BoxDecoration(

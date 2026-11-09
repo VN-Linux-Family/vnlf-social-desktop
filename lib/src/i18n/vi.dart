@@ -4767,8 +4767,6 @@ final class ViAppCommon {
   final sang = 'Sáng';
   final hoatDong = 'Hoạt động';
   final moVnlfSocial = 'Mở VNLF Social';
-  final phanDoi = 'Phản đối';
-  final ungHo = 'Ủng hộ';
   final khongMoDuocLien = 'Không mở được liên kết';
   final videoDangDuocXu = 'Video đang được xử lý';
   final tatAmThanh = 'Tắt âm thanh';
@@ -4786,7 +4784,6 @@ final class ViAppCommon {
   final thaoTacTinNhan = 'Thao tác tin nhắn';
   final chinhSua = 'Chỉnh sửa';
   final lamMoi = 'Làm mới';
-  final luuBaiViet = 'Lưu bài viết';
   final chuaCoDuAn = 'Chưa có dự án';
   final chuDePhoBien = 'Chủ đề phổ biến';
   final ngay = '{inDays} ngày';
@@ -5424,35 +5421,18 @@ final class ViAppThread {
   final camOnBanDa = 'Cảm ơn bạn đã chia sẻ cùng cộng đồng!';
   final nhacDenThanhVien = 'Nhắc đến thành viên';
   final khongTaiDuocGoi = 'Không tải được gợi ý thành viên.';
-  final suaBaiViet = 'Sửa bài viết';
-  final menuBaiViet = 'Menu bài viết';
   final chuaLuuDuocThay =
       'Chưa lưu được thay đổi. Bản nháp vẫn được giữ; vui lòng thử lại.';
   final xoaBinhLuanNay = 'Xóa bình luận này? Các câu trả lời vẫn được giữ.';
   final binhLuanKhongCon =
       'Bình luận không còn nội dung hay ảnh. Xóa bình luận này?';
   final chuaLuuDuocThayDoi = 'Chưa lưu được thay đổi. Vui lòng thử lại.';
-  final khongTaiDuocBinh = 'Không tải được bình luận';
-  final themBinhLuan = 'Thêm bình luận';
-  final khongGuiDuocBinh =
-      'Không gửi được bình luận. Bản nháp vẫn được giữ; vui lòng thử lại.';
   final dangNhapLaiDe =
       'Đăng nhập lại để gửi bình luận. Bản nháp vẫn được giữ.';
   final binhLuanTruocCo =
       'Bình luận trước có thể đã được gửi. Hãy thử lại nguyên nội dung để xác nhận.';
-  final thuXacNhanLai = 'Thử xác nhận lại';
-  final xacNhanThatBai = 'Xác nhận thất bại.';
-  final taiLenThatBai = 'Tải lên thất bại; xóa và chọn lại.';
-  final sanSang = 'Sẵn sàng';
-  final dangXacNhan = 'Đang xác nhận';
-  final dangTaiLen = 'Đang tải lên';
-  final dangChuanBi = 'Đang chuẩn bị';
-  final khongMoDuocAnh = 'Không mở được ảnh đã chọn.';
-  final moiBinhLuanCo = 'Mỗi bình luận có tối đa 10 ảnh.';
-  final themAnh = 'Thêm ảnh';
   final anhDuocTaiLen =
       'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.';
-  final vietBinhLuan = 'Viết bình luận';
   final anhDaTaiLen = '{attachmentIds} ảnh đã tải lên trước đó';
   final daHieu = 'Đã hiểu';
   final binhLuanDaDuoc = 'Bình luận đã được gửi thành công.';
@@ -5460,7 +5440,6 @@ final class ViAppThread {
       'Không khôi phục được bình luận đang chờ. Chức năng gửi đã bị khóa.';
   final khongTimThayNoi = 'Không tìm thấy nội dung này nữa, có thể đã bị xóa.';
   final khongTimThayBai = 'Không tìm thấy bài viết';
-  final xemTrangCaNhan = 'Xem trang cá nhân';
 }
 
 final class ViAppUpdates {

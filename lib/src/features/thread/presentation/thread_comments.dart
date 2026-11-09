@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/vnlf_navigation_helper.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../../i18n/vi.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
-import '../../shared/presentation/feature_widgets.dart';
+import '../../shared/presentation/session_avatar.dart';
 import '../domain/article_comment.dart';
 import '../data/comment_attachment_controller.dart';
 import '../mention/mention_candidates.dart';
@@ -16,6 +19,7 @@ import '../mention/mention_controller.dart';
 import '../mention/mention_suggestions.dart';
 import 'comment_attachment_picker.dart';
 import 'comments_providers.dart';
+import 'detail_parts.dart';
 import 'comment_edit_dialog.dart';
 import 'thread_post_provider.dart';
 
@@ -39,6 +43,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
   bool _selecting = false;
   String? _attachmentError;
   late MentionController _mentions;
+  final _portal = OverlayPortalController();
+  double _composerHeight = 64;
 
   @override
   void initState() {
@@ -360,48 +366,309 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
         if (pending != null) setState(() => _input.text = pending.content);
       }
     });
-    final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
-    return FeatureSurface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(vi.common.binhLuan, style: VnlfTypography.h2(colors.ink)),
-          const SizedBox(height: 12),
-          if (!signedIn)
-            TextButton(
-              onPressed: () => context.push('/login'),
-              child: Text(vi.commentsPanel.dangNhapDeBinhLuan),
+    final phone = isPhoneLayout(context);
+    final composer = _composer(
+      context,
+      draft: draft,
+      recovery: recovery,
+      phone: phone,
+    );
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.line)),
+          ),
+          child: Semantics(
+            header: true,
+            child: Text(
+              format(vi.commentsPanel.binhLuan, {'count': items.length}),
+              style: VnlfTypography.body(colors.ink)
+                  .copyWith(fontWeight: FontWeight.w800),
             ),
-          if (signedIn) ...[
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 12),
+          child: _list(context, remote, comments, items, draft, recovery),
+        ),
+      ],
+    );
+    // The composer spans the card's full width under a hairline, as the
+    // website's sticky `.comment-composer-wrap` does.
+    final section = Container(
+      padding: phone
+          ? const EdgeInsets.fromLTRB(16, 12, 16, 0)
+          : const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: phone ? null : Border.all(color: colors.line),
+        borderRadius: phone
+            ? null
+            : BorderRadius.circular(VnlfDimensions.radiusLg),
+      ),
+      child: phone
+          ? body
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: body,
+                ),
+                composer,
+              ],
+            ),
+    );
+    if (!phone) return section;
+    if (!_portal.isShowing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_portal.isShowing) _portal.show();
+      });
+    }
+    return OverlayPortal(
+      controller: _portal,
+      overlayChildBuilder: (context) => Positioned(
+        left: 0,
+        right: 0,
+        bottom: 0,
+        child: _ReportHeight(
+          onHeight: (height) {
+            if ((height - _composerHeight).abs() > .5) {
+              setState(() => _composerHeight = height);
+            }
+          },
+          child: composer,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: _composerHeight),
+        child: section,
+      ),
+    );
+  }
+
+  Widget _list(
+    BuildContext context,
+    AsyncValue<List<ArticleComment>> remote,
+    List<CommentNodeData> comments,
+    Map<String, ArticleComment> items,
+    CommentAttachmentController draft,
+    AsyncValue<void> recovery,
+  ) {
+    final colors = VnlfColors.of(context);
+    final muted = VnlfTypography.body(colors.muted);
+    if (remote.isLoading && comments.isEmpty) {
+      return Semantics(
+        liveRegion: true,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          child: Text(vi.commentsPanel.dangTaiBinhLuan, style: muted),
+        ),
+      );
+    }
+    if (remote.hasError && comments.isEmpty) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 190),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 7,
+            children: [
+              Text(
+                vi.commentsPanel.chuaTaiDuocBinhLuan,
+                style: muted.copyWith(fontWeight: FontWeight.w700),
+              ),
+              TextButton(
+                onPressed: () =>
+                    ref.invalidate(articleCommentsProvider(widget.postId)),
+                child: Text(vi.common.thuLai),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (comments.isEmpty) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 190),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 7,
+            children: [
+              VnlfIcon(VnlfLucide.messageCircle, size: 24, color: colors.muted),
+              Text(
+                vi.commentsPanel.chuaCoBinhLuan,
+                style: muted.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(vi.commentsPanel.moDauCuocThaoLuan, style: muted),
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final comment in comments)
+          VnlfCommentTree(
+            comment: comment,
+            replyLabel: vi.commentsPanel.traLoi2,
+            onAuthor: (username) =>
+                context.push('/profile/${Uri.encodeComponent(username)}'),
+            onLink: (url) => openVnlfLink(context, url),
+            onVote: (id, value) => _action(
+              () => ref
+                  .read(commentActionsProvider(widget.postId).notifier)
+                  .vote(items[id]!, switch (value) {
+                    VoteState.upvoted => 1,
+                    VoteState.downvoted => -1,
+                    _ => 0,
+                  }),
+            ),
+            onEdit: (id) => _edit(items[id]!),
+            onDelete: (id) => _delete(items[id]!),
+            onPin: (id) => _action(
+              () => ref
+                  .read(commentActionsProvider(widget.postId).notifier)
+                  .pin(items[id]!),
+            ),
+            onReply: (id) {
+              if (recovery.isLoading ||
+                  recovery.hasError ||
+                  draft.submissionPending ||
+                  _submitting ||
+                  !_authorized()) {
+                return;
+              }
+              setState(() {
+                _replyTo = items[id];
+                if (_replyTo != null) {
+                  final mention = '@${_replyTo!.author.username} ';
+                  if (!_input.text.startsWith(mention)) {
+                    _input.text = '$mention${_input.text}';
+                    _input.selection = TextSelection.collapsed(
+                      offset: _input.text.length,
+                    );
+                  }
+                }
+              });
+              widget.focusNode.requestFocus();
+            },
+          ),
+      ],
+    );
+  }
+
+  bool _canSend(CommentAttachmentController draft, AsyncValue<void> recovery) =>
+      !(recovery.isLoading ||
+          recovery.hasError ||
+          draft.confirmed ||
+          (_input.text.trim().isEmpty && draft.readyIds.isEmpty) ||
+          draft.attachments.any(
+            (item) => item.state != CommentAttachmentState.ready,
+          ) ||
+          _input.text.length > 4000 ||
+          _selecting ||
+          _submitting);
+
+  /// The website's comment composer: reply chip, uploads and notices above a
+  /// row of avatar, growing text box, photo button and send button.
+  Widget _composer(
+    BuildContext context, {
+    required CommentAttachmentController draft,
+    required AsyncValue<void> recovery,
+    required bool phone,
+  }) {
+    final colors = VnlfColors.of(context);
+    final signedIn = offlineFeatures || ref.watch(sessionStateProvider) != null;
+    final error = VnlfTypography.body(colors.red);
+    final busy =
+        recovery.isLoading ||
+        recovery.hasError ||
+        draft.submissionPending ||
+        _submitting;
+    final canSend = _canSend(draft, recovery);
+    final onBrand = colors.isDark ? const Color(0xFF102116) : Colors.white;
+    return Material(
+      color: colors.surface,
+      shape: phone
+          ? Border(top: BorderSide(color: colors.line))
+          : RoundedRectangleBorder(
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(VnlfDimensions.radiusLg),
+              ),
+              side: BorderSide.none,
+            ),
+      child: Container(
+        decoration: phone
+            ? null
+            : BoxDecoration(
+                border: Border(top: BorderSide(color: colors.line)),
+              ),
+        padding: phone
+            ? const EdgeInsets.fromLTRB(16, 8, 16, 8)
+            : const EdgeInsets.fromLTRB(20, 10, 20, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             if (_replyTo != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceSoft,
+                    border: Border.all(color: colors.line),
+                    borderRadius: BorderRadius.circular(
+                      VnlfDimensions.radiusMd,
+                    ),
+                  ),
+                  child: Row(
+                    spacing: 8,
+                    children: [
+                      VnlfIcon(VnlfLucide.reply, size: 16, color: colors.brand),
+                      Expanded(
+                        child: Text(
+                          format(vi.commentsPanel.traLoi, {
+                            'displayName': _replyTo!.author.displayName,
+                          }),
+                          style: VnlfTypography.body(colors.brand),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: vi.commentsPanel.huyTraLoi,
+                        visualDensity: VisualDensity.compact,
+                        onPressed: busy
+                            ? null
+                            : () => setState(() => _replyTo = null),
+                        icon: VnlfIcon(
+                          VnlfLucide.x,
+                          size: 16,
+                          color: colors.brand,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (recovery.hasError)
+              Text(vi.app.thread.khongKhoiPhucDuoc, style: error),
+            if (draft.confirmed)
               Row(
                 children: [
                   Expanded(
                     child: Text(
-                      '${vi.commentsPanel.traLoi2} @${_replyTo!.author.username}',
+                      vi.app.thread.binhLuanDaDuoc,
+                      key: const ValueKey('comment-confirmed'),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: vi.commentsPanel.huyTraLoi,
-                    onPressed: draft.submissionPending || _submitting
-                        ? null
-                        : () => setState(() => _replyTo = null),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            if (recovery.hasError)
-              Text(
-                vi.app.thread.khongKhoiPhucDuoc,
-                style: VnlfTypography.meta(colors.red),
-              ),
-            if (draft.confirmed)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vi.app.thread.binhLuanDaDuoc,
-                    key: const ValueKey('comment-confirmed'),
                   ),
                   TextButton(
                     key: const ValueKey('comment-confirmation-dismiss'),
@@ -417,243 +684,323 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                   'attachmentIds': draft.pending!.attachmentIds.length,
                 }),
               ),
-            if (!draft.submissionPending)
-              MentionSuggestions(controller: _mentions),
-            Focus(
-              onKeyEvent: (_, event) => _mentions.handleKey(event)
-                  ? KeyEventResult.handled
-                  : KeyEventResult.ignored,
-              child: TextField(
-                key: const ValueKey('comment-input'),
-                controller: _input,
-                readOnly:
-                    recovery.isLoading ||
-                    recovery.hasError ||
-                    draft.submissionPending ||
-                    _submitting,
-                focusNode: widget.focusNode,
-                minLines: 2,
-                maxLines: 5,
-                maxLength: 4000,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: vi.app.thread.vietBinhLuan,
-                  border: const OutlineInputBorder(),
+            if (draft.attachments.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  height: 100,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: draft.attachments.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) =>
+                        _uploadTile(context, draft, draft.attachments[i]),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              vi.app.thread.anhDuocTaiLen,
-              style: VnlfTypography.meta(colors.muted),
-            ),
-            Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  key: const ValueKey('comment-add-photos'),
-                  onPressed:
-                      recovery.isLoading ||
-                          recovery.hasError ||
-                          _selecting ||
-                          _submitting ||
-                          draft.submissionPending ||
-                          draft.attachments.length >= 10
-                      ? null
-                      : _pickAttachments,
-                  icon: const Icon(Icons.add_photo_alternate_outlined),
-                  label: Text(vi.app.thread.themAnh),
+            if (draft.attachments.isNotEmpty)
+              // The app also says what the website leaves unsaid: uploads are
+              // public as soon as they are picked (API_NOTES, 2026-11-07).
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  vi.app.thread.anhDuocTaiLen,
+                  style: VnlfTypography.body(colors.muted),
                 ),
-                Text('${draft.attachments.length}/10'),
-              ],
-            ),
+              ),
             if (_attachmentError != null)
               Text(
                 _attachmentError == 'limit'
-                    ? vi.app.thread.moiBinhLuanCo
-                    : vi.app.thread.khongMoDuocAnh,
-                style: VnlfTypography.meta(colors.red),
-              ),
-            for (final item in draft.attachments)
-              ListTile(
-                key: ValueKey(item),
-                leading:
-                    item.state == CommentAttachmentState.presigning ||
-                        item.state == CommentAttachmentState.uploading ||
-                        item.state == CommentAttachmentState.completing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        item.state == CommentAttachmentState.ready
-                            ? Icons.image_outlined
-                            : Icons.error_outline,
-                      ),
-                title: Text(item.file.name, overflow: TextOverflow.ellipsis),
-                subtitle: Text(switch (item.state) {
-                  CommentAttachmentState.selected => vi.app.common.daChon,
-                  CommentAttachmentState.presigning =>
-                    vi.app.thread.dangChuanBi,
-                  CommentAttachmentState.uploading => vi.app.thread.dangTaiLen,
-                  CommentAttachmentState.completing =>
-                    vi.app.thread.dangXacNhan,
-                  CommentAttachmentState.ready => vi.app.thread.sanSang,
-                  CommentAttachmentState.presignFailed ||
-                  CommentAttachmentState.uploadFailed =>
-                    vi.app.thread.taiLenThatBai,
-                  CommentAttachmentState.completeFailed =>
-                    vi.app.thread.xacNhanThatBai,
-                }),
-                trailing: Wrap(
-                  children: [
-                    if (item.state == CommentAttachmentState.completeFailed)
-                      IconButton(
-                        tooltip: vi.app.thread.thuXacNhanLai,
-                        onPressed: _submitting
-                            ? null
-                            : () => _retryAttachment(item),
-                        icon: const Icon(Icons.refresh),
-                      ),
-                    IconButton(
-                      tooltip: vi.app.common.xoaAnh,
-                      onPressed:
-                          _submitting ||
-                              draft.submissionPending ||
-                              item.state == CommentAttachmentState.presigning ||
-                              item.state == CommentAttachmentState.uploading ||
-                              item.state == CommentAttachmentState.completing
-                          ? null
-                          : () => setState(() => draft.remove(item)),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
+                    ? vi.commentsPanel.moiBinhLuanToiDa
+                    : vi.commentsPanel.chonAnhJpgPngWebp,
+                style: error,
               ),
             if (draft.submissionPending && !draft.confirmed && !_submitting)
               Text(
                 vi.app.thread.binhLuanTruocCo,
-                style: VnlfTypography.meta(colors.muted),
+                style: VnlfTypography.body(colors.muted),
               ),
             if (_failure != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _failure is HttpFailure &&
-                          [
-                            401,
-                            403,
-                          ].contains((_failure as HttpFailure).statusCode)
-                      ? vi.app.thread.dangNhapLaiDe
-                      : vi.app.thread.khongGuiDuocBinh,
-                  style: VnlfTypography.meta(colors.red),
-                ),
+              Text(
+                _failure is HttpFailure &&
+                        [
+                          401,
+                          403,
+                        ].contains((_failure as HttpFailure).statusCode)
+                    ? vi.app.thread.dangNhapLaiDe
+                    : vi.commentsPanel.chuaGuiDuocBinhLuan,
+                style: error,
               ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                onPressed:
-                    recovery.isLoading ||
-                        recovery.hasError ||
-                        draft.confirmed ||
-                        (_input.text.trim().isEmpty &&
-                            draft.readyIds.isEmpty) ||
-                        draft.attachments.any(
-                          (item) => item.state != CommentAttachmentState.ready,
-                        ) ||
-                        _input.text.length > 4000 ||
-                        _selecting ||
-                        _submitting
-                    ? null
-                    : _submit,
-                child: _submitting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(vi.app.thread.themBinhLuan),
-              ),
-            ),
-          ],
-          if (remote.isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          if (remote.hasError)
-            Column(
-              children: [
-                Text(
-                  vi.app.thread.khongTaiDuocBinh,
-                  style: VnlfTypography.meta(colors.red),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      ref.invalidate(articleCommentsProvider(widget.postId)),
-                  child: Text(vi.common.thuLai),
-                ),
-              ],
-            ),
-          if (!remote.isLoading && !remote.hasError && comments.isEmpty)
+            if (!draft.submissionPending)
+              MentionSuggestions(controller: _mentions),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                vi.commentsPanel.chuaCoBinhLuan,
-                style: VnlfTypography.meta(colors.muted),
+              padding: const EdgeInsets.only(top: 3),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                spacing: 6,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: sessionAvatar(
+                      ref.watch(sessionStateProvider),
+                      size: 44,
+                      cornerRadius: VnlfDimensions.radiusMd,
+                    ),
+                  ),
+                  Expanded(
+                    child: Focus(
+                      onKeyEvent: (_, event) {
+                        if (_mentions.handleKey(event)) {
+                          return KeyEventResult.handled;
+                        }
+                        if (event is KeyDownEvent &&
+                            event.logicalKey == LogicalKeyboardKey.enter &&
+                            !HardwareKeyboard.instance.isShiftPressed) {
+                          if (canSend) _submit();
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: TextField(
+                        key: const ValueKey('comment-input'),
+                        controller: _input,
+                        focusNode: widget.focusNode,
+                        readOnly: !signedIn || busy,
+                        onTap: signedIn ? null : () => context.push('/login'),
+                        minLines: 1,
+                        maxLines: 7,
+                        maxLength: 4000,
+                        textInputAction: TextInputAction.newline,
+                        onChanged: (_) => setState(() {}),
+                        style: VnlfTypography.body(colors.ink),
+                        decoration: InputDecoration(
+                          hintText: signedIn
+                              ? vi.commentsPanel.vietBinhLuan
+                              : vi.commentsPanel.dangNhapDeBinhLuan,
+                          hintStyle: VnlfTypography.body(colors.muted),
+                          counterText: '',
+                          isDense: true,
+                          filled: true,
+                          fillColor: colors.surfaceSoft,
+                          contentPadding: const EdgeInsets.all(12),
+                          constraints: const BoxConstraints(minHeight: 44),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              VnlfDimensions.radiusLg,
+                            ),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: phone ? 44 : 40,
+                    height: 44,
+                    child: IconButton(
+                      key: const ValueKey('comment-add-photos'),
+                      tooltip: vi.commentsPanel.dinhKemAnhBinhLuan,
+                      padding: EdgeInsets.zero,
+                      onPressed:
+                          !signedIn ||
+                              busy ||
+                              _selecting ||
+                              draft.attachments.length >= 10
+                          ? null
+                          : _pickAttachments,
+                      icon: VnlfIcon(
+                        VnlfLucide.imagePlus,
+                        size: 20,
+                        color: colors.muted,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 40,
+                    height: 44,
+                    child: Tooltip(
+                      message: vi.commentsPanel.guiBinhLuan,
+                      child: FilledButton(
+                        key: const ValueKey('comment-send'),
+                        onPressed: canSend ? _submit : null,
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          backgroundColor: colors.brand,
+                          foregroundColor: onBrand,
+                          disabledBackgroundColor: colors.brand.withValues(
+                            alpha: .5,
+                          ),
+                          disabledForegroundColor: onBrand,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              VnlfDimensions.radiusSm,
+                            ),
+                          ),
+                        ),
+                        child: _submitting
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: onBrand,
+                                ),
+                              )
+                            : VnlfIcon(
+                                VnlfLucide.send,
+                                size: 18,
+                                color: onBrand,
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          for (final comment in comments) ...[
-            const SizedBox(height: 16),
-            VnlfCommentTree(
-              comment: comment,
-              replyLabel: vi.commentsPanel.traLoi2,
-              onAuthor: (username) =>
-                  context.push('/profile/${Uri.encodeComponent(username)}'),
-              onVote: (id, value) => _action(
-                () => ref
-                    .read(commentActionsProvider(widget.postId).notifier)
-                    .vote(items[id]!, switch (value) {
-                      VoteState.upvoted => 1,
-                      VoteState.downvoted => -1,
-                      _ => 0,
-                    }),
-              ),
-              onEdit: (id) => _edit(items[id]!),
-              onDelete: (id) => _delete(items[id]!),
-              onPin: (id) => _action(
-                () => ref
-                    .read(commentActionsProvider(widget.postId).notifier)
-                    .pin(items[id]!),
-              ),
-              onReply: (id) {
-                if (recovery.isLoading ||
-                    recovery.hasError ||
-                    draft.submissionPending ||
-                    _submitting ||
-                    !_authorized()) {
-                  return;
-                }
-                setState(() {
-                  _replyTo = items[id];
-                  if (_replyTo != null) {
-                    final mention = '@${_replyTo!.author.username} ';
-                    if (!_input.text.startsWith(mention)) {
-                      _input.text = '$mention${_input.text}';
-                      _input.selection = TextSelection.collapsed(
-                        offset: _input.text.length,
-                      );
-                    }
-                  }
-                });
-                widget.focusNode.requestFocus();
-              },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// A photo waiting under the composer: its name, progress and remove.
+  Widget _uploadTile(
+    BuildContext context,
+    CommentAttachmentController draft,
+    CommentAttachment item,
+  ) {
+    final colors = VnlfColors.of(context);
+    final working =
+        item.state == CommentAttachmentState.presigning ||
+        item.state == CommentAttachmentState.uploading ||
+        item.state == CommentAttachmentState.completing;
+    final failed =
+        item.state == CommentAttachmentState.presignFailed ||
+        item.state == CommentAttachmentState.uploadFailed ||
+        item.state == CommentAttachmentState.completeFailed;
+    return Container(
+      key: ValueKey(item),
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        color: colors.surfaceSoft,
+        border: Border.all(color: colors.line),
+        borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 30, 26),
+              child: Text(
+                item.file.name,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: VnlfTypography.body(colors.muted),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 2,
+            right: 2,
+            child: IconButton(
+              tooltip: vi.app.common.xoaAnh,
+              visualDensity: VisualDensity.compact,
+              onPressed: _submitting || draft.submissionPending || working
+                  ? null
+                  : () => setState(() => draft.remove(item)),
+              icon: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0x8C000000),
+                ),
+                child: const Center(
+                  child: VnlfIcon(VnlfLucide.x, size: 16, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          if (working || failed)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Material(
+                color: Colors.black.withValues(alpha: .55),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(VnlfDimensions.radiusMd - 1),
+                ),
+                child: InkWell(
+                  onTap:
+                      item.state == CommentAttachmentState.completeFailed &&
+                          !_submitting
+                      ? () => _retryAttachment(item)
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 4,
+                      children: [
+                        if (failed)
+                          const VnlfIcon(
+                            VnlfLucide.rotateCcw,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        Flexible(
+                          child: Text(
+                            failed ? vi.common.thuLai : vi.common.dangTai,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: VnlfTypography.body(Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+}
+
+/// Reports the laid-out height of [child], so the page can leave room for a
+/// composer that floats over it.
+class _ReportHeight extends SingleChildRenderObjectWidget {
+  const _ReportHeight({required this.onHeight, required super.child});
+
+  final ValueChanged<double> onHeight;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderReportHeight(onHeight);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderReportHeight renderObject,
+  ) => renderObject.onHeight = onHeight;
+}
+
+class _RenderReportHeight extends RenderProxyBox {
+  _RenderReportHeight(this.onHeight);
+
+  ValueChanged<double> onHeight;
+  double? _reported;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final height = size.height;
+    if (_reported != height) {
+      _reported = height;
+      WidgetsBinding.instance.addPostFrameCallback((_) => onHeight(height));
+    }
   }
 }

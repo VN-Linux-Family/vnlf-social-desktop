@@ -16,6 +16,7 @@ final class ArticleComment {
     this.editedAt,
     this.attachments = const [],
     this.gif,
+    this.mentions = const [],
   });
   final String id;
   final String content;
@@ -31,6 +32,9 @@ final class ArticleComment {
   final DateTime? editedAt;
   final List<ArticleAttachment> attachments;
   final CommentGif? gif;
+
+  /// Usernames the server matched to @mentions in [content].
+  final List<String> mentions;
   ArticleComment copyWith({int? voteScore, int? viewerVote, bool? pinned}) =>
       ArticleComment(
         id: id,
@@ -47,6 +51,7 @@ final class ArticleComment {
         editedAt: editedAt,
         attachments: attachments,
         gif: gif,
+        mentions: mentions,
       );
 }
 
@@ -60,8 +65,14 @@ final class CommentGif {
     this.height,
     this.id = '',
     this.packSlug = '',
+    this.kind = '',
   });
   final String url, title, provider, id, packSlug;
+
+  /// `sticker` for stickers; empty for GIFs.
+  final String kind;
+
+  bool get isSticker => provider == 'VNLF' || kind == 'sticker';
   final bool hidden;
   final int? width, height;
 }

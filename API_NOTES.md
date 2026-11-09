@@ -781,3 +781,13 @@ None of these writes was exercised live: no test account was authorized for
 this change. They have synthetic coverage through a fake transport and widget
 tests, and failed writes are never retried.
 
+## Comment mentions and sticker kinds — 2026-11-09
+
+Comment payloads from `GET /api/v1/articles/:id/comments` carry
+`mentions: [{token, username, displayName}]` for the @mentions the server
+matched, and `gif.kind: "sticker"` for KLIPY stickers (VNLF stickers have
+`provider: "VNLF"`). The website bolds and links only those server-known
+mentions, draws stickers without a frame (at most 160px) and labels KLIPY media
+with its provider. The native app reads both fields from 2026-11-09 and treats
+missing values as none.
+

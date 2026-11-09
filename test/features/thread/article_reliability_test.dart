@@ -106,7 +106,7 @@ void main() {
         'Bình luận bền vững',
       );
       await tester.pump();
-      await tester.tap(find.text('Thêm bình luận'));
+      await tester.tap(find.byKey(const ValueKey('comment-send')));
       await tester.pumpAndSettle();
       expect(submitted!['content'], 'Bình luận bền vững');
       expect(submitted, isNot(contains('parentId')));
@@ -162,8 +162,8 @@ void main() {
     expect(tester.widget<TextField>(input).controller!.text, '@childuser ');
     await tester.enterText(input, '@childuser Trả lời bằng tiếng Việt');
     await tester.pump();
-    await tester.ensureVisible(find.text('Thêm bình luận'));
-    await tester.tap(find.text('Thêm bình luận'));
+    await tester.ensureVisible(find.byKey(const ValueKey('comment-send')));
+    await tester.tap(find.byKey(const ValueKey('comment-send')));
     await tester.pumpAndSettle();
     expect(submitted!['parentId'], 'root');
   });
@@ -184,7 +184,7 @@ void main() {
     await tester.enterText(input, 'Bản nháp không đổi');
     await tester.pump();
     for (var i = 0; i < 2; i++) {
-      await tester.tap(find.text('Thêm bình luận'));
+      await tester.tap(find.byKey(const ValueKey('comment-send')));
       await tester.pumpAndSettle();
     }
     expect(bodies, hasLength(2));
@@ -195,7 +195,7 @@ void main() {
       tester.widget<TextField>(input).controller!.text,
       'Bản nháp không đổi',
     );
-    await tester.tap(find.text('Thêm bình luận'));
+    await tester.tap(find.byKey(const ValueKey('comment-send')));
     await tester.pumpAndSettle();
     expect(bodies, hasLength(3));
     expect(bodies.last['clientCommentId'], bodies.first['clientCommentId']);
@@ -216,13 +216,13 @@ void main() {
       'Giữ lại bản nháp',
     );
     await tester.pump();
-    await tester.tap(find.text('Thêm bình luận'));
+    await tester.tap(find.byKey(const ValueKey('comment-send')));
     await tester.pumpAndSettle();
     expect(
       tester.widget<TextField>(find.byType(TextField)).controller!.text,
       'Giữ lại bản nháp',
     );
-    expect(find.textContaining('Không gửi được bình luận'), findsOneWidget);
+    expect(find.textContaining('Chưa gửi được bình luận'), findsOneWidget);
   });
 
   testWidgets(
@@ -232,7 +232,7 @@ void main() {
         (_) async => ApiResponse(statusCode: 403, body: '{}'),
       );
       await pumpComments(tester, client);
-      expect(find.text('Không tải được bình luận'), findsOneWidget);
+      expect(find.text('Chưa tải được bình luận'), findsOneWidget);
       expect(find.text('Thử lại'), findsOneWidget);
     },
   );

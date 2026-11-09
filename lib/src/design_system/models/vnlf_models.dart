@@ -307,11 +307,31 @@ class CommentNodeData {
     this.actionError,
     this.media = const [],
     this.gif,
+    this.date = '',
+    this.gifProvider,
+    this.gifSticker = false,
+    this.gifLink,
+    this.mentions = const [],
   });
 
   final String id;
   final AuthorData author;
   final String relativeTime;
+
+  /// The website's comment date, `d/m/yyyy`.
+  final String date;
+
+  /// Who served the GIF or sticker (`KLIPY`, `VNLF`).
+  final String? gifProvider;
+
+  /// Stickers have no frame and are smaller than GIFs.
+  final bool gifSticker;
+
+  /// Where a KLIPY GIF or sticker opens.
+  final String? gifLink;
+
+  /// Usernames that @mentions in [body] point to.
+  final List<String> mentions;
   final String body;
   final String? inlineCode;
   final int voteScore;

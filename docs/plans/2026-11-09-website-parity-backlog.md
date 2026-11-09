@@ -20,12 +20,13 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 | Shell (sidebar, rail, phone bar) and home feed | #6 |
 | Every user-visible string in `vi.dart`; no language flags | #7 |
 | Post and article detail pages, post menu, share dialog, link previews, author view counts | #8 |
+| Comments panel and media gallery like the website's | #9 |
 
 ## Screens and features, in port order
 
 ### 1. Article detail and comments
 - ✅ Post and article detail pages like the website's `ArticleDetailView` (#8).
-- ⬜ Comments panel like `comments-panel.tsx`, including the drawer on phones.
+- ✅ Comments panel like `comments-panel.tsx`: count header, rows, depth-one replies, stickers and GIFs, a composer above the phone bar (#9). Still to do: the desktop composer staying in view while scrolling, and `?comment=` links.
 - ✅ The website's "…" menu everywhere a post appears: save, copy link, edit and delete for the author, hide and report for everyone else (#8).
 - ✅ Share dialog: message, Facebook, Telegram, Email and copy (#8).
 - ⬜ GIF (KLIPY) and sticker pickers in comments.

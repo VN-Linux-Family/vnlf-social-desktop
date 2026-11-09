@@ -24,29 +24,61 @@ class ThreadScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final post = ref.watch(threadPostProvider(postId));
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 20),
-      children: [
-        post.when(
-          loading: () =>
-              const VnlfLoadingShimmer(child: VnlfPostCard.loading()),
-          error: (error, stack) => FeatureLoadError(
-            onRetry: () => ref.invalidate(threadPostProvider(postId)),
+    return _PageOverlay(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 20),
+        children: [
+          post.when(
+            loading: () =>
+                const VnlfLoadingShimmer(child: VnlfPostCard.loading()),
+            error: (error, stack) => FeatureLoadError(
+              onRetry: () => ref.invalidate(threadPostProvider(postId)),
+            ),
+            data: (value) => value == null
+                ? VnlfStateCard(
+                    icon: Icons.article_outlined,
+                    title: vi.app.thread.khongTimThayBai,
+                    message: vi.app.thread.khongTimThayNoi,
+                  )
+                : ThreadContent(
+                    key: ValueKey('$postId/${value.id}'),
+                    post: value,
+                  ),
           ),
-          data: (value) => value == null
-              ? VnlfStateCard(
-                  icon: Icons.article_outlined,
-                  title: vi.app.thread.khongTimThayBai,
-                  message: vi.app.thread.khongTimThayNoi,
-                )
-              : ThreadContent(
-                  key: ValueKey('$postId/${value.id}'),
-                  post: value,
-                ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+/// An overlay covering only this page, so the phone comment composer can
+/// float at its bottom without covering the drawer or the bottom bar.
+class _PageOverlay extends StatefulWidget {
+  const _PageOverlay({required this.child});
+  final Widget child;
+
+  @override
+  State<_PageOverlay> createState() => _PageOverlayState();
+}
+
+class _PageOverlayState extends State<_PageOverlay> {
+  late final _entry = OverlayEntry(builder: (_) => widget.child);
+
+  @override
+  void didUpdateWidget(_PageOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _entry.markNeedsBuild();
+  }
+
+  @override
+  void dispose() {
+    _entry.remove();
+    _entry.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Overlay(initialEntries: [_entry]);
 }
 
 class ThreadContent extends ConsumerStatefulWidget {

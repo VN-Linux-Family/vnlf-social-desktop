@@ -150,23 +150,21 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(
-      find.text(
-        'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.',
-      ),
-      findsOneWidget,
-    );
+    const disclosure =
+        'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.';
+    expect(find.text(disclosure), findsNothing);
     await tester.tap(find.byKey(const ValueKey('comment-add-photos')));
     await tester.pumpAndSettle();
     expect(find.text('anh.png'), findsOneWidget);
-    expect(find.text('Xác nhận thất bại.'), findsOneWidget);
-    await tester.tap(find.byTooltip('Thử xác nhận lại'));
+    expect(find.text(disclosure), findsOneWidget);
+    // Like the website, a failed upload offers "Thử lại" on the photo.
+    await tester.tap(find.text('Thử lại'));
     await tester.pumpAndSettle();
-    expect(find.text('Sẵn sàng'), findsOneWidget);
-    await tester.tap(find.text('Thêm bình luận'));
+    expect(find.text('Thử lại'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('comment-send')));
     await tester.pumpAndSettle();
     expect(find.text('anh.png'), findsOneWidget);
-    await tester.tap(find.text('Thêm bình luận'));
+    await tester.tap(find.byKey(const ValueKey('comment-send')));
     await tester.pumpAndSettle();
     expect(bodies, hasLength(2));
     expect(bodies.first['clientCommentId'], bodies.last['clientCommentId']);
@@ -174,9 +172,7 @@ void main() {
     expect(find.byKey(const ValueKey('comment-confirmed')), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Thêm bình luận'),
-          )
+          .widget<FilledButton>(find.byKey(const ValueKey('comment-send')))
           .onPressed,
       isNull,
     );

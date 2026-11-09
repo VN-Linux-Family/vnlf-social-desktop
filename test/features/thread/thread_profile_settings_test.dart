@@ -67,7 +67,7 @@ void main() {
     final input = find.byKey(const ValueKey('comment-input'));
     await tester.ensureVisible(input);
     await tester.enterText(input, 'Mình đã thử trên máy ảo.');
-    final send = find.widgetWithText(FilledButton, 'Thêm bình luận');
+    final send = find.byKey(const ValueKey('comment-send'));
     await tester.ensureVisible(send);
     await tester.tap(send);
     await tester.pumpAndSettle();
