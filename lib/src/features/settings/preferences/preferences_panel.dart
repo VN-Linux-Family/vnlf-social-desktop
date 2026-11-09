@@ -79,7 +79,7 @@ final class PreferencesPanel extends ConsumerWidget {
           (value) => draft.copyWith(messageNotifications: value),
         ),
         toggle(
-          vi.app.settings.amBaoTinNhan,
+          vi.settingsViews.amBaoTinNhan,
           draft.messageSoundEnabled,
           (value) => draft.copyWith(messageSoundEnabled: value),
         ),

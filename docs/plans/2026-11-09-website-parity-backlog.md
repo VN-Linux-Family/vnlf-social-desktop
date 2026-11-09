@@ -46,7 +46,8 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 
 ### 4. Notifications
 - ✅ The website's notification center (#13): the `/notifications` page and the bell's popover at every width, with day groups, filters, the kind select, badges by kind, the unseen count on the bell and the website's copy.
-- ⬜ Notification sounds (`community-sounds.tsx`).
+- ✅ Message chimes like `community-sounds.tsx` (#14): the website's two notes for a direct message or a channel message from someone else while the app is in front, once per message and at most once every 750 ms, following "Âm báo tin nhắn" in Settings. A channel rings only while it is open, because the app joins a channel's realtime topic only then; the website joins every active channel.
+- ⬜ The voice room chimes (someone joins, a message in the room's chat) come with the voice room port; `assets/sounds/voice-join.wav` is ready.
 
 ### 5. Profile
 - ⬜ Profile page parity (`account-views.tsx`, `profile-cover.tsx`, `profile-house.tsx`).

@@ -50,6 +50,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/distro-badges/
+    - assets/sounds/
   fonts:
     - family: BeVietnamPro
       fonts:

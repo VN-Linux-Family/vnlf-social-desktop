@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vnlfsocialapp/src/app/providers.dart';
+import 'package:vnlfsocialapp/src/domain/models.dart';
+import 'package:vnlfsocialapp/src/features/notifications/domain/community_sounds.dart';
+import 'package:vnlfsocialapp/src/features/notifications/presentation/community_chimes.dart';
 import 'package:vnlfsocialapp/src/features/realtime/data/community_socket_client.dart';
 import 'package:vnlfsocialapp/src/features/realtime/domain/community_topic.dart';
 import 'package:vnlfsocialapp/src/features/realtime/presentation/community_realtime_binding.dart';
@@ -88,6 +92,58 @@ void main() {
       await client.dispose();
     },
   );
+  testWidgets('a message from someone else rings while the app is in front', (
+    t,
+  ) async {
+    final socket = FakeConnection();
+    final client = CommunitySocketClient(connector: () async => socket);
+    final rung = <CommunityChime>[];
+    final enabled = StateProvider<bool>((ref) => false);
+    await t.pumpWidget(
+      ProviderScope(
+        overrides: [
+          communitySocketProvider.overrideWithValue(client),
+          sessionStateProvider.overrideWith(
+            (ref) => const Session(userId: 'member-1', displayName: 'Lan'),
+          ),
+          chimeOutputProvider.overrideWithValue((chime) async {
+            rung.add(chime);
+          }),
+          chimesEnabledProvider.overrideWith((ref) => ref.watch(enabled)),
+        ],
+        child: const MaterialApp(home: CommunityAppBinding(child: Text('app'))),
+      ),
+    );
+    await t.pump();
+    void message(String id, {String author = 'peer-1'}) => socket.incoming.add(
+      jsonEncode({
+        'type': 'dm:message-created',
+        'eventId': 'event-$id',
+        'occurredAt': '2026-11-10T08:00:00Z',
+        'data': {
+          'id': id,
+          'conversationId': 'conversation-1',
+          'authorId': author,
+          'content': 'Tiếng Việt: ặ ữ ờ ẫ ệ',
+        },
+      }),
+    );
+
+    message('muted');
+    await t.pump();
+    ProviderScope.containerOf(t.element(find.text('app')))
+            .read(enabled.notifier)
+            .state =
+        true;
+    message('own', author: 'member-1');
+    message('peer');
+    await t.pump();
+
+    expect(rung, [CommunityChime.message]);
+    await t.pumpWidget(const SizedBox());
+    await t.pump();
+    await client.dispose();
+  });
   testWidgets('inactive desktop focus keeps socket; background closes it', (
     t,
   ) async {
