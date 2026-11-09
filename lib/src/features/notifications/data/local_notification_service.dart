@@ -98,6 +98,7 @@ class LocalNotificationService {
     required String body,
     String? payload,
     String? groupKey,
+    bool persistent = false,
   }) async {
     try {
       if (Platform.environment.containsKey('FLUTTER_TEST')) return;
@@ -124,9 +125,15 @@ class LocalNotificationService {
       presentSound: true,
     );
 
-    const linuxDetails = LinuxNotificationDetails(
+    // The website's `requireInteraction` keeps a notification on screen until
+    // it is dismissed. Linux takes that as a timeout; elsewhere the system's
+    // notification settings decide.
+    final linuxDetails = LinuxNotificationDetails(
       urgency: LinuxNotificationUrgency.normal,
       category: LinuxNotificationCategory.imReceived,
+      timeout: persistent
+          ? const LinuxNotificationTimeout.expiresNever()
+          : const LinuxNotificationTimeout.systemDefault(),
     );
 
     final notificationDetails = NotificationDetails(

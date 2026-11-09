@@ -20,6 +20,7 @@ This directory contains developer guides, build/release documentation, API & UI 
 ## Contracts (`docs/contracts/`)
 - [`contracts/community-realtime-events.md`](contracts/community-realtime-events.md) — `/ws/community` WebSocket envelope and event specifications
 - [`contracts/direct_messages.md`](contracts/direct_messages.md) — Direct messaging REST & realtime contract notes
+- [`contracts/native-push.md`](contracts/native-push.md) — What the server and the app each need for push notifications to a closed app
 
 ## Architecture Decision Records (`docs/decisions/`)
 - [`decisions/0001-native-windows-video.md`](decisions/0001-native-windows-video.md) — ADR-0001: Windows Media Foundation native video backend (`video_player_win`)
