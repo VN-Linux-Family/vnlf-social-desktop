@@ -18,4 +18,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backgroundNotificationsSubtitle =>
       'Keeps the connection open while the app runs in the background so new messages and activity can notify you. Nothing arrives after the app is fully closed.';
+
+  @override
+  String get messageNotificationTitle => 'New message';
+
+  @override
+  String get messageNotificationBody => 'You have a new message';
+
+  @override
+  String get channelNotificationTitle => 'Channel chat';
+
+  @override
+  String get channelNotificationBody => 'There is a new message in the channel';
+
+  @override
+  String get activityNotificationBody =>
+      'You have new activity on Vietnam Linux Family.';
 }
