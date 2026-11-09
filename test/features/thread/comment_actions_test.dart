@@ -77,7 +77,7 @@ void main() {
       expect(await controller.pin(second), isTrue);
       final list = controller.state.apply([root, second, reply]);
       expect(list.where((c) => c.pinned).map((c) => c.id), ['second']);
-      expect(presentComments(list, english: false).first.id, 'second');
+      expect(presentComments(list).first.id, 'second');
       expect(await controller.pin(reply), isFalse);
       expect(calls, 1);
     },

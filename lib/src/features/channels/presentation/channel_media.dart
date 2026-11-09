@@ -5,9 +5,9 @@ import '../../../app/providers.dart';
 import '../../../core/api_client.dart';
 import '../../../design_system/components/vnlf_media_gallery.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../data/channel_media_repository.dart';
 import '../domain/channel_models.dart';
-import 'channel_feedback.dart';
 
 final channelMediaUrlProvider = FutureProvider.autoDispose.family<Uri, String>((
   ref,
@@ -43,13 +43,7 @@ class ChannelMedia extends ConsumerWidget {
               onPressed: () =>
                   ref.invalidate(channelMediaUrlProvider(item.downloadPath)),
               icon: const Icon(Icons.broken_image_outlined),
-              label: Text(
-                channelText(
-                  context,
-                  'Không tải được ảnh. Thử lại',
-                  'Image unavailable. Retry',
-                ),
-              ),
+              label: Text((vi.app.common.khongTaiDuocAnh)),
             ),
           );
           continue;

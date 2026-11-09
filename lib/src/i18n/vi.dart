@@ -4625,8 +4625,10 @@ final class ViWorkerPush {
 }
 // END GENERATED
 
-/// Câu chữ chỉ ứng dụng native mới có (thông báo hệ thống, chạy nền, lưu
-/// phiên trên thiết bị). Đặt khóa theo cách của web.
+/// Câu chữ của ứng dụng native chưa có khóa tương ứng trên web: thông báo hệ
+/// thống, chạy nền, lưu phiên, và các màn chưa port xong theo từng phần bên
+/// dưới. Đặt khóa theo cách của web. Khi một màn chuyển sang câu chữ của web
+/// (`vi.<phần của web>`), xóa khóa tương ứng ở đây.
 final class ViApp {
   const ViApp._();
 
@@ -4652,4 +4654,865 @@ final class ViApp {
   final chuaLuuDuocPhien =
       'Máy chủ đã nhận đăng nhập nhưng thiết bị chưa lưu được phiên. Thử lại; '
       'nếu vẫn lỗi, hãy gửi góp ý cho VNLF.';
+
+  // Câu chữ theo từng phần của ứng dụng.
+  final activity = const ViAppActivity._();
+  final auth = const ViAppAuth._();
+  final channels = const ViAppChannels._();
+  final common = const ViAppCommon._();
+  final communication = const ViAppCommunication._();
+  final composer = const ViAppComposer._();
+  final core = const ViAppCore._();
+  final designSystem = const ViAppDesignSystem._();
+  final directMessages = const ViAppDirectMessages._();
+  final discover = const ViAppDiscover._();
+  final feed = const ViAppFeed._();
+  final feedback = const ViAppFeedback._();
+  final leaderboard = const ViAppLeaderboard._();
+  final moderation = const ViAppModeration._();
+  final notifications = const ViAppNotifications._();
+  final polls = const ViAppPolls._();
+  final profile = const ViAppProfile._();
+  final projects = const ViAppProjects._();
+  final realtime = const ViAppRealtime._();
+  final search = const ViAppSearch._();
+  final settings = const ViAppSettings._();
+  final shared = const ViAppShared._();
+  final shell = const ViAppShell._();
+  final thread = const ViAppThread._();
+  final updates = const ViAppUpdates._();
+  final voice = const ViAppVoice._();
+}
+
+final class ViAppActivity {
+  const ViAppActivity._();
+  final dangNhapDeXem = 'Đăng nhập để xem hoạt động';
+  final chuaDiemDanh = 'chưa điểm danh';
+  final daDiemDanhNgay = 'đã điểm danh, ngày thứ {streakDay}';
+  final chuaDenNgay = 'chưa đến ngày';
+  final dieuChinh = 'Điều chỉnh';
+  final diemNhan = 'Điểm nhận';
+  final tongDiem = 'Tổng điểm';
+  final diemTrongThang = 'Điểm trong tháng';
+  final daDiemDanhNgayThu = 'Đã điểm danh, ngày thứ {streakDay}';
+  final chuaDenNgay2 = 'Chưa đến ngày';
+  final coDiem = 'Có điểm';
+  final vuotNgangDeXem = 'Vuốt ngang để xem đủ 7 ngày.';
+  final ngayVaChuoiDiem = 'Ngày và chuỗi điểm danh theo giờ Việt Nam (UTC+07).';
+  final thangSau = 'Tháng sau';
+  final thangTruoc = 'Tháng trước';
+  final thang = 'Tháng {month}, {year}';
+  final chuoiNgay = 'Chuỗi {streak} ngày';
+  final chuoiDaiNhatNgay = 'Chuỗi dài nhất: {longest} ngày';
+  final diemDanhMoiNgay = 'Điểm danh mỗi ngày';
+  final chuaCoHoatDong = 'Chưa có hoạt động.';
+  final khongTaiDuocHoat = 'Không tải được hoạt động trong tháng này.';
+  final dangTaiHoatDong = 'Đang tải hoạt động…';
+  final daXacNhanDiem = 'Đã xác nhận điểm danh.';
+  final diemDanhHomNay = 'Điểm danh hôm nay';
+  final dangDiemDanh = 'Đang điểm danh…';
+  final lamMoiHoatDong = 'Làm mới hoạt động';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được điểm danh. Hãy làm mới hoạt động trước khi thử lại.';
+  final daXacNhanDiemDanh =
+      'Đã xác nhận điểm danh. Hãy làm mới hoạt động để cập nhật lịch.';
+  final thuLaiLuuTru = 'Thử lại lưu trữ';
+  final khongTheLuuTrang = 'Không thể lưu trạng thái điểm danh. Hãy thử lại.';
+  final banDaDiemDanh = 'Bạn đã điểm danh {currentStreak} ngày liên tiếp.';
+  final diemDanhHangNgay = 'Điểm danh hàng ngày';
+}
+
+final class ViAppAuth {
+  const ViAppAuth._();
+  final emailHoacTenNguoi = 'Email hoặc Tên người dùng';
+  final congDongLinuxMa = 'Cộng đồng Linux & Mã nguồn mở Việt Nam';
+  final vuiLongNhapDay =
+      'Vui lòng nhập đầy đủ email/tên người dùng và mật khẩu.';
+  final chaoMungTroLai = 'Chào mừng trở lại, {displayName}!';
+  final vuiLongDienDay = 'Vui lòng điền đầy đủ tất cả các trường.';
+  final matKhauXacNhan = 'Mật khẩu xác nhận không trùng khớp.';
+  final taoTaiKhoanThanh = 'Tạo tài khoản thành công! Chào mừng {displayName}.';
+}
+
+final class ViAppChannels {
+  const ViAppChannels._();
+  final banChuaCoQuyen = 'Bạn chưa có quyền truy cập nội dung này.';
+  final kenhHoacTinNhan = 'Kênh hoặc tin nhắn không còn tồn tại.';
+  final khongDocDuocDu = 'Không đọc được dữ liệu từ máy chủ. Hãy thử làm mới.';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được thao tác. Nội dung được giữ lại; hãy làm mới trước khi gửi lại.';
+  final khongTaiDuocTin =
+      'Không tải được tin nhắn. Kiểm tra kết nối rồi thử lại.';
+  final dangNhapDeXem = 'Đăng nhập để xem kênh cộng đồng';
+  final kenhVaLichSu = 'Kênh và lịch sử trò chuyện chỉ dành cho thành viên.';
+  final chonMotKenhHoac = 'Chọn một kênh hoặc cuộc trò chuyện';
+  final khongMoDuocKenh = 'Không mở được kênh này';
+  final danhSachTroChuyen = 'Danh sách trò chuyện';
+  final chuaCoTinNhan = 'Chưa có tin nhắn';
+  final kenhDaLuuTru = 'Kênh đã lưu trữ. Chỉ có thể xem tin nhắn.';
+  final banChuaCoQuyenGui = 'Bạn chưa có quyền gửi tin nhắn trong kênh này.';
+  final tinNhanSeBi = 'Tin nhắn sẽ bị xóa khỏi kênh.';
+  final tepDangDuocXu = 'Tệp đang được xử lý';
+  final khongXuLyDuoc = 'Không xử lý được tệp';
+  final tinNhanCoGif = 'Tin nhắn có GIF / nhãn dán';
+}
+
+final class ViAppCommon {
+  const ViAppCommon._();
+  final daChon = 'Đã chọn';
+  final vuiLongNhap20 = 'Vui lòng nhập 20–4000 ký tự.';
+  final gopYCuaToi = 'Góp ý của tôi';
+  final daGhiNhanPhan = 'Đã ghi nhận phản hồi!';
+  final toi = 'Tối';
+  final sang = 'Sáng';
+  final hoatDong = 'Hoạt động';
+  final moVnlfSocial = 'Mở VNLF Social';
+  final phanDoi = 'Phản đối';
+  final ungHo = 'Ủng hộ';
+  final khongMoDuocLien = 'Không mở được liên kết';
+  final videoDangDuocXu = 'Video đang được xử lý';
+  final tatAmThanh = 'Tắt âm thanh';
+  final tenNguoiDung = 'Tên người dùng';
+  final quayLai = 'Quay lại';
+  final phienDangNhapDa = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+  final banThaoTacQua = 'Bạn thao tác quá nhanh. Vui lòng chờ rồi thử lại.';
+  final mayChuDangGioi = 'Máy chủ đang giới hạn yêu cầu. Vui lòng thử lại sau.';
+  final khongTaiDuocAnh = 'Không tải được ảnh. Thử lại';
+  final lamMoiTinNhan = 'Làm mới tin nhắn';
+  final mayChuDaXac =
+      'Máy chủ đã xác nhận thao tác, nhưng chưa tải lại được lịch sử. Hãy làm mới; không cần gửi lại.';
+  final taiTinNhanCu = 'Tải tin nhắn cũ hơn';
+  final chinhSuaTinNhan = 'Chỉnh sửa tin nhắn';
+  final thaoTacTinNhan = 'Thao tác tin nhắn';
+  final chinhSua = 'Chỉnh sửa';
+  final lamMoi = 'Làm mới';
+  final luuBaiViet = 'Lưu bài viết';
+  final chuaCoDuAn = 'Chưa có dự án';
+  final chuDePhoBien = 'Chủ đề phổ biến';
+  final ngay = '{inDays} ngày';
+  final gio = '{inHours} giờ';
+  final phut = '{inMinutes} phút';
+  final vuaXong = 'Vừa xong';
+  final vuiLongThuLai = 'Vui lòng thử lại.';
+  final trangWeb = 'Trang web';
+  final xoaAnh = 'Xóa ảnh';
+  final ban = 'Bạn';
+}
+
+final class ViAppCommunication {
+  const ViAppCommunication._();
+  final chuaCoCuocTro = 'Chưa có cuộc trò chuyện phù hợp';
+  final daXuLyYeu = 'Đã xử lý yêu cầu';
+  final tuChoiYeuCau = 'Từ chối yêu cầu';
+  final chapNhanYeuCau = 'Chấp nhận yêu cầu';
+  final lamMoiHopThu = 'Làm mới hộp thư';
+  final troChuyenMoi = 'Trò chuyện mới';
+  final khongCoKenhPhu = 'Không có kênh phù hợp';
+  final khongTaiDuocKenh = 'Không tải được kênh. Thử lại';
+  final khongLuuDuocLua = 'Không lưu được lựa chọn hiển thị.';
+  final kenhCongDong = 'Kênh cộng đồng';
+  final timKenhHoacNguoi = 'Tìm kênh hoặc người';
+  final dangNhapDeTro = 'Đăng nhập để trò chuyện';
+}
+
+final class ViAppComposer {
+  const ViAppComposer._();
+  final chuaCoBanNhap = 'Chưa có bản nháp trên máy chủ';
+  final taiLaiBanNhap = 'Tải lại bản nháp';
+  final banNhapChuaCo = 'Bản nháp chưa có tiêu đề';
+  final toanChieuRong = 'Toàn chiều rộng';
+  final binhThuong = 'Bình thường';
+  final chuThich = 'Chú thích';
+  final vanBanThayThe = 'Văn bản thay thế';
+  final tuyChinhAnh = 'Tùy chỉnh ảnh';
+  final noiDungNayDuoc = 'Nội dung này được giữ nguyên khi lưu.';
+  final goLienKet = 'Gỡ liên kết';
+  final nhapLienKetWeb = 'Nhập liên kết web hoặc email hợp lệ.';
+  final chuaLuuDuocBan =
+      'Chưa lưu được. Bản nháp vẫn được giữ; vui lòng thử lại.';
+  final banNhapDaThay =
+      'Bản nháp đã thay đổi trên thiết bị khác. Chọn phiên bản trước khi lưu.';
+  final mayChuDangGioi =
+      'Máy chủ đang giới hạn yêu cầu. Bản nháp được giữ; vui lòng thử lại sau.';
+  final khongLuuDuocBan =
+      'Không lưu được bản khôi phục trên thiết bị. Nội dung vẫn còn trong trình soạn thảo.';
+  final vietNoiDungHoac = 'Viết nội dung hoặc thêm ảnh, video trước khi đăng.';
+  final nhapCauHoiVa =
+      'Nhập câu hỏi và ít nhất hai lựa chọn khác nhau trước khi đăng.';
+  final khongTheThayHoac = 'Không thể thay hoặc gỡ bình chọn của bài đã đăng.';
+  final binhChonChiDung = 'Bình chọn chỉ dùng trong bài đăng thường.';
+  final motSoAnhCan =
+      'Một số ảnh cần được tải lên trước khi đổi định dạng. Bài viết vẫn được giữ.';
+  final kiemTraDoDai = 'Kiểm tra độ dài tiêu đề, mô tả và văn bản ảnh bìa.';
+  final dungToiDa3 = 'Dùng tối đa 3 thẻ, mỗi thẻ không quá 40 ký tự.';
+  final toiDa20Tep = 'Tối đa 20 tệp đính kèm và một video.';
+  final videoChiDuocDung = 'Video chỉ được dùng trong bài đăng thường.';
+  final videoKhongDuocDai = 'Video không được dài quá 30 giây.';
+  final choVideoXuLy = 'Chờ video xử lý xong hoặc gỡ tệp lỗi trước khi đăng.';
+  final chuyenAnhTrongBai =
+      'Chuyển ảnh trong bài thành tệp đính kèm trước khi đổi sang bài thường.';
+  final dungToiDa21 = 'Dùng tối đa 21 ảnh kể cả ảnh bìa.';
+  final anhToiDa10 = 'Ảnh tối đa 10 MiB, video tối đa 200 MiB.';
+  final chonDinhDangAnh =
+      'Chọn định dạng ảnh được hỗ trợ hoặc video cho bài thường.';
+  final kiemTraLanDang =
+      'Kiểm tra lần đăng đang chờ xác nhận trước khi sửa tiếp.';
+  final theToiDa3 = 'Thẻ (tối đa 3, cách nhau bằng dấu phẩy)';
+  final moTaNgan = 'Mô tả ngắn';
+  final vanBanThayTheAnh = 'Văn bản thay thế ảnh bìa';
+  final goAnhBia = 'Gỡ ảnh bìa';
+  final nhapCauHoiVa2 =
+      'Nhập câu hỏi và 2–6 lựa chọn khác nhau. Nội dung chưa hoàn tất được giữ trên thiết bị.';
+  final binhChonDaDang = 'Bình chọn đã đăng, không thể thay hoặc gỡ.';
+  final boLuaChon = 'Bỏ lựa chọn';
+  final binhChon = 'Bình chọn';
+  final chuyen = 'Chuyển';
+  final tieuDeMoTa =
+      'Tiêu đề, mô tả, thẻ và ảnh bìa sẽ được gỡ. Ảnh trong nội dung chuyển thành tệp đính kèm.';
+  final chuyenSangBaiThuong = 'Chuyển sang bài thường?';
+  final binhChonChiDungTrong =
+      'Bình chọn chỉ dùng trong bài thường. Chuyển sang Article sẽ gỡ bình chọn của bản nháp.';
+  final chuyenSangArticle = 'Chuyển sang Article?';
+  final goVideoTruocKhi = 'Gỡ video trước khi chuyển sang Article.';
+  final khongMoDuocTep = 'Không mở được tệp đã chọn. Bản nháp vẫn được giữ.';
+  final vietBaiDaiArticle = 'Viết bài dài · Article';
+  final chuaLuuThayDoi = 'Chưa lưu thay đổi';
+  final taiBanTrenMay = 'Tải bản trên máy chủ';
+  final luuBanDangSua = 'Lưu bản đang sửa lên phiên bản mới nhất';
+  final mayChuChuaXac =
+      'Máy chủ chưa xác nhận lần đăng trước. Bấm kiểm tra để xác nhận cùng lần đăng đó.';
+  final kiemTraLanDang2 = 'Kiểm tra lần đăng';
+  final banNhap = 'Bản nháp';
+  final dangNhapDeViet = 'Đăng nhập để viết bài';
+  final khoiMa = 'Khối mã';
+  final danhSachDanhSo = 'Danh sách đánh số';
+  final maTrongDong = 'Mã trong dòng';
+  final gachNgang = 'Gạch ngang';
+  final kiemTraTrangThai = 'Kiểm tra trạng thái';
+  final xuLyVideoThat = 'Xử lý video thất bại';
+  final tieuDeArticle = 'Tiêu đề Article';
+  final tuDong = 'Tự động';
+  final khongMau = 'Không màu';
+  final vanBanThuong = 'Văn bản thường';
+  final tieuDe1 = 'Tiêu đề 1';
+  final tieuDe2 = 'Tiêu đề 2';
+  final tieuDe3 = 'Tiêu đề 3';
+  final tieuDe4 = 'Tiêu đề 4';
+  final tieuDe5 = 'Tiêu đề 5';
+  final tieuDe6 = 'Tiêu đề 6';
+  final danLienKet = 'Dán liên kết';
+  final mo = 'Mở';
+}
+
+final class ViAppCore {
+  const ViAppCore._();
+  final thoat = 'Thoát';
+}
+
+final class ViAppDesignSystem {
+  const ViAppDesignSystem._();
+  final anhBaiViet = 'Ảnh bài viết';
+  final anhSau = 'Ảnh sau';
+  final tuyChon = 'Tùy chọn';
+  final anhKhongConTrong = 'Ảnh không còn trong bộ';
+  final khongPhatDuocVideo = 'Không phát được video. Bấm để thử lại.';
+  final phatVideo = 'Phát video';
+  final videoKhongKhaDung = 'Video không khả dụng';
+  final thuLaiVideo = 'Thử lại video';
+  final phongToVideo = 'Phóng to video';
+  final batAmThanh = 'Bật âm thanh';
+  final tamDung = 'Tạm dừng';
+}
+
+final class ViAppDirectMessages {
+  const ViAppDirectMessages._();
+  final khongMoDuocAnh = 'Không mở được ảnh đã chọn. Vui lòng thử lại.';
+  final moiTinNhanCo = 'Mỗi tin nhắn có tối đa bốn ảnh.';
+  final banDaChanNguoi =
+      'Bạn đã chặn người dùng này. Bỏ chặn để có thể gửi lại yêu cầu trò chuyện.';
+  final muonNhanTinCho =
+      '{displayName} muốn nhắn tin cho bạn. Chấp nhận để bắt đầu trò chuyện hoặc từ chối yêu cầu này.';
+  final chapNhan = 'Chấp nhận';
+  final tuChoi = 'Từ chối';
+  final cuocTroChuyenNay =
+      'Cuộc trò chuyện này cần gửi lại yêu cầu nhắn tin trước khi tiếp tục.';
+  final guiYeuCauNhan = 'Gửi yêu cầu nhắn tin';
+  final dangChoNguoiNhan =
+      'Đang chờ người nhận chấp nhận yêu cầu nhắn tin của bạn.';
+  final hienKhongTheGui =
+      'Hiện không thể gửi tin nhắn trong cuộc trò chuyện này.';
+  final banCoTheGui =
+      'Bạn có thể gửi tin nhắn mở đầu cho yêu cầu trò chuyện này.';
+  final nhapTinNhan = 'Nhập tin nhắn...';
+  final banKhongTheThuc =
+      'Bạn không thể thực hiện thao tác này trong trạng thái cuộc trò chuyện hiện tại.';
+  final khongTimThayCuoc = 'Không tìm thấy cuộc trò chuyện hoặc tin nhắn.';
+  final khongDocDuocDu =
+      'Không đọc được dữ liệu tin nhắn từ máy chủ. Hãy thử làm mới.';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được thao tác do lỗi mạng. Nội dung nháp được giữ lại để bạn thử lại.';
+  final khongTaiDuocTin =
+      'Không tải được tin nhắn trực tiếp. Kiểm tra kết nối rồi thử lại.';
+  final chuaXacNhanDuocThao =
+      'Chưa xác nhận được thao tác. Nội dung được giữ lại; hãy làm mới hoặc thử lại.';
+  final khongTaiDuocTinNhan = 'Không tải được tin nhắn trực tiếp.';
+  final banKhongTheNhan = 'Bạn không thể nhắn tin trực tiếp cho chính mình.';
+  final khongTheGuiTin =
+      'Không thể gửi tin nhắn vì một trong hai bên đã chặn liên lạc.';
+  final canGuiYeuCau =
+      'Cần gửi yêu cầu nhắn tin mới trước khi tiếp tục trò chuyện.';
+  final yeuCauNhanTin = 'Yêu cầu nhắn tin này đã được xử lý trước đó.';
+  final chiCoTheChinh =
+      'Chỉ có thể chỉnh sửa tin nhắn trong vòng 15 phút sau khi gửi.';
+  final tepDinhKemChua =
+      'Tệp đính kèm chưa tải lên hoàn tất. Vui lòng thử lại.';
+  final dinhDangAnhDinh = 'Định dạng ảnh đính kèm không được hỗ trợ.';
+  final anhDinhKemVuot = 'Ảnh đính kèm vượt quá giới hạn 10 MB.';
+  final tepAnhDinhKem = 'Tệp ảnh đính kèm không hợp lệ hoặc bị hỏng.';
+  final khongTaiDuocAnh = 'Không tải được ảnh riêng tư. Thử lại';
+  final diToiTinNhan = 'Đi tới tin nhắn';
+  final baoCaoCuocTro = 'Báo cáo cuộc trò chuyện';
+  final chiTietBoSung = 'Chi tiết bổ sung (tùy chọn)';
+  final tinNhanRacSpam = 'Tin nhắn rác (Spam)';
+  final quayRoiHoacXuc = 'Quấy rối hoặc xúc phạm';
+  final luaDaoHoacGia = 'Lừa đảo hoặc giả mạo';
+  final lyDoKhac = 'Lý do khác';
+  final nhapTuKhoaToi = 'Nhập từ khóa (tối thiểu 2 ký tự)...';
+  final tim = 'Tìm';
+  final nhapTuKhoaDe = 'Nhập từ khóa để tìm tin nhắn trong cuộc trò chuyện.';
+  final khongTimThayTin = 'Không tìm thấy tin nhắn phù hợp.';
+  final anhDaChiaSe = 'Ảnh đã chia sẻ trong cuộc trò chuyện';
+  final chuaCoAnhNao =
+      'Chưa có ảnh nào được chia sẻ trong cuộc trò chuyện này.';
+  final taiThemAnhCu = 'Tải thêm ảnh cũ hơn';
+  final tinNhanChuaDoc = 'Tin nhắn chưa đọc';
+  final gifNhanDan = '[GIF / Nhãn dán]';
+  final anhDinhKem = '[Ảnh đính kèm]';
+  final tepDinhKemDang = 'Tệp đính kèm đang được xử lý';
+  final khongXuLyDuoc = 'Không xử lý được tệp đính kèm';
+  final nhanDanTuBo = 'Nhãn dán từ bộ đã ngừng phát hành';
+  final tinNhanCoNhan = 'Tin nhắn có nhãn dán';
+  final tinNhanCoGif = 'Tin nhắn có GIF';
+  final dangNhapDeXem = 'Đăng nhập để xem tin nhắn trực tiếp';
+  final tinNhanRiengTu =
+      'Tin nhắn riêng tư và yêu cầu kết nối chỉ dành cho thành viên đã đăng nhập.';
+  final chonMotCuocTro = 'Chọn một cuộc trò chuyện';
+  final danhSachCuocTro = 'Danh sách cuộc trò chuyện';
+  final khongMoDuocCuoc = 'Không mở được cuộc trò chuyện';
+  final dangXemNguCanh = 'Đang xem ngữ cảnh quanh tin nhắn đã chọn.';
+  final veTinNhanMoi = 'Về tin nhắn mới nhất';
+  final daGuiBaoCao = 'Đã gửi báo cáo cuộc trò chuyện (#{statusNotice}).';
+  final chuaCoTinNhan = 'Chưa có tin nhắn trong cuộc trò chuyện này.';
+  final chanNguoiDung = 'Chặn người dùng?';
+  final banVaSeKhong =
+      'Bạn và {displayName} sẽ không thể nhắn tin cho nhau cho tới khi bỏ chặn.';
+  final xoaCuocTroChuyen = 'Xóa cuộc trò chuyện?';
+  final cuocTroChuyenSe = 'Cuộc trò chuyện sẽ được ẩn khỏi hộp thư của bạn.';
+  final tinNhanNaySe = 'Tin nhắn này sẽ bị xóa khỏi cuộc trò chuyện.';
+  final anhDaChiaSe2 = 'Ảnh đã chia sẻ';
+  final danhDauDaDoc = 'Đánh dấu đã đọc';
+  final boChanNguoiDung = 'Bỏ chặn người dùng';
+  final chanNguoiDung2 = 'Chặn người dùng';
+  final xoaCuocTroChuyen2 = 'Xóa cuộc trò chuyện';
+  final batDauCuocTro = 'Bắt đầu cuộc trò chuyện';
+  final timThanhVien = 'Tìm thành viên';
+  final tenHoacTenNguoi = 'Tên hoặc tên người dùng';
+  final nhapItNhat2 = 'Nhập ít nhất 2 ký tự để tìm thành viên.';
+  final khongTaiDuocThanh = 'Không tải được thành viên. Thử lại';
+  final khongTimThayThanh = 'Không tìm thấy thành viên';
+}
+
+final class ViAppDiscover {
+  const ViAppDiscover._();
+  final hayThuTuKhoa = 'Hãy thử từ khóa hoặc chủ đề khác.';
+  final khongCoKetQua = 'Không có kết quả';
+  final chuaCoThanhVien = 'Chưa có thành viên';
+  final thanhVienTichCuc = 'Thành viên tích cực';
+  final duAnCongDong = 'Dự án cộng đồng';
+  final baiVietNoiBat = 'Bài viết nổi bật';
+  final timBaiViet = 'Tìm bài viết';
+}
+
+final class ViAppFeed {
+  const ViAppFeed._();
+  final dangTaiBaiViet = 'Đang tải bài viết';
+}
+
+final class ViAppFeedback {
+  const ViAppFeedback._();
+  final trangThaiNhan = 'Trạng thái: {label}';
+  final anhVaVideo = 'Ảnh và video';
+  final khongTheKhoiPhuc =
+      'Không thể khôi phục bản nháp. Hãy kiểm tra tài khoản và bộ nhớ bảo mật.';
+  final daGuiThanhCong =
+      'Đã gửi thành công, nhưng chưa dọn được bản nháp trên thiết bị.';
+  final tepKhongHopLe = 'Tệp không hợp lệ hoặc vượt quá giới hạn kích thước.';
+  final mayChuTuChoi =
+      'Máy chủ từ chối yêu cầu. Hãy kiểm tra nội dung và thử lại.';
+  final thaoTacChuaDuoc =
+      'Thao tác chưa được xác nhận. Bản nháp được giữ; kiểm tra trạng thái bên dưới.';
+  final batDauBanNhap = 'Bắt đầu bản nháp mới?';
+  final mayChuCoThe =
+      'Máy chủ có thể đã tạo một tệp không xác định. Không thể xóa tệp đó. Nội dung sẽ được giữ và bản nháp mới dùng mã khác.';
+  final batDauLai = 'Bắt đầu lại';
+  final taiKhoanDaThay = 'Tài khoản đã thay đổi';
+  final khongTheLuuThay =
+      'Không thể lưu thay đổi của tài khoản trước vào bộ nhớ bảo mật.';
+  final dongVaDangNhap = 'Đóng và đăng nhập lại để tiếp tục.';
+  final thuLuuLai = 'Thử lưu lại';
+  final taiKhoanDaThayDoi =
+      'Tài khoản đã thay đổi. Đóng và đăng nhập lại để tiếp tục.';
+  final moTa204000 = 'Mô tả (20–4000 ký tự)';
+  final toiDa5Tep =
+      'Tối đa 5 tệp. Ảnh tối đa 10 MiB; video MP4/WebM tối đa 50 MiB.';
+  final chuaXacNhanHay = 'Chưa xác nhận; hãy xóa tệp này.';
+  final xoaTep = 'Xóa tệp';
+  final khongXacNhanDuoc =
+      'Không xác nhận được yêu cầu tải lên. Một vị trí có thể đã được dùng; hãy xóa các tệp đã biết trước khi bắt đầu lại.';
+  final batDauBanNhapMoi = 'Bắt đầu bản nháp mới';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được kết quả gửi. Chỉ có thể gửi lại nội dung không thay đổi.';
+  final themTep = 'Thêm tệp';
+  final khongLuuDuocBan =
+      'Không lưu được bản nháp vào bộ nhớ bảo mật. Không thể tiếp tục gửi; sao chép nội dung trước khi đóng.';
+  final dangNhapDeXem = 'Đăng nhập để xem lịch sử góp ý của bạn.';
+  final banChuaGuiGop = 'Bạn chưa gửi góp ý nào.';
+  final cuocTroChuyen = 'Cuộc trò chuyện';
+  final dangNhapDeXemCuoc = 'Đăng nhập để xem cuộc trò chuyện này.';
+  final chuaCoTinNhan = 'Chưa có tin nhắn. Đội VNLF sẽ trả lời tại đây.';
+  final vietTinNhanCho = 'Viết tin nhắn cho Đội VNLF…';
+  final guiTinNhan = 'Gửi tin nhắn';
+  final dangMo = 'Đang mở';
+  final dangXemXet = 'Đang xem xét';
+  final daGiaiQuyet = 'Đã giải quyết';
+  final daDong = 'Đã đóng';
+  final deLamSau = 'Để làm sau';
+  final phienDangNhapDa = 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.';
+  final khongTimThayGop = 'Không tìm thấy góp ý này.';
+  final phanHoiTuMay =
+      'Phản hồi từ máy chủ không hợp lệ. Hãy làm mới để thử lại.';
+  final chuaXacNhanDuocTin =
+      'Chưa xác nhận được tin nhắn. Bản nháp được giữ lại để bạn thử lại.';
+  final khongTaiDuocDu = 'Không tải được dữ liệu. Hãy thử lại sau.';
+}
+
+final class ViAppLeaderboard {
+  const ViAppLeaderboard._();
+  final dongGopCuaCong = 'Đóng góp của cộng đồng sẽ xuất hiện tại đây.';
+  final chuaCoXepHang = 'Chưa có xếp hạng';
+  final khongTaiDuocBang = 'Không tải được bảng xếp hạng';
+  final hoatDongCuaToi = 'Hoạt động của tôi';
+  final xepHangCongDong = 'Xếp hạng cộng đồng mẫu';
+  final tuanBatDauTu = 'Tuần bắt đầu từ thứ Hai, theo giờ Việt Nam (UTC+07).';
+  final bangXepHang = 'Bảng xếp hạng';
+}
+
+final class ViAppModeration {
+  const ViAppModeration._();
+  final hoanTat = 'Hoàn tất';
+  final chiTietKhongBat = 'Chi tiết (không bắt buộc)';
+  final doiNguKiemDuyet = 'Đội ngũ kiểm duyệt sẽ xem xét báo cáo của bạn.';
+  final baoCaoNoiDung = 'Báo cáo nội dung';
+  final daNhanBaoCao = 'Đã nhận báo cáo';
+  final khongGuiDuocBao =
+      'Không gửi được báo cáo. Bản nháp vẫn được giữ; vui lòng thử lại.';
+  final vuiLongNhapLy = 'Vui lòng nhập lý do.';
+  final taiKhoanDaThay = 'Tài khoản đã thay đổi. Hãy đóng và mở lại báo cáo.';
+}
+
+final class ViAppNotifications {
+  const ViAppNotifications._();
+  final khongMoDuocThong = 'Không mở được thông báo';
+  final tinNhanThongBao = 'Tin nhắn & Thông báo VNLF';
+  final thongBaoTinNhan =
+      'Thông báo tin nhắn và hoạt động mới từ Vietnam Linux Family';
+  final daThichBaiViet = 'Đã thích bài viết của bạn';
+  final daThichBinhLuan = 'Đã thích bình luận của bạn';
+  final daBinhLuanBai = 'Đã bình luận bài viết của bạn';
+  final daTraLoiBinh = 'Đã trả lời bình luận của bạn';
+  final daTheoDoiBan = 'Đã theo dõi bạn';
+  final daVietVaoSo = 'Đã viết vào sổ lưu bút của bạn';
+  final capNhatCongDong = 'Cập nhật cộng đồng';
+  final taiThem = 'Tải thêm';
+  final chuaCoThongBao = 'Chưa có thông báo';
+  final khongThucHienDuoc = 'Không thực hiện được yêu cầu. Vui lòng thử lại.';
+  final danhDauDaDoc = 'Đánh dấu đã đọc tất cả';
+  final moiLoai = 'Mọi loại';
+  final dangNhapDeXem = 'Đăng nhập để xem thông báo';
+}
+
+final class ViAppPolls {
+  const ViAppPolls._();
+  final bamLaiDeBo = ' · Bấm lại để bỏ';
+  final luotBinhChon = 'lượt bình chọn';
+  final binhChonDaCo = 'Bình chọn đã có phiếu và không thể sửa.';
+  final chiSuaDuocKhi = 'Chỉ sửa được khi chưa có ai bình chọn.';
+  final canCauHoiVa =
+      'Cần câu hỏi và từ hai đến sáu lựa chọn khác nhau, trong giới hạn độ dài.';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được thay đổi. Lựa chọn trước được giữ lại; hãy tải lại hoặc thử lại.';
+  final vuiLongChoRoi = 'Vui lòng chờ rồi thử lại.';
+  final binhChonNayKhong = 'Bình chọn này không còn khả dụng.';
+  final dangNhapLaiDe = 'Đăng nhập lại để lưu lựa chọn.';
+}
+
+final class ViAppProfile {
+  const ViAppProfile._();
+  final dangHienThi50 = 'Đang hiển thị 50 bình luận công khai đầu tiên.';
+  final vi = 'vi';
+  final dangHienThi50Bai = 'Đang hiển thị 50 bài viết công khai đầu tiên.';
+  final chuaCoBaiViet = 'Chưa có bài viết công khai';
+  final an = 'Ẩn';
+  final dangAn = 'Đang ẩn';
+  final chuaCoLoiNhan = 'Chưa có lời nhắn';
+  final banNhapDaGiu = 'Bản nháp đã giữ';
+  final hienKhongTheViet = 'Hiện không thể viết lời nhắn.';
+  final dayLaSoLuu = 'Đây là sổ lưu bút của bạn.';
+  final banKhongTheViet = 'Bạn không thể viết vào sổ này.';
+  final banDaVietHom = 'Bạn đã viết hôm nay (giờ Việt Nam).';
+  final soLuuButDa = 'Sổ lưu bút đã tắt.';
+  final dangNhapDeViet = 'Đăng nhập để viết lời nhắn.';
+  final guiLoiNhan = 'Gửi lời nhắn';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được thao tác. Vui lòng kiểm tra lại trước khi thử lại.';
+  final daXacNhanThao =
+      'Đã xác nhận thao tác, nhưng không tải lại được sổ lưu bút.';
+  final xoaLoiNhan = 'Xóa lời nhắn?';
+  final khongTaiDuocLoi = 'Không tải được lời nhắn tiếp theo.';
+  final hoSoMau = 'Hồ sơ mẫu';
+  final chuaCapNhatDuoc = 'Chưa cập nhật được theo dõi. Thử lại sau.';
+  final chuaXacNhanDuocKet =
+      'Chưa xác nhận được kết quả. Hãy tải lại hồ sơ để kiểm tra.';
+  final thaoTacQuaNhanh = 'Thao tác quá nhanh. Thử lại sau.';
+  final phienDangNhapDa = 'Phiên đăng nhập đã hết. Hãy đăng nhập lại.';
+  final khongTimThayThanh = 'Không tìm thấy thành viên này.';
+  final khongThucHienDuoc = 'Không thực hiện được với thành viên này.';
+  final daBoTheoDoi = 'Đã bỏ theo dõi {name}';
+  final dangTheoDoi = 'Đang theo dõi {name}';
+  final theoDoi = 'Theo dõi {name}';
+  final dangTheoDoiCham = 'Đang theo dõi {name}. Chạm để bỏ theo dõi';
+  final tuyChonHoSo = 'Tùy chọn hồ sơ';
+  final boChan = 'Bỏ chặn {name}';
+  final dangNhapDeTheo = 'Đăng nhập để theo dõi {name}';
+  final hoSoNayHien = 'Hồ sơ này hiện không có sẵn.';
+  final khongTimThayHo = 'Không tìm thấy hồ sơ';
+}
+
+final class ViAppProjects {
+  const ViAppProjects._();
+  final soFork = 'Fork {forks}';
+  final daCoTrenVnlf = 'Đã có trên VNLF: {name}';
+  final lienKetKhac = 'Liên kết khác';
+  final khoMaNguon = 'Kho mã nguồn';
+  final troChuyen = 'Trò chuyện';
+  final taiXuong = 'Tải xuống';
+  final taiLieu = 'Tài liệu';
+  final hocTap = 'Học tập';
+  final troChoi = 'Trò chơi';
+  final heThong = 'Hệ thống';
+  final tiengViet = 'Tiếng Việt';
+  final tienIch = 'Tiện ích';
+  final tuyBien = 'Tùy biến';
+  final thuVien = 'Thư viện';
+  final congCu = 'Công cụ';
+  final ungDung = 'Ứng dụng';
+  final nguoiDongGop = 'Người đóng góp';
+  final nguoiDuyTri = 'Người duy trì';
+  final tacGia = 'Tác giả';
+  final doiTac = 'Đối tác';
+  final daBiAn = 'Đã bị ẩn';
+  final daBiTuChoi = 'Đã bị từ chối';
+  final dangChoDuyet = 'Đang chờ duyệt';
+  final giayPhep = 'Giấy phép';
+  final moBaiThaoLuan = 'Mở bài thảo luận';
+  final chuaCoGioiThieu = 'Chưa có giới thiệu';
+  final anhChup = 'Ảnh chụp';
+  final nguoiDongGop2 = 'người đóng góp';
+  final khoMaNguonKhong = 'Kho mã nguồn không còn khả dụng';
+  final thayDoiDangCho = 'Thay đổi đang chờ duyệt';
+  final trangThaiDuyet = 'Trạng thái duyệt';
+  final khongTaiDuocDu = 'Không tải được dự án';
+  final khongTimThayDu = 'Không tìm thấy dự án';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được đánh giá. Hãy làm mới trước khi thử lại.';
+  final danhGia = 'đánh giá';
+  final moKhoMaNguon = 'Mở kho mã nguồn (GitHub)';
+  final sao = 'Sao';
+  final thuBoLocKhac = 'Thử bộ lọc khác.';
+  final khongCoDuAn = 'Không có dự án phù hợp';
+  final tatCaNgonNgu = 'Tất cả ngôn ngữ';
+  final nhapTenDuAn = 'Nhập tên dự án (tối đa 80 ký tự).';
+  final nhapMoTaNgan = 'Nhập mô tả ngắn (tối đa 160 ký tự).';
+  final gioiThieuCanTu = 'Giới thiệu cần từ 30 đến 10.000 ký tự.';
+  final chonVaiTroCua = 'Chọn vai trò của bạn.';
+  final nhapLienKetGithub =
+      'Nhập liên kết GitHub hợp lệ hoặc chọn không có kho mã.';
+  final kiemTraCacLien =
+      'Kiểm tra các liên kết (tối đa 8 liên kết HTTP hoặc HTTPS).';
+  final themItNhatMot = 'Thêm ít nhất một liên kết khi không có kho mã.';
+  final toiDa200Ky = 'Tối đa 200 ký tự.';
+  final logoKhongHopLe = 'Logo không hợp lệ.';
+  final anhChupManHinh = 'Ảnh chụp màn hình không hợp lệ (tối đa 6 ảnh).';
+  final khongTheTaiLogo = 'Không thể tải logo ({statusCode}).';
+  final taiLogoKhongThanh = 'Tải logo không thành công.';
+  final toiDa6Anh = 'Tối đa 6 ảnh chụp màn hình.';
+  final khongTheTaiAnh = 'Không thể tải ảnh ({statusCode}).';
+  final taiAnhKhongThanh = 'Tải ảnh không thành công.';
+  final mayChuTuChoi =
+      'Máy chủ từ chối yêu cầu ({statusCode}). Dữ liệu vẫn được giữ lại.';
+  final khongTimThayKho = 'Không tìm thấy kho mã công khai này.';
+  final khongTheXemKho =
+      'Không thể xem kho mã lúc này. Bạn vẫn có thể gửi để máy chủ kiểm tra.';
+  final khoMaNayDa = 'Kho mã này đã có trên VNLF.';
+  final dangNhapDeGui = 'Đăng nhập để gửi dự án.';
+  final taiKhoanDaThay =
+      'Tài khoản đã thay đổi. Quay lại tài khoản ban đầu để xem bản nhập.';
+  final duAnSeDuoc =
+      'Dự án sẽ được kiểm duyệt trước khi hiển thị với cộng đồng.';
+  final buoc3 = 'Bước {step} / 3';
+  final chuaXacDinhDuoc =
+      'Chưa xác định được kết quả gửi. Dữ liệu vẫn còn ở đây. Hãy kiểm tra danh sách dự án của bạn trước khi thử lại để tránh gửi trùng.';
+  final daGuiDuAn = 'Đã gửi dự án và đang chờ duyệt.';
+  final duAnKhongCo = 'Dự án không có kho mã công khai';
+  final lienKetKhoMa = 'Liên kết kho mã GitHub';
+  final dangKiemTra = 'Đang kiểm tra…';
+  final xemKhoMa = 'Xem kho mã';
+  final logoDuAn = 'Logo dự án';
+  final dinhDangPngJpg = 'Định dạng PNG, JPG, WebP, GIF (tối đa 10 MB)';
+  final logoDaTaiLen = 'Logo đã tải lên';
+  final xoaLogo = 'Xóa logo';
+  final taiLenLogo = 'Tải lên logo';
+  final toiDa6AnhChup =
+      'Tối đa 6 ảnh chụp màn hình minh họa ứng dụng (tối đa 10 MB mỗi ảnh)';
+  final themAnhChupMan = 'Thêm ảnh chụp màn hình';
+  final dangTaiAnhLen = 'Đang tải ảnh lên…';
+  final loaiLienKet = 'Loại liên kết';
+  final xoaLienKet = 'Xóa liên kết';
+  final themLienKet = 'Thêm liên kết';
+  final banCanGiupGi = 'Bạn cần giúp gì?';
+  final xemTruoc = 'Xem trước';
+  final anhChupManHinhAnh = 'Ảnh chụp màn hình: {mediaAssets} ảnh';
+  final dangBaiGioiThieu = 'Đăng bài giới thiệu khi được duyệt';
+  final duAnMoiSe = 'Dự án mới sẽ ở trạng thái chờ duyệt.';
+}
+
+final class ViAppRealtime {
+  const ViAppRealtime._();
+  final dangKetNoiDe = 'Đang kết nối để cập nhật tin nhắn.';
+  final dangKetNoiLai = 'Đang kết nối lại để cập nhật tin nhắn.';
+  final tinNhanMoiChua = 'Tin nhắn mới chưa thể cập nhật lúc này.';
+}
+
+final class ViAppSearch {
+  const ViAppSearch._();
+  final thuTuKhoaKhac = 'Thử từ khóa khác hoặc đổi phạm vi tìm kiếm.';
+  final dangHienThiCac =
+      'Đang hiển thị các kết quả đầu tiên. Nhập từ khóa cụ thể hơn để tìm thêm.';
+  final ketQua = '{count}{capped} kết quả';
+  final taiLaiChuDe = 'Tải lại chủ đề';
+  final nhapItNhat2 = 'Nhập ít nhất 2 ký tự.';
+  final timBaiVietDu = 'Tìm bài viết, dự án, thành viên và chủ đề.';
+  final timKiemCongDong = 'Tìm kiếm cộng đồng mẫu';
+  final xoaTimKiem = 'Xóa tìm kiếm';
+  final timTrongCongDong = 'Tìm trong cộng đồng';
+}
+
+final class ViAppSettings {
+  const ViAppSettings._();
+  final chuaTaiDuocDanh = 'Chưa tải được danh sách người đã chặn.';
+  final chuaTheXacNhan =
+      'Chưa thể xác nhận kết quả. Hãy làm mới trước khi thử lại.';
+  final daXacNhanBo = 'Đã xác nhận bỏ chặn, nhưng chưa tải lại được danh sách.';
+  final daBoChan = 'Đã bỏ chặn {confirmedName}.';
+  final nhungNguoiBanDa = 'Những người bạn đã chặn.';
+  final nguoiDaChan = 'Người đã chặn';
+  final daLuuCaiDat = 'Đã lưu cài đặt.';
+  final khongTheTaiLai = 'Không thể tải lại cài đặt.';
+  final taiLai = 'Tải lại';
+  final chuaXacDinhDuoc =
+      'Chưa xác định được cài đặt đã lưu hay chưa. Hãy tải lại để kiểm tra.';
+  final amBaoTinNhan = 'Âm báo tin nhắn trên trang web';
+  final binhLuanTraLoi = 'Bình luận, trả lời và tin nhắn';
+  final hienThiTrangThai = 'Hiển thị trạng thái trực tuyến';
+  final hienThiTrenBang = 'Hiển thị trên bảng xếp hạng';
+  final moiNguoiCoThe = 'Mọi người có thể gửi tin nhắn riêng';
+  final khongTheTaiCai = 'Không thể tải cài đặt.';
+  final khongTheTruyCap = 'Không thể truy cập bộ nhớ.';
+  final phanHoiMayChu =
+      'Phản hồi máy chủ không hợp lệ. Thay đổi có thể chưa được lưu.';
+  final khongKetNoiDuoc =
+      'Không kết nối được máy chủ. Thay đổi có thể chưa được lưu.';
+  final quaNhieuYeuCau = 'Quá nhiều yêu cầu. Vui lòng chờ một lát.';
+  final yeuCauBiTu = 'Yêu cầu bị từ chối.';
+  final mayChuGapSu = 'Máy chủ gặp sự cố. Thay đổi có thể chưa được lưu.';
+  final mayChuKhongChap = 'Máy chủ không chấp nhận các giá trị này.';
+  final khongTimThayHo = 'Không tìm thấy hồ sơ.';
+  final phienDangNhapDa =
+      'Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.';
+  final tenNguoiDungNay =
+      'Tên người dùng này đã được sử dụng hoặc đang được giữ chỗ.';
+  final chiGomChuCai = 'Chỉ gồm chữ cái, chữ số, dấu chấm và gạch dưới.';
+  final quaDai = 'Quá dài.';
+  final toiThieu3Ky = 'Tối thiểu 3 ký tự.';
+  final khongDuocDeTrong = 'Không được để trống.';
+  final kiemTraDuLieu = 'Kiểm tra dữ liệu trên máy chủ';
+  final daLuuHoSo = 'Đã lưu hồ sơ.';
+  final tenCuDuocGiu = 'Tên cũ được giữ chỗ cho bạn trong 90 ngày.';
+  final banSeCanDang =
+      'Bạn sẽ cần đăng nhập lại trên các thiết bị bị ảnh hưởng.';
+  final dangXuatThietBi = 'Đăng xuất thiết bị này?';
+  final dangXuatCacPhien = 'Đăng xuất các phiên khác?';
+  final dangXuatCacPhienKhac = 'Đăng xuất các phiên khác';
+  final hienTai = 'Hiện tại';
+  final khongRoLanHoat = 'Không rõ lần hoạt động cuối';
+  final daXacNhanDang =
+      'Đã xác nhận đăng xuất, nhưng chưa tải lại được danh sách phiên.';
+  final thietBiDangDang = 'Thiết bị đang đăng nhập vào tài khoản';
+  final daDangXuatTren =
+      'Đã đăng xuất trên thiết bị. Không thể xác nhận đăng xuất với máy chủ.';
+  final daDangXuatTai =
+      'Đã đăng xuất tại đây nhưng không thể xóa phiên đã lưu. Vui lòng thử lại trước khi đóng ứng dụng.';
+  final tuDongMoThu = 'Tự động mở thu nhỏ khi khởi động máy tính';
+  final khoiDongCungHe = 'Khởi động cùng hệ thống';
+  final tiepTucChayNgam = 'Tiếp tục chạy ngầm để nhận thông báo tức thì';
+  final thuNhoVaoKhay = 'Thu nhỏ vào khay hệ thống khi đóng';
+  final mayTinhKhayHe = 'Máy tính & Khay hệ thống';
+  final mayChu = 'Máy chủ: {apiBaseUrlProvider}';
+  final cheDoMayChu = 'Chế độ máy chủ (Thử nghiệm)';
+  final khongTheLuuGiao =
+      'Không thể lưu giao diện. Vui lòng chọn lại để thử lại.';
+  final khongTheTruyCapBo =
+      'Không thể truy cập bộ nhớ phiên đăng nhập an toàn trên thiết bị này.';
+  final chuaDangNhapTai = 'Chưa đăng nhập tài khoản';
+  final khach = 'Khách';
+  final giaoDienDuocLuu = 'Giao diện được lưu trên thiết bị.';
+  final khongTheLuuHoac = 'Không thể lưu hoặc tải cỡ chữ.';
+}
+
+final class ViAppShared {
+  const ViAppShared._();
+  final khongTaiDuocNoi = 'Không tải được nội dung';
+  final khongLuuDuocThay = 'Không lưu được thay đổi. Vui lòng thử lại.';
+  final vuiLongDangNhap = 'Vui lòng đăng nhập để lưu thay đổi.';
+  final khongTheSaoChep = 'Không thể sao chép liên kết';
+  final baiVietChuaCo = 'Bài viết chưa có liên kết công khai';
+}
+
+final class ViAppShell {
+  const ViAppShell._();
+  final khongGuiDuocGop =
+      'Không gửi được góp ý. Bản nháp vẫn được giữ; vui lòng thử lại.';
+  final chuaXacNhanDuoc =
+      'Chưa xác nhận được kết quả. Hãy gửi lại góp ý không thay đổi để kiểm tra.';
+  final emailHoacLienHe = 'Email hoặc liên hệ (không bắt buộc)';
+  final cacBuocDeTai = 'Các bước để tái hiện lỗi (20–4000 ký tự)...';
+  final hayChoChungMinh =
+      'Hãy cho chúng mình biết điều gì cần cải thiện (20–4000 ký tự)...';
+  final moTaChiTiet = 'Mô tả chi tiết lỗi gặp phải';
+  final moTaYKien = 'Mô tả ý kiến hoặc đề xuất';
+  final guiVoiTaiKhoan = 'Gửi với tài khoản @{username} · Nhận thưởng điểm XP';
+  final baoCaoLoiSu = 'Báo cáo lỗi & sự cố';
+  final dongGopYKien = 'Đóng góp ý kiến & đề xuất';
+  final camOnBanDa =
+      'Cảm ơn bạn đã đóng góp giúp VNLF ngày càng hoàn thiện hơn.';
+  final dieuHuong = 'Điều hướng';
+  final taiKhoanCaNhan = 'Tài khoản cá nhân';
+}
+
+final class ViAppThread {
+  const ViAppThread._();
+  final camOnBanDa = 'Cảm ơn bạn đã chia sẻ cùng cộng đồng!';
+  final nhacDenThanhVien = 'Nhắc đến thành viên';
+  final khongTaiDuocGoi = 'Không tải được gợi ý thành viên.';
+  final suaBaiViet = 'Sửa bài viết';
+  final menuBaiViet = 'Menu bài viết';
+  final chuaLuuDuocThay =
+      'Chưa lưu được thay đổi. Bản nháp vẫn được giữ; vui lòng thử lại.';
+  final xoaBinhLuanNay = 'Xóa bình luận này? Các câu trả lời vẫn được giữ.';
+  final binhLuanKhongCon =
+      'Bình luận không còn nội dung hay ảnh. Xóa bình luận này?';
+  final chuaLuuDuocThayDoi = 'Chưa lưu được thay đổi. Vui lòng thử lại.';
+  final khongTaiDuocBinh = 'Không tải được bình luận';
+  final themBinhLuan = 'Thêm bình luận';
+  final khongGuiDuocBinh =
+      'Không gửi được bình luận. Bản nháp vẫn được giữ; vui lòng thử lại.';
+  final dangNhapLaiDe =
+      'Đăng nhập lại để gửi bình luận. Bản nháp vẫn được giữ.';
+  final binhLuanTruocCo =
+      'Bình luận trước có thể đã được gửi. Hãy thử lại nguyên nội dung để xác nhận.';
+  final thuXacNhanLai = 'Thử xác nhận lại';
+  final xacNhanThatBai = 'Xác nhận thất bại.';
+  final taiLenThatBai = 'Tải lên thất bại; xóa và chọn lại.';
+  final sanSang = 'Sẵn sàng';
+  final dangXacNhan = 'Đang xác nhận';
+  final dangTaiLen = 'Đang tải lên';
+  final dangChuanBi = 'Đang chuẩn bị';
+  final khongMoDuocAnh = 'Không mở được ảnh đã chọn.';
+  final moiBinhLuanCo = 'Mỗi bình luận có tối đa 10 ảnh.';
+  final themAnh = 'Thêm ảnh';
+  final anhDuocTaiLen =
+      'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.';
+  final vietBinhLuan = 'Viết bình luận';
+  final anhDaTaiLen = '{attachmentIds} ảnh đã tải lên trước đó';
+  final daHieu = 'Đã hiểu';
+  final binhLuanDaDuoc = 'Bình luận đã được gửi thành công.';
+  final khongKhoiPhucDuoc =
+      'Không khôi phục được bình luận đang chờ. Chức năng gửi đã bị khóa.';
+  final khongTimThayNoi = 'Không tìm thấy nội dung này nữa, có thể đã bị xóa.';
+  final khongTimThayBai = 'Không tìm thấy bài viết';
+  final xemTrangCaNhan = 'Xem trang cá nhân';
+}
+
+final class ViAppUpdates {
+  const ViAppUpdates._();
+  final xem = 'Xem';
+  final daCoVnlfSocial = 'Đã có VNLF Social {version}.';
+  final taiBanCapNhat = 'Tải bản cập nhật';
+  final xemBanPhatHanh = 'Xem bản phát hành';
+  final kiemTraCapNhat = 'Kiểm tra cập nhật';
+  final banPhatHanhChua = 'Bản phát hành chưa có tệp cho nền tảng này.';
+  final phienBanDangDung = 'Phiên bản đang dùng';
+  final capNhatUngDung = 'Cập nhật ứng dụng';
+  final kiemTraPhienBan = 'Kiểm tra phiên bản ổn định mới.';
+  final chuaCoBanPhat = 'Chưa có bản phát hành công khai để kiểm tra.';
+  final banDangDungPhien = 'Bạn đang dùng phiên bản ổn định mới nhất.';
+  final daCoPhienBan = 'Đã có phiên bản {version}.';
+  final khongKiemTraDuoc =
+      'Không kiểm tra được bản cập nhật. Kiểm tra kết nối rồi thử lại.';
+  final dangKiemTraCap = 'Đang kiểm tra cập nhật…';
+  final khongMoDuocTrang = 'Không mở được trang tải bản cập nhật.';
+}
+
+final class ViAppVoice {
+  const ViAppVoice._();
+  final chiaSeManHinh = 'Chia sẻ màn hình';
+  final dungChiaSe = 'Dừng chia sẻ';
+  final dangNhapDeTham = 'Đăng nhập để tham gia';
+  final thamGiaPhong = 'Tham gia phòng';
+  final roiPhong = 'Rời phòng';
+  final micDangBatNoi = 'Mic đang bật (nói để phát biểu)';
+  final micDangTat = 'Mic đang tắt';
+  final daTatAmThanh = 'Đã tắt âm thanh và mic';
+  final dangChiaSeMan = 'Đang chia sẻ màn hình';
+  final nguoiThamGia = '{inRoom} người tham gia';
+  final dangNhapDeThamGia = 'Đăng nhập để tham gia Voice';
+  final khongTheKetNoi =
+      'Không thể kết nối hoặc hoàn tất rời phòng. Kiểm tra mạng rồi thử lại.';
+  final phongHienKhongKha = 'Phòng hiện không khả dụng.';
+  final amThanhGapLoi =
+      'Âm thanh gặp lỗi. Kiểm tra thiết bị âm thanh rồi kết nối lại.';
+  final phienDangNhapKhong =
+      'Phiên đăng nhập không có quyền vào phòng. Hãy đăng nhập lại hoặc chọn phòng khác.';
+  final chuaDuocCapQuyen =
+      'Chưa được cấp quyền mic. Hãy cho phép sử dụng mic trong cài đặt hệ thống.';
+  final roiPhongHienTai = 'Rời phòng hiện tại';
+  final huyKetNoi = 'Hủy kết nối';
+  final daKetNoiMic = 'Đã kết nối · Mic đang bật';
+  final daKetNoiMicDang = 'Đã kết nối · Mic đang tắt';
+  final ketNoiDeXem = 'Kết nối để xem thành viên trong phòng.';
+  final chuaCoKenhThoai = 'Chưa có kênh thoại nào khả dụng.';
+  final khongTaiDuocDanh = 'Không tải được danh sách kênh thoại.';
+  final dangNghe = 'đang nghe';
+  final daTatMic = 'đã tắt mic';
+  final dangNoi = 'đang nói';
 }

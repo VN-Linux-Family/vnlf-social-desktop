@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/voice_models.dart';
 import 'voice_session_controller.dart';
@@ -21,26 +22,18 @@ class LiveVoiceControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final active = state.roomId != null;
     final selectedActive = state.roomId == room?.id && active;
     final status = switch (state.phase) {
-      VoicePhase.connecting => english ? 'Connecting…' : 'Đang kết nối…',
-      VoicePhase.reconnecting =>
-        english ? 'Reconnecting…' : 'Đang kết nối lại…',
+      VoicePhase.connecting => vi.voiceView.dangKetNoi,
+      VoicePhase.reconnecting => vi.voiceView.dangKetNoiLai,
       VoicePhase.connected =>
         state.deafened
-            ? (english
-                  ? 'Sound off · Microphone muted'
-                  : 'Đã tắt âm thanh và mic')
+            ? vi.app.voice.daTatAmThanh
             : state.muted
-            ? (english
-                  ? 'Connected · Microphone muted'
-                  : 'Đã kết nối · Mic đang tắt')
-            : (english
-                  ? 'Connected · Microphone live'
-                  : 'Đã kết nối · Mic đang bật'),
+            ? vi.app.voice.daKetNoiMicDang
+            : vi.app.voice.daKetNoiMic,
       _ => '',
     };
     return FeatureSurface(
@@ -51,7 +44,7 @@ class LiveVoiceControls extends StatelessWidget {
             Semantics(
               liveRegion: true,
               child: Text(
-                voiceFailureMessage(failure, english),
+                voiceFailureMessage(failure),
                 style: VnlfTypography.meta(colors.red),
                 textAlign: TextAlign.center,
               ),
@@ -94,23 +87,21 @@ class LiveVoiceControls extends StatelessWidget {
                 label: Text(
                   selectedActive
                       ? (state.phase == VoicePhase.connecting
-                            ? (english ? 'Cancel connection' : 'Hủy kết nối')
-                            : (english ? 'Leave room' : 'Rời phòng'))
-                      : (english ? 'Join room' : 'Tham gia phòng'),
+                            ? vi.app.voice.huyKetNoi
+                            : vi.app.voice.roiPhong)
+                      : vi.app.voice.thamGiaPhong,
                 ),
               ),
               if (active && !selectedActive)
                 OutlinedButton.icon(
                   onPressed: onLeave,
                   icon: const Icon(Icons.call_end),
-                  label: Text(
-                    english ? 'Leave current room' : 'Rời phòng hiện tại',
-                  ),
+                  label: Text(vi.app.voice.roiPhongHienTai),
                 ),
               IconButton.filledTonal(
                 tooltip: state.muted
-                    ? (english ? 'Unmute microphone' : 'Bật mic')
-                    : (english ? 'Mute microphone' : 'Tắt mic'),
+                    ? vi.voiceView.batMic
+                    : vi.voiceView.tatMic,
                 isSelected: !state.muted,
                 icon: Icon(state.muted ? Icons.mic_off : Icons.mic),
                 onPressed: state.connected && !state.busy && !state.deafened
@@ -119,8 +110,8 @@ class LiveVoiceControls extends StatelessWidget {
               ),
               IconButton.filledTonal(
                 tooltip: state.deafened
-                    ? (english ? 'Enable sound' : 'Bật âm thanh')
-                    : (english ? 'Deafen' : 'Tắt âm thanh'),
+                    ? vi.voiceView.batAmThanh
+                    : vi.app.common.tatAmThanh,
                 isSelected: state.deafened,
                 icon: Icon(
                   state.deafened ? Icons.headset_off : Icons.headphones,
@@ -135,24 +126,10 @@ class LiveVoiceControls extends StatelessWidget {
   }
 }
 
-String voiceFailureMessage(VoiceFailure failure, bool english) =>
-    switch (failure) {
-      VoicePermissionFailure() =>
-        english
-            ? 'Microphone permission was denied. Allow microphone access in system settings.'
-            : 'Chưa được cấp quyền mic. Hãy cho phép sử dụng mic trong cài đặt hệ thống.',
-      VoiceAccessFailure() =>
-        english
-            ? 'Your session cannot join this room. Sign in again or choose another room.'
-            : 'Phiên đăng nhập không có quyền vào phòng. Hãy đăng nhập lại hoặc chọn phòng khác.',
-      VoiceAudioFailure() =>
-        english
-            ? 'Audio failed. Check your audio device and reconnect.'
-            : 'Âm thanh gặp lỗi. Kiểm tra thiết bị âm thanh rồi kết nối lại.',
-      VoiceUnavailableFailure() =>
-        english ? 'This room is unavailable.' : 'Phòng hiện không khả dụng.',
-      VoiceConnectionFailure() =>
-        english
-            ? 'Could not connect or complete room cleanup. Check your network and try again.'
-            : 'Không thể kết nối hoặc hoàn tất rời phòng. Kiểm tra mạng rồi thử lại.',
-    };
+String voiceFailureMessage(VoiceFailure failure) => switch (failure) {
+  VoicePermissionFailure() => vi.app.voice.chuaDuocCapQuyen,
+  VoiceAccessFailure() => vi.app.voice.phienDangNhapKhong,
+  VoiceAudioFailure() => vi.app.voice.amThanhGapLoi,
+  VoiceUnavailableFailure() => vi.app.voice.phongHienKhongKha,
+  VoiceConnectionFailure() => vi.app.voice.khongTheKetNoi,
+};

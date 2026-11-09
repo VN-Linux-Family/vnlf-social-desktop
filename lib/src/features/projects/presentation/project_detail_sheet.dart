@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import 'project_accent.dart';
 import 'project_stats.dart';
 
@@ -37,7 +38,6 @@ class _ProjectDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final accent = ProjectAccent(project.accentColor, colors);
     final repoOwner = project.repo?['owner'] as String?;
@@ -99,7 +99,7 @@ class _ProjectDetailSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: english ? 'Close' : 'Đóng',
+                  tooltip: vi.common.dong,
                   color: colors.ink,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => Navigator.of(context).pop(),
@@ -130,7 +130,7 @@ class _ProjectDetailSheet extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.open_in_new_rounded, size: 18),
                 label: Text(
-                  english ? 'Open Repository' : 'Mở kho mã nguồn (GitHub)',
+                  vi.app.projects.moKhoMaNguon,
                   textAlign: TextAlign.center,
                   style: VnlfTypography.control(
                     accent.onColor,

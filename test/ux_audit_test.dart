@@ -111,9 +111,9 @@ void main() {
           body: Padding(
             padding: const EdgeInsets.all(12),
             child: VnlfPostCard(
-              post: presentPost(samplePost, english: false),
-              upvoteSemanticLabel: 'Upvote',
-              bookmarkSemanticLabel: 'Bookmark',
+              post: presentPost(samplePost),
+              upvoteSemanticLabel: 'Ủng hộ',
+              bookmarkSemanticLabel: 'Lưu bài viết',
               onVoteChanged: (_) {},
               onCommentTap: () {},
               onShareTap: () {},
@@ -124,8 +124,8 @@ void main() {
       ),
     );
     expect(
-      tester.getTopLeft(find.bySemanticsLabel('Upvote')).dy,
-      closeTo(tester.getTopLeft(find.bySemanticsLabel('Bookmark')).dy, 1),
+      tester.getTopLeft(find.bySemanticsLabel('Ủng hộ')).dy,
+      closeTo(tester.getTopLeft(find.bySemanticsLabel('Lưu bài viết')).dy, 1),
     );
   });
 
@@ -189,12 +189,12 @@ void main() {
         home: Scaffold(body: ComposerToolbar(controller: controller)),
       ),
     );
-    await tester.tap(find.byTooltip('Link'));
+    await tester.tap(find.byTooltip('Liên kết'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'http://');
-    await tester.tap(find.text('Apply'));
+    await tester.tap(find.text('Áp dụng'));
     await tester.pumpAndSettle();
-    expect(find.text('Enter a valid web or email link.'), findsOneWidget);
+    expect(find.text('Nhập liên kết web hoặc email hợp lệ.'), findsOneWidget);
   });
 
   testWidgets('post actions have native targets and expose toggle state', (
@@ -214,11 +214,11 @@ void main() {
             voteState: VoteState.upvoted,
             commentCount: 12345,
             isBookmarked: true,
-            upvoteSemanticLabel: 'Upvote',
-            downvoteSemanticLabel: 'Downvote',
-            bookmarkSemanticLabel: 'Bookmark',
-            commentSemanticLabel: 'Comment',
-            shareSemanticLabel: 'Share',
+            upvoteSemanticLabel: 'Ủng hộ',
+            downvoteSemanticLabel: 'Phản đối',
+            bookmarkSemanticLabel: 'Lưu bài viết',
+            commentSemanticLabel: 'Bình luận',
+            shareSemanticLabel: 'Chia sẻ',
             onVoteChanged: (_) {},
             onCommentTap: () {},
             onShareTap: () {},
@@ -228,30 +228,30 @@ void main() {
       ),
     );
     for (final label in [
-      'Upvote',
-      'Downvote',
-      'Bookmark',
-      'Comment',
-      'Share',
+      'Ủng hộ',
+      'Phản đối',
+      'Lưu bài viết',
+      'Bình luận',
+      'Chia sẻ',
     ]) {
       final node = tester.getSemantics(
         find.bySemanticsLabel(RegExp('^$label')),
       );
       expect(node.rect.width, greaterThanOrEqualTo(48), reason: label);
       expect(node.rect.height, greaterThanOrEqualTo(48), reason: label);
-      if (label == 'Share' || label == 'Bookmark') {
+      if (label == 'Chia sẻ' || label == 'Lưu bài viết') {
         expect(node.rect.width, 48, reason: '$label must not fill a new row');
       }
     }
     expect(
-      tester.getSemantics(find.bySemanticsLabel('Upvote')),
+      tester.getSemantics(find.bySemanticsLabel('Ủng hộ')),
       matchesSemantics(
         isButton: true,
         hasEnabledState: true,
         isEnabled: true,
         hasToggledState: true,
         isToggled: true,
-        label: 'Upvote',
+        label: 'Ủng hộ',
         hasTapAction: true,
         hasFocusAction: true,
         isFocusable: true,
@@ -272,9 +272,9 @@ void main() {
             title: 'Bảng tin',
             onBack: () {},
             backTooltip: 'Back',
-            composeSemanticLabel: 'Create post',
-            searchSemanticLabel: 'Search',
-            notificationsSemanticLabel: 'Notifications',
+            composeSemanticLabel: 'Tạo bài đăng',
+            searchSemanticLabel: 'Tìm kiếm',
+            notificationsSemanticLabel: 'Thông báo',
             onComposeTap: () {},
             onSearchTap: () {},
             onNotificationsTap: () {},

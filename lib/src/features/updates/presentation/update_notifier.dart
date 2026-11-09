@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../domain/app_update.dart';
 import 'update_panel.dart';
@@ -36,19 +37,18 @@ class _AppUpdateNotifierState extends ConsumerState<AppUpdateNotifier> {
     ref.listen(updateControllerProvider, (before, after) {
       final update = after.asData?.value;
       if (update is! UpdateAvailable) return;
-      final english = Localizations.localeOf(context).languageCode == 'en';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              english
-                  ? 'VNLF Social ${update.version} is available.'
-                  : 'Đã có VNLF Social ${update.version}.',
+              format(vi.app.updates.daCoVnlfSocial, {
+                'version': update.version,
+              }),
             ),
             duration: const Duration(seconds: 10),
             action: SnackBarAction(
-              label: english ? 'View' : 'Xem',
+              label: vi.app.updates.xem,
               onPressed: () => openUpdate(context, update),
             ),
           ),

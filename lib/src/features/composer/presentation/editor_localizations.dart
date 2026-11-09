@@ -2,37 +2,39 @@ import 'package:fleather/fleather.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../../i18n/vi.dart';
+
 final class VietnameseEditorLocalizations extends FleatherLocalizations {
   VietnameseEditorLocalizations() : super('vi');
   static const delegate = _VietnameseEditorDelegate();
   @override
-  String get foregroundColorAutomatic => 'Tự động';
+  String get foregroundColorAutomatic => vi.app.composer.tuDong;
   @override
-  String get backgroundColorNoColor => 'Không màu';
+  String get backgroundColorNoColor => vi.app.composer.khongMau;
   @override
-  String get headingNormal => 'Văn bản thường';
+  String get headingNormal => vi.app.composer.vanBanThuong;
   @override
-  String get headingLevel1 => 'Tiêu đề 1';
+  String get headingLevel1 => vi.app.composer.tieuDe1;
   @override
-  String get headingLevel2 => 'Tiêu đề 2';
+  String get headingLevel2 => vi.app.composer.tieuDe2;
   @override
-  String get headingLevel3 => 'Tiêu đề 3';
+  String get headingLevel3 => vi.app.composer.tieuDe3;
   @override
-  String get headingLevel4 => 'Tiêu đề 4';
+  String get headingLevel4 => vi.app.composer.tieuDe4;
   @override
-  String get headingLevel5 => 'Tiêu đề 5';
+  String get headingLevel5 => vi.app.composer.tieuDe5;
   @override
-  String get headingLevel6 => 'Tiêu đề 6';
+  String get headingLevel6 => vi.app.composer.tieuDe6;
   @override
-  String get addLinkDialogPasteLink => 'Dán liên kết';
+  String get addLinkDialogPasteLink => vi.app.composer.danLienKet;
   @override
-  String get addLinkDialogApply => 'Áp dụng';
+  String get addLinkDialogApply => vi.articleEditor.apDung;
   @override
-  String get linkDialogOpen => 'Mở';
+  String get linkDialogOpen => vi.app.composer.mo;
   @override
-  String get linkDialogCopy => 'Sao chép';
+  String get linkDialogCopy => vi.socialOverlays.saoChep;
   @override
-  String get linkDialogRemove => 'Gỡ liên kết';
+  String get linkDialogRemove => vi.app.composer.goLienKet;
 }
 
 final class _VietnameseEditorDelegate

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import 'project_accent.dart';
 
 class ProjectStats extends StatelessWidget {
@@ -13,7 +14,6 @@ class ProjectStats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final language = project.repo?['language'] as String? ?? '';
     final rating = (project.rating?['average'] as num?)?.toDouble() ?? 0;
     final iconColor = accent.onSurface(colors.surfaceSoft);
@@ -21,7 +21,7 @@ class ProjectStats extends StatelessWidget {
       _StatColumn(
         icon: Icons.star_rounded,
         iconColor: colors.ratingStar,
-        label: english ? 'Stars' : 'Sao',
+        label: vi.app.projects.sao,
         value: '${(project.repo?['stars'] as num?)?.toInt() ?? 0}',
       ),
       _StatColumn(
@@ -34,14 +34,14 @@ class ProjectStats extends StatelessWidget {
         _StatColumn(
           icon: Icons.code_rounded,
           iconColor: colors.ink,
-          label: english ? 'Language' : 'Ngôn ngữ',
+          label: vi.projects.ngonNgu,
           value: language,
         ),
       if (rating > 0)
         _StatColumn(
           icon: Icons.recommend_rounded,
           iconColor: iconColor,
-          label: english ? 'Rating' : 'Đánh giá',
+          label: vi.projects.danhGia,
           value: rating.toStringAsFixed(1),
         ),
     ];

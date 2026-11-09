@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
 import '../../../../core/api_client.dart';
+import '../../../../i18n/vi.dart';
 
 /// A server-confirmed rating summary. Distribution is ordered from 1 to 5.
 class ProjectRatingSnapshot {
@@ -250,7 +251,6 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
 
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final state = controller.currentState;
     final data = state.data;
     return Column(
@@ -258,8 +258,8 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
       children: [
         Text(
           data.average == null
-              ? (en ? 'No ratings yet' : 'Chưa có đánh giá')
-              : '${data.average!.toStringAsFixed(1)} / 5 · ${data.count} ${en ? 'ratings' : 'đánh giá'}',
+              ? vi.projects.chuaCoDanhGia
+              : '${data.average!.toStringAsFixed(1)} / 5 · ${data.count} ${vi.app.projects.danhGia}',
         ),
         if (data.count > 0)
           for (var score = 5; score >= 1; score--)
@@ -267,9 +267,7 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
               '$score ★  ${data.distribution.length >= score ? data.distribution[score - 1] : 0}',
             ),
         if (data.myRating != null)
-          Text(
-            '${en ? 'Your rating' : 'Đánh giá của bạn'}: ${data.myRating} / 5',
-          ),
+          Text('${vi.projects.danhGiaCuaBan}: ${data.myRating} / 5'),
         if (state.canRate) ...[
           Wrap(
             children: [
@@ -278,7 +276,7 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
                   selected: data.myRating == score,
                   button: true,
                   child: IconButton(
-                    tooltip: en ? '$score stars' : '$score sao',
+                    tooltip: format(vi.projects.soSao, {'count': score}),
                     onPressed: state.pending || state.error
                         ? null
                         : () => controller.save(score),
@@ -296,20 +294,15 @@ class _ProjectRatingControlState extends ConsumerState<ProjectRatingControl> {
               onPressed: state.pending || state.error
                   ? null
                   : () => controller.save(null),
-              child: Text(en ? 'Remove rating' : 'Bỏ đánh giá'),
+              child: Text(vi.projects.boDanhGia),
             ),
         ],
-        if (state.pending) Text(en ? 'Saving…' : 'Đang lưu…'),
-        if (state.error)
-          Text(
-            en
-                ? 'Could not confirm the rating. Refresh before trying again.'
-                : 'Chưa xác nhận được đánh giá. Hãy làm mới trước khi thử lại.',
-          ),
+        if (state.pending) Text(vi.common.dangLuu),
+        if (state.error) Text(vi.app.projects.chuaXacNhanDuoc),
         if (state.error && widget.onRefresh != null)
           TextButton(
             onPressed: widget.onRefresh,
-            child: Text(en ? 'Refresh' : 'Làm mới'),
+            child: Text(vi.app.common.lamMoi),
           ),
       ],
     );

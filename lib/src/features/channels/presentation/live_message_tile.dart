@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_card.dart';
 
 import 'package:flutter/material.dart';
@@ -7,7 +8,6 @@ import 'channel_media.dart';
 import '../../../design_system/design_system.dart';
 import '../domain/channel_models.dart';
 import '../../shared/presentation/author_mapper.dart';
-import 'channel_feedback.dart';
 
 class LiveMessageTile extends StatelessWidget {
   const LiveMessageTile({
@@ -75,11 +75,7 @@ class LiveMessageTile extends StatelessWidget {
                     Text(time, style: VnlfTypography.meta(colors.muted)),
                     if (!deleted)
                       PopupMenuButton<String>(
-                        tooltip: channelText(
-                          context,
-                          'Thao tác tin nhắn',
-                          'Message actions',
-                        ),
+                        tooltip: (vi.app.common.thaoTacTinNhan),
                         enabled: !busy,
                         padding: EdgeInsets.zero,
                         iconSize: 18,
@@ -98,22 +94,16 @@ class LiveMessageTile extends StatelessWidget {
                         itemBuilder: (_) => [
                           PopupMenuItem(
                             value: 'copy',
-                            child: Text(
-                              channelText(context, 'Sao chép', 'Copy'),
-                            ),
+                            child: Text((vi.chatUi.saoChep)),
                           ),
                           if (own && canAct) ...[
                             PopupMenuItem(
                               value: 'edit',
-                              child: Text(
-                                channelText(context, 'Chỉnh sửa', 'Edit'),
-                              ),
+                              child: Text((vi.app.common.chinhSua)),
                             ),
                             PopupMenuItem(
                               value: 'delete',
-                              child: Text(
-                                channelText(context, 'Xóa', 'Delete'),
-                              ),
+                              child: Text((vi.common.xoa)),
                             ),
                           ],
                         ],
@@ -139,11 +129,7 @@ class LiveMessageTile extends StatelessWidget {
                         ),
                         Text(
                           reply.deleted
-                              ? channelText(
-                                  context,
-                                  'Tin nhắn đã bị xóa',
-                                  'Message deleted',
-                                )
+                              ? (vi.common.tinNhanDaDuocXoa)
                               : reply.content,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -153,13 +139,7 @@ class LiveMessageTile extends StatelessWidget {
                     ),
                   ),
                 SelectableText(
-                  deleted
-                      ? channelText(
-                          context,
-                          'Tin nhắn đã bị xóa',
-                          'Message deleted',
-                        )
-                      : message.content,
+                  deleted ? (vi.common.tinNhanDaDuocXoa) : message.content,
                   style: VnlfTypography.body(
                     deleted ? colors.muted : colors.ink,
                   ),
@@ -167,7 +147,7 @@ class LiveMessageTile extends StatelessWidget {
                 if (!deleted) ...[
                   if (message.editedAt != null)
                     Text(
-                      channelText(context, 'Đã chỉnh sửa', 'Edited'),
+                      (vi.chatUi.daChinhSua),
                       style: VnlfTypography.meta(colors.muted),
                     ),
                   if (media.isNotEmpty)
@@ -182,28 +162,16 @@ class LiveMessageTile extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         attachment.state == 'PROCESSING'
-                            ? channelText(
-                                context,
-                                'Tệp đang được xử lý',
-                                'Attachment processing',
-                              )
+                            ? (vi.app.channels.tepDangDuocXu)
                             : attachment.state == 'FAILED'
-                            ? channelText(
-                                context,
-                                'Không xử lý được tệp',
-                                'Attachment processing failed',
-                              )
-                            : '${channelText(context, 'Tệp đính kèm', 'Attachment')} · ${attachment.mime}',
+                            ? (vi.app.channels.khongXuLyDuoc)
+                            : '${('Tệp đính kèm')} · ${attachment.mime}',
                         style: VnlfTypography.caption(colors.muted),
                       ),
                     ),
                   if (message.hasGif)
                     Text(
-                      channelText(
-                        context,
-                        'Tin nhắn có GIF / nhãn dán',
-                        'Message contains a GIF / sticker',
-                      ),
+                      (vi.app.channels.tinNhanCoGif),
                       style: VnlfTypography.caption(colors.muted),
                     ),
                   if (!deleted && message.poll != null)
@@ -228,16 +196,12 @@ class LiveMessageTile extends StatelessWidget {
                         ),
                       if (canAct) ...[
                         IconButton(
-                          tooltip: channelText(context, 'Trả lời', 'Reply'),
+                          tooltip: (vi.chatUi.traLoi),
                           onPressed: busy ? null : onReply,
                           icon: const Icon(Icons.reply_outlined, size: 18),
                         ),
                         PopupMenuButton<String>(
-                          tooltip: channelText(
-                            context,
-                            'Thêm cảm xúc',
-                            'Add reaction',
-                          ),
+                          tooltip: (vi.reactionPicker.themBieuCam),
                           enabled: !busy,
                           icon: const Icon(
                             Icons.add_reaction_outlined,

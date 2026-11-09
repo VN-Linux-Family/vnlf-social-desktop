@@ -44,7 +44,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Gửi báo cáo'));
       await tester.pumpAndSettle();
       expect(writes, isEmpty);
       await tester.enterText(find.byKey(const Key('report-reason')), 'Spam');
@@ -52,16 +52,16 @@ void main() {
         find.byKey(const Key('report-detail')),
         'Synthetic moderation test',
       );
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Gửi báo cáo'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Could not send'), findsOneWidget);
-      expect(find.text('Report received'), findsNothing);
+      expect(find.textContaining('Không gửi được báo cáo'), findsOneWidget);
+      expect(find.text('Đã nhận báo cáo'), findsNothing);
       expect(writes.single['targetType'], 'ARTICLE');
       succeeds = true;
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Gửi báo cáo'));
       await tester.pumpAndSettle();
       expect(writes, hasLength(2));
-      expect(find.text('Report received'), findsOneWidget);
+      expect(find.text('Đã nhận báo cáo'), findsOneWidget);
     },
   );
   testWidgets('report cannot submit its draft after an account switch', (
@@ -98,10 +98,10 @@ void main() {
       displayName: 'B',
     );
     await tester.pump();
-    await tester.tap(find.text('Send report'));
+    await tester.tap(find.text('Gửi báo cáo'));
     await tester.pumpAndSettle();
     expect(writes, 0);
-    expect(find.textContaining('Your account changed'), findsOneWidget);
+    expect(find.textContaining('Tài khoản đã thay đổi'), findsOneWidget);
     expect(find.text('Spam'), findsOneWidget);
   });
 
@@ -131,10 +131,10 @@ void main() {
       );
       await tester.enterText(find.byKey(const Key('report-reason')), 'Spam');
       client.invalidateSession();
-      await tester.tap(find.text('Send report'));
+      await tester.tap(find.text('Gửi báo cáo'));
       await tester.pumpAndSettle();
       expect(writes, 0);
-      expect(find.textContaining('Your account changed'), findsOneWidget);
+      expect(find.textContaining('Tài khoản đã thay đổi'), findsOneWidget);
     },
   );
 }

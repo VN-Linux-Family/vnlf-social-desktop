@@ -365,23 +365,24 @@ void main() {
     );
   });
 
-  testWidgets('English labels and a toggle state for assistive tech', (
-    tester,
-  ) async {
-    final profiles = _Profiles()..followed = true;
-    final handle = tester.ensureSemantics();
-    await _pump(
-      tester,
-      profiles: profiles,
-      relationships: _Relationships(),
-      locale: const Locale('en'),
-    );
-    expect(find.text('Following'), findsOneWidget);
-    expect(
-      find.bySemanticsLabel('Following Nguyễn An. Tap to unfollow'),
-      findsOneWidget,
-    );
-    expect(find.byTooltip('Profile options'), findsOneWidget);
-    handle.dispose();
-  });
+  testWidgets(
+    'an English device keeps Vietnamese labels and the toggle state',
+    (tester) async {
+      final profiles = _Profiles()..followed = true;
+      final handle = tester.ensureSemantics();
+      await _pump(
+        tester,
+        profiles: profiles,
+        relationships: _Relationships(),
+        locale: const Locale('en'),
+      );
+      expect(find.text('Đang theo dõi'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Đang theo dõi Nguyễn An. Chạm để bỏ theo dõi'),
+        findsOneWidget,
+      );
+      expect(find.byTooltip('Tùy chọn hồ sơ'), findsOneWidget);
+      handle.dispose();
+    },
+  );
 }

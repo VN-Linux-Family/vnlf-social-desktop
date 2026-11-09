@@ -29,7 +29,6 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final mobile =
         VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         VnlfViewportSize.mobile;
@@ -45,10 +44,7 @@ class SettingsScreen extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         if (!mobile) ...[
-          FeatureHeader(
-            title: english ? 'Settings' : 'Cài đặt',
-            showSettings: false,
-          ),
+          FeatureHeader(title: vi.common.caiDat, showSettings: false),
           const SizedBox(height: 12),
         ],
         const AppUpdatePanel(),
@@ -58,7 +54,7 @@ class SettingsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                english ? 'Account' : 'Tài khoản',
+                vi.settingsViews.taiKhoan,
                 style: VnlfTypography.h2(colors.ink),
               ),
               const SizedBox(height: 12),
@@ -110,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(english ? 'Edit profile' : 'Chỉnh sửa hồ sơ'),
+                    label: Text(vi.common.chinhSuaHoSo),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -124,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
                       ? null
                       : () => logoutWithFeedback(context, ref),
                   icon: const Icon(Icons.logout_rounded, size: 18),
-                  label: Text(english ? 'Log out' : 'Đăng xuất'),
+                  label: Text(vi.settingsViews.dangXuat),
                 ),
               ] else ...[
                 Row(
@@ -136,16 +132,14 @@ class SettingsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            english ? 'Guest' : 'Khách',
+                            vi.app.settings.khach,
                             style: VnlfTypography.control(
                               colors.ink,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
-                            english
-                                ? 'Not logged in'
-                                : 'Chưa đăng nhập tài khoản',
+                            vi.app.settings.chuaDangNhapTai,
                             style: VnlfTypography.meta(colors.muted),
                           ),
                         ],
@@ -156,7 +150,7 @@ class SettingsScreen extends ConsumerWidget {
                         backgroundColor: colors.brand,
                       ),
                       onPressed: () => context.push('/login'),
-                      child: Text(english ? 'Log in' : 'Đăng nhập'),
+                      child: Text(vi.common.dangNhap),
                     ),
                   ],
                 ),
@@ -164,9 +158,7 @@ class SettingsScreen extends ConsumerWidget {
               if (sessionStorageFailure != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  english
-                      ? 'Secure session storage is unavailable on this device.'
-                      : 'Không thể truy cập bộ nhớ phiên đăng nhập an toàn trên thiết bị này.',
+                  vi.app.settings.khongTheTruyCapBo,
                   style: VnlfTypography.meta(colors.red),
                 ),
               ],
@@ -189,7 +181,7 @@ class SettingsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                english ? 'Appearance' : 'Giao diện',
+                vi.settingsViews.giaoDien,
                 style: VnlfTypography.h2(colors.ink),
               ),
               const SizedBox(height: 12),
@@ -204,9 +196,9 @@ class SettingsScreen extends ConsumerWidget {
                       side: BorderSide(color: colors.line),
                       labelStyle: VnlfTypography.control(colors.ink),
                       label: Text(switch (mode) {
-                        ThemeMode.light => english ? 'Light' : 'Sáng',
-                        ThemeMode.dark => english ? 'Dark' : 'Tối',
-                        ThemeMode.system => english ? 'System' : 'Tự động',
+                        ThemeMode.light => vi.app.common.sang,
+                        ThemeMode.dark => vi.app.common.toi,
+                        ThemeMode.system => vi.settingsViews.tuDong,
                       }),
                       selected: theme == mode,
                       onSelected: (_) => ref
@@ -218,9 +210,7 @@ class SettingsScreen extends ConsumerWidget {
               if (themeStorageFailure != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  english
-                      ? 'Could not save appearance. Please select it again to retry.'
-                      : 'Không thể lưu giao diện. Vui lòng chọn lại để thử lại.',
+                  vi.app.settings.khongTheLuuGiao,
                   style: VnlfTypography.meta(colors.red),
                 ),
               ],
@@ -230,16 +220,16 @@ class SettingsScreen extends ConsumerWidget {
               if (isDevBuild) ...[
                 const SizedBox(height: 24),
                 Text(
-                  english ? 'Server mode (Dev)' : 'Chế độ máy chủ (Thử nghiệm)',
+                  vi.app.settings.cheDoMayChu,
                   style: VnlfTypography.h2(colors.ink),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   offlineFeatures
                       ? 'Offline fixture'
-                      : (english
-                            ? 'Server: ${ref.watch(apiBaseUrlProvider)}'
-                            : 'Máy chủ: ${ref.watch(apiBaseUrlProvider)}'),
+                      : format(vi.app.settings.mayChu, {
+                          'apiBaseUrlProvider': ref.watch(apiBaseUrlProvider),
+                        }),
                   style: VnlfTypography.meta(colors.muted),
                 ),
                 const SizedBox(height: 8),
@@ -284,15 +274,13 @@ class SettingsScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 8),
               Text(
-                'Giao diện được lưu trên thiết bị.',
+                vi.app.settings.giaoDienDuocLuu,
                 style: VnlfTypography.meta(colors.muted),
               ),
               if (DesktopTrayService.isDesktop) ...[
                 const SizedBox(height: 16),
                 Text(
-                  english
-                      ? 'Desktop & System Tray'
-                      : 'Máy tính & Khay hệ thống',
+                  vi.app.settings.mayTinhKhayHe,
                   style: VnlfTypography.h2(colors.ink),
                 ),
                 const SizedBox(height: 8),
@@ -300,15 +288,11 @@ class SettingsScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: colors.brand,
                   title: Text(
-                    english
-                        ? 'Minimize to system tray on close'
-                        : 'Thu nhỏ vào khay hệ thống khi đóng',
+                    vi.app.settings.thuNhoVaoKhay,
                     style: VnlfTypography.body(colors.ink),
                   ),
                   subtitle: Text(
-                    english
-                        ? 'Keep running in the background to receive instant notifications'
-                        : 'Tiếp tục chạy ngầm để nhận thông báo tức thì',
+                    vi.app.settings.tiepTucChayNgam,
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(desktopMinimizeToTrayProvider),
@@ -320,13 +304,11 @@ class SettingsScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: colors.brand,
                   title: Text(
-                    english ? 'Start with system' : 'Khởi động cùng hệ thống',
+                    vi.app.settings.khoiDongCungHe,
                     style: VnlfTypography.body(colors.ink),
                   ),
                   subtitle: Text(
-                    english
-                        ? 'Automatically launch minimized when starting your computer'
-                        : 'Tự động mở thu nhỏ khi khởi động máy tính',
+                    vi.app.settings.tuDongMoThu,
                     style: VnlfTypography.meta(colors.muted),
                   ),
                   value: ref.watch(desktopAutostartProvider),
@@ -337,10 +319,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
               if (ref.watch(androidPlatformProvider)) ...[
                 const SizedBox(height: 16),
-                Text(
-                  english ? 'Notifications' : 'Thông báo',
-                  style: VnlfTypography.h2(colors.ink),
-                ),
+                Text(vi.common.thongBao, style: VnlfTypography.h2(colors.ink)),
                 const SizedBox(height: 8),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
@@ -386,7 +365,6 @@ Future<void> _setBackgroundNotifications(
 
 Future<void> logoutWithFeedback(BuildContext context, WidgetRef ref) async {
   if (!context.mounted) return;
-  final english = Localizations.localeOf(context).languageCode == 'en';
   try {
     await ref.read(authControllerProvider.notifier).logout();
   } catch (error) {
@@ -395,16 +373,12 @@ Future<void> logoutWithFeedback(BuildContext context, WidgetRef ref) async {
       SnackBar(
         content: Text(
           error is StorageFailure
-              ? (english
-                    ? 'Signed out here, but stored session cleanup failed. Please try again before closing the app.'
-                    : 'Đã đăng xuất tại đây nhưng không thể xóa phiên đã lưu. Vui lòng thử lại trước khi đóng ứng dụng.')
-              : (english
-                    ? 'Signed out on this device. Could not confirm logout with the server.'
-                    : 'Đã đăng xuất trên thiết bị. Không thể xác nhận đăng xuất với máy chủ.'),
+              ? vi.app.settings.daDangXuatTai
+              : vi.app.settings.daDangXuatTren,
         ),
         action: error is StorageFailure
             ? SnackBarAction(
-                label: english ? 'Retry' : 'Thử lại',
+                label: vi.common.thuLai,
                 onPressed: () => logoutWithFeedback(context, ref),
               )
             : null,

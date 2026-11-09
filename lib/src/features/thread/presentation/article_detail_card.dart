@@ -6,6 +6,7 @@ import '../../../design_system/design_system.dart';
 import '../../../design_system/components/vnlf_rich_content.dart';
 import '../../../design_system/components/vnlf_media_gallery.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 
 /// The website's long-article view has its own header and reading layout.
 class ArticleDetailCard extends StatelessWidget {
@@ -34,7 +35,6 @@ class ArticleDetailCard extends StatelessWidget {
   final ValueChanged<VoteState>? onVote;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final compact =
         VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         VnlfViewportSize.mobile;
@@ -89,7 +89,7 @@ class ArticleDetailCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      en ? '$minutes min read' : '$minutes phút đọc',
+                      format(vi.miscViews.phutDoc, {'Math': minutes}),
                       style: body.copyWith(color: colors.muted),
                     ),
                   ],
@@ -141,7 +141,7 @@ class ArticleDetailCard extends StatelessWidget {
                     ),
                     if (onEdit != null || onShare != null || onReport != null)
                       PopupMenuButton<String>(
-                        tooltip: en ? 'Post menu' : 'Menu bài viết',
+                        tooltip: vi.app.thread.menuBaiViet,
                         icon: const Icon(Icons.more_horiz, size: 18),
                         onSelected: (value) {
                           if (value == 'edit') onEdit?.call();
@@ -152,17 +152,17 @@ class ArticleDetailCard extends StatelessWidget {
                           if (onEdit != null)
                             PopupMenuItem(
                               value: 'edit',
-                              child: Text(en ? 'Edit article' : 'Sửa bài viết'),
+                              child: Text(vi.app.thread.suaBaiViet),
                             ),
                           if (onShare != null)
                             PopupMenuItem(
                               value: 'share',
-                              child: Text(en ? 'Share' : 'Chia sẻ'),
+                              child: Text(vi.miscViews.chiaSe),
                             ),
                           if (onReport != null)
                             PopupMenuItem(
                               value: 'report',
-                              child: Text(en ? 'Report' : 'Báo cáo'),
+                              child: Text(vi.common.baoCao),
                             ),
                         ],
                       ),
@@ -194,8 +194,8 @@ class ArticleDetailCard extends StatelessWidget {
                         score: post.voteScore,
                         voteState: post.viewerVote,
                         onVoteChanged: post.actionPending ? null : onVote,
-                        upvoteSemanticLabel: en ? 'Upvote' : 'Ủng hộ',
-                        downvoteSemanticLabel: en ? 'Downvote' : 'Phản đối',
+                        upvoteSemanticLabel: vi.app.common.ungHo,
+                        downvoteSemanticLabel: vi.app.common.phanDoi,
                       ),
                       TextButton.icon(
                         onPressed: onComment,
@@ -205,7 +205,7 @@ class ArticleDetailCard extends StatelessWidget {
                       TextButton.icon(
                         onPressed: onShare,
                         icon: const Icon(Icons.link, size: 16),
-                        label: Text(en ? 'Share' : 'Chia sẻ'),
+                        label: Text(vi.miscViews.chiaSe),
                       ),
                       Semantics(
                         toggled: post.isBookmarked,
@@ -218,9 +218,7 @@ class ArticleDetailCard extends StatelessWidget {
                             size: 17,
                           ),
                           label: Text(
-                            post.isBookmarked
-                                ? (en ? 'Saved' : 'Đã lưu')
-                                : (en ? 'Save' : 'Lưu'),
+                            post.isBookmarked ? vi.common.daLuu : vi.common.luu,
                           ),
                         ),
                       ),
@@ -228,7 +226,7 @@ class ArticleDetailCard extends StatelessWidget {
                         TextButton.icon(
                           onPressed: onReport,
                           icon: const Icon(Icons.flag_outlined, size: 16),
-                          label: Text(en ? 'Report' : 'Báo cáo'),
+                          label: Text(vi.common.baoCao),
                         ),
                     ];
                     return constraints.maxWidth < 560

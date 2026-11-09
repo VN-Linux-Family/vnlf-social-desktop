@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/legacy.dart';
 import 'package:window_manager/legacy.dart';
 
+import '../i18n/vi.dart';
+
 const String kPrefMinimizeToTray = 'desktop_minimize_to_tray';
 const String kPrefAutostart = 'desktop_autostart';
 
@@ -146,9 +148,9 @@ class DesktopTrayService with TrayListener, WindowListener {
 
       final menu = Menu(
         items: [
-          MenuItem(key: 'show_window', label: 'Mở VNLF Social'),
+          MenuItem(key: 'show_window', label: vi.app.common.moVnlfSocial),
           MenuItem.separator(),
-          MenuItem(key: 'exit_app', label: 'Thoát'),
+          MenuItem(key: 'exit_app', label: vi.app.core.thoat),
         ],
       );
       await trayManager.setContextMenu(menu);

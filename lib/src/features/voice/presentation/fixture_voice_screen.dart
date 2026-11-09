@@ -4,31 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/community_samples.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import 'voice_participant.dart';
-
-const _rooms = [
-  (
-    'Kênh đàm thoại chung',
-    'General voice room',
-    'Cùng gặp gỡ và trò chuyện cùng cộng đồng Linux Việt Nam.',
-    'Meet and chat with the Vietnamese Linux community.',
-  ),
-  (
-    'Trà đá chém gió Linux',
-    'Linux tea break',
-    'Chuyện trò sau giờ làm, chia sẻ kinh nghiệm và công nghệ.',
-    'Conversations after work, tech experiences and ideas.',
-  ),
-  (
-    'Kênh Code & Học tập',
-    'Code & study room',
-    'Tập trung, học hỏi và cùng nhau viết mã nguồn mở.',
-    'Focus, learn and code open source together.',
-  ),
-];
 
 class FixtureVoiceScreen extends ConsumerStatefulWidget {
   const FixtureVoiceScreen({super.key});
@@ -54,10 +34,9 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final inRoom = _joined == _selected;
-    final room = _rooms[_selected];
+    final room = sampleVoiceRooms[_selected];
     final members = communityMembers.take(_selected == 2 ? 2 : 3).toList();
     final session =
         ref.watch(sessionStateProvider) ??
@@ -69,7 +48,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
             username: session.username,
             displayName: session.displayName.isNotEmpty
                 ? session.displayName
-                : 'Bạn',
+                : vi.app.common.ban,
             avatarUrl: session.avatarUrl,
             role: session.role,
           )
@@ -97,9 +76,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    english
-                        ? 'Sign in to join Voice'
-                        : 'Đăng nhập để tham gia Voice',
+                    vi.app.voice.dangNhapDeThamGia,
                     style: VnlfTypography.meta(colors.brand),
                   ),
                 ),
@@ -110,7 +87,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                   ),
                   onPressed: () => context.push('/login'),
                   child: Text(
-                    english ? 'Sign In' : 'Đăng nhập',
+                    vi.common.dangNhap,
                     style: TextStyle(
                       color: colors.brand,
                       fontWeight: FontWeight.w700,
@@ -127,7 +104,11 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
               FeatureSurface(
                 child: Column(
                   children: [
-                    for (var index = 0; index < _rooms.length; index++) ...[
+                    for (
+                      var index = 0;
+                      index < sampleVoiceRooms.length;
+                      index++
+                    ) ...[
                       ListTile(
                         dense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -141,7 +122,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                           size: 20,
                         ),
                         title: Text(
-                          english ? _rooms[index].$2 : _rooms[index].$1,
+                          sampleVoiceRooms[index].$1,
                           style: VnlfTypography.control(
                             _selected == index ? colors.brand : colors.ink,
                             fontWeight: _selected == index
@@ -150,7 +131,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          english ? _rooms[index].$4 : _rooms[index].$3,
+                          sampleVoiceRooms[index].$2,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: VnlfTypography.caption(colors.muted),
@@ -165,7 +146,7 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                         selected: _selected == index,
                         onTap: () => setState(() => _selected = index),
                       ),
-                      if (index < _rooms.length - 1)
+                      if (index < sampleVoiceRooms.length - 1)
                         Divider(color: colors.line, height: 1),
                     ],
                   ],
@@ -175,15 +156,12 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    english ? room.$2 : room.$1,
-                    style: VnlfTypography.h3(colors.ink),
-                  ),
+                  Text(room.$1, style: VnlfTypography.h3(colors.ink)),
                   const SizedBox(height: 2),
                   Text(
-                    english
-                        ? '${members.length + (inRoom ? 1 : 0)} participants'
-                        : '${members.length + (inRoom ? 1 : 0)} người tham gia',
+                    format(vi.app.voice.nguoiThamGia, {
+                      'inRoom': members.length + (inRoom ? 1 : 0),
+                    }),
                     style: VnlfTypography.meta(colors.muted),
                   ),
                 ],
@@ -230,18 +208,12 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
               if (inRoom) ...[
                 Text(
                   _sharing
-                      ? (english
-                            ? 'Screen share active'
-                            : 'Đang chia sẻ màn hình')
+                      ? vi.app.voice.dangChiaSeMan
                       : _deafened
-                      ? (english
-                            ? 'Sound off · Microphone muted'
-                            : 'Đã tắt âm thanh và mic')
+                      ? vi.app.voice.daTatAmThanh
                       : _muted
-                      ? (english ? 'Microphone muted' : 'Mic đang tắt')
-                      : (english
-                            ? 'Microphone live'
-                            : 'Mic đang bật (nói để phát biểu)'),
+                      ? vi.app.voice.micDangTat
+                      : vi.app.voice.micDangBatNoi,
                   textAlign: TextAlign.center,
                   style: VnlfTypography.meta(
                     _muted ? colors.muted : colors.brand,
@@ -279,18 +251,14 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                     label: Text(
                       (session != null || offlineFeatures)
                           ? (inRoom
-                                ? (english ? 'Leave room' : 'Rời phòng')
-                                : (english ? 'Join room' : 'Tham gia phòng'))
-                          : (english
-                                ? 'Sign in to join'
-                                : 'Đăng nhập để tham gia'),
+                                ? vi.app.voice.roiPhong
+                                : vi.app.voice.thamGiaPhong)
+                          : vi.app.voice.dangNhapDeTham,
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                   IconButton.filledTonal(
-                    tooltip: _muted
-                        ? (english ? 'Unmute microphone' : 'Bật mic')
-                        : (english ? 'Mute microphone' : 'Tắt mic'),
+                    tooltip: _muted ? vi.voiceView.batMic : vi.voiceView.tatMic,
                     isSelected: !_muted,
                     icon: Icon(_muted ? Icons.mic_off : Icons.mic),
                     onPressed: inRoom && !_deafened
@@ -299,8 +267,8 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                   ),
                   IconButton.filledTonal(
                     tooltip: _deafened
-                        ? (english ? 'Enable sound' : 'Bật âm thanh')
-                        : (english ? 'Deafen' : 'Tắt âm thanh'),
+                        ? vi.voiceView.batAmThanh
+                        : vi.app.common.tatAmThanh,
                     isSelected: _deafened,
                     icon: Icon(
                       _deafened ? Icons.headset_off : Icons.headphones,
@@ -319,8 +287,8 @@ class _FixtureVoiceScreenState extends ConsumerState<FixtureVoiceScreen> {
                   ),
                   IconButton.filledTonal(
                     tooltip: _sharing
-                        ? (english ? 'Stop sharing' : 'Dừng chia sẻ')
-                        : (english ? 'Share screen' : 'Chia sẻ màn hình'),
+                        ? vi.app.voice.dungChiaSe
+                        : vi.app.voice.chiaSeManHinh,
                     isSelected: _sharing,
                     icon: Icon(
                       _sharing

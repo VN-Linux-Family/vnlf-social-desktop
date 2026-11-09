@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 
 class VoiceParticipant extends StatelessWidget {
   const VoiceParticipant({
@@ -17,14 +18,13 @@ class VoiceParticipant extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return Semantics(
       label:
           '${author.displayName}, ${speaking
-              ? (english ? 'speaking' : 'đang nói')
+              ? vi.app.voice.dangNoi
               : muted
-              ? (english ? 'muted' : 'đã tắt mic')
-              : (english ? 'listening' : 'đang nghe')}',
+              ? vi.app.voice.daTatMic
+              : vi.app.voice.dangNghe}',
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(

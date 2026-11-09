@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
 import '../../../app/providers.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/public_profile.dart';
 import 'profile_actions.dart';
@@ -43,7 +44,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final mobile =
         VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
         VnlfViewportSize.mobile;
@@ -55,7 +55,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              tooltip: english ? 'Back' : 'Quay lại',
+              tooltip: vi.app.common.quayLai,
               icon: const Icon(Icons.arrow_back_rounded),
               onPressed: () => context.pop(),
             ),
@@ -73,12 +73,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ? [
                   VnlfStateCard(
                     icon: Icons.person_outline,
-                    title: english
-                        ? 'Profile unavailable'
-                        : 'Không tìm thấy hồ sơ',
-                    message: english
-                        ? 'This profile is unavailable.'
-                        : 'Hồ sơ này hiện không có sẵn.',
+                    title: vi.app.profile.khongTimThayHo,
+                    message: vi.app.profile.hoSoNayHien,
                   ),
                 ]
               : [
@@ -91,14 +87,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                   VnlfFeedTabBar(
-                    tabs: _tabs(value, english),
+                    tabs: _tabs(value),
                     selectedIndex: value.guestbookEnabled
                         ? _tab
                         : _tab.clamp(0, 2),
                     onTabSelected: (index) => setState(() => _tab = index),
-                    semanticLabel: english
-                        ? 'Profile content'
-                        : 'Nội dung hồ sơ',
+                    semanticLabel: vi.accountViews.noiDungHoSo,
                   ),
                   const SizedBox(height: 12),
                   if (_tab == 3 &&
@@ -123,14 +117,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  List<String> _tabs(PublicProfile profile, bool english) {
+  List<String> _tabs(PublicProfile profile) {
     return [
-      english ? 'Posts' : 'Bài viết',
-      english ? 'Comments' : 'Bình luận',
-      english ? 'Projects' : 'Dự án',
+      vi.common.baiViet,
+      vi.common.binhLuan,
+      vi.socialChrome.duAn,
       if (profile.guestbookEnabled ||
           ref.watch(sessionStateProvider)?.userId == profile.author.id)
-        english ? 'Guestbook' : 'Sổ lưu bút',
+        vi.guestbook.soLuuBut,
     ];
   }
 }

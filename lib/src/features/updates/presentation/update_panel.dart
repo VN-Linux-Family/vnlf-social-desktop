@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
 import '../domain/app_update.dart';
 import 'update_providers.dart';
@@ -18,15 +19,8 @@ Future<void> openUpdate(BuildContext context, UpdateAvailable update) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'Could not open the release download.'
-              : 'Không mở được trang tải bản cập nhật.',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(vi.app.updates.khongMoDuocTrang)));
   }
 }
 
@@ -34,45 +28,33 @@ class AppUpdatePanel extends ConsumerWidget {
   const AppUpdatePanel({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final state = ref.watch(updateControllerProvider);
     final update = state.valueOrNull;
     final text = state.isLoading
-        ? (english ? 'Checking for updates…' : 'Đang kiểm tra cập nhật…')
+        ? vi.app.updates.dangKiemTraCap
         : state.hasError
-        ? (english
-              ? 'Update check failed. Check your connection and try again.'
-              : 'Không kiểm tra được bản cập nhật. Kiểm tra kết nối rồi thử lại.')
+        ? vi.app.updates.khongKiemTraDuoc
         : switch (update) {
-            UpdateAvailable(:final version) =>
-              (english
-                  ? 'Version $version is available.'
-                  : 'Đã có phiên bản $version.'),
-            UpdateCurrent() =>
-              (english
-                  ? 'You are using the latest stable version.'
-                  : 'Bạn đang dùng phiên bản ổn định mới nhất.'),
-            UpdateUnavailable() =>
-              (english
-                  ? 'No public release is available yet.'
-                  : 'Chưa có bản phát hành công khai để kiểm tra.'),
-            _ =>
-              (english
-                  ? 'Check for a new stable version.'
-                  : 'Kiểm tra phiên bản ổn định mới.'),
+            UpdateAvailable(:final version) => format(
+              vi.app.updates.daCoPhienBan,
+              {'version': version},
+            ),
+            UpdateCurrent() => vi.app.updates.banDangDungPhien,
+            UpdateUnavailable() => vi.app.updates.chuaCoBanPhat,
+            _ => vi.app.updates.kiemTraPhienBan,
           };
     return FeatureSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            english ? 'App updates' : 'Cập nhật ứng dụng',
+            vi.app.updates.capNhatUngDung,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 8),
           Text(
-            '${english ? 'Installed version' : 'Phiên bản đang dùng'}: $installedAppVersion',
+            '${vi.app.updates.phienBanDangDung}: $installedAppVersion',
             style: VnlfTypography.meta(colors.muted),
           ),
           const SizedBox(height: 8),
@@ -84,9 +66,7 @@ class AppUpdatePanel extends ConsumerWidget {
           ),
           if (update is UpdateAvailable && update.asset == null)
             Text(
-              english
-                  ? 'There is no download for this platform in this release.'
-                  : 'Bản phát hành chưa có tệp cho nền tảng này.',
+              vi.app.updates.banPhatHanhChua,
               style: VnlfTypography.meta(colors.muted),
             ),
           const SizedBox(height: 10),
@@ -99,9 +79,7 @@ class AppUpdatePanel extends ConsumerWidget {
                     ? null
                     : () => ref.read(updateControllerProvider.notifier).check(),
                 icon: const Icon(Icons.refresh),
-                label: Text(
-                  english ? 'Check for updates' : 'Kiểm tra cập nhật',
-                ),
+                label: Text(vi.app.updates.kiemTraCapNhat),
               ),
               if (update is UpdateAvailable)
                 FilledButton.icon(
@@ -109,8 +87,8 @@ class AppUpdatePanel extends ConsumerWidget {
                   icon: const Icon(Icons.download_outlined),
                   label: Text(
                     update.asset == null
-                        ? (english ? 'View release' : 'Xem bản phát hành')
-                        : (english ? 'Download update' : 'Tải bản cập nhật'),
+                        ? vi.app.updates.xemBanPhatHanh
+                        : vi.app.updates.taiBanCapNhat,
                   ),
                 ),
             ],

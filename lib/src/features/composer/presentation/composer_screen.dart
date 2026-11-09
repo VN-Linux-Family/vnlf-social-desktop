@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/tokens/vnlf_colors.dart';
+import '../../../i18n/vi.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../domain/composer_draft.dart';
 import '../domain/composer_format.dart';
@@ -28,7 +29,6 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
   String? _pickerError;
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final session =
         ref.watch(sessionStateProvider) ??
         ref.watch(sessionProvider).valueOrNull;
@@ -39,10 +39,10 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(en ? 'Sign in to write a post' : 'Đăng nhập để viết bài'),
+              Text(vi.app.composer.dangNhapDeViet),
               TextButton(
                 onPressed: () => GoRouter.maybeOf(context)?.push('/login'),
-                child: Text(en ? 'Sign in' : 'Đăng nhập'),
+                child: Text(vi.common.dangNhap),
               ),
             ],
           ),
@@ -55,18 +55,18 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: en ? 'Close' : 'Đóng',
+          tooltip: vi.common.dong,
           icon: const Icon(Icons.close),
           onPressed: () => _close(controller),
         ),
         title: Text(
           draft.format == 'ARTICLE'
-              ? (en ? 'Write an article' : 'Viết Article')
-              : (en ? 'Create post' : 'Tạo bài đăng'),
+              ? vi.articleEditor.vietArticle
+              : vi.articleEditor.taoBaiDang,
         ),
         actions: [
           IconButton(
-            tooltip: en ? 'Drafts' : 'Bản nháp',
+            tooltip: vi.app.composer.banNhap,
             onPressed: controller.busy ? null : () => _drafts(controller),
             icon: const Icon(Icons.drafts_outlined),
           ),
@@ -75,7 +75,7 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                 controller.busy || locked || controller.initializationFailed
                 ? null
                 : controller.save,
-            child: Text(en ? 'Save' : 'Lưu'),
+            child: Text(vi.common.luu),
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -88,8 +88,8 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                   : () => _publish(controller),
               child: Text(
                 locked
-                    ? (en ? 'Retry publication' : 'Kiểm tra lần đăng')
-                    : (en ? 'Publish' : 'Đăng'),
+                    ? vi.app.composer.kiemTraLanDang2
+                    : vi.articleEditor.dang,
               ),
             ),
           ),
@@ -107,42 +107,29 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                       if (controller.busy) const LinearProgressIndicator(),
                       if (controller.error != null)
                         _notice(
-                          composerFailureText(controller.error!, en),
+                          composerFailureText(controller.error!),
                           error: true,
                         ),
                       if (controller.recoveryError != null)
                         _notice(
-                          composerFailureText(controller.recoveryError!, en),
+                          composerFailureText(controller.recoveryError!),
                           error: true,
                         ),
                       if (_pickerError != null)
                         _notice(_pickerError!, error: true),
-                      if (locked)
-                        _notice(
-                          en
-                              ? 'The server has not confirmed the last publication. Retrying checks the same submission.'
-                              : 'Máy chủ chưa xác nhận lần đăng trước. Bấm kiểm tra để xác nhận cùng lần đăng đó.',
-                        ),
+                      if (locked) _notice(vi.app.composer.mayChuChuaXac),
                       if (controller.conflictingDraft != null)
                         Wrap(
                           children: [
                             TextButton(
                               onPressed: () =>
                                   controller.resolveConflict(keepLocal: true),
-                              child: Text(
-                                en
-                                    ? 'Save my version over the latest'
-                                    : 'Lưu bản đang sửa lên phiên bản mới nhất',
-                              ),
+                              child: Text(vi.app.composer.luuBanDangSua),
                             ),
                             TextButton(
                               onPressed: () =>
                                   controller.resolveConflict(keepLocal: false),
-                              child: Text(
-                                en
-                                    ? 'Load the server version'
-                                    : 'Tải bản trên máy chủ',
-                              ),
+                              child: Text(vi.app.composer.taiBanTrenMay),
                             ),
                           ],
                         ),
@@ -150,9 +137,7 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                         TextButton(
                           onPressed: () =>
                               controller.initialize(draftId: widget.draftId),
-                          child: Text(
-                            en ? 'Retry loading draft' : 'Tải lại bản nháp',
-                          ),
+                          child: Text(vi.app.composer.taiLaiBanNhap),
                         )
                       else ...[
                         Padding(
@@ -168,17 +153,15 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                                 '${session.displayName}  @${session.username}',
                               ),
                               const Icon(Icons.public, size: 16),
-                              Text(en ? 'Public' : 'Công khai'),
+                              Text(vi.articleEditor.congKhai),
                               Text(
                                 controller.busy
-                                    ? (en ? 'Saving…' : 'Đang lưu…')
+                                    ? vi.common.dangLuu
                                     : controller.dirty
-                                    ? (en
-                                          ? 'Unsaved changes'
-                                          : 'Chưa lưu thay đổi')
+                                    ? vi.app.composer.chuaLuuThayDoi
                                     : draft.id.isEmpty
-                                    ? (en ? 'New draft' : 'Bản nháp mới')
-                                    : (en ? 'Saved' : 'Đã lưu'),
+                                    ? vi.articleEditor.draftMoi
+                                    : vi.common.daLuu,
                               ),
                               TextButton(
                                 onPressed: controller.busy || locked
@@ -186,10 +169,8 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                                     : () => _changeFormat(controller),
                                 child: Text(
                                   draft.format == 'POST'
-                                      ? (en
-                                            ? 'Write a long article'
-                                            : 'Viết bài dài · Article')
-                                      : (en ? 'Regular post' : 'Bài thường'),
+                                      ? vi.app.composer.vietBaiDaiArticle
+                                      : vi.articleEditor.baiThuong,
                                 ),
                               ),
                               TextButton.icon(
@@ -202,8 +183,8 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                                 ),
                                 label: Text(
                                   _preview
-                                      ? (en ? 'Edit' : 'Soạn')
-                                      : (en ? 'Preview' : 'Xem trước'),
+                                      ? vi.articleEditor.soan
+                                      : vi.articleEditor.xemTruoc,
                                 ),
                               ),
                             ],
@@ -264,7 +245,6 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
     bool video = false,
     String placement = 'ATTACHMENT',
   }) async {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     try {
       final files = await openFiles(
         acceptedTypeGroups: [
@@ -309,45 +289,32 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(
-          () => _pickerError = en
-              ? 'Could not open the selected file. Your draft is kept.'
-              : 'Không mở được tệp đã chọn. Bản nháp vẫn được giữ.',
-        );
+        setState(() => _pickerError = vi.app.composer.khongMoDuocTep);
       }
     }
   }
 
   Future<void> _changeFormat(ComposerController controller) async {
     final draft = controller.draft;
-    final en = Localizations.localeOf(context).languageCode == 'en';
     if (draft.format == 'POST') {
       if (draft.media.any((m) => m.isVideo)) {
-        setState(
-          () => _pickerError = en
-              ? 'Remove the video before switching to an article.'
-              : 'Gỡ video trước khi chuyển sang Article.',
-        );
+        setState(() => _pickerError = vi.app.composer.goVideoTruocKhi);
         return;
       }
       if (draft.publishedAt == null && draft.pollDraft != null) {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(en ? 'Switch to an article?' : 'Chuyển sang Article?'),
-            content: Text(
-              en
-                  ? 'Polls are available in regular posts. Switching removes this draft’s poll.'
-                  : 'Bình chọn chỉ dùng trong bài thường. Chuyển sang Article sẽ gỡ bình chọn của bản nháp.',
-            ),
+            title: Text(vi.app.composer.chuyenSangArticle),
+            content: Text(vi.app.composer.binhChonChiDungTrong),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(en ? 'Cancel' : 'Hủy'),
+                child: Text(vi.common.huy),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(en ? 'Switch' : 'Chuyển'),
+                child: Text(vi.app.composer.chuyen),
               ),
             ],
           ),
@@ -357,29 +324,23 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
       try {
         controller.edit(asArticle(controller.draft));
       } catch (failure) {
-        setState(() => _pickerError = composerFailureText(failure, en));
+        setState(() => _pickerError = composerFailureText(failure));
       }
       return;
     }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
-          en ? 'Switch to a regular post?' : 'Chuyển sang bài thường?',
-        ),
-        content: Text(
-          en
-              ? 'Title, excerpt, tags and cover will be removed. Images in the text become attachments.'
-              : 'Tiêu đề, mô tả, thẻ và ảnh bìa sẽ được gỡ. Ảnh trong nội dung chuyển thành tệp đính kèm.',
-        ),
+        title: Text(vi.app.composer.chuyenSangBaiThuong),
+        content: Text(vi.app.composer.tieuDeMoTa),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(en ? 'Cancel' : 'Hủy'),
+            child: Text(vi.common.huy),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(en ? 'Switch' : 'Chuyển'),
+            child: Text(vi.app.composer.chuyen),
           ),
         ],
       ),
@@ -388,7 +349,7 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
     try {
       controller.edit(asRegularPost(controller.draft));
     } catch (failure) {
-      setState(() => _pickerError = composerFailureText(failure, en));
+      setState(() => _pickerError = composerFailureText(failure));
     }
   }
 

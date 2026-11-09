@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../../../domain/models.dart';
+import '../../../../i18n/vi.dart';
 import '../../../shared/presentation/author_mapper.dart';
 import '../../../shared/presentation/feature_widgets.dart';
 import '../domain/blocked_people.dart';
@@ -14,7 +15,6 @@ class BlockedPeoplePanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final state = ref.watch(blockedPeopleControllerProvider);
     final controller = ref.read(blockedPeopleControllerProvider.notifier);
@@ -23,17 +23,17 @@ class BlockedPeoplePanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            en ? 'Blocked people' : 'Người đã chặn',
+            vi.app.settings.nguoiDaChan,
             style: VnlfTypography.h2(colors.ink),
           ),
           const SizedBox(height: 8),
           Text(
-            en ? 'People you have blocked.' : 'Những người bạn đã chặn.',
+            vi.app.settings.nhungNguoiBanDa,
             style: VnlfTypography.meta(colors.muted),
           ),
           if (state.loading)
             Semantics(
-              label: en ? 'Loading' : 'Đang tải',
+              label: vi.loading.dangTai,
               liveRegion: true,
               child: const LinearProgressIndicator(),
             ),
@@ -41,9 +41,9 @@ class BlockedPeoplePanel extends ConsumerWidget {
             Semantics(
               liveRegion: true,
               child: Text(
-                en
-                    ? 'Unblocked ${state.confirmedName}.'
-                    : 'Đã bỏ chặn ${state.confirmedName}.',
+                format(vi.app.settings.daBoChan, {
+                  'confirmedName': state.confirmedName,
+                }),
               ),
             ),
           if (state.failed)
@@ -51,21 +51,15 @@ class BlockedPeoplePanel extends ConsumerWidget {
               liveRegion: true,
               child: Text(
                 state.uncertain && state.confirmedName != null
-                    ? (en
-                          ? 'Unblock was confirmed, but the list could not be refreshed.'
-                          : 'Đã xác nhận bỏ chặn, nhưng chưa tải lại được danh sách.')
+                    ? vi.app.settings.daXacNhanBo
                     : state.uncertain
-                    ? (en
-                          ? 'The result could not be confirmed. Refresh before trying again.'
-                          : 'Chưa thể xác nhận kết quả. Hãy làm mới trước khi thử lại.')
-                    : (en
-                          ? 'Could not load blocked people.'
-                          : 'Chưa tải được danh sách người đã chặn.'),
+                    ? vi.app.settings.chuaTheXacNhan
+                    : vi.app.settings.chuaTaiDuocDanh,
                 style: VnlfTypography.meta(colors.red),
               ),
             ),
           if (!state.loading && state.items != null && state.items!.isEmpty)
-            Text(en ? 'You have not blocked anyone.' : 'Bạn chưa chặn ai.'),
+            Text(vi.people.chuaChanAi),
           for (final person in state.items ?? const <BlockedPerson>[])
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -97,12 +91,12 @@ class BlockedPeoplePanel extends ConsumerWidget {
                 onPressed: state.loading || state.uncertain
                     ? null
                     : () => controller.unblock(person),
-                child: Text(en ? 'Unblock' : 'Bỏ chặn'),
+                child: Text(vi.people.boChan),
               ),
             ),
           TextButton(
             onPressed: state.loading ? null : controller.refresh,
-            child: Text(en ? 'Refresh' : 'Làm mới'),
+            child: Text(vi.app.common.lamMoi),
           ),
         ],
       ),

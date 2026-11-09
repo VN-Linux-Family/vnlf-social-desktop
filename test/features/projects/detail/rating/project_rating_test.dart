@@ -209,24 +209,24 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byTooltip('5 stars'));
+    await tester.tap(find.byTooltip('5 sao'));
     await tester.pump();
     repo.calls.single.completeError(const TransportFailure());
     await tester.pump();
-    expect(find.textContaining('Could not confirm'), findsOneWidget);
-    expect(find.text('Your rating: 4 / 5'), findsOneWidget);
+    expect(find.textContaining('Chưa xác nhận được đánh giá'), findsOneWidget);
+    expect(find.text('Đánh giá của bạn: 4 / 5'), findsOneWidget);
     expect(
       tester
           .widget<IconButton>(
             find.ancestor(
-              of: find.byTooltip('5 stars'),
+              of: find.byTooltip('5 sao'),
               matching: find.byType(IconButton),
             ),
           )
           .onPressed,
       isNull,
     );
-    await tester.tap(find.text('Refresh'));
+    await tester.tap(find.text('Làm mới'));
     expect(refreshes, 1);
   });
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../channels/presentation/live_channel_state.dart';
 import '../../direct_messages/domain/direct_message_models.dart';
 import '../../direct_messages/presentation/direct_message_feedback.dart';
@@ -89,7 +90,6 @@ class _CommunicationDirectoryState
 
   @override
   Widget build(BuildContext context) {
-    final en = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     final owner = ref.watch(sessionStateProvider);
     ref.listen(sessionStateProvider, (before, after) {
@@ -108,7 +108,7 @@ class _CommunicationDirectoryState
       return Center(
         child: TextButton(
           onPressed: () => _navigate('/login'),
-          child: Text(en ? 'Sign in to chat' : 'Đăng nhập để trò chuyện'),
+          child: Text(vi.app.communication.dangNhapDeTro),
         ),
       );
     }
@@ -143,7 +143,7 @@ class _CommunicationDirectoryState
           onChanged: (value) =>
               ref.read(communicationFilterProvider.notifier).state = value,
           decoration: InputDecoration(
-            hintText: en ? 'Find a channel or person' : 'Tìm kênh hoặc người',
+            hintText: vi.app.communication.timKenhHoacNguoi,
             prefixIcon: const Icon(Icons.search, size: 18),
           ),
         ),
@@ -158,14 +158,12 @@ class _CommunicationDirectoryState
           ),
           label: Align(
             alignment: Alignment.centerLeft,
-            child: Text(en ? 'Channels' : 'Kênh cộng đồng'),
+            child: Text(vi.app.communication.kenhCongDong),
           ),
         ),
         if (ref.watch(communicationPreferenceFailureProvider) != null)
           Text(
-            en
-                ? 'Could not remember this display choice.'
-                : 'Không lưu được lựa chọn hiển thị.',
+            vi.app.communication.khongLuuDuocLua,
             style: VnlfTypography.meta(colors.red),
           ),
         if (showChannels) ...[
@@ -173,11 +171,7 @@ class _CommunicationDirectoryState
           if (channels.hasError)
             TextButton(
               onPressed: () => ref.invalidate(liveChannelsProvider),
-              child: Text(
-                en
-                    ? 'Could not load channels. Retry'
-                    : 'Không tải được kênh. Thử lại',
-              ),
+              child: Text(vi.app.communication.khongTaiDuocKenh),
             ),
           for (final channel in visibleChannels)
             ListTile(
@@ -213,7 +207,7 @@ class _CommunicationDirectoryState
             Padding(
               padding: const EdgeInsets.all(8),
               child: Text(
-                en ? 'No matching channels' : 'Không có kênh phù hợp',
+                vi.app.communication.khongCoKenhPhu,
                 style: VnlfTypography.meta(colors.muted),
               ),
             ),
@@ -222,19 +216,19 @@ class _CommunicationDirectoryState
           children: [
             Expanded(
               child: Text(
-                en ? 'Private messages' : 'Tin nhắn riêng',
+                vi.directMessageLiveView.tinNhanRieng,
                 style: VnlfTypography.control(colors.muted),
               ),
             ),
             IconButton(
-              tooltip: en ? 'New conversation' : 'Trò chuyện mới',
+              tooltip: vi.app.communication.troChuyenMoi,
               onPressed: inbox.openingConversation
                   ? null
                   : () => showNewDmDialog(context, ref),
               icon: const Icon(Icons.add_comment_outlined, size: 18),
             ),
             IconButton(
-              tooltip: en ? 'Refresh conversations' : 'Làm mới hộp thư',
+              tooltip: vi.app.communication.lamMoiHopThu,
               onPressed: inbox.loading
                   ? null
                   : () =>
@@ -263,7 +257,7 @@ class _CommunicationDirectoryState
                   ),
                   IconButton(
                     key: ValueKey('communication-accept-${conversation.id}'),
-                    tooltip: en ? 'Accept request' : 'Chấp nhận yêu cầu',
+                    tooltip: vi.app.communication.chapNhanYeuCau,
                     onPressed: _pending.contains(conversation.id)
                         ? null
                         : () => _answer(conversation, true),
@@ -271,7 +265,7 @@ class _CommunicationDirectoryState
                   ),
                   IconButton(
                     key: ValueKey('communication-decline-${conversation.id}'),
-                    tooltip: en ? 'Decline request' : 'Từ chối yêu cầu',
+                    tooltip: vi.app.communication.tuChoiYeuCau,
                     onPressed: _pending.contains(conversation.id)
                         ? null
                         : () => _answer(conversation, false),
@@ -281,7 +275,7 @@ class _CommunicationDirectoryState
               )
             else
               Text(
-                en ? 'Request handled' : 'Đã xử lý yêu cầu',
+                vi.app.communication.daXuLyYeu,
                 style: VnlfTypography.meta(colors.muted),
               ),
           ],
@@ -307,7 +301,7 @@ class _CommunicationDirectoryState
             ),
             subtitle: Text(
               conversation.lastMessage ??
-                  (en ? 'No messages yet' : 'Chưa có tin nhắn'),
+                  vi.directMessageLiveView.chuaCoTinNhan,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: VnlfTypography.meta(colors.muted),
@@ -337,9 +331,7 @@ class _CommunicationDirectoryState
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-              en
-                  ? 'No matching conversations'
-                  : 'Chưa có cuộc trò chuyện phù hợp',
+              vi.app.communication.chuaCoCuocTro,
               style: VnlfTypography.meta(colors.muted),
             ),
           ),

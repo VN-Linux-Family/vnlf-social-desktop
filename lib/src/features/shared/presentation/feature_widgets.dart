@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 
 class FeatureHeader extends StatelessWidget {
   const FeatureHeader({
@@ -15,14 +16,13 @@ class FeatureHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
           IconButton(
-            tooltip: english ? 'Back' : 'Quay lại',
+            tooltip: vi.app.common.quayLai,
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => context.canPop() ? context.pop() : context.go('/'),
           ),
@@ -32,7 +32,7 @@ class FeatureHeader extends StatelessWidget {
           ),
           if (showSettings)
             IconButton(
-              tooltip: english ? 'Settings' : 'Cài đặt',
+              tooltip: vi.common.caiDat,
               icon: const Icon(Icons.settings_outlined),
               onPressed: () => context.push('/settings'),
             ),
@@ -68,12 +68,11 @@ class FeatureLoadError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     return VnlfStateCard(
       icon: Icons.error_outline,
-      title: english ? 'Unable to load content' : 'Không tải được nội dung',
-      message: english ? 'Please try again.' : 'Vui lòng thử lại.',
-      actionLabel: english ? 'Retry' : 'Thử lại',
+      title: vi.app.shared.khongTaiDuocNoi,
+      message: vi.app.common.vuiLongThuLai,
+      actionLabel: vi.common.thuLai,
       onAction: onRetry,
     );
   }

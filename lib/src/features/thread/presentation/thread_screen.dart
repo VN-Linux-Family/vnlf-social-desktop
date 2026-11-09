@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../polls/presentation/poll_card.dart';
 import '../../moderation/presentation/report_dialog.dart';
 
@@ -25,7 +26,6 @@ class ThreadScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final post = ref.watch(threadPostProvider(postId));
     final article = post.valueOrNull?.format == 'ARTICLE';
     final mobile =
@@ -46,7 +46,7 @@ class ThreadScreen extends ConsumerWidget {
                 child: Container(
                   alignment: Alignment.centerLeft,
                   child: Tooltip(
-                    message: english ? 'Back' : 'Quay lại',
+                    message: vi.app.common.quayLai,
                     child: TextButton.icon(
                       onPressed: () {
                         final router = GoRouter.maybeOf(context);
@@ -57,17 +57,14 @@ class ThreadScreen extends ConsumerWidget {
                         }
                       },
                       icon: const Icon(Icons.arrow_back, size: 16),
-                      label: Text(
-                        english ? 'Back to feed' : 'Quay lại bảng tin',
-                      ),
+                      label: Text(vi.miscViews.quayLaiBangTin),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        if (!article && !mobile)
-          FeatureHeader(title: english ? 'Thread' : 'Bài viết'),
+        if (!article && !mobile) FeatureHeader(title: vi.common.baiViet),
         SizedBox(height: mobile ? 12 : 10),
         post.when(
           loading: () =>
@@ -78,12 +75,8 @@ class ThreadScreen extends ConsumerWidget {
           data: (value) => value == null
               ? VnlfStateCard(
                   icon: Icons.article_outlined,
-                  title: english
-                      ? 'Post unavailable'
-                      : 'Không tìm thấy bài viết',
-                  message: english
-                      ? 'This content is no longer available; it may have been deleted.'
-                      : 'Không tìm thấy nội dung này nữa, có thể đã bị xóa.',
+                  title: vi.app.thread.khongTimThayBai,
+                  message: vi.app.thread.khongTimThayNoi,
                 )
               : ThreadContent(
                   key: ValueKey('$postId/${value.id}'),
@@ -115,11 +108,10 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final source = widget.post;
-    final summary = presentPost(source, english: english, fullContent: true);
+    final summary = presentPost(source, fullContent: true);
     final interaction = ref.watch(postInteractionProvider(source.id));
-    final detail = interaction.apply(summary, english: english);
+    final detail = interaction.apply(summary);
     final session =
         ref.watch(sessionStateProvider) ??
         ref.watch(sessionProvider).valueOrNull;
@@ -169,7 +161,7 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
             onCommentTap: _commentFocus.requestFocus,
             onShareTap: () => copyPostLink(context, source),
             onReportTap: () => showArticleReport(context, ref, source.id),
-            shareSemanticLabel: english ? 'Share' : 'Chia sẻ',
+            shareSemanticLabel: vi.miscViews.chiaSe,
             onVoteChanged: (value) => ref
                 .read(postInteractionsProvider.notifier)
                 .vote(source.id, value),
@@ -179,10 +171,10 @@ class _ThreadContentState extends ConsumerState<ThreadContent> {
                   source.id,
                   initialValue: source.viewerBookmarked,
                 ),
-            upvoteSemanticLabel: english ? 'Upvote' : 'Ủng hộ',
-            downvoteSemanticLabel: english ? 'Downvote' : 'Phản đối',
-            commentSemanticLabel: english ? 'Comments' : 'Bình luận',
-            bookmarkSemanticLabel: english ? 'Bookmark' : 'Lưu bài viết',
+            upvoteSemanticLabel: vi.app.common.ungHo,
+            downvoteSemanticLabel: vi.app.common.phanDoi,
+            commentSemanticLabel: vi.common.binhLuan,
+            bookmarkSemanticLabel: vi.app.common.luuBaiViet,
           ),
         const SizedBox(height: 12),
         ThreadComments(postId: source.id, focusNode: _commentFocus),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/external_uri.dart';
 import '../../core/vnlf_navigation_helper.dart';
+import '../../i18n/vi.dart';
 import '../tokens/vnlf_colors.dart';
 import '../tokens/vnlf_dimensions.dart';
 import '../tokens/vnlf_typography.dart';
@@ -61,15 +62,8 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
       /* A visible message below covers platform launcher failures. */
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          Localizations.localeOf(context).languageCode == 'en'
-              ? 'Could not open link'
-              : 'Không mở được liên kết',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(vi.app.common.khongMoDuocLien)));
   }
 
   InlineSpan _inline(Map<String, dynamic> node) {
@@ -155,7 +149,6 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
               _children(child).isNotEmpty,
         )
         .toList();
-    final english = Localizations.localeOf(context).languageCode == 'en';
     Widget blocks() => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -248,8 +241,8 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: VnlfCodeBlock(
             code: _text(node),
-            copyLabel: english ? 'Copy' : 'Sao chép',
-            copiedLabel: english ? 'Copied' : 'Đã chép',
+            copyLabel: vi.articleRenderer.saoChep,
+            copiedLabel: vi.articleRenderer.daChep,
           ),
         );
       case 'horizontalRule':
@@ -276,7 +269,7 @@ class _VnlfRichContentState extends State<VnlfRichContent> {
                 )
               else
                 Text(
-                  english ? 'Image unavailable' : 'Ảnh không còn trong bộ',
+                  vi.app.designSystem.anhKhongConTrong,
                   style: VnlfTypography.meta(colors.muted),
                 ),
               if (attrs['caption'] is String &&

@@ -195,10 +195,10 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Continue'), findsNothing);
+      expect(find.text('Tiếp tục'), findsNothing);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
-      expect(find.text('Continue'), findsOneWidget);
+      expect(find.text('Tiếp tục'), findsOneWidget);
       expect(calls, 1);
       await tester.pumpWidget(const SizedBox());
       tracker.dispose();
@@ -335,7 +335,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Continue'), findsOneWidget);
+      expect(find.text('Tiếp tục'), findsOneWidget);
       key.currentState!.push(
         DialogRoute<void>(
           context: key.currentContext!,
@@ -345,7 +345,7 @@ void main() {
       await tester.pumpAndSettle();
       client.invalidateSession();
       await tester.pumpAndSettle();
-      expect(find.text('Continue'), findsNothing);
+      expect(find.text('Tiếp tục'), findsNothing);
       expect(find.text('other dialog'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       tracker.dispose();
@@ -402,7 +402,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Continue'), findsNothing);
+    expect(find.text('Tiếp tục'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     tracker.dispose();
   });

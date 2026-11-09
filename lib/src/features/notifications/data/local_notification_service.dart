@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../i18n/vi.dart';
+
 final localNotificationServiceProvider = Provider<LocalNotificationService>((
   ref,
 ) {
@@ -52,7 +54,7 @@ class LocalNotificationService {
       requestSoundPermission: true,
     );
     final linuxSettings = LinuxInitializationSettings(
-      defaultActionName: 'Mở VNLF Social',
+      defaultActionName: vi.app.common.moVnlfSocial,
       defaultIcon: AssetsLinuxIcon('assets/images/vnlf-icon-maskable.png'),
     );
 
@@ -106,11 +108,10 @@ class LocalNotificationService {
       if (!ok) return;
     }
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'vnlf_messages',
-      'Tin nhắn & Thông báo VNLF',
-      channelDescription:
-          'Thông báo tin nhắn và hoạt động mới từ Vietnam Linux Family',
+      vi.app.notifications.tinNhanThongBao,
+      channelDescription: vi.app.notifications.thongBaoTinNhan,
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
@@ -128,7 +129,7 @@ class LocalNotificationService {
       category: LinuxNotificationCategory.imReceived,
     );
 
-    const notificationDetails = NotificationDetails(
+    final notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: darwinDetails,
       macOS: darwinDetails,

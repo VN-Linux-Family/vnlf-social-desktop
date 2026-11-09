@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/external_uri.dart';
+import '../../i18n/vi.dart';
 import '../models/vnlf_models.dart';
 import '../tokens/vnlf_colors.dart';
 import 'vnlf_windows_video.dart';
@@ -125,7 +126,6 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final unavailable =
         widget.media.state == 'FAILED' ||
         externalWebUri(widget.media.url) == null;
@@ -136,8 +136,8 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
         color: VnlfColors.of(context).surfaceSoft,
         child: Text(
           widget.media.state == 'PROCESSING'
-              ? (english ? 'Video is processing' : 'Video đang được xử lý')
-              : (english ? 'Video unavailable' : 'Video không khả dụng'),
+              ? vi.app.common.videoDangDuocXu
+              : vi.app.designSystem.videoKhongKhaDung,
         ),
       );
     }
@@ -181,20 +181,14 @@ class _VnlfVideoState extends State<VnlfVideo> with WidgetsBindingObserver {
                               children: [
                                 IconButton(
                                   iconSize: 48,
-                                  tooltip: english
-                                      ? 'Play video'
-                                      : 'Phát video',
+                                  tooltip: vi.app.designSystem.phatVideo,
                                   onPressed: _play,
                                   icon: const Icon(
                                     Icons.play_circle_fill_rounded,
                                   ),
                                 ),
                                 if (_failed)
-                                  Text(
-                                    english
-                                        ? 'Video unavailable. Tap to retry.'
-                                        : 'Không phát được video. Bấm để thử lại.',
-                                  ),
+                                  Text(vi.app.designSystem.khongPhatDuocVideo),
                               ],
                             ),
                     ),

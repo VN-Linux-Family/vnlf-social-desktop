@@ -156,12 +156,12 @@ void main() {
       );
       final profiles = Profiles();
       final container = await pumpGuestbook(tester, owner, profiles, client);
-      expect(find.text('Hidden'), findsOneWidget);
+      expect(find.text('Đang ẩn'), findsOneWidget);
       await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
-      expect(find.text('Show'), findsOneWidget);
-      expect(find.text('Delete'), findsOneWidget);
-      expect(find.text('Block this person'), findsOneWidget);
+      expect(find.text('Hiện lại'), findsOneWidget);
+      expect(find.text('Xóa'), findsOneWidget);
+      expect(find.text('Chặn người này'), findsOneWidget);
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
       profiles.mine = true;
@@ -171,9 +171,9 @@ void main() {
       // A non-owner must never gain owner controls from the entry status.
       await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
-      expect(find.text('Show'), findsNothing);
-      expect(find.text('Block this person'), findsNothing);
-      expect(find.text('Delete'), findsOneWidget);
+      expect(find.text('Hiện lại'), findsNothing);
+      expect(find.text('Chặn người này'), findsNothing);
+      expect(find.text('Xóa'), findsOneWidget);
     },
   );
 
@@ -190,7 +190,7 @@ void main() {
     final container = await pumpGuestbook(tester, owner, profiles, client);
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show'));
+    await tester.tap(find.text('Hiện lại'));
     await tester.pump();
     expect(writes, 1);
     expect(
@@ -203,7 +203,7 @@ void main() {
     await tester.pump();
     gate.completeError(StateError('connection lost'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Could not confirm'), findsNothing);
+    expect(find.textContaining('Chưa xác nhận được thao tác'), findsNothing);
     expect(writes, 1);
   });
   testWidgets('uncertain moderation refreshes and shows no success', (
@@ -218,11 +218,11 @@ void main() {
     await pumpGuestbook(tester, owner, profiles, client);
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Show'));
+    await tester.tap(find.text('Hiện lại'));
     await tester.pumpAndSettle();
     expect(writes, 1);
     expect(profiles.reads, greaterThan(1));
-    expect(find.textContaining('Could not confirm'), findsOneWidget);
+    expect(find.textContaining('Chưa xác nhận được thao tác'), findsOneWidget);
   });
 
   testWidgets('uncertain submission preserves the draft and refreshes', (
@@ -236,12 +236,12 @@ void main() {
     final profiles = Profiles()..blockedReason = null;
     await pumpGuestbook(tester, other, profiles, client);
     await tester.enterText(find.byType(TextField), 'A synthetic greeting');
-    await tester.tap(find.text('Send'));
+    await tester.tap(find.text('Gửi lời nhắn'));
     await tester.pumpAndSettle();
     expect(writes, 1);
     expect(profiles.reads, greaterThan(1));
     expect(find.text('A synthetic greeting'), findsOneWidget);
-    expect(find.textContaining('Could not confirm'), findsOneWidget);
+    expect(find.textContaining('Chưa xác nhận được thao tác'), findsOneWidget);
   });
 
   testWidgets('failed reconciliation still shows uncertainty and draft', (
@@ -255,10 +255,10 @@ void main() {
       ..failAfterFirstRead = true;
     await pumpGuestbook(tester, other, profiles, client);
     await tester.enterText(find.byType(TextField), 'Keep this draft');
-    await tester.tap(find.text('Send'));
+    await tester.tap(find.text('Gửi lời nhắn'));
     await tester.pumpAndSettle();
     expect(find.text('Keep this draft'), findsOneWidget);
-    expect(find.textContaining('Could not confirm'), findsOneWidget);
+    expect(find.textContaining('Chưa xác nhận được thao tác'), findsOneWidget);
   });
 
   testWidgets(
@@ -272,11 +272,14 @@ void main() {
         ..reasonAfterFirstRead = 'GUESTBOOK_DAILY_LIMIT';
       await pumpGuestbook(tester, other, profiles, client);
       await tester.enterText(find.byType(TextField), 'Keep this draft');
-      await tester.tap(find.text('Send'));
+      await tester.tap(find.text('Gửi lời nhắn'));
       await tester.pumpAndSettle();
       expect(find.text('Keep this draft'), findsOneWidget);
       expect(tester.widget<TextField>(find.byType(TextField)).readOnly, isTrue);
-      expect(find.textContaining('Could not confirm'), findsOneWidget);
+      expect(
+        find.textContaining('Chưa xác nhận được thao tác'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -305,10 +308,10 @@ void main() {
         ..failAfterFirstRead = true;
       await pumpGuestbook(tester, other, profiles, client);
       await tester.enterText(find.byType(TextField), 'Hello');
-      await tester.tap(find.text('Send'));
+      await tester.tap(find.text('Gửi lời nhắn'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Action confirmed'), findsOneWidget);
-      expect(find.textContaining('Could not confirm'), findsNothing);
+      expect(find.textContaining('Đã xác nhận thao tác'), findsOneWidget);
+      expect(find.textContaining('Chưa xác nhận được thao tác'), findsNothing);
     },
   );
 }

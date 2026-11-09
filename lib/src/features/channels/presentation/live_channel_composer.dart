@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../design_system/design_system.dart';
+import '../../../i18n/vi.dart';
 import '../domain/channel_models.dart';
-import 'channel_feedback.dart';
 import 'live_channel_state.dart';
 
 class LiveChannelComposer extends ConsumerStatefulWidget {
@@ -62,14 +62,14 @@ class _LiveChannelComposerState extends ConsumerState<LiveChannelComposer> {
               children: [
                 Expanded(
                   child: Text(
-                    '${channelText(context, 'Đang trả lời', 'Replying to')} ${reply.author.displayName}: ${reply.content}',
+                    '${('Đang trả lời')} ${reply.author.displayName}: ${reply.content}',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: VnlfTypography.caption(colors.muted),
                   ),
                 ),
                 IconButton(
-                  tooltip: channelText(context, 'Hủy trả lời', 'Cancel reply'),
+                  tooltip: (vi.chatUi.huyTraLoi),
                   onPressed: state.sending
                       ? null
                       : () => controller.replyTo(null),
@@ -92,7 +92,7 @@ class _LiveChannelComposerState extends ConsumerState<LiveChannelComposer> {
                   onChanged: controller.updateDraft,
                   decoration: InputDecoration(
                     hintText:
-                        '${channelText(context, 'Gửi tin nhắn vào', 'Message')} #${widget.channel.slug}...',
+                        '${('Gửi tin nhắn vào')} #${widget.channel.slug}...',
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -102,7 +102,7 @@ class _LiveChannelComposerState extends ConsumerState<LiveChannelComposer> {
                 ),
               ),
               IconButton(
-                tooltip: channelText(context, 'Gửi tin nhắn', 'Send message'),
+                tooltip: (vi.chatUi.guiTinNhan),
                 onPressed:
                     state.sending ||
                         state.draft.trim().isEmpty ||

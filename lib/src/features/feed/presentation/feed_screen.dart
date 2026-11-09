@@ -86,9 +86,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               loading: () => [
                 _band(
                   phone,
-                  const VnlfLoadingShimmer(
+                  VnlfLoadingShimmer(
                     child: VnlfPostCard.loading(
-                      loadingSemanticLabel: 'Đang tải bài viết',
+                      loadingSemanticLabel: vi.app.feed.dangTaiBaiViet,
                     ),
                   ),
                 ),
@@ -295,10 +295,7 @@ class _FeedPostTile extends ConsumerWidget {
         poll: source.poll == null
             ? null
             : PollCard(poll: source.poll!, authorId: source.author.id),
-        post: interaction.apply(
-          presentPost(source, english: false),
-          english: false,
-        ),
+        post: interaction.apply(presentPost(source)),
         onVoteChanged: (vote) =>
             ref.read(postInteractionsProvider.notifier).vote(source.id, vote),
         onBookmarkToggle: () => ref
@@ -312,8 +309,8 @@ class _FeedPostTile extends ConsumerWidget {
         onReportTap: () => showArticleReport(context, ref, source.id),
         onCommentTap: () => context.push(path),
         moreOptionsSemanticLabel: vi.feedViews.moMenuBaiViet,
-        upvoteSemanticLabel: 'Ủng hộ',
-        downvoteSemanticLabel: 'Phản đối',
+        upvoteSemanticLabel: vi.app.common.ungHo,
+        downvoteSemanticLabel: vi.app.common.phanDoi,
         commentSemanticLabel: vi.common.binhLuan,
         shareSemanticLabel: vi.socialOverlays.saoChepLienKet,
         bookmarkSemanticLabel: vi.common.luuBaiViet,

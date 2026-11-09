@@ -1,3 +1,4 @@
+import '../../../i18n/vi.dart';
 import '../../realtime/presentation/chat_realtime_bindings.dart';
 
 import 'package:flutter/material.dart';
@@ -24,17 +25,9 @@ class LiveChannelsScreen extends ConsumerWidget {
       return Center(
         child: VnlfStateCard(
           icon: Icons.forum_outlined,
-          title: channelText(
-            context,
-            'Đăng nhập để xem kênh cộng đồng',
-            'Sign in to view community channels',
-          ),
-          message: channelText(
-            context,
-            'Kênh và lịch sử trò chuyện chỉ dành cho thành viên.',
-            'Channels and chat history are available to members.',
-          ),
-          actionLabel: channelText(context, 'Đăng nhập', 'Sign in'),
+          title: (vi.app.channels.dangNhapDeXem),
+          message: (vi.app.channels.kenhVaLichSu),
+          actionLabel: (vi.common.dangNhap),
           onAction: () => context.push('/login'),
         ),
       );
@@ -79,43 +72,21 @@ class LiveChannelsScreen extends ConsumerWidget {
                         child: channels.isLoading
                             ? const CircularProgressIndicator()
                             : channelSlug == null
-                            ? Text(
-                                channelText(
-                                  context,
-                                  'Chọn một kênh hoặc cuộc trò chuyện',
-                                  'Choose a channel or conversation',
-                                ),
-                              )
+                            ? Text((vi.app.channels.chonMotKenhHoac))
                             : Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    channelText(
-                                      context,
-                                      'Không mở được kênh này',
-                                      'Could not open this channel',
-                                    ),
-                                  ),
+                                  Text((vi.app.channels.khongMoDuocKenh)),
                                   TextButton(
                                     onPressed: () =>
                                         ref.invalidate(liveChannelsProvider),
-                                    child: Text(
-                                      channelText(
-                                        context,
-                                        'Thử lại',
-                                        'Try again',
-                                      ),
-                                    ),
+                                    child: Text((vi.common.thuLai)),
                                   ),
                                   if (!wide)
                                     TextButton(
                                       onPressed: () => context.go('/channels'),
                                       child: Text(
-                                        channelText(
-                                          context,
-                                          'Danh sách trò chuyện',
-                                          'Conversation list',
-                                        ),
+                                        (vi.app.channels.danhSachTroChuyen),
                                       ),
                                     ),
                                 ],
@@ -129,11 +100,8 @@ class LiveChannelsScreen extends ConsumerWidget {
                               children: [
                                 if (!wide)
                                   IconButton(
-                                    tooltip: channelText(
-                                      context,
-                                      'Danh sách trò chuyện',
-                                      'Conversation list',
-                                    ),
+                                    tooltip:
+                                        (vi.app.channels.danhSachTroChuyen),
                                     onPressed: () => context.go('/channels'),
                                     icon: const Icon(Icons.arrow_back),
                                   ),
@@ -146,11 +114,7 @@ class LiveChannelsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 IconButton(
-                                  tooltip: channelText(
-                                    context,
-                                    'Làm mới tin nhắn',
-                                    'Refresh messages',
-                                  ),
+                                  tooltip: (vi.app.common.lamMoiTinNhan),
                                   icon: const Icon(Icons.refresh),
                                   onPressed: () {
                                     ref.read(apiClientProvider).clearCache();
@@ -213,11 +177,7 @@ class _ChannelHistory extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             child: Text(
               state.confirmedRefreshFailed
-                  ? channelText(
-                      context,
-                      'Máy chủ đã xác nhận thao tác, nhưng chưa tải lại được lịch sử. Hãy làm mới; không cần gửi lại.',
-                      'The server confirmed the action, but history could not be reloaded. Refresh; do not send again.',
-                    )
+                  ? (vi.app.common.mayChuDaXac)
                   : channelFailure(context, state.failure),
               style: TextStyle(color: colors.red),
             ),
@@ -256,13 +216,7 @@ class _ChannelHistory extends ConsumerWidget {
                           return Center(
                             child: TextButton(
                               onPressed: controller.loadOlder,
-                              child: Text(
-                                channelText(
-                                  context,
-                                  'Tải tin nhắn cũ hơn',
-                                  'Load older messages',
-                                ),
-                              ),
+                              child: Text((vi.app.common.taiTinNhanCu)),
                             ),
                           );
                         }
@@ -270,13 +224,7 @@ class _ChannelHistory extends ConsumerWidget {
                           return Center(
                             child: Padding(
                               padding: const EdgeInsets.all(24),
-                              child: Text(
-                                channelText(
-                                  context,
-                                  'Chưa có tin nhắn',
-                                  'No messages yet',
-                                ),
-                              ),
+                              child: Text((vi.app.channels.chuaCoTinNhan)),
                             ),
                           );
                         }
@@ -306,7 +254,7 @@ class _ChannelHistory extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             child: Text(
-              '${channelText(context, 'Chế độ chậm', 'Slow mode')}: ${channel.slowModeSeconds} ${channelText(context, 'giây', 'seconds')}',
+              '${('Chế độ chậm')}: ${channel.slowModeSeconds} ${('giây')}',
               style: VnlfTypography.caption(colors.muted),
             ),
           ),
@@ -317,16 +265,8 @@ class _ChannelHistory extends ConsumerWidget {
             padding: const EdgeInsets.all(12),
             child: Text(
               channel.isArchived
-                  ? channelText(
-                      context,
-                      'Kênh đã lưu trữ. Chỉ có thể xem tin nhắn.',
-                      'This channel is archived. Messages are read only.',
-                    )
-                  : channelText(
-                      context,
-                      'Bạn chưa có quyền gửi tin nhắn trong kênh này.',
-                      'You do not have permission to post in this channel.',
-                    ),
+                  ? (vi.app.channels.kenhDaLuuTru)
+                  : (vi.app.channels.banChuaCoQuyenGui),
             ),
           ),
       ],
@@ -341,22 +281,16 @@ class _ChannelHistory extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialog) => AlertDialog(
-        title: Text(channelText(context, 'Xóa tin nhắn?', 'Delete message?')),
-        content: Text(
-          channelText(
-            context,
-            'Tin nhắn sẽ bị xóa khỏi kênh.',
-            'This message will be deleted from the channel.',
-          ),
-        ),
+        title: Text((vi.chatUi.xoaTinNhan)),
+        content: Text((vi.app.channels.tinNhanSeBi)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialog, false),
-            child: Text(channelText(context, 'Hủy', 'Cancel')),
+            child: Text((vi.common.huy)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialog, true),
-            child: Text(channelText(context, 'Xóa', 'Delete')),
+            child: Text((vi.common.xoa)),
           ),
         ],
       ),
@@ -403,7 +337,7 @@ class _EditMessageDialogState extends ConsumerState<_EditMessageDialog> {
   Widget build(BuildContext context) => PopScope(
     canPop: !_saving,
     child: AlertDialog(
-      title: Text(channelText(context, 'Chỉnh sửa tin nhắn', 'Edit message')),
+      title: Text((vi.app.common.chinhSuaTinNhan)),
       content: SizedBox(
         width: 420,
         child: Column(
@@ -428,7 +362,7 @@ class _EditMessageDialogState extends ConsumerState<_EditMessageDialog> {
       actions: [
         TextButton(
           onPressed: _saving ? null : () => Navigator.pop(context),
-          child: Text(channelText(context, 'Hủy', 'Cancel')),
+          child: Text((vi.common.huy)),
         ),
         FilledButton(
           onPressed: _saving || _input.text.trim().isEmpty
@@ -461,7 +395,7 @@ class _EditMessageDialogState extends ConsumerState<_EditMessageDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(channelText(context, 'Lưu', 'Save')),
+              : Text((vi.common.luu)),
         ),
       ],
     ),

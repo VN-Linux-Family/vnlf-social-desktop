@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../data/comments_repository.dart';
@@ -67,7 +68,6 @@ final commentActionsProvider = StateNotifierProvider.autoDispose
 
 List<CommentNodeData> presentComments(
   List<ArticleComment> comments, {
-  required bool english,
   Set<String> pending = const {},
   Map<String, AppFailure> errors = const {},
 }) {
@@ -91,9 +91,7 @@ List<CommentNodeData> presentComments(
     id: comment.id,
     author: presentAuthor(comment.author),
     body: comment.content,
-    relativeTime: comment.createdAt == null
-        ? ''
-        : _time(comment.createdAt!, english),
+    relativeTime: comment.createdAt == null ? '' : _time(comment.createdAt!),
     voteScore: comment.voteScore,
     canEdit: comment.canEdit,
     canDelete: comment.canDelete,
@@ -102,9 +100,7 @@ List<CommentNodeData> presentComments(
     edited: comment.editedAt != null,
     pending: pending.contains(comment.id),
     actionError: errors.containsKey(comment.id)
-        ? (english
-              ? 'Could not save the change. Try again.'
-              : 'Chưa lưu được thay đổi. Vui lòng thử lại.')
+        ? vi.app.thread.chuaLuuDuocThayDoi
         : null,
     hiddenSticker: comment.gif?.hidden ?? false,
     gif: comment.gif == null || comment.gif!.hidden
@@ -142,14 +138,16 @@ List<CommentNodeData> presentComments(
   ];
 }
 
-String _time(DateTime date, bool english) {
+String _time(DateTime date) {
   final age = DateTime.now().difference(date);
-  if (age.inMinutes < 1) return english ? 'Just now' : 'Vừa xong';
+  if (age.inMinutes < 1) return vi.app.common.vuaXong;
   if (age.inHours < 1) {
-    return english ? '${age.inMinutes}m' : '${age.inMinutes} phút';
+    return format(vi.app.common.phut, {'inMinutes': age.inMinutes});
   }
-  if (age.inDays < 1) return english ? '${age.inHours}h' : '${age.inHours} giờ';
-  return english ? '${age.inDays}d' : '${age.inDays} ngày';
+  if (age.inDays < 1) {
+    return format(vi.app.common.gio, {'inHours': age.inHours});
+  }
+  return format(vi.app.common.ngay, {'inDays': age.inDays});
 }
 
 /// An orphan cannot target its deleted root or become a nested reply on the API.

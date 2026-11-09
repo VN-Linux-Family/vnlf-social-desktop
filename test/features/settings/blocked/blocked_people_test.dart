@@ -82,21 +82,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Unblock'));
+      await tester.tap(find.text('Bỏ chặn'));
       repository.write.complete();
       await tester.pumpAndSettle();
       expect(invalidations, 1);
-      expect(find.text('Unblocked Target.'), findsOneWidget);
+      expect(find.text('Đã bỏ chặn Target.'), findsOneWidget);
       expect(
-        find.text(
-          'Unblock was confirmed, but the list could not be refreshed.',
-        ),
+        find.text('Đã xác nhận bỏ chặn, nhưng chưa tải lại được danh sách.'),
         findsOneWidget,
       );
       expect(
-        find.text(
-          'The result could not be confirmed. Refresh before trying again.',
-        ),
+        find.text('Chưa thể xác nhận kết quả. Hãy làm mới trước khi thử lại.'),
         findsNothing,
       );
     },

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
+import '../../../i18n/vi.dart';
 import '../../feed/presentation/feed_notifier.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -295,7 +296,6 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
 
   @override
   Widget build(BuildContext context) {
-    final english = Localizations.localeOf(context).languageCode == 'en';
     final colors = VnlfColors.of(context);
     ref.listen(sessionStateProvider, (before, after) {
       if (before?.userId == after?.userId) return;
@@ -337,7 +337,6 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
     };
     final comments = presentComments(
       items.values.toList(),
-      english: english,
       pending: actions.pending,
       errors: actions.errors,
     );
@@ -366,17 +365,12 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            english ? 'Comments' : 'Bình luận',
-            style: VnlfTypography.h2(colors.ink),
-          ),
+          Text(vi.common.binhLuan, style: VnlfTypography.h2(colors.ink)),
           const SizedBox(height: 12),
           if (!signedIn)
             TextButton(
               onPressed: () => context.push('/login'),
-              child: Text(
-                english ? 'Sign in to comment' : 'Đăng nhập để bình luận',
-              ),
+              child: Text(vi.commentsPanel.dangNhapDeBinhLuan),
             ),
           if (signedIn) ...[
             if (_replyTo != null)
@@ -384,11 +378,11 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${english ? 'Reply to' : 'Trả lời'} @${_replyTo!.author.username}',
+                      '${vi.commentsPanel.traLoi2} @${_replyTo!.author.username}',
                     ),
                   ),
                   IconButton(
-                    tooltip: english ? 'Cancel reply' : 'Hủy trả lời',
+                    tooltip: vi.commentsPanel.huyTraLoi,
                     onPressed: draft.submissionPending || _submitting
                         ? null
                         : () => setState(() => _replyTo = null),
@@ -398,9 +392,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               ),
             if (recovery.hasError)
               Text(
-                english
-                    ? 'Could not restore the pending comment. Sending is disabled.'
-                    : 'Không khôi phục được bình luận đang chờ. Chức năng gửi đã bị khóa.',
+                vi.app.thread.khongKhoiPhucDuoc,
                 style: VnlfTypography.meta(colors.red),
               ),
             if (draft.confirmed)
@@ -408,24 +400,22 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    english
-                        ? 'Comment sent successfully.'
-                        : 'Bình luận đã được gửi thành công.',
+                    vi.app.thread.binhLuanDaDuoc,
                     key: const ValueKey('comment-confirmed'),
                   ),
                   TextButton(
                     key: const ValueKey('comment-confirmation-dismiss'),
                     onPressed: _dismissConfirmation,
-                    child: Text(english ? 'Done' : 'Đã hiểu'),
+                    child: Text(vi.app.thread.daHieu),
                   ),
                 ],
               ),
             if (draft.pending != null &&
                 draft.pending!.attachmentIds.isNotEmpty)
               Text(
-                english
-                    ? '${draft.pending!.attachmentIds.length} previously uploaded photos'
-                    : '${draft.pending!.attachmentIds.length} ảnh đã tải lên trước đó',
+                format(vi.app.thread.anhDaTaiLen, {
+                  'attachmentIds': draft.pending!.attachmentIds.length,
+                }),
               ),
             if (!draft.submissionPending)
               MentionSuggestions(controller: _mentions),
@@ -447,15 +437,13 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                 maxLength: 4000,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  labelText: english ? 'Write a comment' : 'Viết bình luận',
+                  labelText: vi.app.thread.vietBinhLuan,
                   border: const OutlineInputBorder(),
                 ),
               ),
             ),
             Text(
-              english
-                  ? 'Selected photos upload immediately and are publicly accessible. They may retain image metadata and remain on the server after removal.'
-                  : 'Ảnh được tải lên và công khai ngay khi chọn, có thể giữ siêu dữ liệu và vẫn lưu trên máy chủ sau khi xóa khỏi bản nháp.',
+              vi.app.thread.anhDuocTaiLen,
               style: VnlfTypography.meta(colors.muted),
             ),
             Wrap(
@@ -474,7 +462,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                       ? null
                       : _pickAttachments,
                   icon: const Icon(Icons.add_photo_alternate_outlined),
-                  label: Text(english ? 'Add photos' : 'Thêm ảnh'),
+                  label: Text(vi.app.thread.themAnh),
                 ),
                 Text('${draft.attachments.length}/10'),
               ],
@@ -482,12 +470,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             if (_attachmentError != null)
               Text(
                 _attachmentError == 'limit'
-                    ? (english
-                          ? 'A comment can have up to 10 photos.'
-                          : 'Mỗi bình luận có tối đa 10 ảnh.')
-                    : (english
-                          ? 'Could not open selected photos.'
-                          : 'Không mở được ảnh đã chọn.'),
+                    ? vi.app.thread.moiBinhLuanCo
+                    : vi.app.thread.khongMoDuocAnh,
                 style: VnlfTypography.meta(colors.red),
               ),
             for (final item in draft.attachments)
@@ -509,38 +493,31 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                       ),
                 title: Text(item.file.name, overflow: TextOverflow.ellipsis),
                 subtitle: Text(switch (item.state) {
-                  CommentAttachmentState.selected =>
-                    english ? 'Selected' : 'Đã chọn',
+                  CommentAttachmentState.selected => vi.app.common.daChon,
                   CommentAttachmentState.presigning =>
-                    english ? 'Preparing' : 'Đang chuẩn bị',
-                  CommentAttachmentState.uploading =>
-                    english ? 'Uploading' : 'Đang tải lên',
+                    vi.app.thread.dangChuanBi,
+                  CommentAttachmentState.uploading => vi.app.thread.dangTaiLen,
                   CommentAttachmentState.completing =>
-                    english ? 'Confirming' : 'Đang xác nhận',
-                  CommentAttachmentState.ready =>
-                    english ? 'Ready' : 'Sẵn sàng',
+                    vi.app.thread.dangXacNhan,
+                  CommentAttachmentState.ready => vi.app.thread.sanSang,
                   CommentAttachmentState.presignFailed ||
                   CommentAttachmentState.uploadFailed =>
-                    english
-                        ? 'Upload failed; remove and select again.'
-                        : 'Tải lên thất bại; xóa và chọn lại.',
+                    vi.app.thread.taiLenThatBai,
                   CommentAttachmentState.completeFailed =>
-                    english ? 'Confirmation failed.' : 'Xác nhận thất bại.',
+                    vi.app.thread.xacNhanThatBai,
                 }),
                 trailing: Wrap(
                   children: [
                     if (item.state == CommentAttachmentState.completeFailed)
                       IconButton(
-                        tooltip: english
-                            ? 'Retry confirmation'
-                            : 'Thử xác nhận lại',
+                        tooltip: vi.app.thread.thuXacNhanLai,
                         onPressed: _submitting
                             ? null
                             : () => _retryAttachment(item),
                         icon: const Icon(Icons.refresh),
                       ),
                     IconButton(
-                      tooltip: english ? 'Remove photo' : 'Xóa ảnh',
+                      tooltip: vi.app.common.xoaAnh,
                       onPressed:
                           _submitting ||
                               draft.submissionPending ||
@@ -556,9 +533,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
               ),
             if (draft.submissionPending && !draft.confirmed && !_submitting)
               Text(
-                english
-                    ? 'The previous submission may have been sent. Retry it unchanged to confirm.'
-                    : 'Bình luận trước có thể đã được gửi. Hãy thử lại nguyên nội dung để xác nhận.',
+                vi.app.thread.binhLuanTruocCo,
                 style: VnlfTypography.meta(colors.muted),
               ),
             if (_failure != null)
@@ -570,12 +545,8 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                             401,
                             403,
                           ].contains((_failure as HttpFailure).statusCode)
-                      ? (english
-                            ? 'Sign in again to send your comment. Your draft is kept.'
-                            : 'Đăng nhập lại để gửi bình luận. Bản nháp vẫn được giữ.')
-                      : (english
-                            ? 'Could not send comment. Your draft is kept; try again.'
-                            : 'Không gửi được bình luận. Bản nháp vẫn được giữ; vui lòng thử lại.'),
+                      ? vi.app.thread.dangNhapLaiDe
+                      : vi.app.thread.khongGuiDuocBinh,
                   style: VnlfTypography.meta(colors.red),
                 ),
               ),
@@ -603,7 +574,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(english ? 'Add comment' : 'Thêm bình luận'),
+                    : Text(vi.app.thread.themBinhLuan),
               ),
             ),
           ],
@@ -616,15 +587,13 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             Column(
               children: [
                 Text(
-                  english
-                      ? 'Could not load comments'
-                      : 'Không tải được bình luận',
+                  vi.app.thread.khongTaiDuocBinh,
                   style: VnlfTypography.meta(colors.red),
                 ),
                 TextButton(
                   onPressed: () =>
                       ref.invalidate(articleCommentsProvider(widget.postId)),
-                  child: Text(english ? 'Retry' : 'Thử lại'),
+                  child: Text(vi.common.thuLai),
                 ),
               ],
             ),
@@ -632,7 +601,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
-                english ? 'No comments yet' : 'Chưa có bình luận',
+                vi.commentsPanel.chuaCoBinhLuan,
                 style: VnlfTypography.meta(colors.muted),
               ),
             ),
@@ -640,7 +609,7 @@ class _ThreadCommentsState extends ConsumerState<ThreadComments> {
             const SizedBox(height: 16),
             VnlfCommentTree(
               comment: comment,
-              replyLabel: english ? 'Reply' : 'Trả lời',
+              replyLabel: vi.commentsPanel.traLoi2,
               onAuthor: (username) =>
                   context.push('/profile/${Uri.encodeComponent(username)}'),
               onVote: (id, value) => _action(
