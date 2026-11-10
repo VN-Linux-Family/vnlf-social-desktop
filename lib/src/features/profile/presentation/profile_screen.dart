@@ -12,7 +12,11 @@ import 'profile_content.dart';
 import 'profile_data.dart';
 import 'profile_guestbook.dart';
 import 'profile_header.dart';
+import 'profile_palette.dart';
+import 'profile_tabs.dart';
 
+/// The website's profile page: one 720px column on the profile theme's
+/// canvas, which fills the space right of the sidebar.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({
     super.key,
@@ -44,87 +48,121 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mobile =
-        VnlfViewportSize.fromWidth(MediaQuery.sizeOf(context).width) ==
-        VnlfViewportSize.mobile;
+    final width = MediaQuery.sizeOf(context).width;
+    final phone = width < 841;
     final profile = ref.watch(profileProvider(widget.username));
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        if (!mobile && context.canPop()) ...[
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              tooltip: vi.app.common.quayLai,
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => context.pop(),
+    final palette = ProfilePalette.of(
+      context,
+      profile.valueOrNull?.decor ?? const ProfileDecor(),
+    );
+    final gutter = VnlfDimensions.mobileGutter(width);
+    return ColoredBox(
+      color: palette.canvas,
+      child: ListView(
+        padding: phone
+            ? EdgeInsets.fromLTRB(gutter, 10, gutter, 20)
+            : const EdgeInsets.fromLTRB(38, 34, 38, 80),
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!phone && context.canPop()) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: vi.app.common.quayLai,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        onPressed: () => context.pop(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  ...profile.when(
+                    loading: () => const [
+                      Center(child: CircularProgressIndicator()),
+                    ],
+                    error: (error, stack) => [
+                      FeatureLoadError(
+                        onRetry: () =>
+                            ref.invalidate(profileProvider(widget.username)),
+                      ),
+                    ],
+                    data: (value) => value == null
+                        ? [
+                            VnlfStateCard(
+                              icon: Icons.person_outline,
+                              title: vi.app.profile.khongTimThayHo,
+                              message: vi.app.profile.hoSoNayHien,
+                            ),
+                          ]
+                        : _page(value, palette, phone),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
-        ...profile.when(
-          loading: () => const [Center(child: CircularProgressIndicator())],
-          error: (error, stack) => [
-            FeatureLoadError(
-              onRetry: () => ref.invalidate(profileProvider(widget.username)),
-            ),
-          ],
-          data: (value) => value == null
-              ? [
-                  VnlfStateCard(
-                    icon: Icons.person_outline,
-                    title: vi.app.profile.khongTimThayHo,
-                    message: vi.app.profile.hoSoNayHien,
-                  ),
-                ]
-              : [
-                  ProfileHeader(
-                    profile: value,
-                    actions: ProfileActions(
-                      profile: value,
-                      profileKey: widget.username,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  VnlfFeedTabBar(
-                    tabs: _tabs(value),
-                    selectedIndex: value.guestbookEnabled
-                        ? _tab
-                        : _tab.clamp(0, 2),
-                    onTabSelected: (index) => setState(() => _tab = index),
-                    semanticLabel: vi.accountViews.noiDungHoSo,
-                  ),
-                  const SizedBox(height: 12),
-                  if (_tab == 3 &&
-                      (value.guestbookEnabled ||
-                          ref.watch(sessionStateProvider)?.userId ==
-                              value.author.id))
-                    ProfileGuestbook(
-                      key: ValueKey(
-                        '${value.author.username}:${ref.watch(sessionStateProvider)?.userId}',
-                      ),
-                      username: value.author.username,
-                      ownerId: value.author.id,
-                    )
-                  else
-                    ProfileContent(
-                      username: value.author.username,
-                      tab: _tab < 3 ? _tab : 0,
-                    ),
-                ],
-        ),
-      ],
+      ),
     );
   }
 
-  List<String> _tabs(PublicProfile profile) {
+  List<Widget> _page(PublicProfile value, ProfilePalette palette, bool phone) {
+    final owner = ref.watch(sessionStateProvider)?.userId == value.author.id;
+    final guestbook = value.guestbookEnabled || owner;
+    final tabs = _tabs(value.author.username, guestbook);
+    final selected = _tab.clamp(0, tabs.length - 1);
     return [
-      vi.common.baiViet,
-      vi.common.binhLuan,
-      vi.socialChrome.duAn,
-      if (profile.guestbookEnabled ||
-          ref.watch(sessionStateProvider)?.userId == profile.author.id)
-        vi.guestbook.soLuuBut,
+      ProfileHeader(
+        profile: value,
+        palette: palette,
+        actions: ProfileActions(profile: value, profileKey: widget.username),
+        tabs: ProfileTabs(
+          tabs: tabs,
+          selected: selected,
+          accent: palette.accent,
+          onSelected: (index) => setState(() => _tab = index),
+        ),
+      ),
+      SizedBox(height: phone ? 8 : 16),
+      if (selected == 3)
+        ProfileGuestbook(
+          key: ValueKey(
+            '${value.author.username}:${ref.watch(sessionStateProvider)?.userId}',
+          ),
+          username: value.author.username,
+          ownerId: value.author.id,
+        )
+      else
+        ProfileContent(username: value.author.username, tab: selected),
+    ];
+  }
+
+  /// The website's tabs and counts: the loaded posts and comments, the
+  /// projects once loaded, and the guestbook's total from the server.
+  List<ProfileTab> _tabs(String username, bool guestbook) {
+    final posts = ref.watch(profilePostsProvider(username)).valueOrNull;
+    final comments = ref.watch(profileCommentsProvider(username)).valueOrNull;
+    final projects = ref.watch(profileProjectsProvider(username)).valueOrNull;
+    final entries = guestbook
+        ? ref.watch(profileGuestbookProvider(username)).valueOrNull
+        : null;
+    return [
+      (label: vi.common.baiViet, icon: null, count: posts?.items.length),
+      (label: vi.common.binhLuan, icon: null, count: comments?.items.length),
+      (
+        label: vi.projects.tabDuAn,
+        icon: VnlfLucide.folderGit2,
+        count: projects?.items.length,
+      ),
+      if (guestbook)
+        (
+          label: vi.guestbook.soLuuBut,
+          icon: VnlfLucide.bookOpen,
+          count: entries?.total,
+        ),
     ];
   }
 }

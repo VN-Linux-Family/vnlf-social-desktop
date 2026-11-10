@@ -50,7 +50,8 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ The voice room chimes (someone joins, a message in the room's chat) come with the voice room port; `assets/sounds/voice-join.wav` is ready.
 
 ### 5. Profile
-- ⬜ Profile page parity (`account-views.tsx`, `profile-cover.tsx`, `profile-house.tsx`).
+- ✅ Profile header like `ProfileView` (#15): the profile theme's colours and canvas, the cover, the avatar over its edge, links and the Discord account, the status, follow or edit, the "…" menu, the stats and the tabs with their counts.
+- ⬜ Still on the profile page: the moving cover, wallpaper, music, the machine card, the visit counter, the "Đã lưu" tab, and the profile and decor reports.
 - ⬜ Avatar and cover upload with cropping.
 - ⬜ Followers and following lists. The app only shows the counts.
 - ⬜ Profile music, "my machine" card, personal links, visit counter.

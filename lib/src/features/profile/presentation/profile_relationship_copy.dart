@@ -16,7 +16,6 @@ final class ProfileRelationshipCopy {
   String get unblock => vi.people.boChan;
   String get unblockLabel => format(vi.app.profile.boChan, {'name': name});
   String get blockedHint => vi.people.banDaChan;
-  String get moreOptions => vi.app.profile.tuyChonHoSo;
   String get cancel => vi.common.huy;
   String get confirmBlock => vi.common.chan;
   String get blockTitle => format(vi.people.chanHoi, {'name': name});

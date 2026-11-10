@@ -24,6 +24,30 @@ void main() {
             'followingCount': 3,
             'bio': 'Tiếng Việt: ặ ữ ờ ẫ ệ',
             'unknown': true,
+            'decor': {
+              'cover': {
+                'imageUrl': 'https://example.invalid/cover-1500.webp',
+                'smallUrl': 'https://example.invalid/cover-750.webp',
+                'videoUrl': null,
+              },
+              'theme': {'id': 'nord', 'accentColor': '#3366ff'},
+              'guestbookEnabled': true,
+              'status': {
+                'emoji': '🐧',
+                'text': 'Đang cài Arch',
+                'expiresAt': null,
+              },
+              'links': [
+                {
+                  'url': 'https://github.com/an',
+                  'platform': 'github',
+                  'label': 'an',
+                },
+                {'platform': 'x'},
+              ],
+              'discord': {'username': 'an.vnlf', 'displayName': null},
+              'visits': {'count': 1234, 'hidden': false},
+            },
           },
           '/api/v1/users/fixture/articles' => <String, dynamic>{
             'items': [
@@ -90,6 +114,17 @@ void main() {
     expect(profile.currentStreak, 5);
     expect(profile.followingCount, 3);
     expect(profile.followerCount, 8);
+    expect(profile.coverUrl, 'https://example.invalid/cover-1500.webp');
+    expect(
+      profile.decor.coverSmallUrl,
+      'https://example.invalid/cover-750.webp',
+    );
+    expect(profile.decor.themeId, 'nord');
+    expect(profile.decor.accentColor, '#3366ff');
+    expect(profile.decor.status, (emoji: '🐧', text: 'Đang cài Arch'));
+    expect(profile.decor.links, ['https://github.com/an']);
+    expect(profile.decor.discordUsername, 'an.vnlf');
+    expect(profile.decor.visits, (count: 1234, hidden: false));
     expect(
       (await repository.getPosts('fixture')).items.single.id,
       'scoped-post',

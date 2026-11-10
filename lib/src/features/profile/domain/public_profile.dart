@@ -14,6 +14,7 @@ final class PublicProfile {
     this.isSample = false,
     this.followedByViewer,
     this.blockedByViewer,
+    this.decor = const ProfileDecor(),
   });
   final Author author;
   final String? bio;
@@ -29,6 +30,43 @@ final class PublicProfile {
   /// Null means the server did not provide the viewer's relationship state.
   final bool? followedByViewer;
   final bool? blockedByViewer;
+
+  /// The look its owner picked; the defaults when they changed nothing.
+  final ProfileDecor decor;
+}
+
+/// The parts of the website's `decor` a profile page and card show.
+final class ProfileDecor {
+  const ProfileDecor({
+    this.themeId = 'vnlf',
+    this.accentColor,
+    this.coverSmallUrl,
+    this.status,
+    this.links = const [],
+    this.discordUsername,
+    this.visits,
+  });
+
+  /// A `PROFILE_THEMES` id; `profileThemeColors` falls back to `vnlf`.
+  final String themeId;
+  final String? accentColor;
+
+  /// The 750×250 cover, which the card shows.
+  final String? coverSmallUrl;
+
+  /// The emoji and line shown under the bio.
+  final ({String emoji, String text})? status;
+
+  /// The links under the bio as stored; `parseProfileLink` checks each again
+  /// before it is shown.
+  final List<String> links;
+
+  /// The linked Discord account, when its owner shows it.
+  final String? discordUsername;
+
+  /// Different visitors per day, summed. Null for visitors when the owner
+  /// hid it; [hidden] tells the owner that only they see it.
+  final ({int count, bool hidden})? visits;
 }
 
 final class ProfileComment {
