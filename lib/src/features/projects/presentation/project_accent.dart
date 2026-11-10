@@ -11,6 +11,9 @@ final class ProjectAccent {
 
   Color get color => _projectColor ?? colors.brand;
 
+  /// The project's own logo colour, when it set a valid one.
+  Color? get own => _projectColor;
+
   Color get soft => _projectColor == null
       ? colors.brandSoft
       : Color.alphaBlend(

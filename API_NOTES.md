@@ -240,7 +240,7 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 | `POST` | `/api/v1/auth/register` | [CONFIRMED] | No | Verified payload: `{"email": "<email>", "username": "<user>", "password": "<pwd>"}`. Success returns session JSON and emits `set-cookie`. Duplicate returns `HTTP 409`. |
 | `POST` | `/api/v1/auth/refresh` | [INFERRED] | Cookie | Cookie/token rotation behavior. |
 | `POST` | `/api/v1/auth/logout` | [CONFIRMED] | Cookie | Clears server-side session and cookie. |
-| `GET` | `/api/v1/discover` | [CONFIRMED] | No | Returns `{articles: [...], users: [...], tags: [...], projects: [...], hasMore: bool}`. Powers the Discover screen with live community content. |
+| `GET` | `/api/v1/discover` | [CONFIRMED] | No | Returns `{articles: [...], users: [...], tags: [...], projects: [...], hasMore: bool}`. The website's Khám phá reads only the first three `tags` and `users` (`users[]` carries `bio` and `followedByViewer`). Its `articles` are the search projection: no `voteScore`, `viewerVote` or `commentCount` (checked live 2026-11-10), so the app draws no post cards from them. Featured projects come from `GET /api/v1/projects?sort=featured`, first three. |
 | `GET` | `/api/v1/users/{username}` | [CONFIRMED] | No | User profile entity: `{id, role, status, username, displayName, bio, website, totalPoints, level, currentStreak, followerCount, followingCount, avatarUrl, style, ...}`. |
 
 > [!NOTE]

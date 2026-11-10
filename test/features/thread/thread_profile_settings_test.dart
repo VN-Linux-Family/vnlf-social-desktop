@@ -7,6 +7,7 @@ import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/domain/repositories.dart';
+import 'package:vnlfsocialapp/src/features/discover/presentation/discover_screen.dart';
 import 'package:vnlfsocialapp/src/features/profile/presentation/profile_tabs.dart';
 
 void main() {
@@ -218,28 +219,31 @@ void main() {
     expect(backButtons, findsOneWidget);
   });
 
-  testWidgets('discover searches and filters articles and opens contributors', (
+  testWidgets('discover shows topics, projects and people to follow', (
     tester,
   ) async {
     final router = await _pumpApp(tester);
     router.go('/discover');
     await tester.pumpAndSettle();
-    expect(find.text('Bài viết nổi bật'), findsOneWidget);
+    expect(find.text('Góc nhìn mới, mỗi ngày.'), findsOneWidget);
     expect(find.text('Arch Linux'), findsOneWidget);
-    expect(find.text('Hyprland'), findsOneWidget);
-    expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'không có bài nào');
+    // Only the first three topics, as on the website.
+    expect(find.text('Hyprland'), findsNothing);
+    expect(find.text('Dự án nổi bật'), findsOneWidget);
+    expect(find.text('vnlf-cli'), findsOneWidget);
+    // The people come last in a lazily built list.
+    await tester.scrollUntilVisible(
+      find.text('@hoangnam'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(DiscoverScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.pumpAndSettle();
-    expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsNothing);
-    expect(find.text('Không có kết quả'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), '');
-    await tester.tap(find.text('Arch Linux'));
-    await tester.pumpAndSettle();
-    expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
-    final contributor = find.text('Hoàng Nam').last;
-    await tester.ensureVisible(contributor);
-    await tester.pumpAndSettle();
-    await tester.tap(contributor);
+    await tester.tap(find.bySemanticsLabel(RegExp('Xem hồ sơ Hoàng Nam')));
     await tester.pumpAndSettle();
     expect(
       router.routerDelegate.currentConfiguration.last.matchedLocation,

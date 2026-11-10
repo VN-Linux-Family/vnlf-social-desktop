@@ -355,8 +355,14 @@ GoRouter createMainRouter({
                     ),
                   ],
                 ),
-                // Detail pages are wide on the website: no right rail.
-                rightSidebarChild: state.uri.path == '/'
+                // The website keeps its right rail on the feed and Khám phá;
+                // other pages are wide there.
+                rightSidebarChild:
+                    const [
+                      '/',
+                      '/discover',
+                      '/explore',
+                    ].contains(state.uri.path)
                     ? const LeaderboardPanel(sidebar: true)
                     : null,
                 destinationLabels: labels,

@@ -28,7 +28,7 @@ final class ProjectItemDto {
       owner: owner == null ? null : ProfileDto.fromJson(owner).toDomain(),
       repo: objectValue(_json['repo'], 'repo'),
       rating: objectValue(_json['rating'], 'rating'),
-      commentCount: intValue(_json['commentCount'], 'commentCount'),
+      commentCount: nullableInt(_json['commentCount'], 'commentCount'),
       approvedAt: dateValue(_json['approvedAt'], 'approvedAt'),
     );
   }

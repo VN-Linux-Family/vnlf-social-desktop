@@ -27,7 +27,6 @@ abstract interface class PostRepository {
 }
 
 abstract interface class DiscoverRepository {
-  Future<DiscoverPage> getProjects();
   Future<DiscoverData> getDiscoverData();
 }
 

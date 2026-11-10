@@ -5,10 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../shared/presentation/post_card_tile.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../../projects/presentation/project_card.dart';
 import '../domain/public_profile.dart';
 import 'profile_data.dart';
 
@@ -68,23 +68,10 @@ class ProfileContent extends ConsumerWidget {
         ref.watch(profileProjectsProvider(username)),
         () => ref.invalidate(profileProjectsProvider(username)),
         (page) => [
-          if (page.items.isEmpty) _empty(vi.app.common.chuaCoDuAn),
-          for (final item in page.items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: VnlfProjectPreviewCard(
-                project: ProjectShowcaseData(
-                  id: item.id,
-                  name: item.name,
-                  description: item.tagline,
-                  primaryLanguage: item.repo?['language'] as String? ?? '',
-                  tag: item.type,
-                  stars: (item.repo?['stars'] as num?)?.toInt() ?? 0,
-                  forks: (item.repo?['forks'] as num?)?.toInt() ?? 0,
-                  rating: (item.rating?['average'] as num?)?.toDouble() ?? 0,
-                ),
-              ),
-            ),
+          if (page.items.isEmpty)
+            _empty(vi.app.common.chuaCoDuAn)
+          else
+            ProjectGrid(items: page.items),
         ],
       ),
     };

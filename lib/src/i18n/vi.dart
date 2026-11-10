@@ -4665,7 +4665,6 @@ final class ViApp {
   final core = const ViAppCore._();
   final designSystem = const ViAppDesignSystem._();
   final directMessages = const ViAppDirectMessages._();
-  final discover = const ViAppDiscover._();
   final feed = const ViAppFeed._();
   final feedback = const ViAppFeedback._();
   final leaderboard = const ViAppLeaderboard._();
@@ -5021,17 +5020,6 @@ final class ViAppDirectMessages {
   final khongTimThayThanh = 'Không tìm thấy thành viên';
   final trucTuyen = 'Trực tuyến';
   final ngoaiTuyen = 'Ngoại tuyến';
-}
-
-final class ViAppDiscover {
-  const ViAppDiscover._();
-  final hayThuTuKhoa = 'Hãy thử từ khóa hoặc chủ đề khác.';
-  final khongCoKetQua = 'Không có kết quả';
-  final chuaCoThanhVien = 'Chưa có thành viên';
-  final thanhVienTichCuc = 'Thành viên tích cực';
-  final duAnCongDong = 'Dự án cộng đồng';
-  final baiVietNoiBat = 'Bài viết nổi bật';
-  final timBaiViet = 'Tìm bài viết';
 }
 
 final class ViAppFeed {

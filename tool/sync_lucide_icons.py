@@ -24,17 +24,18 @@ OUT = pathlib.Path('lib/src/design_system/icons/vnlf_lucide.dart')
 # Icons the ported screens use, by their lucide (kebab-case) name.
 ICONS = [
     'arrow-big-down', 'arrow-big-up', 'arrow-left', 'arrow-up-right',
-    'at-sign', 'badge-check', 'ban', 'bell', 'book-open', 'bookmark',
-    'check', 'chevron-down', 'chevron-left', 'chevron-right',
-    'circle-alert', 'circle-check', 'circle-help', 'compass', 'ellipsis',
-    'eye', 'flag', 'flame', 'folder-git-2', 'headphones', 'heart',
-    'image-plus', 'layout-grid', 'link-2', 'linkedin', 'loader-circle',
-    'lock-keyhole', 'log-out', 'mail', 'mail-check', 'message-circle',
-    'message-square-text', 'mic-vocal', 'monitor', 'moon', 'pause',
-    'pen-line', 'pin', 'play', 'plus', 'radio', 'refresh-cw', 'reply',
-    'rotate-ccw', 'search', 'send', 'settings', 'shield', 'shield-check',
-    'square-plus', 'sticker', 'store', 'sun', 'trash-2', 'trophy',
-    'user-check', 'user-plus', 'users', 'x', 'zap',
+    'at-sign', 'badge-check', 'ban', 'bell', 'book-open', 'bookmark', 'check',
+    'chevron-down', 'chevron-left', 'chevron-right', 'circle-alert',
+    'circle-check', 'circle-help', 'compass', 'ellipsis', 'eye', 'flag',
+    'flame', 'folder-git-2', 'git-fork', 'github', 'handshake', 'hash',
+    'headphones', 'heart', 'history', 'image-plus', 'layout-grid', 'link-2',
+    'linkedin', 'loader-circle', 'lock-keyhole', 'log-out', 'mail',
+    'mail-check', 'message-circle', 'message-square-text', 'mic-vocal',
+    'monitor', 'moon', 'pause', 'pen-line', 'pin', 'play', 'plus', 'radio',
+    'refresh-cw', 'reply', 'rotate-ccw', 'search', 'send', 'settings',
+    'shield', 'shield-check', 'square-plus', 'star', 'sticker', 'store', 'sun',
+    'trash-2', 'trending-up', 'trophy', 'user-check', 'user-plus', 'users',
+    'x', 'zap',
 ]
 
 

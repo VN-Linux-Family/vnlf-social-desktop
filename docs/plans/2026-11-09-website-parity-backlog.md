@@ -68,7 +68,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ Voice: text chat in the room, per-person volume, noise suppression.
 
 ### 8. Other pages
-- ⬜ Explore page: intro, topics, featured projects, writer cards.
+- ✅ Explore page: intro, topics, featured projects, writer cards (#17). The website's project card is ported (`ProjectCard`); topics open search until the tag page is ported.
 - ⬜ Tag pages (`/t/[tag]`) and "My articles" (`/my/articles`).
 - ⬜ Stats and points history (`/stats`, `/stats/history`). The app has an Activity screen to compare.
 - ⬜ Daily check-in card in the right rail.

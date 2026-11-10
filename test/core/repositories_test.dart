@@ -26,12 +26,14 @@ void main() {
         await container.read(channelsRepositoryProvider).getChannels(),
         isEmpty,
       );
+      final discover = await container
+          .read(discoverRepositoryProvider)
+          .getDiscoverData();
+      expect(discover.tags.first.name, 'Arch Linux');
+      expect(discover.users.single.author.username, 'hoangnam');
       expect(
-        (await container.read(discoverRepositoryProvider).getProjects())
-            .items
-            .single
-            .name,
-        'vnlf-cli',
+        discover.users.single.bio,
+        'Yêu thích Linux, chia sẻ công cụ mã nguồn mở.',
       );
       expect(
         (await container.read(leaderboardsRepositoryProvider).getLeaderboard())

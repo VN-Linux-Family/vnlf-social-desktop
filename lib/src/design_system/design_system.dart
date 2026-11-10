@@ -19,6 +19,7 @@ export 'components/vnlf_state_cards.dart';
 export 'components/vnlf_vote_capsule.dart';
 export 'models/vnlf_models.dart';
 export 'tokens/vnlf_colors.dart';
+export 'tokens/vnlf_css_gradient.dart';
 export 'tokens/vnlf_dimensions.dart';
 export 'tokens/vnlf_theme.dart';
 export 'tokens/vnlf_typography.dart';
