@@ -236,10 +236,14 @@ class _PostDetailCard extends ConsumerWidget {
               'displayName': post.author.displayName,
             }),
             excludeSemantics: true,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => openAuthorProfile(context, post),
-              child: VnlfAvatar(author: detail.author, size: phone ? 40 : 43),
+            child: VnlfProfilePreview.wrap(
+              context,
+              post.author.username,
+              InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => openAuthorProfile(context, post),
+                child: VnlfAvatar(author: detail.author, size: phone ? 40 : 43),
+              ),
             ),
           ),
           SizedBox(width: phone ? 10 : 13),
@@ -276,7 +280,7 @@ class _AuthorLine extends StatelessWidget {
       style: VnlfTypography.body(colors.muted),
     );
     final narrow = MediaQuery.sizeOf(context).width <= 520;
-    return InkWell(
+    final link = InkWell(
       onTap: () => openAuthorProfile(context, post),
       child: narrow
           ? Column(
@@ -295,6 +299,7 @@ class _AuthorLine extends StatelessWidget {
               ],
             ),
     );
+    return VnlfProfilePreview.wrap(context, post.author.username, link);
   }
 }
 

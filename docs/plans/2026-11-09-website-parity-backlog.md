@@ -32,7 +32,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ The website's "…" menu everywhere a post appears: save, copy link, edit and delete for the author, hide and report for everyone else (#8).
 - ✅ Share dialog: message, Facebook, Telegram, Email and copy (#8).
 - ✅ Sticker and GIF picker in comments: KLIPY search, saved stickers, installed packs, recent stickers (#11). The pack dialog and sticker pages still open the website.
-- ⬜ Profile hover card on desktop (`profile-card.tsx`).
+- ✅ Profile card like `profile-card.tsx` (#16): with a mouse it opens 450 ms over a name or avatar and closes 250 ms after leaving both; on touch a 500 ms press opens it as a sheet. It shows the profile's theme, cover, level, status, bio, links, follow, "Nhắn tin" and "Xem trang cá nhân". Post cards, comments, post and article authors and guestbook entries have it; @mentions inside text do not yet.
 
 ### 2. Sign-in pages
 - ✅ Login and register pages like the website's `AuthView` (#11).
@@ -53,7 +53,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ Profile header like `ProfileView` (#15): the profile theme's colours and canvas, the cover, the avatar over its edge, links and the Discord account, the status, follow or edit, the "…" menu, the stats and the tabs with their counts.
 - ⬜ Still on the profile page: the moving cover, wallpaper, music, the machine card, the visit counter, the "Đã lưu" tab, and the profile and decor reports.
 - ⬜ Avatar and cover upload with cropping.
-- ⬜ Followers and following lists. The app only shows the counts.
+- ✅ Followers and following lists like `PeopleDialog` (#16): the two counts open them, with a follow button on each row.
 - ⬜ Profile music, "my machine" card, personal links, visit counter.
 - ⬜ Customize hub (`/settings/decor`) and wardrobe: frames, name effects, nameplates, pets, entrance. The app already draws frames and name effects but cannot pick them.
 

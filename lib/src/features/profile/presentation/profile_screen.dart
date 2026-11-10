@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +9,11 @@ import '../../../design_system/design_system.dart';
 import '../../../app/providers.dart';
 import '../../../i18n/vi.dart';
 import '../../shared/presentation/feature_widgets.dart';
+import '../../shared/presentation/page_header_actions.dart';
 import '../domain/public_profile.dart';
+import 'people_dialog.dart';
 import 'profile_actions.dart';
+import 'profile_card.dart';
 import 'profile_content.dart';
 import 'profile_data.dart';
 import 'profile_guestbook.dart';
@@ -31,10 +37,21 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _tab = 0;
+  final _scroll = ScrollController();
+
+  /// The desktop page header's height and the gap under it.
+  static const _headerSpace = 64.0 + 18;
+
   @override
   void initState() {
     super.initState();
     if (widget.initialGuestbook) _tab = 3;
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -56,55 +73,74 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       profile.valueOrNull?.decor ?? const ProfileDecor(),
     );
     final gutter = VnlfDimensions.mobileGutter(width);
-    return ColoredBox(
-      color: palette.canvas,
-      child: ListView(
-        padding: phone
-            ? EdgeInsets.fromLTRB(gutter, 10, gutter, 20)
-            : const EdgeInsets.fromLTRB(38, 34, 38, 80),
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    final list = ListView(
+      controller: _scroll,
+      padding: phone
+          ? EdgeInsets.fromLTRB(gutter, 10, gutter, 20)
+          : const EdgeInsets.fromLTRB(38, 34 + _headerSpace, 38, 80),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...profile.when(
+                  loading: () => const [
+                    Center(child: CircularProgressIndicator()),
+                  ],
+                  error: (error, stack) => [
+                    FeatureLoadError(
+                      onRetry: () =>
+                          ref.invalidate(profileProvider(widget.username)),
+                    ),
+                  ],
+                  data: (value) => value == null
+                      ? [
+                          VnlfStateCard(
+                            icon: Icons.person_outline,
+                            title: vi.app.profile.khongTimThayHo,
+                            message: vi.app.profile.hoSoNayHien,
+                          ),
+                        ]
+                      : _page(value, palette, phone),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+    return ProfilePageScope(
+      username: profile.valueOrNull?.author.username ?? widget.username,
+      child: ColoredBox(
+        color: palette.canvas,
+        child: phone
+            ? list
+            : Stack(
                 children: [
-                  if (!phone && context.canPop()) ...[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        tooltip: vi.app.common.quayLai,
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        onPressed: () => context.pop(),
+                  Positioned.fill(child: list),
+                  // The website's title bar floats over the profile and
+                  // stays 12px from the top once the page scrolls.
+                  ListenableBuilder(
+                    listenable: _scroll,
+                    builder: (context, _) => Positioned(
+                      top: math.max(
+                        12,
+                        34 - (_scroll.hasClients ? _scroll.offset : 0),
+                      ),
+                      left: 38,
+                      right: 38,
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 720),
+                          child: const _FloatingHeader(),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                  ],
-                  ...profile.when(
-                    loading: () => const [
-                      Center(child: CircularProgressIndicator()),
-                    ],
-                    error: (error, stack) => [
-                      FeatureLoadError(
-                        onRetry: () =>
-                            ref.invalidate(profileProvider(widget.username)),
-                      ),
-                    ],
-                    data: (value) => value == null
-                        ? [
-                            VnlfStateCard(
-                              icon: Icons.person_outline,
-                              title: vi.app.profile.khongTimThayHo,
-                              message: vi.app.profile.hoSoNayHien,
-                            ),
-                          ]
-                        : _page(value, palette, phone),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -119,6 +155,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         profile: value,
         palette: palette,
         actions: ProfileActions(profile: value, profileKey: widget.username),
+        onOpenPeople: ref.watch(peopleRepositoryProvider) == null
+            ? null
+            : (tab) => showPeopleDialog(
+                context,
+                username: value.author.username,
+                name: value.author.displayName,
+                initial: tab,
+              ),
         tabs: ProfileTabs(
           tabs: tabs,
           selected: selected,
@@ -164,5 +208,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           count: entries?.total,
         ),
     ];
+  }
+}
+
+/// The website's frosted title bar on a profile: "Hồ sơ", then search,
+/// the bell and the viewer's avatar, with a way back when there is one.
+class _FloatingHeader extends StatelessWidget {
+  const _FloatingHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = VnlfColors.of(context);
+    final radius = BorderRadius.circular(VnlfDimensions.radiusLg);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x8C000000),
+            offset: Offset(0, 12),
+            blurRadius: 30,
+            spreadRadius: -20,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 64),
+            padding: const EdgeInsets.fromLTRB(18, 10, 12, 10),
+            decoration: BoxDecoration(
+              color: colors.surface.withValues(alpha: .76),
+              border: Border.all(color: colors.surface.withValues(alpha: .55)),
+              borderRadius: radius,
+            ),
+            child: Row(
+              spacing: 10,
+              children: [
+                if (context.canPop())
+                  IconButton(
+                    tooltip: vi.app.common.quayLai,
+                    icon: const VnlfIcon(VnlfLucide.arrowLeft, size: 20),
+                    onPressed: () => context.pop(),
+                  ),
+                Expanded(
+                  child: Text(
+                    vi.common.hoSo,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: VnlfTypography.pageTitle(colors.ink),
+                  ),
+                ),
+                const PageHeaderActions(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

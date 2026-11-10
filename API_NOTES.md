@@ -906,5 +906,18 @@ synthetic coverage in `test/features/notifications/notification_center_test.dart
   `POST /api/v1/dm/conversations`, as the app's new-message dialog does.
 
 Not ported yet: the moving cover (`videoUrl`), the wallpaper, music, the
-machine card, the visit counter, the "Đã lưu" tab, the followers and following
-lists, and the profile and decor reports.
+machine card, the counter skins, the "Đã lưu" tab, and the profile and decor
+reports.
+
+## Followers and following — 2026-11-10
+
+[CONFIRMED from source] (`apps/api/src/modules/users.ts:30-31`,
+`people-lists.tsx`, `PersonRowSchema` in `packages/contracts/src/social.ts`):
+- `GET /api/v1/users/{username}/followers[?cursor=]` and
+  `GET /api/v1/users/{username}/following[?cursor=]` return
+  `{items: PersonRow[], nextCursor}`, newest first. A `PersonRow` is
+  `{id, username, displayName, bio, avatarUrl, style, followedByViewer, isViewer}`.
+  Both work without a session.
+- A row's follow button sends the existing `POST`/`DELETE /api/v1/users/{id}/follow`
+  once, never retried, then the open profiles read their counts again, as the
+  website invalidates its `['profile']` queries.

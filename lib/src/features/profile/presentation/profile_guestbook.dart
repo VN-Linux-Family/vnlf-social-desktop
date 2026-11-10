@@ -312,13 +312,17 @@ class _ProfileGuestbookState extends ConsumerState<ProfileGuestbook> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          InkWell(
-                            onTap: () => context.push(
-                              '/profile/${Uri.encodeComponent(entry.author.username)}',
-                            ),
-                            child: VnlfAvatar(
-                              author: presentAuthor(entry.author),
-                              size: 32,
+                          VnlfProfilePreview.wrap(
+                            context,
+                            entry.author.username,
+                            InkWell(
+                              onTap: () => context.push(
+                                '/profile/${Uri.encodeComponent(entry.author.username)}',
+                              ),
+                              child: VnlfAvatar(
+                                author: presentAuthor(entry.author),
+                                size: 32,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10),
