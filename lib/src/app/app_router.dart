@@ -30,6 +30,7 @@ import '../features/projects/presentation/projects_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/shared/presentation/session_avatar.dart';
+import '../features/shared/presentation/right_rail.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
@@ -363,7 +364,7 @@ GoRouter createMainRouter({
                       '/discover',
                       '/explore',
                     ].contains(state.uri.path)
-                    ? const LeaderboardPanel(sidebar: true)
+                    ? const RightRail()
                     : null,
                 destinationLabels: labels,
                 brandTitlePrefix: 'VNLF ',

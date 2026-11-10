@@ -71,7 +71,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ✅ Explore page: intro, topics, featured projects, writer cards (#17). The website's project card is ported (`ProjectCard`); topics open search until the tag page is ported.
 - ⬜ Tag pages (`/t/[tag]`) and "My articles" (`/my/articles`).
 - ⬜ Stats and points history (`/stats`, `/stats/history`). The app has an Activity screen to compare.
-- ⬜ Daily check-in card in the right rail.
+- ✅ The website's right rail (`RightRail`): "XP của bạn" with the level, the next goal and the streak (`GET /api/v1/me/point-stats?period=week`), the busiest open voice room, and the week's top three, each only when it has something to show (#19).
 - ⬜ Sticker packs (`/stickers`) and pixel icons (`/icons`).
 - ⬜ Edit a submitted project (`/projects/[slug]/edit`).
 - ⬜ CaramOS support tickets, Help, Community guidelines and Privacy. The app opens these on the website today.
