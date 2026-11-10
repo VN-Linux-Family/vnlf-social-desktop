@@ -344,7 +344,7 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 | `GET` | `/api/v1/leaderboards` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response: `period`, `periodStart`, `periodEnd`, `computedAt`, `items`. |
 | `GET` | `/api/v1/point-rules` | [CONFIRMED - observed unauthenticated (public)] | Optional | Observed live response: `items` array with karma activity rules. |
 | `GET` | `/api/v1/me/points` | [INFERRED] | Yes | Current user point balance. Authenticated state **[UNKNOWN]**. |
-| `GET` | `/api/v1/me/point-stats`| [INFERRED] | Yes | Authenticated points history **[UNKNOWN]**. |
+| `GET` | `/api/v1/me/point-stats` | [CONFIRMED - website source + server source] | Yes | `?period=week\|month\|year` (default week). The website's right rail calls it with `period=week` (`social-chrome.tsx`). Returns `{period, start, end, totalPoints, level, currentStreak, longestStreak, earnedPoints, series: [{date, points}], byActivity: [{type, points}], nextLevel: {level, name, minTotalPoints} \| null}` (`apps/api/src/modules/admin.ts`). |
 | `POST` | `/api/v1/me/check-in` | [INFERRED] | Yes | Write endpoint: daily check-in claim. |
 
 ---
