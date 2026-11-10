@@ -1,9 +1,9 @@
 # Native push notifications
 
-Status, 2026-11-09: the app can read, show and register Web Push
-notifications, but nothing can receive them yet. The server only accepts
-browser push endpoints, and the app has no push service on the device. This
-page lists what each side needs. Source references are to the website
+Status, 2026-11-10: the Android app receives Web Push through a UnifiedPush
+distributor and has the Settings card, but the server only accepts browser
+push endpoints, so turning push on fails until it changes. This page lists
+what each side needs. Source references are to the website
 repository (`vnlf-social`).
 
 ## What the server sends today
@@ -53,8 +53,7 @@ All under `lib/src/features/notifications/`:
 - `PushRegistration` follows `push-settings.tsx` step by step, with a
   `PushDistributor` in place of the browser's `PushManager`.
 
-Still missing in the app: a `PushDistributor` implementation and the
-"Thông báo trên thiết bị" switch in Settings.
+The distributor and the Settings card came later; see "App side" below.
 
 ## Server change
 
@@ -72,21 +71,41 @@ worker then posts to those URLs, so pick one of these:
    short. Without that check, an account can make the worker call internal
    services.
 
-## App change, after approval
+## App side (2026-11-10)
 
-1. Add the `unifiedpush` package (6.2.0, Apache-2.0, published by
-   unifiedpush.org; Android, and Linux through `unifiedpush_linux`). AGENTS.md
-   §5 requires the owner's approval and a native build check first.
-2. Implement `PushDistributor` with it: `registerApp(instance, vapid:)` with
-   the server key; the `PushEndpoint` from `onNewEndpoint` (its URL and
-   `pubKeySet`) becomes the `WebPushSubscription`; `onMessage` hands
-   `content` to `PushMessage.decode` and the presenter when `decrypted` is
-   true.
-3. Port `PushSettings` and `PushPermissionPrompt` to Settings with
-   `PushRegistration`, including the per-account "turned off on this device"
-   flag and the one-week "Để sau" snooze.
-4. Register again when the distributor reports a new endpoint, as the
-   website does on `pushsubscriptionchange`, and delete the old one.
+The owner approved the `unifiedpush` package on 2026-11-10.
+
+1. `unifiedpush` resolves to 6.1.0 (Apache-2.0, published by
+   unifiedpush.org, Android only). 6.2.0 also pulls `unifiedpush_linux`,
+   whose `window_manager ^0.5.1` conflicts with the app's 0.6. The connector
+   brings Tink for Java while `flutter_secure_storage` brings Tink for
+   Android, so `android/app/build.gradle.kts` substitutes `tink-android`
+   1.18.0 for both.
+2. `UnifiedPushDistributor` is the `PushDistributor`: `register(vapid:)`
+   with the server key; the endpoint from `onNewEndpoint` (its URL and
+   `pubKeySet`) becomes the `WebPushSubscription`, kept in secure storage
+   with the key it was made for. A missing distributor, an endpoint without
+   keys and a 30-second silence raise `PushDistributorUnavailable`;
+   `onRegistrationFailed` raises `PushRegistrationRefused` with its reason.
+3. Messages: the connector decrypts each one; a body it could decrypt goes
+   to `PushMessage.decode` and `PushMessagePresenter`. While the app runs,
+   `PushServiceBinding` takes them. With the app closed, the connector
+   starts `main` headless with `--unifiedpush-bg`, which only shows the
+   notification. A tap that starts the app is read from the plugin's launch
+   details.
+4. A replaced endpoint, the counterpart of `pushsubscriptionchange`: the
+   distributor records the endpoint the server still has. Once a member is
+   signed in, `PushRegistration.replace` posts the new one and deletes the
+   old one, once per launch or replacement, never retried.
+5. Settings has the website's "Thông báo đẩy" card (`PushSettings`): it
+   loads, turns push on and off at once, and sends a local test while on.
+   It tells apart a missing permission, no distributor, a refusing
+   distributor, the server refusing the endpoint (400
+   `PUSH_ENDPOINT_INVALID`, true until the server change) and the 10-device
+   limit. Not ported yet: `PushPermissionPrompt` with the per-account
+   "turned off on this device" flag and the one-week "Để sau" snooze. It
+   only makes sense once the server accepts distributor endpoints, since
+   every turn-on fails until then.
 
 ## Checks
 

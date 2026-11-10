@@ -81,7 +81,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 ### 9. Push notifications when the app is closed
 - ⏸ The server sends Web Push only to browser push services, so a closed app cannot be woken. Today the app gets notices while it runs, or in the background on Android when the user turns that on.
 - ✅ The client is ready for a server change (#12): `PushMessage` and `PushMessagePresenter` read and show the worker's payload like `push-sw.js`, `PushRegistration` follows `push-settings.tsx` with a `PushDistributor` in place of the browser's `PushManager`, and `docs/contracts/native-push.md` lists what is left on each side.
-- ⬜ A `PushDistributor` on the `unifiedpush` package, which needs the owner's approval, then the Settings switch.
+- ✅ A `PushDistributor` on the `unifiedpush` package (6.1.0, Android), headless delivery while the app is closed, and endpoint replacement (#18). Settings has the "Thông báo đẩy" card (#18). ⬜ The permission prompt, once the server accepts distributor endpoints.
 
 ## Not planned
 

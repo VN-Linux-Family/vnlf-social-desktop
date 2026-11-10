@@ -12,8 +12,8 @@ typedef HeldPushSubscription = ({
 /// of a browser's `PushManager`: it makes an endpoint with keys for the
 /// server's VAPID key, and decrypts what arrives there.
 ///
-/// No build ships one yet; `docs/contracts/native-push.md` describes what
-/// the server and the app each need.
+/// `docs/contracts/native-push.md` describes what the server and the app
+/// each need.
 abstract interface class PushDistributor {
   /// The subscription this device holds, or null.
   Future<HeldPushSubscription?> current();
@@ -23,4 +23,18 @@ abstract interface class PushDistributor {
 
   /// Drops the subscription this device holds.
   Future<void> unsubscribe();
+}
+
+/// No distributor app is installed, or the one picked did not answer with
+/// an endpoint.
+final class PushDistributorUnavailable implements Exception {
+  const PushDistributorUnavailable();
+}
+
+/// The distributor refused to register the app (`onRegistrationFailed`),
+/// with its reason, such as `NETWORK` or `VAPID_REQUIRED`.
+final class PushRegistrationRefused implements Exception {
+  const PushRegistrationRefused(this.reason);
+
+  final String reason;
 }

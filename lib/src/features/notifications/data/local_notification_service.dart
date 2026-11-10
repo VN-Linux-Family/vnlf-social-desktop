@@ -73,6 +73,7 @@ class LocalNotificationService {
         },
       );
       _initialized = initialized ?? false;
+      if (_initialized) unawaited(_openLaunchNotification());
       return _initialized;
     } catch (e) {
       debugPrint('Failed to initialize local notifications: $e');
@@ -92,7 +93,8 @@ class LocalNotificationService {
     return await android?.requestNotificationsPermission() ?? false;
   }
 
-  Future<void> showNotification({
+  /// Shows a notification; false when the system did not take it.
+  Future<bool> showNotification({
     required int id,
     required String title,
     required String body,
@@ -101,12 +103,12 @@ class LocalNotificationService {
     bool persistent = false,
   }) async {
     try {
-      if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+      if (Platform.environment.containsKey('FLUTTER_TEST')) return true;
     } catch (_) {}
 
     if (!_initialized) {
       final ok = await initialize(onSelectNotification: _onNotificationTap);
-      if (!ok) return;
+      if (!ok) return false;
     }
 
     final androidDetails = AndroidNotificationDetails(
@@ -151,8 +153,10 @@ class LocalNotificationService {
         notificationDetails: notificationDetails,
         payload: payload,
       );
+      return true;
     } catch (e) {
       debugPrint('Error showing local notification: $e');
+      return false;
     }
   }
 
@@ -168,6 +172,21 @@ class LocalNotificationService {
     try {
       await _plugin.cancelAll();
     } catch (_) {}
+  }
+
+  /// A tap on a notification can start the app, for example one shown while
+  /// it was closed. The plugin reports that tap here instead of through the
+  /// tap callback.
+  Future<void> _openLaunchNotification() async {
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      final payload = details?.notificationResponse?.payload;
+      if (details?.didNotificationLaunchApp == true && payload != null) {
+        _onNotificationTap?.call(payload);
+      }
+    } catch (error) {
+      debugPrint('Notification launch details unavailable: $error');
+    }
   }
 
   void dispose() {

@@ -192,6 +192,7 @@ Managed exclusively by **Core (Codex, GPT-6.1 Terra)**:
 | `intl` | `^0.20.2` | Date/time and currency formatting in Vietnamese | Official Dart package |
 | `flutter_svg` | `^2.0.17` | SVG icon & badge rendering | Standard |
 | `livekit_client` | `^2.3.4` | Voice rooms WebRTC SFU client | Official LiveKit SDK |
+| `unifiedpush` | `^6.1.0` | Push to a closed app through a UnifiedPush distributor (Android); owner approved 2026-11-10 | Apache-2.0, publisher unifiedpush.org; 6.2.0 needs `window_manager` 0.5, so the lock keeps 6.1.0 |
 
 Dev Dependencies:
 - `build_runner`, `freezed`, `json_serializable`, `riverpod_generator`, `flutter_test`, `flutter_lints`.

@@ -10,6 +10,7 @@ import '../../../core/desktop_tray_service.dart';
 import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../notifications/data/local_notification_service.dart';
+import '../../notifications/presentation/push_settings_card.dart';
 import '../../shared/presentation/author_mapper.dart';
 import '../../shared/presentation/feature_samples.dart';
 import '../../shared/presentation/feature_widgets.dart';
@@ -174,6 +175,8 @@ class SettingsScreen extends ConsumerWidget {
           const BlockedPeoplePanel(),
           const SizedBox(height: 16),
           const FeatureSurface(child: PreferencesPanel()),
+          const SizedBox(height: 12),
+          const PushSettingsCard(),
         ],
         const SizedBox(height: 16),
         FeatureSurface(

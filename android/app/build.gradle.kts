@@ -7,6 +7,18 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// The UnifiedPush connector depends on Tink for Java and flutter_secure_storage
+// on Tink for Android, which hold the same classes. Both use the Android build.
+configurations.all {
+    val tink = "com.google.crypto.tink:tink-android:1.18.0"
+    resolutionStrategy {
+        force(tink)
+        dependencySubstitution {
+            substitute(module("com.google.crypto.tink:tink")).using(module(tink))
+        }
+    }
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 val appKeystorePropertiesFile = project.file("key.properties")
