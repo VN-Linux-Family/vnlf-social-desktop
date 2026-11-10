@@ -7,7 +7,9 @@ import '../../../app/providers.dart';
 import '../../../domain/models.dart';
 import '../../channels/presentation/live_channel_state.dart';
 import '../../notifications/data/local_notification_service.dart';
+import '../../notifications/domain/community_sounds.dart';
 import '../../notifications/presentation/background_notification_presenter.dart';
+import '../../notifications/presentation/community_chimes.dart';
 import '../../notifications/presentation/notifications_controller.dart';
 import '../data/community_chat_update.dart';
 import '../data/community_socket_client.dart';
@@ -73,7 +75,11 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
           );
         }
       }
-      if (!_foreground) _presentInBackground(event);
+      if (_foreground) {
+        _ring(event);
+      } else {
+        _presentInBackground(event);
+      }
     });
     if (client != null) {
       unawaited(() async {
@@ -81,6 +87,20 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
         await client.start();
       }());
     }
+  }
+
+  /// In front, a message rings the website's chime; in the background the
+  /// system notification brings its own sound.
+  void _ring(CommunityEvent event) {
+    final sound = messageSound(
+      event.type,
+      event.data,
+      ref.read(sessionStateProvider)?.userId ?? '',
+    );
+    if (sound == null) return;
+    ref
+        .read(communitySoundsProvider)
+        .play(sound.kind, sound.id, enabled: ref.read(chimesEnabledProvider));
   }
 
   void _presentInBackground(CommunityEvent event) {

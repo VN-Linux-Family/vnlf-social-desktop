@@ -5321,7 +5321,6 @@ final class ViAppSettings {
   final taiLai = 'Tải lại';
   final chuaXacDinhDuoc =
       'Chưa xác định được cài đặt đã lưu hay chưa. Hãy tải lại để kiểm tra.';
-  final amBaoTinNhan = 'Âm báo tin nhắn trên trang web';
   final binhLuanTraLoi = 'Bình luận, trả lời và tin nhắn';
   final hienThiTrangThai = 'Hiển thị trạng thái trực tuyến';
   final hienThiTrenBang = 'Hiển thị trên bảng xếp hạng';
