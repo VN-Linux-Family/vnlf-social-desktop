@@ -16,6 +16,7 @@ import 'src/features/activity/presentation/activity_page.dart';
 import 'src/features/notifications/data/local_notification_service.dart';
 import 'src/features/notifications/presentation/legacy_push_cleanup_provider.dart';
 import 'src/features/notifications/presentation/notification_tap.dart';
+import 'src/features/notifications/presentation/push_providers.dart';
 import 'src/features/profile/presentation/profile_card.dart';
 import 'src/features/updates/presentation/update_notifier.dart';
 import 'src/i18n/vi.dart';
@@ -27,7 +28,13 @@ import 'src/features/settings/text_size/text_size.dart';
 import 'src/features/shared/presentation/feature_samples.dart'
     show offlineFeatures;
 
-void main() {
+Future<void> main(List<String> args) async {
+  // A push message arrived while the app was closed: the UnifiedPush
+  // connector runs this entrypoint headless to show it.
+  if (args.contains(unifiedPushBackgroundArg)) {
+    await runUnifiedPushInBackground();
+    return;
+  }
   runApp(const MainApp());
 }
 
@@ -58,6 +65,7 @@ class _AppState extends ConsumerState<_App> {
     rootObservers: [_modalTracker.observer()],
     shellObservers: [_modalTracker.observer()],
   );
+  late final _pushService = PushServiceBinding(ref);
 
   @override
   void initState() {
@@ -85,6 +93,7 @@ class _AppState extends ConsumerState<_App> {
                   launchUrl(page, mode: LaunchMode.externalApplication),
             ),
           );
+      unawaited(_pushService.start());
     });
   }
 
@@ -121,6 +130,7 @@ class _AppState extends ConsumerState<_App> {
         _scaffoldMessengerKey.currentState?.clearSnackBars();
         if (nextUser != null && nextUser.isNotEmpty) {
           _removeLegacyPushSubscription();
+          unawaited(_pushService.syncReplacedEndpoint());
         }
       }
     });

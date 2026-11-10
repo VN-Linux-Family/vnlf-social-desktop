@@ -69,4 +69,20 @@ final class PushRegistration {
     await _repository.removeSubscription(held.subscription.endpoint);
     await _distributor.unsubscribe();
   }
+
+  /// Like `push-sw.js` on `pushsubscriptionchange`: registers the endpoint
+  /// the distributor now holds, then deletes [previousEndpoint] when it
+  /// differs.
+  Future<void> replace(String previousEndpoint) async {
+    final held = await _distributor.current();
+    if (held == null) return;
+    await _repository.addSubscription(held.subscription);
+    if (held.subscription.endpoint == previousEndpoint) return;
+    try {
+      await _repository.removeSubscription(previousEndpoint);
+    } on AppFailure {
+      // The server's push worker drops the old endpoint once it answers
+      // 404 or 410, which is all the website relies on too.
+    }
+  }
 }

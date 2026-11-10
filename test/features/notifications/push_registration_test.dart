@@ -70,6 +70,15 @@ void main() {
     expect(distributor.log, ['unsubscribe']);
   });
 
+  test('a replaced endpoint is registered, then the old one deleted', () async {
+    distributor.held = (subscription: _subscription('b'), serverKey: 'key-2');
+    repository.failDelete = true;
+    await registration.replace('a');
+    expect(repository.log, ['POST b', 'DELETE a']);
+    await registration.replace('b');
+    expect(repository.log, ['POST b', 'DELETE a', 'POST b']);
+  });
+
   test('a server without push cannot be turned on', () async {
     await expectLater(
       registration.enable(

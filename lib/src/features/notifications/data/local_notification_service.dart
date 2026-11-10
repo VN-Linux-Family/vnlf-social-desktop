@@ -73,6 +73,7 @@ class LocalNotificationService {
         },
       );
       _initialized = initialized ?? false;
+      if (_initialized) unawaited(_openLaunchNotification());
       return _initialized;
     } catch (e) {
       debugPrint('Failed to initialize local notifications: $e');
@@ -168,6 +169,21 @@ class LocalNotificationService {
     try {
       await _plugin.cancelAll();
     } catch (_) {}
+  }
+
+  /// A tap on a notification can start the app, for example one shown while
+  /// it was closed. The plugin reports that tap here instead of through the
+  /// tap callback.
+  Future<void> _openLaunchNotification() async {
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      final payload = details?.notificationResponse?.payload;
+      if (details?.didNotificationLaunchApp == true && payload != null) {
+        _onNotificationTap?.call(payload);
+      }
+    } catch (error) {
+      debugPrint('Notification launch details unavailable: $error');
+    }
   }
 
   void dispose() {
