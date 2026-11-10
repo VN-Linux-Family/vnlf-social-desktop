@@ -82,6 +82,7 @@ void main() {
         ),
         for (final path in [
           '/search',
+          '/t/:slug',
           '/login',
           '/compose',
           '/projects',
@@ -133,7 +134,7 @@ void main() {
     expect(find.byType(VnlfVoteCapsule), findsNothing);
   });
 
-  testWidgets('the search box and a topic open search', (tester) async {
+  testWidgets('the search box opens search, a topic its page', (tester) async {
     final router = await pump(tester);
     await tester.enterText(find.byType(TextField), 'wayland');
     await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -144,7 +145,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Arch Linux'));
     await tester.pumpAndSettle();
-    expect(find.text('route /search?q=Arch+Linux'), findsOneWidget);
+    expect(find.text('route /t/arch-linux'), findsOneWidget);
   });
 
   testWidgets('a guest who follows is sent to sign in', (tester) async {

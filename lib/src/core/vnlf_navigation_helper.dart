@@ -100,6 +100,18 @@ String? resolveInAppVnlfRoute(Uri uri) {
     case 'settings':
       return '/settings';
 
+    case 't':
+      if (segments.length >= 2 && segments[1].isNotEmpty) {
+        return '/t/${Uri.encodeComponent(segments[1])}';
+      }
+      return null;
+
+    case 'my':
+      if (segments.length >= 2 && segments[1] == 'articles') {
+        return '/my/articles';
+      }
+      return null;
+
     case 'search':
       final q = uri.queryParameters['q'];
       return q != null ? '/search?q=${Uri.encodeComponent(q)}' : '/search';

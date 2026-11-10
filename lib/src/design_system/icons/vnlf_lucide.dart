@@ -19,6 +19,9 @@
 
 /// Lucide outlines (24×24 view box) drawn by [VnlfIcon].
 enum VnlfLucide {
+  archive(
+    '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  ),
   arrowBigDown('<path d="M15 6v6h4l-7 7-7-7h4V6h6z"/>'),
   arrowBigUp('<path d="M9 18v-6H5l7-7 7 7h-4v6H9z"/>'),
   arrowLeft('<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>'),
@@ -56,6 +59,9 @@ enum VnlfLucide {
   ),
   eye(
     '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
+  ),
+  fileText(
+    '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
   ),
   flag(
     '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
