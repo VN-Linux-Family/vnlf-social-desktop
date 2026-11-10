@@ -10,6 +10,7 @@ import 'package:vnlfsocialapp/src/app/app_router.dart';
 import 'package:vnlfsocialapp/src/app/providers.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_card.dart';
 
 void main() {
   for (final width in [390.0, 900.0, 1440.0]) {
@@ -77,11 +78,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/projects');
-    expect(find.byType(VnlfProjectPreviewCard), findsOneWidget);
+    expect(find.byType(ProjectCard), findsOneWidget);
     expect(find.text('vnlf-cli'), findsOneWidget);
     expect(
       find.descendant(
-        of: find.byType(VnlfProjectPreviewCard),
+        of: find.byType(ProjectCard),
         matching: find.text('Dart'),
       ),
       findsOneWidget,

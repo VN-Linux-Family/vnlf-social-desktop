@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -13,9 +15,12 @@ import 'project_detail_sheet.dart';
 /// its project lists share. VNLF's own projects are brand green, partners'
 /// amber and members' plain; a project with a logo colour is tinted by it.
 class ProjectCard extends StatefulWidget {
-  const ProjectCard({super.key, required this.project});
+  const ProjectCard({super.key, required this.project, this.trending = false});
 
   final ProjectItem project;
+
+  /// Sorted by "Đang lên": the card adds the stars gained this week.
+  final bool trending;
 
   @override
   State<ProjectCard> createState() => _ProjectCardState();
@@ -125,7 +130,8 @@ class _ProjectCardState extends State<ProjectCard> {
                     ],
                   ),
                 ),
-              if (repo != null) _RepoFacts(repo: repo),
+              if (repo != null)
+                _RepoFacts(repo: repo, trending: widget.trending),
               _Foot(project: project),
             ],
           ),
@@ -138,14 +144,18 @@ class _ProjectCardState extends State<ProjectCard> {
 /// `.projects-grid`: as many columns of at least 260px as fit, 12px apart,
 /// each row as tall as its tallest card.
 class ProjectGrid extends StatelessWidget {
-  const ProjectGrid({super.key, required this.items});
+  const ProjectGrid({super.key, required this.items, this.trending = false});
 
   final List<ProjectItem> items;
+  final bool trending;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = ((constraints.maxWidth + 12) / 272).floor().clamp(1, 3);
+      // One column on narrow windows (`max-width: 640px`).
+      final columns = MediaQuery.sizeOf(context).width <= 640
+          ? 1
+          : math.max(1, ((constraints.maxWidth + 12) / 272).floor());
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 12,
@@ -159,7 +169,10 @@ class ProjectGrid extends StatelessWidget {
                   for (var index = start; index < start + columns; index++)
                     Expanded(
                       child: index < items.length
-                          ? ProjectCard(project: items[index])
+                          ? ProjectCard(
+                              project: items[index],
+                              trending: trending,
+                            )
                           : const SizedBox.shrink(),
                     ),
                 ],
@@ -483,9 +496,10 @@ class _RatingStars extends StatelessWidget {
 /// Stars, forks, language and the last push, as GitHub last said
 /// (`ProjectRepoFacts`), behind GitHub's mark.
 class _RepoFacts extends StatelessWidget {
-  const _RepoFacts({required this.repo});
+  const _RepoFacts({required this.repo, required this.trending});
 
   final Map<String, dynamic> repo;
+  final bool trending;
 
   @override
   Widget build(BuildContext context) {
@@ -495,6 +509,7 @@ class _RepoFacts extends StatelessWidget {
     if (stars == null) return Text(vi.projects.dangLaySoLieu, style: style);
     final forks = (repo['forks'] as num?)?.toInt();
     final language = repo['language'] as String? ?? '';
+    final starsWeek = (repo['starsWeek'] as num?)?.toInt() ?? 0;
     final pushed = repo['pushedAt'] is String
         ? DateTime.tryParse(repo['pushedAt'] as String)
         : null;
@@ -551,6 +566,23 @@ class _RepoFacts extends StatelessWidget {
                   ),
                 ),
                 Flexible(child: Text(language, style: style)),
+              ],
+            ),
+          if (trending && starsWeek > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                VnlfIcon(VnlfLucide.trendingUp, size: 14, color: colors.brand),
+                Flexible(
+                  child: Text(
+                    format(vi.projects.starTuanNay, {'count': starsWeek}),
+                    style: VnlfTypography.meta(
+                      colors.brand,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
           if (pushed != null)

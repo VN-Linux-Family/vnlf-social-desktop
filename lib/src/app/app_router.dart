@@ -36,6 +36,7 @@ import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
 import '../features/my_articles/presentation/my_articles_screen.dart';
 import '../features/tags/presentation/tag_screen.dart';
+import '../features/projects/domain/project_directory.dart';
 import '../gallery/gallery_page.dart';
 import '../i18n/vi.dart';
 import 'providers.dart';
@@ -246,7 +247,9 @@ GoRouter createMainRouter({
                 centerMaxWidth: communication ? double.infinity : 1053,
                 // A profile paints its theme's canvas across the column and
                 // lays out its own margins, as the website does.
-                centerFillsColumn: profileRoute,
+                // Wide pages lay out their own column.
+                centerFillsColumn:
+                    profileRoute || state.uri.path == '/projects',
                 showMobileBottomNav: !communicationDetail,
                 titleText: titleText,
                 // Phones show chats, threads and the home feed full-bleed,
@@ -438,8 +441,13 @@ GoRouter createMainRouter({
           ),
           GoRoute(
             path: '/projects',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ProjectsScreen()),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProjectsScreen(
+                initialFilters: ProjectFilters.fromQuery(
+                  state.uri.queryParameters,
+                ),
+              ),
+            ),
           ),
           GoRoute(
             path: '/projects/submit',

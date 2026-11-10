@@ -1,4 +1,5 @@
 import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_card.dart';
 import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
 
 import 'dart:convert';
@@ -259,23 +260,23 @@ void main() {
           ),
         ],
       );
-      expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
-      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      expect(find.byType(ProjectCard), findsNWidgets(2));
+      await tester.tap(find.byType(VnlfSelect<String>).at(1));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Rust (1)').last);
       await tester.pumpAndSettle();
       expect(find.text('Rust Tool'), findsOneWidget);
       expect(find.text('Dart Tool'), findsNothing);
-      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      await tester.tap(find.byType(VnlfSelect<String>).at(1));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Python (1)').last);
       await tester.pumpAndSettle();
-      expect(find.text('Không có dự án phù hợp'), findsOneWidget);
-      await tester.tap(find.byType(DropdownButton<String>).at(1));
+      expect(find.text('Không có dự án nào khớp bộ lọc.'), findsOneWidget);
+      await tester.tap(find.byType(VnlfSelect<String>).at(1));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tất cả ngôn ngữ').last);
+      await tester.tap(find.text('Mọi ngôn ngữ').last);
       await tester.pumpAndSettle();
-      expect(find.byType(VnlfProjectPreviewCard), findsNWidgets(2));
+      expect(find.byType(ProjectCard), findsNWidgets(2));
     },
   );
 
