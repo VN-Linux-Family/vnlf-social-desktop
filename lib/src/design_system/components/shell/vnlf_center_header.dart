@@ -127,23 +127,36 @@ class _VnlfHeaderIconBoxState extends State<VnlfHeaderIconBox> {
             Positioned(
               top: -5,
               right: -5,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 18),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA63030),
-                  borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
-                  border: Border.all(color: colors.surface),
-                ),
-                child: Text(
-                  widget.badgeCount > 99 ? '99+' : '${widget.badgeCount}',
-                  textAlign: TextAlign.center,
-                  style: VnlfTypography.meta(const Color(0xFFFFFFFF)),
-                ),
-              ),
+              child: VnlfBellCount(count: widget.badgeCount),
             ),
         ],
       ),
     );
   }
+}
+
+/// The bell's unseen count, as the website's `.bell-unread-count`: white on
+/// dark red, ringed with the surface, "99+" above 99.
+class VnlfBellCount extends StatelessWidget {
+  const VnlfBellCount({super.key, required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minWidth: 18),
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+    decoration: BoxDecoration(
+      color: const Color(0xFFA63030),
+      borderRadius: BorderRadius.circular(VnlfDimensions.radiusMd),
+      border: Border.all(color: VnlfColors.of(context).surface),
+    ),
+    child: Text(
+      count > 99 ? '99+' : '$count',
+      textAlign: TextAlign.center,
+      textScaler: TextScaler.noScaling,
+      style: VnlfTypography.plain(const Color(0xFFFFFFFF))
+          .copyWith(height: 1.2),
+    ),
+  );
 }

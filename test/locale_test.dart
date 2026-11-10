@@ -47,6 +47,12 @@ void main() {
             offenders.add('${file.path}:${i + 1}: ${literal[0]}');
           }
         }
+        // A literal nested in an interpolation, such as '${'…'} $name',
+        // splits into two matches that leave the copy outside both.
+        final code = lines[i].split(' // ').first;
+        if (_vietnamese.hasMatch(code.replaceAll(_literal, ''))) {
+          offenders.add('${file.path}:${i + 1}: ${code.trim()}');
+        }
       }
     }
     expect(offenders, isEmpty);

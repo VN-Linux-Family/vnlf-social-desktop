@@ -7,8 +7,7 @@ import '../../../design_system/design_system.dart';
 import '../../../domain/models.dart';
 import '../../../i18n/vi.dart';
 import '../../composer/presentation/composer_prompt.dart';
-import '../../notifications/presentation/notifications_controller.dart';
-import '../../notifications/presentation/notifications_sheet.dart';
+import '../../notifications/presentation/notification_bell.dart';
 import '../../shared/presentation/post_card_tile.dart';
 import '../../shared/presentation/session_avatar.dart';
 import 'feed_notifier.dart';
@@ -183,20 +182,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   tooltip: vi.common.timKiem,
                   onPressed: () => context.push('/search'),
                 ),
-                VnlfHeaderIconBox(
-                  icon: VnlfLucide.bell,
-                  iconSize: 20,
-                  muted: false,
-                  tooltip: vi.common.thongBao,
-                  badgeCount:
-                      ref.watch(unreadNotificationsCountProvider).valueOrNull ??
-                      0,
-                  onPressed: () => showModalBottomSheet<void>(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => const NotificationsSheet(),
-                  ),
-                ),
+                const NotificationBellBox(),
                 Semantics(
                   button: true,
                   label: session == null

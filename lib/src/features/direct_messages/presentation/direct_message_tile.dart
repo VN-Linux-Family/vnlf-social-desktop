@@ -218,7 +218,9 @@ class DirectMessageTile extends StatelessWidget {
                                 ? vi.app.directMessages.tepDinhKemDang
                                 : attachment.state == 'FAILED'
                                 ? vi.app.directMessages.khongXuLyDuoc
-                                : '${'Tệp đính kèm'} · ${attachment.mime}',
+                                : format(vi.app.common.tepDinhKemLoai, {
+                                    'mime': attachment.mime,
+                                  }),
                             style: VnlfTypography.caption(colors.muted),
                           ),
                         ),

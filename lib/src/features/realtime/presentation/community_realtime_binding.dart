@@ -65,7 +65,13 @@ class _CommunityAppBindingState extends ConsumerState<CommunityAppBinding>
     _eventsSub = client?.events.listen((event) {
       if (event.type == 'notification:created' ||
           event.type == 'notification:updated') {
-        ref.invalidate(unreadNotificationsCountProvider);
+        ref.invalidate(notificationBadgeCountProvider);
+        // An open list shows the change, as the website refetches its lists.
+        if (ref.exists(notificationsControllerProvider)) {
+          unawaited(
+            ref.read(notificationsControllerProvider.notifier).refresh(),
+          );
+        }
       }
       if (!_foreground) _presentInBackground(event);
     });

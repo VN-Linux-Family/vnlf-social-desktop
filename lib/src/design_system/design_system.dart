@@ -10,6 +10,7 @@ export 'components/vnlf_media_preview.dart';
 export 'components/vnlf_overlays.dart';
 export 'components/vnlf_post_attachment.dart';
 export 'components/vnlf_post_card.dart';
+export 'components/vnlf_select.dart';
 export 'icons/vnlf_icon.dart';
 export 'components/vnlf_shell.dart';
 export 'components/vnlf_skeleton.dart';

@@ -109,6 +109,8 @@ void main() {
     await controller.refresh();
     expect(controller.state.items.single.title, 'Tiếng Việt: ặ ữ ờ ẫ ệ');
     expect(controller.state.items.single.unread, isTrue);
+    // Marking the list seen does not hold up the list.
+    await pumpEventQueue();
     expect(writes.single.path, '/api/v1/notifications/seen');
     await controller.markRead('notification-1');
     expect(controller.state.items.single.unread, isTrue);

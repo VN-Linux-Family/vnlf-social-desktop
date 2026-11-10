@@ -254,7 +254,9 @@ class _ChannelHistory extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             child: Text(
-              '${('Chế độ chậm')}: ${channel.slowModeSeconds} ${('giây')}',
+              format(vi.app.channels.cheDoCham, {
+                'seconds': channel.slowModeSeconds,
+              }),
               style: VnlfTypography.caption(colors.muted),
             ),
           ),

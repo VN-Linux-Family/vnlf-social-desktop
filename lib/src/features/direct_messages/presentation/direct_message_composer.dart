@@ -190,7 +190,6 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
       );
     }
 
-    final peerName = conversation?.peer.displayName ?? '';
     final canSubmit =
         !_selecting &&
         !state.sending &&
@@ -236,7 +235,10 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      '${'Đang trả lời'} ${reply.author.displayName}: ${reply.content}',
+                      format(vi.app.common.dangTraLoi, {
+                        'name': reply.author.displayName,
+                        'content': reply.content,
+                      }),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: VnlfTypography.caption(colors.muted),
@@ -301,9 +303,7 @@ class _DirectMessageComposerState extends ConsumerState<DirectMessageComposer> {
                   textInputAction: TextInputAction.newline,
                   onChanged: controller.updateDraft,
                   decoration: InputDecoration(
-                    hintText: peerName.isEmpty
-                        ? vi.app.directMessages.nhapTinNhan
-                        : '${'Nhắn tin cho'} $peerName...',
+                    hintText: vi.directMessageLiveView.vietTinNhan,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,

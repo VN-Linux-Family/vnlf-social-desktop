@@ -41,7 +41,9 @@ class VnlfMobileStickyHeader extends StatelessWidget {
   final String composeSemanticLabel;
   final VoidCallback? onSearchTap;
   final String searchSemanticLabel;
-  final VoidCallback? onNotificationsTap;
+
+  /// Called with the bell's place on screen, to anchor the popover.
+  final ValueChanged<Rect>? onNotificationsTap;
   final String notificationsSemanticLabel;
   final int notificationBadgeCount;
   final String? semanticLabel;
@@ -116,7 +118,7 @@ class VnlfMobileStickyHeader extends StatelessWidget {
                 icon: VnlfLucide.bell,
                 semanticLabel: notificationsSemanticLabel,
                 badgeCount: notificationBadgeCount,
-                onTap: onNotificationsTap,
+                onTapAt: onNotificationsTap,
               ),
             ],
           ),
@@ -136,13 +138,17 @@ class _HeaderIconButton extends StatelessWidget {
   const _HeaderIconButton({
     required this.icon,
     required this.semanticLabel,
-    required this.onTap,
+    this.onTap,
+    this.onTapAt,
     this.badgeCount = 0,
   });
 
   final VnlfLucide icon;
   final String semanticLabel;
   final VoidCallback? onTap;
+
+  /// Like [onTap], with the button's place on screen.
+  final ValueChanged<Rect>? onTapAt;
   final int badgeCount;
 
   @override
@@ -153,28 +159,35 @@ class _HeaderIconButton extends StatelessWidget {
       button: true,
       label: semanticLabel.isNotEmpty ? semanticLabel : null,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTapAt == null
+            ? onTap
+            : () {
+                final box = context.findRenderObject()! as RenderBox;
+                onTapAt!(box.localToGlobal(Offset.zero) & box.size);
+              },
         customBorder: const CircleBorder(),
         child: SizedBox(
           width: 48,
           height: 48,
-          child: Center(
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                VnlfIcon(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: VnlfIcon(
                   icon,
                   size: icon == VnlfLucide.bell ? 20 : 22,
                   color: colors.ink,
                 ),
-                if (badgeCount > 0)
-                  Positioned(
-                    top: -1,
-                    right: -1,
-                    child: _Dot(color: _unreadColor, ring: colors.surface),
-                  ),
-              ],
-            ),
+              ),
+              // The website's 44px button puts the count 4px from the top
+              // and 2px from the right; this is the same spot in 48px.
+              if (badgeCount > 0)
+                Positioned(
+                  top: 6,
+                  right: 4,
+                  child: VnlfBellCount(count: badgeCount),
+                ),
+            ],
           ),
         ),
       ),

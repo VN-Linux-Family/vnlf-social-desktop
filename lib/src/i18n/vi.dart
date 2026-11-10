@@ -4755,6 +4755,7 @@ final class ViAppChannels {
   final tepDangDuocXu = 'Tệp đang được xử lý';
   final khongXuLyDuoc = 'Không xử lý được tệp';
   final tinNhanCoGif = 'Tin nhắn có GIF / nhãn dán';
+  final cheDoCham = 'Chế độ chậm: {seconds} giây';
 }
 
 final class ViAppCommon {
@@ -4794,6 +4795,8 @@ final class ViAppCommon {
   final trangWeb = 'Trang web';
   final xoaAnh = 'Xóa ảnh';
   final ban = 'Bạn';
+  final dangTraLoi = 'Đang trả lời {name}: {content}';
+  final tepDinhKemLoai = 'Tệp đính kèm · {mime}';
 }
 
 final class ViAppCommunication {
@@ -4940,7 +4943,6 @@ final class ViAppDirectMessages {
       'Hiện không thể gửi tin nhắn trong cuộc trò chuyện này.';
   final banCoTheGui =
       'Bạn có thể gửi tin nhắn mở đầu cho yêu cầu trò chuyện này.';
-  final nhapTinNhan = 'Nhập tin nhắn...';
   final banKhongTheThuc =
       'Bạn không thể thực hiện thao tác này trong trạng thái cuộc trò chuyện hiện tại.';
   final khongTimThayCuoc = 'Không tìm thấy cuộc trò chuyện hoặc tin nhắn.';
@@ -5017,6 +5019,8 @@ final class ViAppDirectMessages {
   final nhapItNhat2 = 'Nhập ít nhất 2 ký tự để tìm thành viên.';
   final khongTaiDuocThanh = 'Không tải được thành viên. Thử lại';
   final khongTimThayThanh = 'Không tìm thấy thành viên';
+  final trucTuyen = 'Trực tuyến';
+  final ngoaiTuyen = 'Ngoại tuyến';
 }
 
 final class ViAppDiscover {
@@ -5119,23 +5123,9 @@ final class ViAppModeration {
 
 final class ViAppNotifications {
   const ViAppNotifications._();
-  final khongMoDuocThong = 'Không mở được thông báo';
   final tinNhanThongBao = 'Tin nhắn & Thông báo VNLF';
   final thongBaoTinNhan =
       'Thông báo tin nhắn và hoạt động mới từ Vietnam Linux Family';
-  final daThichBaiViet = 'Đã thích bài viết của bạn';
-  final daThichBinhLuan = 'Đã thích bình luận của bạn';
-  final daBinhLuanBai = 'Đã bình luận bài viết của bạn';
-  final daTraLoiBinh = 'Đã trả lời bình luận của bạn';
-  final daTheoDoiBan = 'Đã theo dõi bạn';
-  final daVietVaoSo = 'Đã viết vào sổ lưu bút của bạn';
-  final capNhatCongDong = 'Cập nhật cộng đồng';
-  final taiThem = 'Tải thêm';
-  final chuaCoThongBao = 'Chưa có thông báo';
-  final khongThucHienDuoc = 'Không thực hiện được yêu cầu. Vui lòng thử lại.';
-  final danhDauDaDoc = 'Đánh dấu đã đọc tất cả';
-  final moiLoai = 'Mọi loại';
-  final dangNhapDeXem = 'Đăng nhập để xem thông báo';
   // The website's service worker (`push-sw.js`) shows these for a push.
   final tieuDeThongBaoDay = 'VNLF Social';
   final banCoHoatDongMoiDay = 'Bạn có hoạt động mới.';

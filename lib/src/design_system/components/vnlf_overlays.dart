@@ -113,7 +113,7 @@ class _MenuPopover extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = VnlfColors.of(context);
     return CustomSingleChildLayout(
-      delegate: _PopoverLayout(anchor),
+      delegate: _PopoverLayout(anchor, gap: 6),
       child: Semantics(
         label: label,
         scopesRoute: true,
@@ -138,14 +138,21 @@ class _MenuPopover extends StatelessWidget {
 }
 
 /// Opens [builder] in a panel anchored to [anchor] like the website's
-/// `Popover`: below the trigger and right-aligned, or above it when there is
-/// no room, never closer than 8px to the window edge.
+/// `Popover`: [gap] below the trigger and right-aligned, or above it when
+/// there is no room, never closer than 8px to the window edge.
+///
+/// The panel is [width] wide when the window allows, at most [maxHeight]
+/// tall, with [radius] corners and [padding] inside.
 Future<T?> showVnlfPopover<T>(
   BuildContext context, {
   required Rect anchor,
   required String label,
   required WidgetBuilder builder,
   double width = 360,
+  double gap = 6,
+  double? maxHeight,
+  double radius = VnlfDimensions.radiusLg,
+  EdgeInsetsGeometry padding = const EdgeInsets.all(12),
 }) {
   final screen = MediaQuery.sizeOf(context).width;
   return showGeneralDialog<T>(
@@ -159,18 +166,22 @@ Future<T?> showVnlfPopover<T>(
     pageBuilder: (context, _, _) {
       final colors = VnlfColors.of(context);
       return CustomSingleChildLayout(
-        delegate: _PopoverLayout(anchor),
+        delegate: _PopoverLayout(anchor, gap: gap),
         child: Semantics(
           label: label,
           scopesRoute: true,
           explicitChildNodes: true,
           child: Container(
             width: (screen - 16).clamp(0, width).toDouble(),
-            padding: const EdgeInsets.all(12),
+            constraints: maxHeight == null
+                ? null
+                : BoxConstraints(maxHeight: maxHeight),
+            padding: padding,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               color: colors.surface,
               border: Border.all(color: colors.line),
-              borderRadius: BorderRadius.circular(VnlfDimensions.radiusLg),
+              borderRadius: BorderRadius.circular(radius),
               boxShadow: vnlfHardShadow(colors),
             ),
             child: Material(
@@ -189,8 +200,9 @@ Future<T?> showVnlfPopover<T>(
 /// Below the trigger and right-aligned to it, or above when there is no room,
 /// always 8px inside the window.
 class _PopoverLayout extends SingleChildLayoutDelegate {
-  const _PopoverLayout(this.anchor);
+  const _PopoverLayout(this.anchor, {required this.gap});
   final Rect anchor;
+  final double gap;
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
@@ -203,9 +215,9 @@ class _PopoverLayout extends SingleChildLayoutDelegate {
       8.0,
       (size.width - 8 - child.width).clamp(8.0, double.infinity),
     );
-    var y = anchor.bottom + 6;
+    var y = anchor.bottom + gap;
     if (y + child.height > size.height - 8) {
-      y = anchor.top - 6 - child.height;
+      y = anchor.top - gap - child.height;
     }
     return Offset(
       x,
@@ -218,7 +230,7 @@ class _PopoverLayout extends SingleChildLayoutDelegate {
 
   @override
   bool shouldRelayout(_PopoverLayout oldDelegate) =>
-      oldDelegate.anchor != anchor;
+      oldDelegate.anchor != anchor || oldDelegate.gap != gap;
 }
 
 class _MenuSheet extends StatelessWidget {

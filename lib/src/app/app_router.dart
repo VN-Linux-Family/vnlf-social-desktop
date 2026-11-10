@@ -2,7 +2,8 @@ import '../features/projects/detail/presentation/project_detail_screen.dart';
 import '../features/projects/submission/project_submission_screen.dart';
 import '../features/feedback/feedback.dart';
 import '../features/feedback/presentation/feedback_attachment_dialog.dart';
-import '../features/notifications/presentation/notifications_sheet.dart';
+import '../features/notifications/presentation/notification_bell.dart';
+import '../features/notifications/presentation/notification_center.dart';
 
 import 'dart:convert';
 
@@ -208,6 +209,8 @@ GoRouter createMainRouter({
                   ? vi.socialChrome.bangDiemTuan
                   : state.uri.path == '/activity'
                   ? vi.app.common.hoatDong
+                  : state.uri.path == '/notifications'
+                  ? vi.common.thongBao
                   : null;
               final dmInbox = ref.watch(dmInboxProvider);
               final channels =
@@ -219,7 +222,7 @@ GoRouter createMainRouter({
                 if (hasUnreadMessages) VnlfNavDestination.messages,
               };
               final notificationBadgeCount =
-                  ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
+                  ref.watch(notificationBadgeCountProvider).valueOrNull ?? 0;
               return VnlfAdaptiveShell(
                 unreadDestinations: unreadDestinations,
                 notificationBadgeCount: notificationBadgeCount,
@@ -262,7 +265,8 @@ GoRouter createMainRouter({
                       },
                 backTooltip: vi.projects.quayLaiBuoc,
                 onSearchTap: () => context.push('/search'),
-                onNotificationsTap: () => _showNotificationsModal(context, ref),
+                onNotificationsTap: (bell) =>
+                    showNotificationsPopover(context, ref, bell),
                 onComposeTap: () =>
                     context.push(session == null ? '/login' : '/compose'),
                 composeSemanticLabel: vi.articleEditor.taoBaiDang,
@@ -309,6 +313,7 @@ GoRouter createMainRouter({
                       '/',
                       '/leaderboard',
                       '/activity',
+                      '/notifications',
                       '/projects',
                       '/settings',
                       '/discover',
@@ -389,6 +394,17 @@ GoRouter createMainRouter({
             path: '/activity',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ActivityPage()),
+          ),
+          GoRoute(
+            path: '/notifications',
+            // The website sends guests to sign in first.
+            redirect: (context, state) =>
+                ProviderScope.containerOf(context).read(sessionStateProvider) ==
+                    null
+                ? '/login'
+                : null,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: NotificationCenter()),
           ),
           GoRoute(
             path: '/projects',
@@ -1048,15 +1064,5 @@ void showFeedbackDialog(BuildContext context, WidgetRef ref) {
     _feedbackDialogOpen = false;
     contentController.dispose();
     contactController.dispose();
-  });
-}
-
-void _showNotificationsModal(BuildContext context, WidgetRef ref) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (_) => const NotificationsSheet(),
-  ).whenComplete(() {
-    ref.invalidate(unreadNotificationsCountProvider);
   });
 }

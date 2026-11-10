@@ -165,7 +165,9 @@ class LiveMessageTile extends StatelessWidget {
                             ? (vi.app.channels.tepDangDuocXu)
                             : attachment.state == 'FAILED'
                             ? (vi.app.channels.khongXuLyDuoc)
-                            : '${('Tệp đính kèm')} · ${attachment.mime}',
+                            : format(vi.app.common.tepDinhKemLoai, {
+                                'mime': attachment.mime,
+                              }),
                         style: VnlfTypography.caption(colors.muted),
                       ),
                     ),

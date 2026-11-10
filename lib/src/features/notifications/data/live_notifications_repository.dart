@@ -32,8 +32,10 @@ final class LiveNotificationsRepository implements NotificationsRepository {
       items: objectList(json['items'], 'notifications.items').map((item) {
         final id = stringValue(item['id'], 'notification.id');
         if (id.isEmpty) throw const ParseFailure('notification.id');
-        final summary =
-            objectValue(item['targetSummary'], 'notification.summary') ?? {};
+        final summary = objectValue(
+          item['targetSummary'],
+          'notification.summary',
+        );
         final actors = objectList(item['actors'], 'notification.actors');
         return CommunityNotice(
           id: id,
@@ -44,10 +46,16 @@ final class LiveNotificationsRepository implements NotificationsRepository {
             'notification.targetType',
           ),
           href: stringValue(item['href'], 'notification.href'),
-          title: stringValue(summary['title'], 'notification.title'),
-          excerpt: stringValue(summary['excerpt'], 'notification.excerpt'),
-          actor: ProfileDto.fromJson(actors.isEmpty ? {} : actors.first)
-              .toDomain(),
+          title: stringValue(summary?['title'], 'notification.title'),
+          excerpt: stringValue(summary?['excerpt'], 'notification.excerpt'),
+          summarized: summary != null,
+          actors: [
+            for (final actor in actors) ProfileDto.fromJson(actor).toDomain(),
+          ],
+          actorCount: intValue(item['actorCount'], 'notification.actorCount'),
+          payload:
+              objectValue(item['payload'], 'notification.payload') ?? const {},
+          updatedAt: dateValue(item['updatedAt'], 'notification.updatedAt'),
           unread: item['readAt'] == null,
         );
       }).toList(),

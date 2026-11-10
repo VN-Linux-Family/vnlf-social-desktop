@@ -277,7 +277,7 @@ void main() {
             notificationsSemanticLabel: 'Thông báo',
             onComposeTap: () {},
             onSearchTap: () {},
-            onNotificationsTap: () {},
+            onNotificationsTap: (_) {},
           ),
         ),
       ),

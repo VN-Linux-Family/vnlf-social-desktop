@@ -134,7 +134,7 @@ class VnlfAdaptiveShell extends StatelessWidget {
   final ValueChanged<ThemeMode>? onThemeModeChanged;
   final VoidCallback? onProfileTap;
   final VoidCallback? onSearchTap;
-  final VoidCallback? onNotificationsTap;
+  final ValueChanged<Rect>? onNotificationsTap;
   final VoidCallback? onComposeTap;
   final String composeSemanticLabel;
 
@@ -646,7 +646,7 @@ class _MobileShellScaffold extends StatefulWidget {
   final String? titleText;
   final String searchSemanticLabel;
   final VoidCallback? onSearchTap;
-  final VoidCallback? onNotificationsTap;
+  final ValueChanged<Rect>? onNotificationsTap;
   final VoidCallback? onComposeTap;
   final String composeSemanticLabel;
   final Widget? accountAvatar;

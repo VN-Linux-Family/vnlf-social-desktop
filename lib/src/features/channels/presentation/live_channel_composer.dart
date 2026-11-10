@@ -62,7 +62,10 @@ class _LiveChannelComposerState extends ConsumerState<LiveChannelComposer> {
               children: [
                 Expanded(
                   child: Text(
-                    '${('Đang trả lời')} ${reply.author.displayName}: ${reply.content}',
+                    format(vi.app.common.dangTraLoi, {
+                      'name': reply.author.displayName,
+                      'content': reply.content,
+                    }),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: VnlfTypography.caption(colors.muted),
@@ -91,8 +94,9 @@ class _LiveChannelComposerState extends ConsumerState<LiveChannelComposer> {
                   textInputAction: TextInputAction.newline,
                   onChanged: controller.updateDraft,
                   decoration: InputDecoration(
-                    hintText:
-                        '${('Gửi tin nhắn vào')} #${widget.channel.slug}...',
+                    hintText: format(vi.channelViews.nhanVao, {
+                      'name': widget.channel.slug,
+                    }),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,
