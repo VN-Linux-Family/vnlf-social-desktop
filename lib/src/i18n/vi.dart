@@ -5117,6 +5117,32 @@ final class ViAppNotifications {
   // The website's service worker (`push-sw.js`) shows these for a push.
   final tieuDeThongBaoDay = 'VNLF Social';
   final banCoHoatDongMoiDay = 'Bạn có hoạt động mới.';
+  // The push card in Settings. The website's own wording speaks of a
+  // browser tab; these say the same for the app and its push service.
+  final thietBiChuaHoTroDay = 'Thiết bị này chưa hỗ trợ thông báo đẩy.';
+  final dayMoTa =
+      'Tin nhắn riêng, lời mời và lượt mention trong channel sẽ báo ngay cả '
+      'khi ứng dụng đang đóng. Khi bạn đang mở ứng dụng, thông báo chỉ hiện '
+      'trong ứng dụng. Mention trong bình luận được gộp lại cho đỡ phiền.';
+  final dayCanUnifiedPush =
+      'Trên Android, thông báo đẩy đi qua một ứng dụng UnifiedPush như ntfy. '
+      'Cài ứng dụng đó trước khi bật.';
+  final daBatDay =
+      'Đã bật. Tin nhắn riêng và lượt mention trong channel sẽ báo ngay cả '
+      'khi ứng dụng đang đóng.';
+  final chuaCoUngDungNhanDay =
+      'Chưa có ứng dụng nhận thông báo đẩy. Cài một ứng dụng UnifiedPush '
+      '(ví dụ ntfy) rồi bật lại.';
+  final ungDungNhanDayTuChoi =
+      'Ứng dụng nhận thông báo đẩy chưa đăng ký được. Thử lại sau.';
+  final mayChuChuaNhanUnifiedPush =
+      'Máy chủ VNLF chưa nhận thông báo đẩy qua UnifiedPush. Tính năng này '
+      'sẽ chạy khi máy chủ được cập nhật.';
+  final daGuiThongBaoThu =
+      'Đã gửi thông báo thử. Nếu không thấy, kiểm tra quyền thông báo của '
+      'ứng dụng.';
+  final chuaHienThongBaoThu =
+      'Chưa hiện được thông báo thử. Kiểm tra quyền thông báo của ứng dụng.';
 }
 
 final class ViAppPolls {

@@ -1,9 +1,9 @@
 # Native push notifications
 
-Status, 2026-11-09: the app can read, show and register Web Push
-notifications, but nothing can receive them yet. The server only accepts
-browser push endpoints, and the app has no push service on the device. This
-page lists what each side needs. Source references are to the website
+Status, 2026-11-10: the Android app receives Web Push through a UnifiedPush
+distributor and has the Settings card, but the server only accepts browser
+push endpoints, so turning push on fails until it changes. This page lists
+what each side needs. Source references are to the website
 repository (`vnlf-social`).
 
 ## What the server sends today
@@ -53,8 +53,7 @@ All under `lib/src/features/notifications/`:
 - `PushRegistration` follows `push-settings.tsx` step by step, with a
   `PushDistributor` in place of the browser's `PushManager`.
 
-Still missing in the app: a `PushDistributor` implementation and the
-"Thông báo trên thiết bị" switch in Settings.
+The distributor and the Settings card came later; see "App side" below.
 
 ## Server change
 
@@ -98,9 +97,15 @@ The owner approved the `unifiedpush` package on 2026-11-10.
    distributor records the endpoint the server still has. Once a member is
    signed in, `PushRegistration.replace` posts the new one and deletes the
    old one, once per launch or replacement, never retried.
-5. Still to do: the "Thông báo trên thiết bị" switch in Settings
-   (`PushSettings`, `PushPermissionPrompt`, the per-account "turned off on
-   this device" flag and the one-week "Để sau" snooze).
+5. Settings has the website's "Thông báo đẩy" card (`PushSettings`): it
+   loads, turns push on and off at once, and sends a local test while on.
+   It tells apart a missing permission, no distributor, a refusing
+   distributor, the server refusing the endpoint (400
+   `PUSH_ENDPOINT_INVALID`, true until the server change) and the 10-device
+   limit. Not ported yet: `PushPermissionPrompt` with the per-account
+   "turned off on this device" flag and the one-week "Để sau" snooze. It
+   only makes sense once the server accepts distributor endpoints, since
+   every turn-on fails until then.
 
 ## Checks
 

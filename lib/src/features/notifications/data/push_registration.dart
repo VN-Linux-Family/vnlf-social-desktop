@@ -67,7 +67,12 @@ final class PushRegistration {
     final held = await _distributor.current();
     if (held == null) return;
     await _repository.removeSubscription(held.subscription.endpoint);
-    await _distributor.unsubscribe();
+    try {
+      await _distributor.unsubscribe();
+    } on Exception {
+      // The website ignores this too: the server no longer sends to the
+      // endpoint, so a distributor that kept it only stays quiet.
+    }
   }
 
   /// Like `push-sw.js` on `pushsubscriptionchange`: registers the endpoint
