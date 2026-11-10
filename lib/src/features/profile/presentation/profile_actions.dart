@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/providers.dart';
 import '../../../design_system/design_system.dart';
@@ -57,11 +56,7 @@ class ProfileActions extends ConsumerWidget {
             VnlfMenuAction(
               icon: VnlfLucide.bookOpen,
               label: vi.common.quanLyBaiViet,
-              // "My articles" is not ported yet; the website has it.
-              onSelected: () => launchUrl(
-                Uri.parse('https://vietnamlinuxfamily.net/my/articles'),
-                mode: LaunchMode.externalApplication,
-              ),
+              onSelected: () => context.push('/my/articles'),
             ),
             VnlfMenuAction(
               icon: VnlfLucide.settings,

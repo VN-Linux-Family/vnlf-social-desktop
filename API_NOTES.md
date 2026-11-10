@@ -262,6 +262,10 @@ All errors must be mapped into a typed Dart sealed class `ApiFailure` with statu
 | `DELETE` | `/api/v1/articles/{id}/bookmark` | [CONFIRMED - website source] | Yes | Removes the viewer's bookmark. |
 | `DELETE`| `/api/v1/articles/{id}` | [CONFIRMED - website source] | Yes | Deletes the author's own article (status `REMOVED`). |
 | `POST` | `/api/v1/articles/{id}/hide` | [CONFIRMED - website source] | Yes | Hides a published article from the viewer's feed. |
+| `GET` | `/api/v1/tags/{slug}/articles` | [CONFIRMED - observed unauthenticated + server source] | Optional | The website's topic page (`/t/[tag]`) sends `limit=30` and `cursor`. Returns `{tag: {id, name, slug}, total, items: ArticleDto[], nextCursor}`; `total` only on the first page (no cursor). The slug match is exact and case-sensitive; an unknown slug is 404 `TAG_NOT_FOUND`, a bad cursor 400 `INVALID_CURSOR`, `limit` > 50 is 422 (`apps/api/src/modules/collections.ts`). |
+| `GET` | `/api/v1/me/articles` | [CONFIRMED - website source + server source] | Yes | `?status=DRAFT` lists drafts; without it, the 50 most recently changed posts of every status, including `REMOVED`. Returns `{items: ArticleDto[]}`, no cursor (`articles.ts`). "Bài viết của bạn" and the composer use it. |
+| `POST` | `/api/v1/articles/{id}/archive` | [CONFIRMED - website source + server source] | Yes | The owner hides a published post from the feed: `{ok: true}`; 409 `ARTICLE_NOT_PUBLISHED` otherwise. |
+| `POST` | `/api/v1/articles/{id}/restore` | [CONFIRMED - website source + server source] | Yes | Publishes an archived post again: `{ok: true}`; 409 `ARTICLE_NOT_RESTORABLE`, or `ARTICLE_MODERATED` while a moderation action holds it. |
 | `GET` | `/api/v1/articles/{id}/comments`| [INFERRED] | Optional | Fetch comment hierarchy for article. |
 | `POST` | `/api/v1/articles/{id}/comments`| [INFERRED] | Yes | Write endpoint: create comment. |
 

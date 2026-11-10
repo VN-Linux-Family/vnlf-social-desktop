@@ -306,8 +306,8 @@ class _ExploreHeroState extends State<_ExploreHero> {
   }
 }
 
-/// A topic card: "#", the tag, "Chủ đề cộng đồng" and "Khám phá ↗". The
-/// app has no tag page yet, so it searches the tag instead.
+/// A topic card: "#", the tag, "Chủ đề cộng đồng" and "Khám phá ↗", which
+/// opens the topic's page.
 class _TopicCard extends StatefulWidget {
   const _TopicCard({required this.tag});
 
@@ -332,9 +332,7 @@ class _TopicCardState extends State<_TopicCard> {
       child: InkWell(
         borderRadius: radius,
         onHover: (value) => setState(() => _hovered = value),
-        onTap: () => context.push(
-          '/search?q=${Uri.encodeQueryComponent(widget.tag.name)}',
-        ),
+        onTap: () => context.push('/t/${Uri.encodeComponent(widget.tag.slug)}'),
         child: Ink(
           decoration: BoxDecoration(
             color: colors.surface,

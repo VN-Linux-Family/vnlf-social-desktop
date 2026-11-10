@@ -57,10 +57,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() => _activeQuery = keyword.length >= 2 ? keyword : null);
   }
 
-  void _useTopic(SearchTopic topic) {
-    _query.text = topic.name;
-    _searchNow();
-  }
+  /// Topics open their page, as on the website's search.
+  void _useTopic(SearchTopic topic) =>
+      context.push('/t/${Uri.encodeComponent(topic.slug)}');
 
   @override
   void dispose() {

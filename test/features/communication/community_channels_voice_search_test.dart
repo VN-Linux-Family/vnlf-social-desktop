@@ -170,37 +170,48 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'search query, scope, popular tags and clear filter real results',
-    (tester) async {
-      await _pump(tester, '/search');
-      await tester.enterText(
-        find.byKey(const Key('search-input')),
-        '  VNLF-CLI  ',
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pumpAndSettle();
-      expect(find.text('vnlf-cli'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Bài viết'));
-      await tester.pumpAndSettle();
-      expect(find.text('vnlf-cli'), findsNothing);
-      expect(find.text('Không tìm thấy kết quả'), findsOneWidget);
-      await tester.tap(find.byTooltip('Xóa tìm kiếm'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ActionChip, 'Wayland'));
-      await tester.pumpAndSettle();
-      expect(find.text('Trải nghiệm Arch Linux và Wayland'), findsOneWidget);
-      final membersScope = find.widgetWithText(ChoiceChip, 'Thành viên');
-      await tester.ensureVisible(membersScope);
-      await tester.pumpAndSettle();
-      await tester.tap(membersScope);
-      await tester.enterText(find.byKey(const Key('search-input')), 'hoangnam');
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pumpAndSettle();
-      expect(find.text('Hoàng Nam'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('a popular topic opens its page, as on the website', (
+    tester,
+  ) async {
+    await _pump(tester, '/search');
+    await tester.tap(find.widgetWithText(ActionChip, 'Wayland'));
+    await tester.pumpAndSettle();
+    // The fixture server has no posts for the tag.
+    expect(find.text('#wayland'), findsOneWidget);
+    expect(
+      find.textContaining('Chưa có bài nào gắn #wayland.'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('search query, scope and clear filter real results', (
+    tester,
+  ) async {
+    await _pump(tester, '/search');
+    await tester.enterText(
+      find.byKey(const Key('search-input')),
+      '  VNLF-CLI  ',
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(find.text('vnlf-cli'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Bài viết'));
+    await tester.pumpAndSettle();
+    expect(find.text('vnlf-cli'), findsNothing);
+    expect(find.text('Không tìm thấy kết quả'), findsOneWidget);
+    await tester.tap(find.byTooltip('Xóa tìm kiếm'));
+    await tester.pumpAndSettle();
+    final membersScope = find.widgetWithText(ChoiceChip, 'Thành viên');
+    await tester.ensureVisible(membersScope);
+    await tester.pumpAndSettle();
+    await tester.tap(membersScope);
+    await tester.enterText(find.byKey(const Key('search-input')), 'hoangnam');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(find.text('Hoàng Nam'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('feed vote and bookmark survive a visit to thread and back', (
     tester,

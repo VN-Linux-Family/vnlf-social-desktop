@@ -68,8 +68,8 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ Voice: text chat in the room, per-person volume, noise suppression.
 
 ### 8. Other pages
-- ✅ Explore page: intro, topics, featured projects, writer cards (#17). The website's project card is ported (`ProjectCard`); topics open search until the tag page is ported.
-- ⬜ Tag pages (`/t/[tag]`) and "My articles" (`/my/articles`).
+- ✅ Explore page: intro, topics, featured projects, writer cards (#17). The website's project card is ported (`ProjectCard`); topics open the tag page (#20).
+- ✅ Tag pages (`/t/[tag]`) and "Bài viết của bạn" (`/my/articles`) (#20). Khám phá's topics, search topics, `/t/` links and the profile's "Quản lý bài viết" open them. ⬜ Hashtags in post text and comments still need to link to their topic.
 - ⬜ Stats and points history (`/stats`, `/stats/history`). The app has an Activity screen to compare.
 - ✅ The website's right rail (`RightRail`): "XP của bạn" with the level, the next goal and the streak (`GET /api/v1/me/point-stats?period=week`), the busiest open voice room, and the week's top three, each only when it has something to show (#19).
 - ⬜ Sticker packs (`/stickers`) and pixel icons (`/icons`).

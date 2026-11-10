@@ -34,6 +34,8 @@ import '../features/shared/presentation/right_rail.dart';
 import '../features/search/presentation/search_screen.dart';
 import '../features/voice/presentation/voice_screen.dart';
 import '../features/thread/presentation/thread_screen.dart';
+import '../features/my_articles/presentation/my_articles_screen.dart';
+import '../features/tags/presentation/tag_screen.dart';
 import '../gallery/gallery_page.dart';
 import '../i18n/vi.dart';
 import 'providers.dart';
@@ -160,6 +162,8 @@ GoRouter createMainRouter({
               ? VnlfNavDestination.messages
               : state.uri.path.startsWith('/projects/')
               ? VnlfNavDestination.projects
+              : state.uri.path.startsWith('/t/')
+              ? VnlfNavDestination.explore
               : destinations.entries
                     .where((entry) => entry.value == state.uri.path)
                     .map((entry) => entry.key)
@@ -190,6 +194,7 @@ GoRouter createMainRouter({
                   state.uri.path.startsWith('/projects/') ||
                   state.uri.path.startsWith('/project/') ||
                   state.uri.path == '/settings' ||
+                  state.uri.path == '/my/articles' ||
                   state.uri.path.startsWith('/profile/') ||
                   state.uri.path.startsWith('/user/') ||
                   state.uri.path.startsWith('/users/') ||
@@ -217,6 +222,12 @@ GoRouter createMainRouter({
                   ? vi.app.common.hoatDong
                   : state.uri.path == '/notifications'
                   ? vi.common.thongBao
+                  : state.uri.path == '/my/articles'
+                  ? vi.common.baiVietCuaBan
+                  : state.uri.path.startsWith('/t/')
+                  ? format(vi.socialLayoutClient.chuDe, {
+                      'pathname': state.uri.pathSegments.last,
+                    })
                   : null;
               final dmInbox = ref.watch(dmInboxProvider);
               final channels =
@@ -331,7 +342,9 @@ GoRouter createMainRouter({
                       '/channels',
                       '/voice',
                       '/search',
+                      '/my/articles',
                     ].contains(state.uri.path) ||
+                    state.uri.path.startsWith('/t/') ||
                     threadId != null ||
                     state.uri.path.startsWith('/profile/') ||
                     state.uri.path.startsWith('/user/') ||
@@ -360,10 +373,11 @@ GoRouter createMainRouter({
                 // other pages are wide there.
                 rightSidebarChild:
                     const [
-                      '/',
-                      '/discover',
-                      '/explore',
-                    ].contains(state.uri.path)
+                          '/',
+                          '/discover',
+                          '/explore',
+                        ].contains(state.uri.path) ||
+                        state.uri.path.startsWith('/t/')
                     ? const RightRail()
                     : null,
                 destinationLabels: labels,
@@ -519,6 +533,26 @@ GoRouter createMainRouter({
             path: '/discover',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: DiscoverScreen()),
+          ),
+          GoRoute(
+            path: '/t/:slug',
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: TagScreen(
+                slug: state.pathParameters['slug']!,
+                cursor: state.uri.queryParameters['cursor'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/my/articles',
+            // A private page on the website: guests sign in first.
+            redirect: (context, state) =>
+                ProviderScope.containerOf(context).read(sessionStateProvider) ==
+                    null
+                ? '/login'
+                : null,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: MyArticlesScreen()),
           ),
           GoRoute(
             path: '/search',
