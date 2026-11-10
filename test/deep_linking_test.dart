@@ -89,6 +89,33 @@ void main() {
         ),
         '/projects',
       );
+      // The website submits at /projects/new, and lists keep their filters.
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse('https://vietnamlinuxfamily.net/projects/new'),
+        ),
+        '/projects/submit',
+      );
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse(
+            'https://vietnamlinuxfamily.net/projects?type=TOOL&q=b%E1%BB%99+g%C3%B5&utm=x',
+          ),
+        ),
+        '/projects?type=TOOL&q=b%E1%BB%99+g%C3%B5',
+      );
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse('https://vietnamlinuxfamily.net/t/linux'),
+        ),
+        '/t/linux',
+      );
+      expect(
+        resolveInAppVnlfRoute(
+          Uri.parse('https://vietnamlinuxfamily.net/my/articles'),
+        ),
+        '/my/articles',
+      );
       expect(
         resolveInAppVnlfRoute(
           Uri.parse('https://vietnamlinuxfamily.net/explore'),

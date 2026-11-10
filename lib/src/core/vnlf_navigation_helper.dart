@@ -63,10 +63,20 @@ String? resolveInAppVnlfRoute(Uri uri) {
     case 'projects':
     case 'project':
       if (segments.length >= 2 && segments[1].isNotEmpty) {
-        if (segments[1] == 'submit') return '/projects/submit';
+        // The website submits at /projects/new.
+        if (segments[1] == 'submit' || segments[1] == 'new') {
+          return '/projects/submit';
+        }
         return '/projects/${Uri.encodeComponent(segments[1])}';
       }
-      return '/projects';
+      // Keep the list's filters (`type`, `language`, `seeking`, `q`, `sort`).
+      final filters = {
+        for (final key in const ['type', 'language', 'seeking', 'q', 'sort'])
+          key: ?uri.queryParameters[key],
+      };
+      return filters.isEmpty
+          ? '/projects'
+          : Uri(path: '/projects', queryParameters: filters).toString();
 
     case 'discover':
     case 'explore':

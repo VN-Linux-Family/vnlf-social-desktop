@@ -5241,9 +5241,6 @@ final class ViAppProjects {
   final danhGia = 'đánh giá';
   final moKhoMaNguon = 'Mở kho mã nguồn (GitHub)';
   final sao = 'Sao';
-  final thuBoLocKhac = 'Thử bộ lọc khác.';
-  final khongCoDuAn = 'Không có dự án phù hợp';
-  final tatCaNgonNgu = 'Tất cả ngôn ngữ';
   final nhapTenDuAn = 'Nhập tên dự án (tối đa 80 ký tự).';
   final nhapMoTaNgan = 'Nhập mô tả ngắn (tối đa 160 ký tự).';
   final gioiThieuCanTu = 'Giới thiệu cần từ 30 đến 10.000 ký tự.';

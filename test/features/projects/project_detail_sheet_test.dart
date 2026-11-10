@@ -1,4 +1,5 @@
 import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_card.dart';
 import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,7 +172,20 @@ Future<void> _openProject(
     ),
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.byType(VnlfProjectPreviewCard));
+  // At larger text the card sits below the intro and filters, and is
+  // taller than the window, so tap its name.
+  final name = find.descendant(
+    of: find.byType(ProjectCard),
+    matching: find.text('vnlf-cli'),
+  );
+  await tester.scrollUntilVisible(
+    name,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.ensureVisible(name);
+  await tester.pumpAndSettle();
+  await tester.tap(name);
   await tester.pumpAndSettle();
 }
 

@@ -33,15 +33,41 @@ final class ProjectDirectoryState {
     this.languages = const [],
     this.nextCursor,
     this.loading = false,
+    this.loadingMore = false,
     this.error,
   });
   final ProjectFilters filters;
+
+  /// What the list shows. The previous results stay while new filters
+  /// load, dimmed, like the website's `keepPreviousData`.
   final List<ProjectItem> items;
   final List<ProjectFacet> types;
   final List<ProjectFacet> languages;
   final String? nextCursor;
+
+  /// A first page is on its way.
   final bool loading;
+
+  /// "Xem thêm" is on its way.
+  final bool loadingMore;
+
+  /// The last first page failed; the list is then empty.
   final AppFailure? error;
+
+  ProjectDirectoryState copyWith({
+    ProjectFilters? filters,
+    bool? loading,
+    bool? loadingMore,
+  }) => ProjectDirectoryState(
+    filters: filters ?? this.filters,
+    items: items,
+    types: types,
+    languages: languages,
+    nextCursor: nextCursor,
+    loading: loading ?? this.loading,
+    loadingMore: loadingMore ?? this.loadingMore,
+    error: error,
+  );
 }
 
 final class ProjectDirectoryController
@@ -54,19 +80,10 @@ final class ProjectDirectoryController
   int _generation = 0;
   final Set<String> _cursors = {};
   Timer? _debounce;
-  String? _pendingText;
 
+  /// The search box: the list follows 300ms after the last keystroke.
   void search(String text) {
     _debounce?.cancel();
-    _pendingText = text;
-    // Invalidate immediately, so an old response cannot appear while typing.
-    _generation++;
-    state = ProjectDirectoryState(
-      filters: state.filters,
-      items: state.items,
-      types: state.types,
-      languages: state.languages,
-    );
     _debounce = Timer(
       const Duration(milliseconds: 300),
       () => setFilters(state.filters.copyWith(query: text.trim())),
@@ -74,40 +91,31 @@ final class ProjectDirectoryController
   }
 
   void setFilters(ProjectFilters filters) {
-    _debounce?.cancel();
-    final effective = filters.copyWith(
-      query: _pendingText?.trim() ?? filters.query,
-    );
-    _pendingText = null;
-    state = ProjectDirectoryState(
-      filters: effective,
-      types: state.types,
-      languages: state.languages,
-    );
+    if (filters == state.filters) return;
+    state = state.copyWith(filters: filters);
     load();
   }
 
   void resetSession() {
     _debounce?.cancel();
-    _pendingText = null;
     state = ProjectDirectoryState(filters: state.filters);
     load(refresh: true);
   }
 
   Future<void> load({bool more = false, bool refresh = false}) async {
-    if (more && (state.loading || state.nextCursor == null)) return;
+    if (more) {
+      if (state.loading || state.loadingMore || state.nextCursor == null) {
+        return;
+      }
+    } else {
+      _cursors.clear();
+    }
     final cursor = more ? state.nextCursor : null;
-    if (!more) _cursors.clear();
     final generation = ++_generation;
     final previous = state;
-    state = ProjectDirectoryState(
-      filters: previous.filters,
-      items: previous.items,
-      types: previous.types,
-      languages: previous.languages,
-      nextCursor: previous.nextCursor,
-      loading: true,
-    );
+    state = more
+        ? previous.copyWith(loadingMore: true)
+        : previous.copyWith(loading: true, loadingMore: false);
     try {
       final result = await repository.fetch(
         previous.filters,
@@ -135,25 +143,26 @@ final class ProjectDirectoryController
         languages: more ? previous.languages : result.languages,
         nextCursor: next,
       );
-    } on AppFailure catch (error) {
+    } on Object catch (error) {
       if (!mounted || generation != _generation) return;
+      if (more) {
+        // The website keeps the list and the button, and says nothing. A
+        // server that repeats a cursor would loop, so paging stops there.
+        state = error is ParseFailure
+            ? ProjectDirectoryState(
+                filters: previous.filters,
+                items: previous.items,
+                types: previous.types,
+                languages: previous.languages,
+              )
+            : previous.copyWith(loadingMore: false);
+        return;
+      }
       state = ProjectDirectoryState(
         filters: previous.filters,
-        items: previous.items,
         types: previous.types,
         languages: previous.languages,
-        nextCursor: previous.nextCursor,
-        error: error,
-      );
-    } catch (_) {
-      if (!mounted || generation != _generation) return;
-      state = ProjectDirectoryState(
-        filters: previous.filters,
-        items: previous.items,
-        types: previous.types,
-        languages: previous.languages,
-        nextCursor: previous.nextCursor,
-        error: const TransportFailure(),
+        error: error is AppFailure ? error : const TransportFailure(),
       );
     }
   }

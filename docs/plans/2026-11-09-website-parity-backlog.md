@@ -73,6 +73,7 @@ Status: ✅ done · 🔄 in progress · ⬜ to do · ⏸ waits for the server.
 - ⬜ Stats and points history (`/stats`, `/stats/history`). The app has an Activity screen to compare.
 - ✅ The website's right rail (`RightRail`): "XP của bạn" with the level, the next goal and the streak (`GET /api/v1/me/point-stats?period=week`), the busiest open voice room, and the week's top three, each only when it has something to show (#19).
 - ⬜ Sticker packs (`/stickers`) and pixel icons (`/icons`).
+- ✅ The projects page (`/projects`, `ProjectsView`) (#21): the intro with "Đăng dự án", search, sort, language and "Tìm người đóng góp", the type chips, tier sections with their headings, the website's card grid (four columns at 1440), "+N star tuần này" when sorted by "Đang lên", and "Xem thêm". The previous results stay, dimmed, while new filters load. `/projects?…` links keep their filters.
 - ⬜ Edit a submitted project (`/projects/[slug]/edit`).
 - ⬜ CaramOS support tickets, Help, Community guidelines and Privacy. The app opens these on the website today.
 - ⬜ Keyboard shortcuts (`keyboard-shortcuts.tsx`).

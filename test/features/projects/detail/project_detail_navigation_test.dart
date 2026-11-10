@@ -8,6 +8,7 @@ import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/design_system/components/vnlf_rich_content.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/features/projects/domain/project_directory.dart';
+import 'package:vnlfsocialapp/src/features/projects/presentation/project_card.dart';
 import 'package:vnlfsocialapp/src/features/projects/presentation/project_directory_controller.dart';
 import 'package:vnlfsocialapp/src/features/projects/detail/data/project_detail_repository.dart';
 import 'package:vnlfsocialapp/src/features/projects/detail/domain/project_detail.dart';
@@ -38,7 +39,7 @@ void main() {
         ),
       );
       await t.pumpAndSettle();
-      await t.tap(find.byType(VnlfProjectPreviewCard));
+      await t.tap(find.byType(ProjectCard));
       await t.pumpAndSettle();
       expect(find.byType(ProjectDetailScreen), findsOneWidget);
       expect(

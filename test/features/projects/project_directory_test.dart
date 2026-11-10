@@ -114,8 +114,77 @@ void main() {
     repo.calls.last.result.complete(page('third', cursor: '24'));
     await repeated;
     expect(controller.state.items.map((item) => item.id), ['first', 'second']);
-    expect(controller.state.error, isA<ParseFailure>());
+    // Paging stops instead of looping; the list stays.
+    expect(controller.state.nextCursor, isNull);
+    expect(controller.state.error, isNull);
     controller.dispose();
+  });
+
+  test('new filters keep the old list, dimmed, until they load', () async {
+    final repo = PendingRepository();
+    final controller = ProjectDirectoryController(repo);
+    addTearDown(controller.dispose);
+    repo.calls[0].result.complete(page('first'));
+    await Future<void>.delayed(Duration.zero);
+    controller.setFilters(const ProjectFilters(type: 'TOOL'));
+    expect(controller.state.loading, isTrue);
+    expect(controller.state.items.single.id, 'first');
+    // The same filters again do not ask the server.
+    controller.setFilters(const ProjectFilters(type: 'TOOL'));
+    expect(repo.calls, hasLength(2));
+    repo.calls[1].result.complete(page('tool'));
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.state.loading, isFalse);
+    expect(controller.state.items.single.id, 'tool');
+  });
+
+  test(
+    'a failed first page empties the list; a failed next page does not',
+    () async {
+      final repo = PendingRepository();
+      final controller = ProjectDirectoryController(repo);
+      addTearDown(controller.dispose);
+      repo.calls[0].result.complete(page('first', cursor: '24'));
+      await Future<void>.delayed(Duration.zero);
+      final more = controller.load(more: true);
+      expect(controller.state.loadingMore, isTrue);
+      repo.calls.last.result.completeError(const TransportFailure());
+      await more;
+      expect(controller.state.items.single.id, 'first');
+      expect(controller.state.nextCursor, '24');
+      expect(controller.state.error, isNull);
+
+      final again = controller.load(refresh: true);
+      repo.calls.last.result.completeError(const TransportFailure());
+      await again;
+      expect(controller.state.items, isEmpty);
+      expect(controller.state.error, isA<TransportFailure>());
+    },
+  );
+
+  test('a /projects address keeps only what the website keeps', () {
+    final filters = ProjectFilters.fromQuery({
+      'type': 'TOOL',
+      'language': 'x' * 70,
+      'seeking': 'true',
+      'q': 'bộ gõ',
+      'sort': 'random',
+    });
+    expect(filters.type, 'TOOL');
+    expect(filters.language, hasLength(60));
+    expect(filters.seeking, isFalse);
+    expect(filters.query, 'bộ gõ');
+    expect(filters.sort, 'featured');
+    expect(filters.filtered, isTrue);
+    expect(ProjectFilters.fromQuery(const {'type': 'NOPE'}).filtered, isFalse);
+    expect(
+      groupByTier(const [
+        ProjectItem(id: 'a', name: 'a', tier: 'VNLF'),
+        ProjectItem(id: 'b', name: 'b', tier: 'VNLF'),
+        ProjectItem(id: 'c', name: 'c', tier: 'COMMUNITY'),
+      ]).map((group) => group.length),
+      [2, 1],
+    );
   });
 
   test('overlapping server pages keep one copy of each project', () async {
