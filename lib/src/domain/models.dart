@@ -222,7 +222,7 @@ final class ProjectItem {
     this.owner,
     this.repo,
     this.rating,
-    this.commentCount = 0,
+    this.commentCount,
     this.approvedAt,
   });
   final String id;
@@ -240,7 +240,9 @@ final class ProjectItem {
   final Author? owner;
   final Map<String, dynamic>? repo;
   final Map<String, dynamic>? rating;
-  final int commentCount;
+
+  /// Null when the website shows no count on the card.
+  final int? commentCount;
   final DateTime? approvedAt;
 }
 
@@ -264,19 +266,6 @@ final class CommunityChannel {
   final String name;
 }
 
-final class ProjectSummary {
-  const ProjectSummary({required this.id, required this.name});
-  final String id;
-  final String name;
-}
-
-final class DiscoverPage {
-  DiscoverPage({required List<ProjectSummary> items, this.nextCursor})
-    : items = List.unmodifiable(items);
-  final List<ProjectSummary> items;
-  final String? nextCursor;
-}
-
 final class DiscoverTag {
   const DiscoverTag({required this.id, required this.slug, required this.name});
   final String id;
@@ -284,23 +273,30 @@ final class DiscoverTag {
   final String name;
 }
 
+/// A member the website's Khám phá suggests following.
+final class DiscoverUser {
+  const DiscoverUser({
+    required this.author,
+    this.bio = '',
+    this.followedByViewer = false,
+  });
+  final Author author;
+  final String bio;
+  final bool followedByViewer;
+}
+
+/// `GET /api/v1/discover` as the website's Khám phá reads it: topics and
+/// people. Its articles carry no vote or comment counts, and the website
+/// shows none of them there.
 final class DiscoverData {
   DiscoverData({
-    List<FeedPost> articles = const [],
-    List<Author> users = const [],
+    List<DiscoverUser> users = const [],
     List<DiscoverTag> tags = const [],
-    List<ProjectSummary> projects = const [],
-    this.hasMore = false,
-  }) : articles = List.unmodifiable(articles),
-       users = List.unmodifiable(users),
-       tags = List.unmodifiable(tags),
-       projects = List.unmodifiable(projects);
+  }) : users = List.unmodifiable(users),
+       tags = List.unmodifiable(tags);
 
-  final List<FeedPost> articles;
-  final List<Author> users;
+  final List<DiscoverUser> users;
   final List<DiscoverTag> tags;
-  final List<ProjectSummary> projects;
-  final bool hasMore;
 }
 
 final class LeaderboardEntry {

@@ -12,8 +12,8 @@ import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:fleather/fleather.dart';
 import 'package:vnlfsocialapp/src/features/composer/presentation/composer_editor.dart';
 import 'package:vnlfsocialapp/src/features/composer/presentation/composer_toolbar.dart';
-import 'package:vnlfsocialapp/src/features/discover/presentation/discover_articles.dart';
 import 'package:vnlfsocialapp/src/features/shared/presentation/feature_samples.dart';
+import 'package:vnlfsocialapp/src/features/shared/presentation/post_card_tile.dart';
 import 'package:vnlfsocialapp/src/features/feed/presentation/post_mapper.dart';
 
 import '../tool/ux_audit_fixtures.dart';
@@ -146,7 +146,7 @@ void main() {
     expect(container.read(sessionStateProvider)?.userId, auditOwner.userId);
   });
 
-  testWidgets('discover post actions respond to votes and bookmarks', (
+  testWidgets('post card actions respond to votes and bookmarks', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -155,9 +155,7 @@ void main() {
         child: MaterialApp(
           theme: VnlfTheme.light(),
           home: Scaffold(
-            body: SingleChildScrollView(
-              child: DiscoverArticles(posts: [samplePost], query: ''),
-            ),
+            body: SingleChildScrollView(child: PostCardTile(post: samplePost)),
           ),
         ),
       ),

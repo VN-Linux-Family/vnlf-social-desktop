@@ -6,6 +6,7 @@ import '../domain/repositories.dart';
 import 'feed_dto.dart';
 import 'field_reader.dart';
 import 'leaderboard_dto.dart';
+import 'profile_dto.dart';
 import 'projects_dto.dart';
 
 /// Synthetic content using the confirmed public feed response shape.
@@ -377,114 +378,31 @@ final class FixturePostRepository implements PostRepository {
 final class FixtureDiscoverRepository implements DiscoverRepository {
   const FixtureDiscoverRepository(this._client);
   final ApiClient _client;
-  @override
-  Future<DiscoverPage> getProjects() => _client.get(
-    '/api/v1/projects',
-    decode: (json) {
-      final page = ProjectsPageDto.fromJson(json).toDomain();
-      return DiscoverPage(
-        items: page.items
-            .map((item) => ProjectSummary(id: item.id, name: item.name))
-            .toList(),
-        nextCursor: page.nextCursor,
-      );
-    },
-  );
 
   @override
   Future<DiscoverData> getDiscoverData() => _client.get(
     '/api/v1/discover',
-    decode: (json) {
-      final rawArticles = json['articles'] as List<dynamic>? ?? const [];
-      final rawUsers = json['users'] as List<dynamic>? ?? const [];
-      final rawTags = json['tags'] as List<dynamic>? ?? const [];
-      final rawProjects = json['projects'] as List<dynamic>? ?? const [];
-
-      final articles = rawArticles.whereType<Map<String, dynamic>>().map((
-        item,
-      ) {
-        final authorMap = item['author'] is Map<String, dynamic>
-            ? item['author'] as Map<String, dynamic>
-            : null;
-        return FeedPost(
-          id: item['id'] as String? ?? '',
-          slug: stringValue(item['slug'], 'article.slug'),
-          excerpt: item['excerpt'] as String? ?? item['title'] as String? ?? '',
-          title: item['title'] as String?,
-          voteScore: item['voteScore'] as int? ?? 0,
-          commentCount: item['commentCount'] as int? ?? 0,
-          author: Author(
-            id:
-                authorMap?['id'] as String? ??
-                item['authorId'] as String? ??
-                '',
-            username:
-                authorMap?['username'] as String? ??
-                item['username'] as String? ??
-                '',
-            displayName:
-                authorMap?['displayName'] as String? ??
-                item['displayName'] as String? ??
-                item['username'] as String? ??
-                '',
-            avatarUrl:
-                authorMap?['avatarUrl'] as String? ??
-                item['avatarUrl'] as String? ??
-                '',
-            style: styleValue(
-              authorMap?['style'] ?? item['style'],
-              'article.style',
+    decode: (json) => DiscoverData(
+      users: [
+        for (final item in objectList(json['users'], 'discover.users'))
+          DiscoverUser(
+            author: ProfileDto.fromJson(item).toDomain(),
+            bio: stringValue(item['bio'], 'discover.user.bio'),
+            followedByViewer: boolValue(
+              item['followedByViewer'],
+              'discover.user.followedByViewer',
             ),
           ),
-        );
-      }).toList();
-
-      final users = rawUsers.whereType<Map<String, dynamic>>().map((item) {
-        return Author(
-          id: item['id'] as String? ?? '',
-          username: item['username'] as String? ?? '',
-          displayName:
-              item['displayName'] as String? ??
-              item['username'] as String? ??
-              '',
-          avatarUrl: item['avatarUrl'] as String? ?? '',
-          role: item['role'] as String? ?? '',
-          style: styleValue(item['style'], 'user.style'),
-        );
-      }).toList();
-
-      final tags = rawTags.whereType<Map<String, dynamic>>().map((item) {
-        return DiscoverTag(
-          id: item['id'] as String? ?? '',
-          slug: item['slug'] as String? ?? '',
-          name: item['name'] as String? ?? item['slug'] as String? ?? '',
-        );
-      }).toList();
-
-      final projects = rawProjects.whereType<Map<String, dynamic>>().map((
-        item,
-      ) {
-        return ProjectSummary(
-          id: item['id'] as String? ?? '',
-          name: item['name'] as String? ?? '',
-        );
-      }).toList();
-
-      final hasMoreRaw = json['hasMore'];
-      final hasMore = hasMoreRaw is bool
-          ? hasMoreRaw
-          : hasMoreRaw is Map
-          ? hasMoreRaw.values.any((v) => v == true)
-          : false;
-
-      return DiscoverData(
-        articles: articles,
-        users: users,
-        tags: tags,
-        projects: projects,
-        hasMore: hasMore,
-      );
-    },
+      ],
+      tags: [
+        for (final item in objectList(json['tags'], 'discover.tags'))
+          DiscoverTag(
+            id: stringValue(item['id'], 'discover.tag.id'),
+            slug: stringValue(item['slug'], 'discover.tag.slug'),
+            name: stringValue(item['name'], 'discover.tag.name'),
+          ),
+      ],
+    ),
   );
 }
 

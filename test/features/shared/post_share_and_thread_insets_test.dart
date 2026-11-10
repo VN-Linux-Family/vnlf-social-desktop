@@ -4,26 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vnlfsocialapp/main.dart';
 import 'package:vnlfsocialapp/src/core/api_client.dart';
-import 'package:vnlfsocialapp/src/data/fixture_repositories.dart';
 import 'package:vnlfsocialapp/src/data/live_post_repository.dart';
 import 'package:vnlfsocialapp/src/domain/models.dart';
 import 'package:vnlfsocialapp/src/design_system/design_system.dart';
 import 'package:vnlfsocialapp/src/features/shared/presentation/post_share.dart';
 
 void main() {
-  test('discover articles retain the canonical share slug', () async {
-    final client = ApiClient(
-      transport: fixtureTransport,
-      throttleInterval: Duration.zero,
-      hostKey: Object(),
-    );
-    final discover = await FixtureDiscoverRepository(client).getDiscoverData();
-    expect(
-      canonicalPostUri(discover.articles.first).toString(),
-      'https://vietnamlinuxfamily.net/a/trai-nghiem-arch-linux-va-wayland',
-    );
-  });
-
   test('article detail retains the canonical share slug', () async {
     final client = ApiClient(
       transport: (_) async => ApiResponse(

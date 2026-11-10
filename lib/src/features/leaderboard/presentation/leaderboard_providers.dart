@@ -17,10 +17,13 @@ final weeklyLeaderboardRepositoryProvider =
       return LiveWeeklyLeaderboardRepository(ref.watch(apiClientProvider));
     });
 
-/// Sidebar and discovery always show the current week.
-final leaderboardProvider = FutureProvider<LeaderboardPage>(
-  (ref) => ref.watch(weeklyLeaderboardRepositoryProvider).getWeek(),
-);
+/// Sidebar and discovery always show the current week. The request is made
+/// again when the account changes: the API client rejects one that was in
+/// flight then, which happens at launch while a saved session is restored.
+final leaderboardProvider = FutureProvider<LeaderboardPage>((ref) {
+  ref.watch(sessionStateProvider.select((session) => session?.userId));
+  return ref.watch(weeklyLeaderboardRepositoryProvider).getWeek();
+});
 
 final selectedLeaderboardWeekProvider = StateProvider<LeaderboardWeek?>(
   (ref) => null,
